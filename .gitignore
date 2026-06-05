@@ -1,0 +1,46 @@
+# ── Dependências ──────────────────────────────────────────────
+node_modules/
+
+# ── Variáveis de ambiente (NUNCA versionar segredos) ──────────
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# ── Builds / artefatos ────────────────────────────────────────
+dist/
+build/
+*.tsbuildinfo
+
+# ── WhatsApp / estado de sessão (Baileys) ─────────────────────
+auth_info/
+chaveiro-bot/auth_info/
+
+# ── Uploads de mídia gerados em runtime ───────────────────────
+uploads/
+chaveiro-bot/uploads/
+
+# ── Bancos / vetores locais ───────────────────────────────────
+*.db
+*.db-journal
+*.rvf
+*.rvf.lock
+
+# ── Ruflo / claude-flow / swarm ───────────────────────────────
+.swarm/
+.claude-flow/
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+build_*.log
+npm-debug.log*
+
+# ── Sistema operacional / editor ──────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ── Coverage de testes ────────────────────────────────────────
+coverage/

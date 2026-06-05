@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── MULTI-TENANT ──────────────────────────────────────────────────────────────
+// Cada empresa é um tenant isolado. Todos os dados de negócio são escopados por
+// empresaId; o isolamento é garantido no client Prisma estendido (src/db/tenant.js).
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  slug      String   @unique
+  ativo     Boolean  @default(true)
+  whatsapp  EmpresaWhatsapp?
+  usuarios  Usuario[]
+  tecnicos  Tecnico[]
+  servicos  Servico[]
+  materiais Material[]
+  pagamentos Pagamento[]
+  criadoEm  DateTime @default(now())
+}
+
+// Configuração da conexão WhatsApp por empresa (gateway Evolution API multi-instância).
+// Tabela dedicada (não colunas em Empresa) para isolar credenciais e estado de conexão.
+model EmpresaWhatsapp {
+  id               Int      @id @default(autoincrement())
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId        Int      @unique
+  instanceName     String?  @unique  // nome da instância no Evolution API
+  apiKeyEnc        String?            // token da instância, criptografado em repouso
+  numeroDisplay    String?            // número exibido no painel
+  estadoConexao    String   @default("desconectado")
+  grupoJid         String?            // grupo que recebe o resumo do serviço
+  reviewDelayHoras Int      @default(2)   // atraso (h) para pedir avaliação ao cliente
+  reviewLink       String?            // link de avaliação da empresa (Google, site, etc.)
+  webhookSecret    String?            // segredo HMAC do webhook desta empresa
+  atualizadoEm     DateTime @updatedAt
+}
+
+model Tecnico {
+  id              Int         @id @default(autoincrement())
+  empresa         Empresa     @relation(fields: [empresaId], references: [id])
+  empresaId       Int
+  nome            String
+  telefone        String?     // identificador interno WhatsApp (pode ser LID ou número real)
+  telefoneDisplay String?              // número de telefone para exibição no painel
+  comissao        Float       @default(0)  // percentual: 10.0 = 10%
+  metaMensal      Float?               // meta de receita líquida do mês (R$); null = sem meta
+  fotoPerfil      String?     // URL da foto de perfil do WhatsApp
+  ativo           Boolean     @default(true)
+  servicos        Servico[]
+  pagamentos      Pagamento[]
+  criadoEm       DateTime    @default(now())
+
+  // telefone é único POR EMPRESA (o mesmo número pode existir em empresas diferentes)
+  @@unique([empresaId, telefone])
+  @@index([empresaId])
+}
+
+model Servico {
+  id             Int               @id @default(autoincrement())
+  empresa        Empresa           @relation(fields: [empresaId], references: [id])
+  empresaId      Int
+  tecnico        Tecnico           @relation(fields: [tecnicoId], references: [id])
+  tecnicoId      Int
+  local          String
+  endereco       String?
+  descricao      String
+  material       String?           // descrição textual do material
+  valorCobrado   Float
+  valorMaterial  Float             @default(0)
+  valorLiquido   Float             // calculado automaticamente: cobrado - material
+  comissaoGerada Float             @default(0)  // valorLiquido * (comissao / 100)
+  fotoEvidencia  String?           // caminho/URL da foto enviada junto ao serviço (prova visual)
+  // Cliente atendido — usado para enviar a solicitação de avaliação após a conclusão
+  clienteNome    String?
+  clienteTelefone String?
+  msgOriginal    String
+  remetenteWpp   String
+  materiais      ServicoMaterial[]
+  movimentacoes  MovimentacaoEstoque[]
+  criadoEm      DateTime          @default(now())
+
+  @@index([empresaId])
+  @@index([empresaId, criadoEm])
+  @@index([tecnicoId])
+  @@index([local])
+  @@index([endereco])
+  @@index([clienteTelefone])
+}
+
+// Banco central de materiais — catálogo + controle de estoque com saldo real
+model Material {
+  id              Int                   @id @default(autoincrement())
+  empresa         Empresa               @relation(fields: [empresaId], references: [id])
+  empresaId       Int
+  nome            String
+  descricao       String?               // descrição do produto/material
+  imagemUrl       String?               // URL/foto do produto
+  unidade         String                @default("un")  // un, m, kg, l, etc.
+  precoUnit       Float?                // custo de compra (entrada)
+  precoVenda      Float?                // preço cobrado ao cliente
+  estoqueMinimo   Float?                // gatilho de alerta de reposição
+  quantidadeAtual Float                 @default(0)  // saldo real em estoque
+  servicos        ServicoMaterial[]
+  movimentacoes   MovimentacaoEstoque[]
+  criadoEm       DateTime              @default(now())
+
+  // nome é único POR EMPRESA
+  @@unique([empresaId, nome])
+  @@index([empresaId])
+}
+
+// Histórico de movimentações de estoque (entrada manual / saída por serviço / ajuste)
+model MovimentacaoEstoque {
+  id          Int       @id @default(autoincrement())
+  material    Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  materialId  Int
+  tipo        String    // "entrada" | "saida" | "ajuste"
+  quantidade  Float     // sempre positiva; o sinal é dado pelo tipo
+  saldoApos   Float     // saldo do material logo após esta movimentação (auditoria)
+  origem      String?   // "manual" | "servico" | "ajuste"
+  servico     Servico?  @relation(fields: [servicoId], references: [id], onDelete: SetNull)
+  servicoId   Int?
+  observacao  String?
+  criadoEm   DateTime  @default(now())
+
+  @@index([materialId])
+}
+
+// Relacionamento serviço ↔ material com quantidade
+model ServicoMaterial {
+  id         Int      @id @default(autoincrement())
+  servico    Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  servicoId  Int
+  material   Material @relation(fields: [materialId], references: [id])
+  materialId Int
+  quantidade Float    @default(1)
+  descricao  String?
+
+  @@unique([servicoId, materialId])
+}
+
+model Usuario {
+  id                  Int       @id @default(autoincrement())
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  empresaId           Int
+  nome                String
+  username            String    @unique
+  email               String?   @unique
+  telefone            String?
+  senhaHash           String
+  admin               Boolean   @default(false)
+  ativo               Boolean   @default(true)
+  // Verificação (estrutura — envio de e-mail/OTP plugável depois)
+  emailVerificado     Boolean   @default(false)
+  telefoneVerificado  Boolean   @default(false)
+  // 2FA (estrutura — fluxo TOTP plugável depois)
+  twoFactorAtivo      Boolean   @default(false)
+  twoFactorSecret     String?
+  // Segurança de sessão: tokens emitidos antes desta data são inválidos
+  // (permite "sair de todos os dispositivos" e invalidação após troca de senha)
+  tokenValidoApos     DateTime?
+  senhaAlteradaEm     DateTime?
+  // Preferências de notificação (toggles liga/desliga). null = usa padrões.
+  notificacoes        Json?
+  avisos              Notificacao[]
+  criadoEm           DateTime  @default(now())
+
+  @@index([empresaId])
+}
+
+// Central de avisos (inbox) por usuário, com lido/não-lido
+model Notificacao {
+  id         Int      @id @default(autoincrement())
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId  Int
+  tipo       String   // "estoque_baixo" | "resumo" | "novo_servico" | "meta" | "sistema"
+  titulo     String
+  mensagem   String
+  link       String?  // rota no painel para onde o aviso leva (ex: /estoque)
+  lida       Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  @@index([usuarioId, lida])
+  @@index([usuarioId, criadoEm])
+}
+
+// Registro de pagamentos de comissão aos técnicos
+model Pagamento {
+  id         Int      @id @default(autoincrement())
+  empresa    Empresa  @relation(fields: [empresaId], references: [id])
+  empresaId  Int
+  tecnico    Tecnico  @relation(fields: [tecnicoId], references: [id])
+  tecnicoId  Int
+  valor      Float
+  descricao  String?
+  criadoEm  DateTime @default(now())
+
+  @@index([empresaId])
+}
+
+// Sessão de conversa do bot no PRIVADO (fluxo passo a passo de registro de serviço).
+// Persistida no banco para sobreviver a restart e funcionar com escala horizontal.
+// Uma sessão ATIVA por (empresaId, jid) — o índice único garante isso.
+model SessaoConversa {
+  id            Int      @id @default(autoincrement())
+  empresaId     Int
+  tecnicoId     Int?
+  jid           String   // JID/numero do WhatsApp do técnico no privado
+  fluxo         String   @default("registro_servico") // tipo de fluxo
+  estadoAtual   String   // passo atual da máquina de estados (ex.: "local", "endereco", ...)
+  dadosParciais Json     @default("{}") // respostas coletadas até agora
+  atualizadoEm  DateTime @updatedAt
+  criadoEm      DateTime @default(now())
+
+  @@unique([empresaId, jid])
+  @@index([atualizadoEm])
+}
+
+// Avaliação do cliente após a conclusão de um serviço.
+// Fila por due-time: o cron varre as pendentes com agendadoPara <= now e envia
+// a solicitação (nota 1–5 + link). A resposta do cliente preenche `nota`.
+// status: "pendente" (agendada) → "enviada" → "respondida" | "expirada"
+model Avaliacao {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int
+  servicoId       Int       @unique          // 1 avaliação por serviço
+  clienteTelefone String                     // destino (formato 55DDDNUMERO)
+  clienteNome     String?
+  nota            Int?                        // 1..5, preenchido na resposta
+  comentario      String?
+  status          String    @default("pendente")
+  agendadoPara    DateTime                    // quando a solicitação deve ser enviada
+  enviadoEm       DateTime?
+  respondidoEm    DateTime?
+  criadoEm        DateTime  @default(now())
+
+  @@index([status, agendadoPara])             // varredura eficiente do cron
+  @@index([empresaId])
+  @@index([clienteTelefone, status])          // achar avaliação pendente de resposta
+}

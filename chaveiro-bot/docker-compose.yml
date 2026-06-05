@@ -1,0 +1,98 @@
+networks:
+  chaveiro-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  evolution_data:
+  redis_data:
+
+services:
+  # ── BANCO DE DADOS ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: chaveiro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chaveirobot
+      POSTGRES_USER: chaveiro
+      POSTGRES_PASSWORD: chaveiro123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - chaveiro-net
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U chaveiro -d chaveirobot']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── REDIS (exigido pela Evolution API v2) ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: chaveiro-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - chaveiro-net
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── EVOLUTION API (WhatsApp) ───────────────────────────────────────────────
+  # Após subir: acesse http://localhost:8080 e crie uma instância chamada "chaveiro"
+  # Em seguida, conecte seu WhatsApp via QR Code
+  evolution-api:
+    image: atendai/evolution-api:latest
+    container_name: chaveiro-evolution
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      SERVER_URL: http://localhost:8080
+      AUTHENTICATION_TYPE: apikey
+      AUTHENTICATION_API_KEY: chaveiro-evolution-2024-xk9m
+      DATABASE_ENABLED: 'true'
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://chaveiro:chaveiro123@postgres:5432/chaveirobot
+      DATABASE_CONNECTION_CLIENT_NAME: evolution_api
+      CACHE_REDIS_ENABLED: 'true'
+      CACHE_REDIS_URI: redis://redis:6379
+      CACHE_REDIS_PREFIX_KEY: evo
+      CACHE_REDIS_SAVE_INSTANCES: 'false'
+      QRCODE_LIMIT: '10'
+      LANGUAGE: pt-BR
+      WEBHOOK_GLOBAL_ENABLED: 'false'
+      WEBSOCKET_ENABLED: 'true'
+      WEBSOCKET_GLOBAL_EVENTS: 'false'
+    volumes:
+      - evolution_data:/evolution/instances
+    networks:
+      - chaveiro-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── BACKEND NODE.JS ────────────────────────────────────────────────────────
+  # Descomente este bloco para rodar o backend também via Docker
+  # Certifique-se de fazer build da imagem antes: docker build -t chaveiro-bot .
+  #
+  # backend:
+  #   image: chaveiro-bot
+  #   container_name: chaveiro-backend
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   ports:
+  #     - '3000:3000'
+  #   networks:
+  #     - chaveiro-net
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy

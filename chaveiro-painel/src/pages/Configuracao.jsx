@@ -1,0 +1,94 @@
+import { useNavigate } from 'react-router-dom';
+import { User, Lock, Bell, MessageCircle, Users, CreditCard } from 'lucide-react';
+import BackHeader from '../components/BackHeader.jsx';
+import { useToast } from '../components/Toast.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
+
+// Página de configurações no padrão SaaS: conta, segurança, integrações.
+// Estoque/Materiais saíram daqui — agora são abas próprias.
+// Cards com `to` navegam; cards com `breve: true` ainda serão implementados.
+const SECOES = [
+  {
+    titulo: 'Conta',
+    cards: [
+      { to: '/configuracao/perfil', icon: User, titulo: 'Perfil', sub: 'Nome, e-mail e telefone', cor: 'text-sky-300', bg: 'bg-sky-400/10' },
+      { to: '/configuracao/seguranca', icon: Lock, titulo: 'Segurança', sub: 'Senha e verificação em duas etapas', cor: 'text-accent-300', bg: 'bg-accent-400/10' },
+      { to: '/configuracao/notificacoes', icon: Bell, titulo: 'Notificações', sub: 'Alertas de estoque e resumos', cor: 'text-indigo-300', bg: 'bg-indigo-400/10' },
+    ],
+  },
+  {
+    titulo: 'Integrações',
+    cards: [
+      { to: '/configuracao/whatsapp', icon: MessageCircle, titulo: 'WhatsApp', sub: 'Status do bot e conexão', cor: 'text-success', bg: 'bg-success/10' },
+    ],
+  },
+  {
+    titulo: 'Plano',
+    cards: [
+      { icon: CreditCard, titulo: 'Plano e cobrança', sub: 'Assinatura e faturas', cor: 'text-muted', bg: 'bg-dark-700', breve: true },
+    ],
+  },
+];
+
+const CARD_USUARIOS = {
+  to: '/configuracao/usuarios', icon: Users, titulo: 'Usuários',
+  sub: 'Gerenciar acessos da equipe', cor: 'text-indigo-300', bg: 'bg-indigo-400/10',
+};
+
+function CardLink({ card, onClick }) {
+  const { icon: Icon, titulo, sub, cor, bg, breve } = card;
+  return (
+    <button
+      onClick={onClick}
+      className="card flex items-center gap-4 text-left active:scale-[0.98] transition-transform w-full"
+    >
+      <div className={`w-11 h-11 rounded-md flex items-center justify-center shrink-0 border border-dark-600 ${bg}`}>
+        <Icon size={21} className={cor} strokeWidth={1.8} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-white flex items-center gap-2">
+          {titulo}
+          {breve && <span className="badge text-[9px]">em breve</span>}
+        </p>
+        <p className="text-muted text-xs mt-0.5">{sub}</p>
+      </div>
+      <svg className="text-muted shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  );
+}
+
+export default function Configuracao() {
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { isAdmin } = useAuth();
+
+  const secoes = SECOES.map((s) =>
+    s.titulo === 'Conta' && isAdmin ? { ...s, cards: [...s.cards, CARD_USUARIOS] } : s
+  );
+
+  function abrir(card) {
+    if (card.to) navigate(card.to);
+    else toast('Em breve disponível', 'warning');
+  }
+
+  return (
+    <div className="flex flex-col min-h-full">
+      <BackHeader titulo="Configurações" />
+
+      <div className="px-4 pt-3 pb-8 flex flex-col gap-6 lg:max-w-3xl">
+        {secoes.map((secao) => (
+          <div key={secao.titulo}>
+            <p className="section-label mb-2 px-1">{secao.titulo}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {secao.cards.map((card) => (
+                <CardLink key={card.titulo} card={card} onClick={() => abrir(card)} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

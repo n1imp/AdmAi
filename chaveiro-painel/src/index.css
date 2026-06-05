@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Sora', 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background-color: #0E1014;
+    color: #E6E9EF;
+    min-height: 100dvh;
+    /* Atmosfera técnica: leve grade + vinheta radial de acento no topo */
+    background-image:
+      radial-gradient(900px 500px at 100% -10%, rgba(34, 211, 238, 0.06), transparent 60%),
+      radial-gradient(700px 400px at -10% 0%, rgba(34, 211, 238, 0.04), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Numerais tabulares: alinham colunas de valores (KPIs, tabelas) */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scrollbar discreta (visível no desktop, fina) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #262B34;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* ── Card / superfície de painel ──────────────────────────────────────── */
+  .card {
+    @apply bg-dark-800 rounded-lg border border-dark-600 p-4 shadow-panel;
+  }
+
+  /* Card com canto-acento (detalhe industrial) */
+  .card-accent {
+    @apply card relative overflow-hidden;
+  }
+  .card-accent::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-[3px] bg-accent-400;
+  }
+
+  /* ── Input ────────────────────────────────────────────────────────────── */
+  .input {
+    @apply w-full bg-dark-700 border border-dark-600 rounded-md px-3.5 py-2.5
+           text-white placeholder-muted text-sm
+           focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-400/30
+           transition-colors;
+  }
+
+  /* ── Botão primário (ciano) ───────────────────────────────────────────── */
+  .btn-primary {
+    @apply w-full inline-flex items-center justify-center gap-2
+           bg-accent-400 hover:bg-accent-300 active:bg-accent-500
+           text-dark-950 font-semibold rounded-md py-2.5 px-5
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
+           font-display uppercase tracking-wider text-sm
+           shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)];
+  }
+
+  /* ── Botão ghost / secundário ─────────────────────────────────────────── */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           bg-dark-700 hover:bg-dark-600 active:bg-dark-600
+           text-white border border-dark-600 hover:border-dark-500
+           rounded-md py-2.5 px-4 text-sm font-medium transition-colors;
+  }
+
+  /* Botão de perigo (ações destrutivas) */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30
+           rounded-md py-2.5 px-4 text-sm font-medium transition-colors;
+  }
+
+  /* ── Badge ────────────────────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium
+           border border-dark-500 bg-dark-700 text-muted;
+  }
+
+  /* ── Skeleton (shimmer) ───────────────────────────────────────────────── */
+  .skeleton {
+    @apply rounded-md bg-gradient-to-r from-dark-700 via-dark-600 to-dark-700
+           bg-[length:200%_100%] animate-shimmer;
+  }
+
+  /* ── KPI ──────────────────────────────────────────────────────────────── */
+  .kpi-value {
+    @apply font-display text-3xl font-bold leading-none tracking-tight tnum;
+  }
+  .kpi-label {
+    @apply text-[11px] text-muted font-semibold uppercase tracking-[0.14em];
+  }
+
+  /* Rótulo de seção técnico (com tracejado de acento) */
+  .section-label {
+    @apply flex items-center gap-2 text-[11px] font-display font-semibold uppercase
+           tracking-[0.18em] text-muted;
+  }
+}
+
+@layer utilities {
+  /* Safe-area para notch / home indicator */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .h-safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom, 0);
+  }
+}
