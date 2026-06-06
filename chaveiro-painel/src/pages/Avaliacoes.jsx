@@ -39,6 +39,7 @@ export default function Avaliacoes() {
 
   const buscar = useCallback(async () => {
     setErro(null);
+    setCarregando(true); // mostra o indicador também ao filtrar/atualizar
     try {
       const params = filtro ? `?status=${filtro}` : '';
       const { data } = await api.get(`/avaliacoes${params}`);
@@ -50,7 +51,7 @@ export default function Avaliacoes() {
     }
   }, [filtro]);
 
-  useEffect(() => { setCarregando(true); buscar(); }, [buscar]);
+  useEffect(() => { buscar(); }, [buscar]);
 
   const resumo = dados?.resumo;
   const lista = dados?.avaliacoes ?? [];

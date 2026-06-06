@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-const schema = z.object({
+// Exportado para testes unitários (valida o cross-field sem disparar process.exit).
+export const schema = z.object({
   DATABASE_URL: z.string().min(1),
   PORT: z.string().default('3000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -24,6 +25,27 @@ const schema = z.object({
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   APP_VERSION: z.string().optional(),          // ex.: tag de release, usada no Sentry/logs
+}).superRefine((cfg, ctx) => {
+  // Cross-field: se o gateway Evolution está habilitado (EVOLUTION_HOST setado),
+  // exigimos as vars sem as quais ele não funciona — falha rápida no boot com
+  // mensagem clara. PUBLIC_URL é apenas RECOMENDADA (webhook inbound), então NÃO
+  // falha aqui — é reportada via diagnóstico em tempo de execução.
+  if (cfg.EVOLUTION_HOST) {
+    if (!cfg.EVOLUTION_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['EVOLUTION_API_KEY'],
+        message: 'EVOLUTION_API_KEY é obrigatória quando EVOLUTION_HOST está definido.',
+      });
+    }
+    if (!cfg.ENCRYPTION_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ENCRYPTION_KEY'],
+        message: 'ENCRYPTION_KEY é obrigatória quando EVOLUTION_HOST está definido (cifra segredos do WhatsApp).',
+      });
+    }
+  }
 });
 
 const parsed = schema.safeParse(process.env);

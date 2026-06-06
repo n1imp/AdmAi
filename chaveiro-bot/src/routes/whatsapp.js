@@ -9,11 +9,38 @@ import {
   statusConexao,
   listarGrupos,
   definirGrupo,
+  desconectar,
   segredoWebhook,
 } from '../services/whatsapp/gateway.js';
 import { rotearMensagemInbound } from '../services/inbound.js';
 
 export const whatsappRouter = Router();
+
+/**
+ * Converte falhas comuns do gateway em mensagens pt-BR acionáveis para o painel,
+ * sem vazar detalhes internos. Retorna o texto a colocar no campo `erro`.
+ */
+function mensagemErro(erro) {
+  const msg = String(erro?.message ?? '');
+  if (msg.includes('ENCRYPTION_KEY')) {
+    return 'Falta configurar ENCRYPTION_KEY no servidor.';
+  }
+  if (msg.includes('EVOLUTION_HOST')) {
+    return 'Falta configurar EVOLUTION_HOST no servidor.';
+  }
+  if (msg.includes('EVOLUTION_API_KEY')) {
+    return 'Falta configurar EVOLUTION_API_KEY no servidor.';
+  }
+  // Erros de rede/axios ao falar com a Evolution (host errado, fora do ar, timeout).
+  const codigo = erro?.code ?? '';
+  if (
+    msg.includes('Evolution API falhou') ||
+    ['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNRESET'].includes(codigo)
+  ) {
+    return 'Não foi possível falar com o servidor Evolution. Verifique EVOLUTION_HOST.';
+  }
+  return 'Falha ao conectar ao gateway WhatsApp.';
+}
 
 // ── PAINEL (autenticado, escopado pela empresa do usuário) ────────────────────
 
@@ -24,7 +51,7 @@ whatsappRouter.get('/api/whatsapp/status', requireAuth, async (req, res) => {
     res.json(status);
   } catch (erro) {
     logger.error('Erro GET /whatsapp/status', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro ao consultar conexão' });
+    res.status(500).json({ erro: mensagemErro(erro) });
   }
 });
 
@@ -35,7 +62,22 @@ whatsappRouter.post('/api/whatsapp/conectar', requireAuth, async (req, res) => {
     res.json(r);
   } catch (erro) {
     logger.error('Erro POST /whatsapp/conectar', { erro: erro.message });
-    res.status(502).json({ erro: 'Falha ao conectar ao gateway WhatsApp', detalhe: erro.message });
+    // Config ausente no servidor → 500 (admin precisa configurar o .env).
+    // Falha de comunicação com a Evolution → 502 (gateway upstream).
+    const msg = String(erro?.message ?? '');
+    const ehConfig = /ENCRYPTION_KEY|EVOLUTION_HOST|EVOLUTION_API_KEY/.test(msg);
+    res.status(ehConfig ? 500 : 502).json({ erro: mensagemErro(erro) });
+  }
+});
+
+// POST /api/whatsapp/desconectar — deleta a instância e zera o estado da empresa
+whatsappRouter.post('/api/whatsapp/desconectar', requireAuth, async (req, res) => {
+  try {
+    const r = await desconectar(req.user.empresaId);
+    res.json(r);
+  } catch (erro) {
+    logger.error('Erro POST /whatsapp/desconectar', { erro: erro.message });
+    res.status(500).json({ erro: mensagemErro(erro) });
   }
 });
 
@@ -47,7 +89,7 @@ whatsappRouter.get('/api/whatsapp/grupos', requireAuth, async (req, res) => {
   } catch (erro) {
     if (erro.message === 'WhatsApp não conectado') return res.status(503).json({ erro: erro.message });
     logger.error('Erro GET /whatsapp/grupos', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro ao buscar grupos' });
+    res.status(500).json({ erro: mensagemErro(erro) });
   }
 });
 

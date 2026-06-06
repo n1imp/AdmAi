@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Wifi, WifiOff, Loader2, QrCode, RefreshCw, Users, Star, Save, Link as LinkIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Wifi, WifiOff, Loader2, QrCode, RefreshCw, Users, Star, Save, Link as LinkIcon, AlertTriangle, Smartphone, Power, HelpCircle } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 
@@ -15,6 +16,9 @@ export default function ConfiguracaoBot() {
   const [estado, setEstado] = useState('desconectado');
   const [carregando, setCarregando] = useState(true);
   const [conectando, setConectando] = useState(false);
+  const [desconectando, setDesconectando] = useState(false);
+  const [configIncompleta, setConfigIncompleta] = useState(false);
+  const [faltando, setFaltando] = useState([]);
   const [erro, setErro] = useState(null);
   const [config, setConfig] = useState({ grupoJid: null, reviewDelayHoras: 2, reviewLink: '', numeroDisplay: '' });
   const [grupos, setGrupos] = useState([]);
@@ -28,6 +32,8 @@ export default function ConfiguracaoBot() {
       const { data } = await api.get('/whatsapp/status');
       setQr(data.qr);
       setEstado(data.estado);
+      setConfigIncompleta(Boolean(data.configIncompleta));
+      setFaltando(Array.isArray(data.faltando) ? data.faltando : []);
       setErro(null);
     } catch (e) {
       setErro(e.response?.status === 401 ? 'Sem autorização.' : 'Erro ao conectar com o servidor.');
@@ -59,6 +65,22 @@ export default function ConfiguracaoBot() {
       setErro(e.response?.data?.erro ?? 'Falha ao conectar ao gateway WhatsApp.');
     } finally {
       setConectando(false);
+    }
+  }
+
+  async function desconectar() {
+    setDesconectando(true);
+    setErro(null);
+    try {
+      await api.post('/whatsapp/desconectar');
+      setEstado('desconectado');
+      setQr(null);
+      setGrupos([]);
+      await buscarStatus();
+    } catch (e) {
+      setErro(e.response?.data?.erro ?? 'Falha ao desconectar o WhatsApp.');
+    } finally {
+      setDesconectando(false);
     }
   }
 
@@ -139,6 +161,26 @@ export default function ConfiguracaoBot() {
         </div>
       </div>
 
+      {/* Banner de configuração incompleta no servidor */}
+      {configIncompleta && (
+        <div className="mx-4 bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 mb-6">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" strokeWidth={1.8} />
+            <div className="min-w-0">
+              <p className="text-warning text-sm font-semibold">Configuração pendente no servidor</p>
+              <p className="text-muted text-xs mt-1">
+                {faltando.length > 0
+                  ? <>Faltam definir: <strong className="text-white">{faltando.join(', ')}</strong>. Peça ao administrador para configurar no .env.</>
+                  : 'Há variáveis de ambiente faltando. Peça ao administrador para configurar no .env.'}
+              </p>
+              <Link to="/ajuda" className="text-warning text-xs font-medium inline-flex items-center gap-1 mt-2 hover:underline">
+                <HelpCircle size={12} /> Como configurar
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {erro && (
         <div className="mx-4 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3 mb-6">
           <p className="text-danger text-sm">{erro}</p>
@@ -161,19 +203,28 @@ export default function ConfiguracaoBot() {
               <p className="font-display font-bold text-white text-lg">Bot conectado!</p>
               <p className="text-muted text-sm mt-1">O ChaveiroBot está ativo nesta empresa.</p>
             </div>
+            {config.numeroDisplay && (
+              <div className="flex items-center gap-1.5 text-muted text-xs bg-dark-700 border border-dark-600 rounded-lg px-3 py-1.5">
+                <Smartphone size={13} className="text-success" />
+                <span>Número conectado: <strong className="text-white">{config.numeroDisplay}</strong></span>
+              </div>
+            )}
+            <button onClick={desconectar} disabled={desconectando}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg border border-danger/30 text-danger text-sm font-medium hover:bg-danger/10 transition-colors disabled:opacity-50">
+              {desconectando ? <Loader2 size={15} className="animate-spin" /> : <Power size={15} />}
+              {desconectando ? 'Desconectando…' : 'Desconectar'}
+            </button>
           </div>
         ) : qr ? (
           <div className="flex flex-col items-center gap-4">
             <div className="card p-4 flex flex-col items-center gap-3">
-              <p className="text-muted text-xs text-center">
-                Abra o WhatsApp → <strong className="text-white">Aparelhos conectados</strong> → Conectar um aparelho
-              </p>
               <div className="bg-white rounded-xl p-3">
                 <img src={qr} alt="QR Code WhatsApp" className="w-56 h-56 block" />
               </div>
               <p className="text-muted text-xs text-center flex items-center gap-1">
                 <RefreshCw size={11} /> Atualizado automaticamente a cada 4s
               </p>
+              <ComoConectar />
             </div>
           </div>
         ) : (
@@ -185,10 +236,19 @@ export default function ConfiguracaoBot() {
               <p className="font-display font-bold text-white text-lg">Conectar WhatsApp</p>
               <p className="text-muted text-sm mt-1">Gere o QR Code para vincular o número da empresa.</p>
             </div>
-            <button onClick={conectar} disabled={conectando} className="btn-primary flex items-center gap-2 px-6">
+            <button onClick={conectar} disabled={conectando || configIncompleta}
+              className="btn-primary flex items-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
               {conectando ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}
               {conectando ? 'Gerando…' : 'Conectar'}
             </button>
+            {configIncompleta && (
+              <p className="text-warning text-xs text-center flex items-center gap-1">
+                <AlertTriangle size={11} /> Conexão indisponível até o servidor ser configurado.
+              </p>
+            )}
+            <div className="w-full max-w-xs">
+              <ComoConectar />
+            </div>
           </div>
         )}
       </div>
@@ -219,6 +279,9 @@ export default function ConfiguracaoBot() {
             ))}
           </select>
           {estado !== 'conectado' && <p className="text-muted text-xs mt-1">Conecte o WhatsApp para listar os grupos.</p>}
+          {estado === 'conectado' && !carregandoGrupos && grupos.length === 0 && (
+            <p className="text-muted text-xs mt-1">Nenhum grupo encontrado — confirme que o número do bot participa de algum grupo.</p>
+          )}
         </div>
 
         {/* Avaliação do cliente */}
@@ -243,6 +306,32 @@ export default function ConfiguracaoBot() {
           {salvo ? 'Salvo!' : 'Salvar configurações'}
         </button>
       </div>
+    </div>
+  );
+}
+
+// Mini-guia compacto de 3 passos para vincular o aparelho
+function ComoConectar() {
+  const passos = [
+    'Abra o WhatsApp no celular',
+    'Toque em Aparelhos conectados → Conectar um aparelho',
+    'Aponte a câmera para o QR Code acima',
+  ];
+  return (
+    <div className="w-full rounded-lg bg-dark-700/60 border border-dark-600 p-3">
+      <p className="text-white text-xs font-semibold flex items-center gap-1.5 mb-2">
+        <Smartphone size={13} className="text-success" /> Como conectar
+      </p>
+      <ol className="space-y-1.5">
+        {passos.map((passo, i) => (
+          <li key={i} className="flex items-start gap-2 text-muted text-xs">
+            <span className="shrink-0 w-4 h-4 rounded-full bg-success/15 text-success text-[10px] font-bold flex items-center justify-center mt-px">
+              {i + 1}
+            </span>
+            <span>{passo}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

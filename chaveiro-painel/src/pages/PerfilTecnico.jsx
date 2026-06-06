@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import {
-  ArrowLeft, Wallet, ClipboardList, TrendingUp, DollarSign,
+  Wallet, ClipboardList, TrendingUp, DollarSign,
   CheckCircle, ChevronDown, ChevronUp, UserX, UserCheck, Target,
 } from 'lucide-react';
 import api, { formatarMoeda, formatarData, formatarDataCurta } from '../lib/api.js';
 import { SkeletonLista, SkeletonKpi } from '../components/Skeleton.jsx';
+import BackHeader from '../components/BackHeader.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -101,7 +102,6 @@ function ModalPagamento({ tecnico, onConfirm, onClose }) {
 
 export default function PerfilTecnico() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const toast = useToast();
 
   const [dados, setDados] = useState(null);
@@ -178,18 +178,8 @@ export default function PerfilTecnico() {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 pt-6 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate('/tecnicos')}
-          aria-label="Voltar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <h1 className="font-display text-2xl font-bold text-white uppercase tracking-wide">
-          {t?.nome ?? 'Perfil'}
-        </h1>
-      </div>
+      <BackHeader titulo="Técnico" para="/tecnicos" />
+      {t?.nome && <p className="px-4 -mt-0.5 mb-3 text-muted text-sm truncate">{t.nome}</p>}
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
 
