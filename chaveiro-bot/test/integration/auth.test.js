@@ -27,10 +27,10 @@ describe('POST /api/setup', () => {
 
   it('bloqueia segundo setup (409) quando já existe usuário', async () => {
     await request(app).post('/api/setup').send({
-      nome: 'Dono', nomeEmpresa: 'X', username: 'dono', senha: 'segredo',
+      nome: 'Dono', nomeEmpresa: 'Empresa X', username: 'dono', senha: 'segredo',
     });
     const res = await request(app).post('/api/setup').send({
-      nome: 'Outro', nomeEmpresa: 'Y', username: 'outro', senha: 'segredo',
+      nome: 'Outro', nomeEmpresa: 'Empresa Y', username: 'outro', senha: 'segredo',
     });
     expect(res.status).toBe(409);
   });
@@ -39,7 +39,7 @@ describe('POST /api/setup', () => {
 describe('POST /api/auth/login', () => {
   beforeEach(async () => {
     await request(app).post('/api/setup').send({
-      nome: 'Dono', nomeEmpresa: 'X', username: 'dono', senha: 'segredo',
+      nome: 'Dono', nomeEmpresa: 'Empresa X', username: 'dono', senha: 'segredo',
     });
   });
 
