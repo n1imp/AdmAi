@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # ── Backend: testes unitários + integração (contra Postgres) + audit ──────
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chaveiro-bot
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chaveiro
+          POSTGRES_PASSWORD: chaveiro123
+          POSTGRES_DB: chaveirobot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U chaveiro -d chaveirobot_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
+      NODE_ENV: test
+      API_TOKEN: ci-api-token
+      JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: chaveiro-bot/package-lock.json
+
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: Testes unitários
+        run: npm test
+
+      - name: Testes de integração (Supertest + Postgres)
+        run: npm run test:integration
+
+      - name: Auditoria de dependências (falha em High+)
+        run: npm audit --audit-level=high
+
+  # ── Frontend: testes + build de produção ──────────────────────────────────
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chaveiro-painel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: chaveiro-painel/package-lock.json
+
+      - run: npm ci
+
+      - name: Testes (Vitest + RTL)
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build
+
+      - name: Auditoria de dependências (falha em High+)
+        run: npm audit --audit-level=high
