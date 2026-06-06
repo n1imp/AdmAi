@@ -11,10 +11,10 @@ import path from 'node:path';
 import { env } from './config/env.js';
 import { capturarErro } from './config/sentry.js';
 import { metricsMiddleware, metricsHandler } from './config/metrics.js';
-import { apiRouter, requireAuth } from './routes/api.js';
+import { apiRouter } from './routes/api.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
-import { getQRBase64, getEstado, getSock } from './services/baileys.js';
+import { getEstado } from './services/baileys.js';
 import { whatsappRouter } from './routes/whatsapp.js';
 
 /**
@@ -102,30 +102,6 @@ export function criarApp() {
   app.use(whatsappRouter);
 
   app.use('/api', apiRouter);
-
-  // ── /api/qr — estado do WhatsApp para o painel React ─────────────────────
-  app.get('/api/qr', requireAuth, (req, res) => {
-    res.json({ qr: getQRBase64(), estado: getEstado() });
-  });
-
-  // ── /api/grupos — lista grupos do WhatsApp ────────────────────────────────
-  app.get('/api/grupos', requireAuth, async (req, res) => {
-    const sock = getSock();
-    if (!sock || getEstado() !== 'conectado') {
-      return res.status(503).json({ erro: 'WhatsApp não conectado' });
-    }
-    try {
-      const grupos = await sock.groupFetchAllParticipating();
-      const lista = Object.values(grupos).map((g) => ({
-        id: g.id,
-        nome: g.subject,
-        participantes: g.participants?.length ?? 0,
-      }));
-      res.json(lista.sort((a, b) => a.nome.localeCompare(b.nome)));
-    } catch {
-      res.status(500).json({ erro: 'Erro ao buscar grupos' });
-    }
-  });
 
   // ── Health check ──────────────────────────────────────────────────────────
   // Checa o banco (SELECT 1) e o estado de shutdown. 503 quando degradado/desligando.

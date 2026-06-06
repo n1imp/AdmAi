@@ -168,7 +168,7 @@ export default function Usuarios() {
                       Admin
                     </span>
                   )}
-                  {u.id === parseInt(localStorage.getItem('chaveiro_uid') ?? '0') && (
+                  {u.id === meuUser?.id && (
                     <span className="badge bg-dark-700 text-muted border border-dark-600 text-[10px]">você</span>
                   )}
                 </div>
@@ -181,7 +181,7 @@ export default function Usuarios() {
                 </span>
                 <button
                   onClick={() => toggleAtivo(u)}
-                  disabled={u.username === meuUser?.username}
+                  disabled={u.id === meuUser?.id}
                   className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                     u.ativo
                       ? 'bg-danger/10 text-danger hover:bg-danger/20'

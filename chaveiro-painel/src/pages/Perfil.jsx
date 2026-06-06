@@ -10,11 +10,11 @@ function SeloVerificacao({ verificado, preenchido }) {
   if (!preenchido) return null;
   return verificado ? (
     <span className="badge bg-success/10 text-success border border-success/20 text-[10px]">
-      <CheckCircle2 size={11} /> verificado
+      <CheckCircle2 size={11} /> confirmado
     </span>
   ) : (
-    <span className="badge bg-warning/10 text-warning border-warning/20 text-[10px]">
-      <AlertCircle size={11} /> não verificado
+    <span className="badge bg-dark-700 text-muted border border-dark-600 text-[10px]">
+      <AlertCircle size={11} /> não confirmado
     </span>
   );
 }
@@ -127,7 +127,7 @@ export default function Perfil() {
             </div>
 
             <p className="text-muted text-xs -mt-1">
-              Alterar e-mail ou telefone exigirá nova verificação.
+              E-mail e telefone são usados apenas para contato e identificação da conta.
             </p>
 
             <button type="submit" disabled={salvando || !alterado} className="btn-primary mt-1">

@@ -64,7 +64,10 @@ function AbaAvisos() {
       try {
         await api.patch(`/notificacoes/${aviso.id}/lida`);
         setAvisos((prev) => prev.map((a) => (a.id === aviso.id ? { ...a, lida: true } : a)));
-      } catch { /* segue para o link mesmo assim */ }
+      } catch {
+        // Avisa, mas segue para o link mesmo assim
+        toast('Não foi possível marcar como lida', 'error');
+      }
     }
     if (aviso.link) navigate(aviso.link);
   }

@@ -10,6 +10,7 @@ import {
 import api, { formatarMoeda, formatarDataCurta } from '../lib/api.js';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
+import WelcomeCard from '../components/WelcomeCard.jsx';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 
 const PERIODOS = [
@@ -144,6 +145,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Cartão de boas-vindas (dispensável, some após o primeiro uso) */}
+      <WelcomeCard />
 
       {/* Seletor de período */}
       <div className="px-4 flex gap-2 mb-4 flex-wrap">

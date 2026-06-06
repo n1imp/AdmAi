@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, Calculator } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
+import BackHeader from '../components/BackHeader.jsx';
 import { SkeletonLista } from '../components/Skeleton.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
@@ -41,16 +42,13 @@ export default function Reparticao() {
   async function exportarPDF() {
     setExportando(true);
     try {
-      // Força download via anchor tag — o browser trata o blob corretamente
-      const token = localStorage.getItem('chaveiro_token');
-      const url = `/api/relatorio/pdf?inicio=${inicio}&fim=${fim}`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+      // Download via instância api.js — o token é injetado pelo interceptor
+      const { data: blob } = await api.get('/relatorio/pdf', {
+        params: { inicio, fim },
+        responseType: 'blob',
       });
 
-      if (!response.ok) throw new Error('Falha ao gerar PDF');
-
-      const blob = await response.blob();
+      // Força download via anchor tag — o browser trata o blob corretamente
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = `relatorio_${inicio}_${fim}.pdf`;
@@ -68,11 +66,8 @@ export default function Reparticao() {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 pt-6 pb-4">
-        <p className="section-label mb-1"><span className="w-5 h-px bg-accent-400" /> FECHAMENTO</p>
-        <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">Repartição</h1>
-        <p className="text-muted text-xs mt-0.5">Período por técnico</p>
-      </div>
+      <BackHeader titulo="Repartição" para="/mais" />
+      <p className="px-4 -mt-0.5 mb-3 text-muted text-xs">Fechamento por técnico</p>
 
       {/* Seletor de período */}
       <div className="px-4 mb-4 lg:max-w-3xl">

@@ -20,7 +20,7 @@ function carregarUserInicial() {
     localStorage.removeItem('chaveiro_token');
     return null;
   }
-  return { nome: payload.nome, admin: payload.admin };
+  return { id: payload.id, nome: payload.nome, admin: payload.admin, empresaId: payload.empresaId };
 }
 
 export function AuthProvider({ children }) {
@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
   function login(token) {
     localStorage.setItem('chaveiro_token', token);
     const payload = decodeJWT(token);
-    if (payload) setUser({ nome: payload.nome, admin: payload.admin });
+    if (payload) setUser({ id: payload.id, nome: payload.nome, admin: payload.admin, empresaId: payload.empresaId });
   }
 
   function logout() {

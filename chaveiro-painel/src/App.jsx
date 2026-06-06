@@ -21,6 +21,7 @@ import ConfiguracaoBot from './pages/ConfiguracaoBot.jsx';
 import Estoque from './pages/Estoque.jsx';
 import Catalogo from './pages/Catalogo.jsx';
 import Usuarios from './pages/Usuarios.jsx';
+import Ajuda from './pages/Ajuda.jsx';
 
 function RequireAuth({ children }) {
   const { user } = useAuth();
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/estoque" element={<RequireAuth><Layout><Estoque /></Layout></RequireAuth>} />
 
           <Route path="/mais" element={<RequireAuth><Layout><Mais /></Layout></RequireAuth>} />
+          <Route path="/ajuda" element={<RequireAuth><Layout><Ajuda /></Layout></RequireAuth>} />
           <Route path="/configuracao" element={<RequireAuth><Layout><Configuracao /></Layout></RequireAuth>} />
           <Route path="/configuracao/perfil" element={<RequireAuth><Layout><Perfil /></Layout></RequireAuth>} />
           <Route path="/configuracao/seguranca" element={<RequireAuth><Layout><Seguranca /></Layout></RequireAuth>} />

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
+import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useFormPersist } from '../hooks/useFormPersist.js';
 import { useAnalytics } from '../hooks/useAnalytics.js';
@@ -85,19 +86,8 @@ export default function NovoServico() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 pt-6 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          aria-label="Voltar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 className="font-display text-2xl font-bold text-white uppercase tracking-wide">Novo Serviço</h1>
-          <p className="text-muted text-xs">Cadastro manual</p>
-        </div>
-      </div>
+      <BackHeader titulo="Novo serviço" para="/servicos" />
+      <p className="px-4 -mt-0.5 mb-2 text-muted text-xs">Cadastro manual</p>
 
       {/* Formulário */}
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 pb-6 flex flex-col gap-4 lg:max-w-2xl">

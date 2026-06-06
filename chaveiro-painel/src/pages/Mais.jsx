@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Package, MessageCircle, Users, Settings2, LogOut, Star, ChevronRight } from 'lucide-react';
+import { PieChart, Package, Settings2, LogOut, Star, ChevronRight, HelpCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 const GRUPOS = [
@@ -14,16 +14,11 @@ const GRUPOS = [
   {
     titulo: 'Conta e sistema',
     cards: [
-      { to: '/configuracao/whatsapp', icon: MessageCircle, titulo: 'WhatsApp', sub: 'Status do bot e conexão', cor: 'text-success', bg: 'bg-success/10' },
       { to: '/configuracao', icon: Settings2, titulo: 'Configurações', sub: 'Conta, segurança e preferências', cor: 'text-muted', bg: 'bg-dark-700' },
+      { to: '/ajuda', icon: HelpCircle, titulo: 'Ajuda', sub: 'Como usar o app', cor: 'text-sky-300', bg: 'bg-sky-400/10' },
     ],
   },
 ];
-
-const CARD_USUARIOS = {
-  to: '/configuracao/usuarios', icon: Users, titulo: 'Usuários',
-  sub: 'Gerenciar acessos', cor: 'text-indigo-300', bg: 'bg-indigo-400/10',
-};
 
 function CardLink({ card, onClick }) {
   const { icon: Icon, titulo, sub, cor, bg } = card;
@@ -46,13 +41,7 @@ function CardLink({ card, onClick }) {
 
 export default function Mais() {
   const navigate = useNavigate();
-  const { isAdmin, user, logout } = useAuth();
-
-  const gruposExibidos = GRUPOS.map((g) =>
-    g.titulo === 'Conta e sistema' && isAdmin
-      ? { ...g, cards: [...g.cards, CARD_USUARIOS] }
-      : g
-  );
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex flex-col min-h-full px-4 pt-6 pb-8">
@@ -62,7 +51,7 @@ export default function Mais() {
       </div>
 
       <div className="flex flex-col gap-6">
-        {gruposExibidos.map((grupo) => (
+        {GRUPOS.map((grupo) => (
           <div key={grupo.titulo}>
             <p className="section-label mb-2 px-1">{grupo.titulo}</p>
             <div className="grid gap-3 sm:grid-cols-2">
