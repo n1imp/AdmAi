@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+auth_info
+uploads
+.git
+.gitignore
+test
+src/**/__tests__
+vitest.config.js
+vitest.integration.config.js
+*.log
+Dockerfile
+.dockerignore

@@ -10,6 +10,19 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.test.{js,jsx}'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Separa libs pesadas em chunks próprios — derruba o bundle único de ~783KB
+        // e melhora o cache (libs mudam menos que o código da app).
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     // Proxy para a API durante desenvolvimento — evita CORS
