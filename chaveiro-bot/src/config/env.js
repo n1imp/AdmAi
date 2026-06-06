@@ -20,6 +20,10 @@ const schema = z.object({
   PUBLIC_URL: z.string().optional(),
   // Chave mestra para cifrar segredos por-empresa (apikey de instância, webhookSecret)
   ENCRYPTION_KEY: z.string().min(16).optional(),
+  // ── Observabilidade ───────────────────────────────────────────────────────
+  SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  APP_VERSION: z.string().optional(),          // ex.: tag de release, usada no Sentry/logs
 });
 
 const parsed = schema.safeParse(process.env);
