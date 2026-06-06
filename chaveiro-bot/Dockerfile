@@ -3,6 +3,8 @@
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+# Prisma no Alpine (musl) precisa de openssl para o engine; libc6-compat ajuda os binários.
+RUN apk add --no-cache openssl libc6-compat
 # Instala dependências de produção (deterministico via lockfile).
 COPY package*.json ./
 RUN npm ci --omit=dev
@@ -13,6 +15,9 @@ RUN npx prisma generate
 FROM node:20-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
+
+# openssl é exigido pelo schema/query engine do Prisma em runtime (migrate deploy).
+RUN apk add --no-cache openssl libc6-compat
 
 # Usuário sem privilégios (nunca rodar como root).
 RUN addgroup -S nodejs -g 1001 && adduser -S appuser -u 1001 -G nodejs
