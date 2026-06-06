@@ -40,6 +40,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: chaveiro-bot/package-lock.json
 
+      # Alinha o npm à versão que gerou os lockfiles (resolve ranges OR de forma idêntica).
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npx prisma generate
 
@@ -66,6 +68,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: chaveiro-painel/package-lock.json
 
+      # Alinha o npm à versão que gerou os lockfiles (resolve ranges OR de forma idêntica).
+      - run: npm install -g npm@11
       - run: npm ci
 
       - name: Testes (Vitest + RTL)
