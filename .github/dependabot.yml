@@ -1,0 +1,31 @@
+# Dependabot — atualizações automáticas de dependências
+# Abre PRs semanais para manter dependências e GitHub Actions em dia.
+version: 2
+
+updates:
+  # Backend (Node.js) — chaveiro-bot
+  - package-ecosystem: "npm"
+    directory: "/chaveiro-bot"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(bot)"
+
+  # Painel (Node.js) — chaveiro-painel
+  - package-ecosystem: "npm"
+    directory: "/chaveiro-painel"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(painel)"
+
+  # GitHub Actions (workflows na raiz do repositório)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(actions)"
