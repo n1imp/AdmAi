@@ -1,10 +1,19 @@
+// ⚠️ NOTA (directUrl x SQLite de dev): o `directUrl` no datasource abaixo é só para
+// Postgres (pooler do Supabase). Se você REGERAR o schema SQLite de dev a partir
+// deste arquivo (ex.: o sed que cria prisma/schema.sqlite.prisma), REMOVA manualmente
+// a linha `directUrl` de lá — o SQLite não a suporta e o `db push` falha.
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  // Runtime: conexão via pooler (Supabase pgbouncer, porta 6543, ?pgbouncer=true).
   url      = env("DATABASE_URL")
+  // Migrations/introspect: conexão DIRETA (porta 5432). O Prisma usa directUrl
+  // automaticamente no `migrate deploy`; o pgbouncer em transaction mode não
+  // suporta os locks/prepared statements das migrations.
+  directUrl = env("DIRECT_URL")
 }
 
 // ── MULTI-TENANT ──────────────────────────────────────────────────────────────

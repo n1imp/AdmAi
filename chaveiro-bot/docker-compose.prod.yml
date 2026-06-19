@@ -1,0 +1,43 @@
+# ── Override de PRODUÇÃO ───────────────────────────────────────────────────────
+# Usar SEMPRE junto com o compose base:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# O que muda em relação ao base:
+#   • adiciona o Caddy (reverse proxy + HTTPS automático) expondo só 80/443;
+#   • fecha as portas internas (backend/painel/evolution) — acessíveis apenas pela
+#     rede interna chaveiro-net (via `ports: !reset []`, requer Docker Compose ≥ 2.24).
+#
+# Defina no .env: CADDY_APP_DOMAIN=app.seudominio.com e CADDY_API_DOMAIN=api.seudominio.com
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: chaveiro-caddy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      CADDY_APP_DOMAIN: ${CADDY_APP_DOMAIN:?defina CADDY_APP_DOMAIN no .env}
+      CADDY_API_DOMAIN: ${CADDY_API_DOMAIN:?defina CADDY_API_DOMAIN no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - chaveiro-net
+    depends_on:
+      - backend
+      - painel
+
+  # Em produção, NÃO publicar portas no host — só o Caddy (80/443) fica exposto.
+  # (postgres/redis/evolution-api têm profile "local" e não sobem em produção.)
+  backend:
+    ports: !reset []
+  painel:
+    ports: !reset []
+
+volumes:
+  caddy_data:
+  caddy_config:

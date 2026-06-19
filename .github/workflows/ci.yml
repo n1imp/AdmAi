@@ -29,6 +29,8 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
+      # directUrl no schema exige DIRECT_URL; na CI não há pooler, então aponta para o mesmo Postgres direto.
+      DIRECT_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
       NODE_ENV: test
       API_TOKEN: ci-api-token
       JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
