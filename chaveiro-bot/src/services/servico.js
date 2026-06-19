@@ -1,6 +1,7 @@
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
 import { darBaixaPorServico } from './estoque.js';
+import { igualInsensivel } from '../utils/busca.js';
 export { formatarData, formatarMoeda } from '../utils/formatar.js';
 
 export async function buscarOuCriarTecnico(nome, empresaId) {
@@ -8,7 +9,7 @@ export async function buscarOuCriarTecnico(nome, empresaId) {
   const nomeNormalizado = nome.trim();
   return prisma.$transaction(async (tx) => {
     const existente = await tx.tecnico.findFirst({
-      where: { empresaId, nome: { equals: nomeNormalizado, mode: 'insensitive' } },
+      where: { empresaId, nome: igualInsensivel(nomeNormalizado) },
     });
     if (existente) return existente;
     const novo = await tx.tecnico.create({ data: { nome: nomeNormalizado, empresaId } });

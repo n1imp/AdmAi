@@ -13,6 +13,7 @@ import { agendarAvaliacao } from '../services/avaliacao.js';
 import { resolverPreferencias } from '../services/notificacao.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { contemInsensivel } from '../utils/busca.js';
 import { gerarJWT, verificarJWT, tokenAindaValido } from '../services/auth.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 
@@ -480,9 +481,9 @@ apiRouter.get('/servicos', async (req, res) => {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
     const where = {};
-    if (tecnico) where.tecnico = { nome: { contains: tecnico, mode: 'insensitive' } };
-    if (local) where.local = { contains: local, mode: 'insensitive' };
-    if (endereco) where.endereco = { contains: endereco, mode: 'insensitive' };
+    if (tecnico) where.tecnico = { nome: contemInsensivel(tecnico) };
+    if (local) where.local = contemInsensivel(local);
+    if (endereco) where.endereco = contemInsensivel(endereco);
     if (inicio || fim) where.criadoEm = construirFiltroPeriodo('custom', inicio, fim);
 
     const [servicos, total] = await Promise.all([
