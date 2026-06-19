@@ -4,6 +4,9 @@ import { z } from 'zod';
 // Exportado para testes unitários (valida o cross-field sem disparar process.exit).
 export const schema = z.object({
   DATABASE_URL: z.string().min(1),
+  // Conexão DIRETA p/ migrations (Supabase pooler). Opcional: só exigida quando o
+  // schema Postgres é usado (prod/CI); o dev local em SQLite não precisa.
+  DIRECT_URL: z.string().optional(),
   PORT: z.string().default('3000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_TOKEN: z.string().min(1),

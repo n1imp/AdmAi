@@ -1,3 +1,11 @@
+# Compose base do ChaveiroBot.
+#
+# Serviços SEM profile (backend, painel) sobem SEMPRE — inclusive em produção.
+# Serviços com `profiles: ["local"]` (postgres, redis, evolution-api) só sobem em
+# desenvolvimento local:  docker compose --profile local up -d
+# Em PRODUÇÃO o banco é o Supabase (gerenciado) e o WhatsApp é a Cloud API (Meta),
+# então esses três NÃO rodam na VPS — o comando de prod (com docker-compose.prod.yml)
+# sobe apenas backend + painel + Caddy.
 networks:
   chaveiro-net:
     driver: bridge
@@ -6,33 +14,43 @@ volumes:
   postgres_data:
   evolution_data:
   redis_data:
+  backend_uploads:
+  backend_auth_info:
+
+# Rotação de logs (evita encher o disco da VPS — incidente comum). Reusado via anchor.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
 
 services:
-  # ── BANCO DE DADOS ─────────────────────────────────────────────────────────
+  # ── BANCO DE DADOS (somente dev local — em prod use Supabase) ───────────────
   postgres:
     image: postgres:16-alpine
     container_name: chaveiro-postgres
+    profiles: ['local']
     restart: unless-stopped
     environment:
       POSTGRES_DB: chaveirobot
-      POSTGRES_USER: chaveiro
-      POSTGRES_PASSWORD: chaveiro123
+      POSTGRES_USER: ${POSTGRES_USER:-chaveiro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chaveiro123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
+    # H8a: porta NÃO exposta ao host — o banco só é acessado internamente via chaveiro-net.
     networks:
       - chaveiro-net
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U chaveiro -d chaveirobot']
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── REDIS (exigido pela Evolution API v2) ─────────────────────────────────
+  # ── REDIS (somente dev local — exigido pela Evolution API) ─────────────────
   redis:
     image: redis:7-alpine
     container_name: chaveiro-redis
+    profiles: ['local']
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -44,22 +62,23 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── EVOLUTION API (WhatsApp) ───────────────────────────────────────────────
-  # Após subir: acesse http://localhost:8080 e crie uma instância chamada "chaveiro"
-  # Em seguida, conecte seu WhatsApp via QR Code
+  # ── EVOLUTION API (somente dev local — em prod use WhatsApp Cloud API) ──────
+  # Após subir: acesse http://localhost:8080 e crie uma instância chamada "chaveiro".
   evolution-api:
     image: atendai/evolution-api:latest
     container_name: chaveiro-evolution
+    profiles: ['local']
     restart: unless-stopped
     ports:
       - '8080:8080'
     environment:
-      SERVER_URL: http://localhost:8080
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8080}
       AUTHENTICATION_TYPE: apikey
-      AUTHENTICATION_API_KEY: chaveiro-evolution-2024-xk9m
+      # Default vazio para não quebrar o parse do compose quando o serviço não sobe.
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-}
       DATABASE_ENABLED: 'true'
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://chaveiro:chaveiro123@postgres:5432/chaveirobot
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-chaveiro}:${POSTGRES_PASSWORD:-chaveiro123}@postgres:5432/chaveirobot
       DATABASE_CONNECTION_CLIENT_NAME: evolution_api
       CACHE_REDIS_ENABLED: 'true'
       CACHE_REDIS_URI: redis://redis:6379
@@ -80,7 +99,7 @@ services:
       redis:
         condition: service_healthy
 
-  # ── BACKEND NODE.JS ────────────────────────────────────────────────────────
+  # ── BACKEND NODE.JS (sempre — prod e local) ────────────────────────────────
   backend:
     build:
       context: .
@@ -90,11 +109,17 @@ services:
     env_file: .env
     ports:
       - '3000:3000'
+    volumes:
+      # M11: persistem entre recriações do container (uploads de evidências e credenciais Baileys).
+      - backend_uploads:/app/uploads
+      - backend_auth_info:/app/auth_info
     networks:
       - chaveiro-net
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # Cap de memória (segurança contra runaway). Acomoda --max-old-space-size=512 + overhead.
+    mem_limit: 700m
+    logging: *default-logging
+    # Sem depends_on de postgres: em produção o banco é o Supabase (externo). No
+    # profile local o postgres sobe junto e o Prisma conecta de forma lazy.
     healthcheck:
       test: ['CMD', 'node', '-e', "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
@@ -102,7 +127,7 @@ services:
       start_period: 20s
       retries: 3
 
-  # ── PAINEL (frontend React servido por nginx) ──────────────────────────────
+  # ── PAINEL (frontend React servido por nginx — sempre) ─────────────────────
   painel:
     build:
       context: ../chaveiro-painel
@@ -113,5 +138,8 @@ services:
       - '8081:80'
     networks:
       - chaveiro-net
+    mem_limit: 128m
+    logging: *default-logging
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy

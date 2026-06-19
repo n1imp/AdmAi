@@ -25,10 +25,11 @@ export function criarApp() {
   const estado = { isShuttingDown: false };
   const app = express();
 
-  // Atrás do nginx (serviço `painel`) há 1 proxy: confia no X-Forwarded-For dele
-  // para que req.ip seja o IP real do cliente — sem isso o rate limiting por IP
-  // (/api, /webhook) contaria todos os usuários no mesmo balde.
-  app.set('trust proxy', 1);
+  // Em produção há 2 proxies na frente do app no caminho do painel:
+  // Caddy (HTTPS) → nginx (painel) → backend. Confiamos em 2 saltos para que
+  // req.ip seja o IP real do cliente — sem isso o rate limiting por IP (/api,
+  // /webhook) contaria todos os usuários no mesmo balde e os logs perderiam o IP.
+  app.set('trust proxy', 2);
 
   // ── Headers de segurança (Helmet) ─────────────────────────────────────────
   app.use(
