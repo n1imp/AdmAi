@@ -376,11 +376,15 @@ AdmAi/
 │   │   │   ├── api.js             # API REST do painel (auth, serviços, dashboard, …)
 │   │   │   └── whatsapp.js        # Gateway + webhook inbound por empresa
 │   │   └── services/
-│   │       ├── auth.js  oauth.js  totp.js  senha.js   # autenticação
-│   │       ├── whatsapp/gateway.js  whatsapp/cloud-gateway.js  whatsapp/crypto.js  whatsapp/evolution-client.js  whatsapp/cloud-client.js
+│   │       ├── auth.js  oauth.js  totp.js  otp.js  senha.js   # autenticação (senha, 2FA, OTP, social)
+│   │       ├── identidade.js                          # número único por telefone (anti-duplicidade)
+│   │       ├── permissoes.js  credenciais.js          # RBAC do painel + credenciais de funcionário (PIN)
+│   │       ├── whatsapp/ (gateway.js, cloud-gateway.js, crypto.js, evolution-client.js, cloud-client.js)
+│   │       ├── google/ (oauth.js, businessClient.js, analise.js)  # avaliações Google + análise por IA
 │   │       ├── inbound.js  conversa.js                # roteamento + máquina de estados
 │   │       ├── parser.js  servico.js                  # parsing e CRUD de serviço
 │   │       ├── estoque.js  catalogo.js                # materiais e estoque
+│   │       ├── ponto.js                                # ponto eletrônico / banco de horas (RH)
 │   │       ├── avaliacao.js  notificacao.js  agendador.js  # avaliações, avisos, cron
 │   │       ├── busca.js                                # helper de busca case-insensitive (Postgres/SQLite)
 │   │       ├── relatorio.js  bootstrap.js
