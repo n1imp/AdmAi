@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
-    "@hapi/boom": "^10.0.1",
     "@prisma/client": "^5.10.0",
     "@sentry/node": "^10.56.0",
     "axios": "^1.6.7",
