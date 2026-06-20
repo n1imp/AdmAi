@@ -339,9 +339,11 @@ function ModalHistorico({ material, onClose }) {
   }, [onClose]);
 
   useEffect(() => {
+    let active = true;
     api.get(`/materiais/${material.id}/movimentacoes`)
-      .then(({ data }) => setMovs(data))
-      .catch(() => setErro(true));
+      .then(({ data }) => { if (active) setMovs(data); })
+      .catch(() => { if (active) setErro(true); });
+    return () => { active = false; };
   }, [material.id]);
 
   const ICONE = {
@@ -429,7 +431,9 @@ function ModalConfirmarDelete({ material, onClose, onConfirmar }) {
 }
 
 function Miniatura({ url, nome }) {
-  if (!url) {
+  const [falhou, setFalhou] = useState(false);
+  // Sem URL ou imagem quebrada: mostra o placeholder (mantém o tamanho do slot).
+  if (!url || falhou) {
     return (
       <div className="w-12 h-12 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center shrink-0">
         <ImageOff size={18} className="text-muted" />
@@ -441,7 +445,7 @@ function Miniatura({ url, nome }) {
       src={url}
       alt={nome}
       className="w-12 h-12 rounded-md object-cover border border-dark-600 shrink-0 bg-dark-700"
-      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      onError={() => setFalhou(true)}
     />
   );
 }

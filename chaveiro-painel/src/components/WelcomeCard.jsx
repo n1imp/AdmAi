@@ -10,7 +10,7 @@ const ACOES = [
   { icon: BarChart3, texto: 'Acompanhar no painel', cor: 'text-sky-300', bg: 'bg-sky-400/10' },
 ];
 
-export default function WelcomeCard() {
+export default function WelcomeCard({ onVerTutorial }) {
   const navigate = useNavigate();
   // Se já foi visto, nasce oculto e não renderiza nada.
   const [visivel, setVisivel] = useState(() => !localStorage.getItem(STORAGE_KEY));
@@ -53,7 +53,7 @@ export default function WelcomeCard() {
 
         <div className="flex gap-3 mt-5">
           <button
-            onClick={() => navigate('/ajuda')}
+            onClick={() => (onVerTutorial ? onVerTutorial() : navigate('/ajuda'))}
             className="btn-primary flex items-center justify-center gap-2 flex-1"
           >
             <BookOpen size={16} />

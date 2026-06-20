@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/Toast.jsx';
-import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
+import { AuthProvider, useAuth, tokenExpirado } from './contexts/AuthContext.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import { useOffline } from './hooks/useOffline.js';
@@ -10,6 +11,7 @@ import Servicos from './pages/Servicos.jsx';
 import NovoServico from './pages/NovoServico.jsx';
 import Reparticao from './pages/Reparticao.jsx';
 import Tecnicos from './pages/Tecnicos.jsx';
+import NovoTecnico from './pages/NovoTecnico.jsx';
 import PerfilTecnico from './pages/PerfilTecnico.jsx';
 import Avaliacoes from './pages/Avaliacoes.jsx';
 import Mais from './pages/Mais.jsx';
@@ -22,10 +24,19 @@ import Estoque from './pages/Estoque.jsx';
 import Catalogo from './pages/Catalogo.jsx';
 import Usuarios from './pages/Usuarios.jsx';
 import Ajuda from './pages/Ajuda.jsx';
+import Privacidade from './pages/Privacidade.jsx';
+import Termos from './pages/Termos.jsx';
+import Landing from './pages/Landing.jsx';
+import RodapeLegal from './components/RodapeLegal.jsx';
 
 function RequireAuth({ children }) {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, logout } = useAuth();
+  // Se o token já expirou, derruba a sessão (efeito) e manda pro login.
+  const expirado = tokenExpirado();
+  useEffect(() => {
+    if (expirado && user) logout();
+  }, [expirado, user, logout]);
+  if (!user || expirado) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -35,18 +46,33 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+// Raiz: visitante não autenticado vê a landing pública; logado vê o dashboard.
+function Home() {
+  const { user } = useAuth();
+  if (!user) return <Landing />;
+  return (
+    <RequireAuth>
+      <Layout><Dashboard /></Layout>
+    </RequireAuth>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          {/* Documentos legais — públicos (acessíveis sem login) */}
+          <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/termos" element={<Termos />} />
 
-          <Route path="/" element={<RequireAuth><Layout><Dashboard /></Layout></RequireAuth>} />
+          <Route path="/" element={<Home />} />
           <Route path="/servicos" element={<RequireAuth><Layout><Servicos /></Layout></RequireAuth>} />
           <Route path="/servicos/novo" element={<RequireAuth><Layout><NovoServico /></Layout></RequireAuth>} />
           <Route path="/reparticao" element={<RequireAuth><Layout><Reparticao /></Layout></RequireAuth>} />
           <Route path="/tecnicos" element={<RequireAuth><Layout><Tecnicos /></Layout></RequireAuth>} />
+          <Route path="/tecnicos/novo" element={<RequireAuth><Layout><NovoTecnico /></Layout></RequireAuth>} />
           <Route path="/tecnicos/:id" element={<RequireAuth><Layout><PerfilTecnico /></Layout></RequireAuth>} />
           <Route path="/avaliacoes" element={<RequireAuth><Layout><Avaliacoes /></Layout></RequireAuth>} />
 
@@ -99,6 +125,7 @@ function Layout({ children }) {
         {/* No desktop, conteúdo centralizado com largura máxima; no mobile, largura total */}
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
           <div className="lg:max-w-6xl lg:mx-auto lg:px-2">{children}</div>
+          <RodapeLegal />
         </main>
       </div>
 

@@ -125,10 +125,12 @@ export default function Usuarios() {
 
   async function toggleAtivo(u) {
     try {
-      await api.patch(`/usuarios/${u.id}`, { ativo: !u.ativo });
-      setUsuarios((prev) => prev.map((x) => x.id === u.id ? { ...x, ativo: !u.ativo } : x));
-      toast(`Usuário ${!u.ativo ? 'ativado' : 'desativado'}`, 'success');
+      const { data } = await api.patch(`/usuarios/${u.id}`, { ativo: !u.ativo });
+      // Usa o valor confirmado pelo servidor (não assume !u.ativo).
+      setUsuarios((prev) => prev.map((x) => x.id === u.id ? { ...x, ativo: data.ativo } : x));
+      toast(`Usuário ${data.ativo ? 'ativado' : 'desativado'}`, 'success');
     } catch (err) {
+      // Em erro nada muda no estado, então não há o que reverter.
       toast(err.response?.data?.erro ?? 'Erro ao atualizar', 'error');
     }
   }

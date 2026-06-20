@@ -15,12 +15,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Limpa a sessão de forma centralizada: remove o token e avisa o AuthProvider
+// (via evento) para que o estado React não fique "autenticado" após o 401.
+export function limparSessao() {
+  localStorage.removeItem('chaveiro_token');
+  // O AuthProvider escuta este evento para zerar o estado do usuário.
+  window.dispatchEvent(new Event('chaveiro:logout'));
+}
+
 // Redireciona para login em caso de 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('chaveiro_token');
+      limparSessao();
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -28,6 +36,18 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// ── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
+
+/**
+ * Auto-cadastro público (cria empresa + dono). `payload` inclui telefone, que é
+ * obrigatório (identidade no robô de número único, verificada por OTP via WhatsApp).
+ * @returns {Promise<object>} dados da sessão ({ token, telefoneVerificado, ... }).
+ */
+export async function register(payload) {
+  const { data } = await api.post('/auth/register', payload);
+  return data;
+}
 
 // ── HELPERS DE FORMATAÇÃO ────────────────────────────────────────────────────
 

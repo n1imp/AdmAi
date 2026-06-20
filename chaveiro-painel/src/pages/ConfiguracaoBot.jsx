@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Wifi, WifiOff, Loader2, QrCode, RefreshCw, Users, Star, Save, Link as LinkIcon, AlertTriangle, Smartphone, Power, HelpCircle } from 'lucide-react';
+import { Wifi, WifiOff, Loader2, QrCode, RefreshCw, AlertTriangle, Smartphone, Power, HelpCircle, ShieldCheck, Info } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 
@@ -11,58 +11,54 @@ const ESTADOS = {
   desconectado: { label: 'Desconectado', cor: 'text-danger', bg: 'bg-danger/10 border-danger/20', Icon: WifiOff },
 };
 
+// Aceita tanto data-URL completo ('data:image/png;base64,…') quanto base64 cru
+// vindo do gateway, devolvendo sempre um src renderável por <img>.
+function normalizarQr(qr) {
+  if (!qr) return null;
+  return qr.startsWith('data:') ? qr : `data:image/png;base64,${qr}`;
+}
+
 export default function ConfiguracaoBot() {
-  const [qr, setQr] = useState(null);
   const [estado, setEstado] = useState('desconectado');
+  const [qr, setQr] = useState(null);
+  const [instanceName, setInstanceName] = useState(null);
+  const [ehSuperAdmin, setEhSuperAdmin] = useState(false);
+  const [atualizadoEm, setAtualizadoEm] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [conectando, setConectando] = useState(false);
   const [desconectando, setDesconectando] = useState(false);
-  const [configIncompleta, setConfigIncompleta] = useState(false);
-  const [faltando, setFaltando] = useState([]);
   const [erro, setErro] = useState(null);
-  const [config, setConfig] = useState({ grupoJid: null, reviewDelayHoras: 2, reviewLink: '', numeroDisplay: '' });
-  const [grupos, setGrupos] = useState([]);
-  const [carregandoGrupos, setCarregandoGrupos] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [salvo, setSalvo] = useState(false);
   const intervalRef = useRef(null);
 
   async function buscarStatus() {
     try {
-      const { data } = await api.get('/whatsapp/status');
-      setQr(data.qr);
-      setEstado(data.estado);
-      setConfigIncompleta(Boolean(data.configIncompleta));
-      setFaltando(Array.isArray(data.faltando) ? data.faltando : []);
+      const { data } = await api.get('/bot/whatsapp/status');
+      setEstado(data.estado ?? 'desconectado');
+      setQr(normalizarQr(data.qr));
+      setInstanceName(data.instanceName ?? null);
+      setEhSuperAdmin(Boolean(data.ehSuperAdmin));
+      setAtualizadoEm(data.atualizadoEm ?? null);
       setErro(null);
+      return true;
     } catch (e) {
       setErro(e.response?.status === 401 ? 'Sem autorização.' : 'Erro ao conectar com o servidor.');
+      return false;
     } finally {
       setCarregando(false);
     }
   }
 
-  async function buscarConfig() {
-    try {
-      const { data } = await api.get('/whatsapp/config');
-      setConfig({
-        grupoJid: data.grupoJid ?? null,
-        reviewDelayHoras: data.reviewDelayHoras ?? 2,
-        reviewLink: data.reviewLink ?? '',
-        numeroDisplay: data.numeroDisplay ?? '',
-      });
-    } catch { /* silencioso */ }
-  }
-
-  async function conectar() {
+  async function parear() {
     setConectando(true);
     setErro(null);
     try {
-      const { data } = await api.post('/whatsapp/conectar');
-      setQr(data.qr);
-      setEstado(data.estado);
+      const { data } = await api.post('/bot/whatsapp/conectar');
+      if (data.estado) setEstado(data.estado);
+      if (data.qr) setQr(normalizarQr(data.qr));
     } catch (e) {
-      setErro(e.response?.data?.erro ?? 'Falha ao conectar ao gateway WhatsApp.');
+      setErro(e.response?.status === 403
+        ? 'Apenas a equipe técnica pode parear o robô.'
+        : e.response?.data?.erro ?? 'Falha ao parear o robô.');
     } finally {
       setConectando(false);
     }
@@ -72,67 +68,54 @@ export default function ConfiguracaoBot() {
     setDesconectando(true);
     setErro(null);
     try {
-      await api.post('/whatsapp/desconectar');
+      await api.post('/bot/whatsapp/desconectar');
       setEstado('desconectado');
       setQr(null);
-      setGrupos([]);
       await buscarStatus();
     } catch (e) {
-      setErro(e.response?.data?.erro ?? 'Falha ao desconectar o WhatsApp.');
+      setErro(e.response?.status === 403
+        ? 'Apenas a equipe técnica pode desconectar o robô.'
+        : e.response?.data?.erro ?? 'Falha ao desconectar o robô.');
     } finally {
       setDesconectando(false);
     }
   }
 
-  async function carregarGrupos() {
-    setCarregandoGrupos(true);
-    try {
-      const { data } = await api.get('/whatsapp/grupos');
-      setGrupos(data);
-    } catch (e) {
-      setErro(e.response?.data?.erro ?? 'Não foi possível listar os grupos.');
-    } finally {
-      setCarregandoGrupos(false);
-    }
-  }
-
-  async function salvarConfig() {
-    setSalvando(true);
-    setSalvo(false);
-    try {
-      const payload = {
-        grupoJid: config.grupoJid || null,
-        reviewDelayHoras: Number(config.reviewDelayHoras) || 0,
-        reviewLink: config.reviewLink || '',
-        numeroDisplay: config.numeroDisplay || null,
-      };
-      const { data } = await api.patch('/whatsapp/config', payload);
-      setConfig({
-        grupoJid: data.grupoJid ?? null,
-        reviewDelayHoras: data.reviewDelayHoras ?? 2,
-        reviewLink: data.reviewLink ?? '',
-        numeroDisplay: data.numeroDisplay ?? '',
-      });
-      setSalvo(true);
-      setTimeout(() => setSalvo(false), 2500);
-    } catch (e) {
-      setErro(e.response?.data?.erro ?? 'Erro ao salvar configuração.');
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   useEffect(() => {
-    buscarStatus();
-    buscarConfig();
-    intervalRef.current = setInterval(buscarStatus, 4000);
-    return () => clearInterval(intervalRef.current);
+    let active = true;
+
+    function pararPolling() {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    async function tick() {
+      const ok = await buscarStatus();
+      if (!active || !ok || document.hidden) pararPolling();
+    }
+
+    function iniciarPolling() {
+      if (!active || document.hidden || intervalRef.current) return;
+      intervalRef.current = setInterval(tick, 4000);
+    }
+
+    function aoMudarVisibilidade() {
+      if (document.hidden) {
+        pararPolling();
+      } else if (active) {
+        buscarStatus().then((ok) => { if (active && ok) iniciarPolling(); });
+      }
+    }
+
+    buscarStatus().then((ok) => { if (active && ok) iniciarPolling(); });
+    document.addEventListener('visibilitychange', aoMudarVisibilidade);
+
+    return () => {
+      active = false;
+      pararPolling();
+      document.removeEventListener('visibilitychange', aoMudarVisibilidade);
+    };
   }, []);
-
-  // Quando conecta, já busca os grupos para escolha
-  useEffect(() => {
-    if (estado === 'conectado' && grupos.length === 0) carregarGrupos();
-  }, [estado]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const info = ESTADOS[estado] ?? ESTADOS.desconectado;
   const { Icon } = info;
@@ -141,45 +124,25 @@ export default function ConfiguracaoBot() {
     <div className="flex flex-col min-h-full pb-8">
       <BackHeader titulo="WhatsApp" />
       <div className="px-4 pt-4 pb-2 mb-2">
-        <p className="text-muted text-xs">Conexão do bot com o WhatsApp da sua empresa</p>
+        <p className="text-muted text-xs">Status da conexão do robô com o WhatsApp</p>
       </div>
 
       {/* Badge de estado */}
       <div className={`mx-4 flex items-center gap-2.5 rounded-xl border px-4 py-3 mb-6 ${info.bg}`}>
         <Icon size={18} className={`${info.cor} ${estado === 'conectando' ? 'animate-spin' : ''}`} strokeWidth={1.8} />
-        <div>
+        <div className="min-w-0">
           <p className={`font-semibold text-sm ${info.cor}`}>{info.label}</p>
           <p className="text-muted text-xs">
             {estado === 'conectado'
-              ? 'O bot está ativo e recebendo mensagens'
+              ? 'O robô está ativo e recebendo mensagens'
               : estado === 'aguardando_qr'
-              ? 'Escaneie o QR Code abaixo com o WhatsApp'
+              ? 'Aguardando leitura do QR Code'
               : estado === 'conectando'
               ? 'Estabelecendo conexão com o WhatsApp…'
-              : 'O bot não está conectado. Clique em Conectar para gerar o QR.'}
+              : 'O robô não está conectado no momento'}
           </p>
         </div>
       </div>
-
-      {/* Banner de configuração incompleta no servidor */}
-      {configIncompleta && (
-        <div className="mx-4 bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 mb-6">
-          <div className="flex items-start gap-2.5">
-            <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" strokeWidth={1.8} />
-            <div className="min-w-0">
-              <p className="text-warning text-sm font-semibold">Configuração pendente no servidor</p>
-              <p className="text-muted text-xs mt-1">
-                {faltando.length > 0
-                  ? <>Faltam definir: <strong className="text-white">{faltando.join(', ')}</strong>. Peça ao administrador para configurar no .env.</>
-                  : 'Há variáveis de ambiente faltando. Peça ao administrador para configurar no .env.'}
-              </p>
-              <Link to="/ajuda" className="text-warning text-xs font-medium inline-flex items-center gap-1 mt-2 hover:underline">
-                <HelpCircle size={12} /> Como configurar
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {erro && (
         <div className="mx-4 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3 mb-6">
@@ -187,7 +150,6 @@ export default function ConfiguracaoBot() {
         </div>
       )}
 
-      {/* Conexão / QR */}
       <div className="px-4">
         {carregando ? (
           <div className="flex flex-col items-center gap-3 py-12">
@@ -200,29 +162,24 @@ export default function ConfiguracaoBot() {
               <Wifi size={32} className="text-success" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="font-display font-bold text-white text-lg">Bot conectado!</p>
-              <p className="text-muted text-sm mt-1">O ChaveiroBot está ativo nesta empresa.</p>
+              <p className="font-display font-bold text-white text-lg">Robô conectado!</p>
+              <p className="text-muted text-sm mt-1">O ChaveiroBot está ativo e atendendo no WhatsApp.</p>
             </div>
-            {config.numeroDisplay && (
+            {instanceName && (
               <div className="flex items-center gap-1.5 text-muted text-xs bg-dark-700 border border-dark-600 rounded-lg px-3 py-1.5">
                 <Smartphone size={13} className="text-success" />
-                <span>Número conectado: <strong className="text-white">{config.numeroDisplay}</strong></span>
+                <span>Instância: <strong className="text-white">{instanceName}</strong></span>
               </div>
             )}
-            <button onClick={desconectar} disabled={desconectando}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg border border-danger/30 text-danger text-sm font-medium hover:bg-danger/10 transition-colors disabled:opacity-50">
-              {desconectando ? <Loader2 size={15} className="animate-spin" /> : <Power size={15} />}
-              {desconectando ? 'Desconectando…' : 'Desconectar'}
-            </button>
           </div>
-        ) : qr ? (
+        ) : ehSuperAdmin && qr ? (
           <div className="flex flex-col items-center gap-4">
             <div className="card p-4 flex flex-col items-center gap-3">
               <div className="bg-white rounded-xl p-3">
                 <img src={qr} alt="QR Code WhatsApp" className="w-56 h-56 block" />
               </div>
               <p className="text-muted text-xs text-center flex items-center gap-1">
-                <RefreshCw size={11} /> Atualizado automaticamente a cada 4s
+                <RefreshCw size={11} /> Atualizado automaticamente
               </p>
               <ComoConectar />
             </div>
@@ -233,79 +190,69 @@ export default function ConfiguracaoBot() {
               <QrCode size={32} className="text-muted" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="font-display font-bold text-white text-lg">Conectar WhatsApp</p>
-              <p className="text-muted text-sm mt-1">Gere o QR Code para vincular o número da empresa.</p>
+              <p className="font-display font-bold text-white text-lg">Robô desconectado</p>
+              {ehSuperAdmin ? (
+                <p className="text-muted text-sm mt-1">Pareie o robô para gerar o QR Code e vincular o número.</p>
+              ) : (
+                <p className="text-muted text-sm mt-1 max-w-xs">O robô é gerenciado pela equipe técnica. Em caso de indisponibilidade, fale com o suporte.</p>
+              )}
             </div>
-            <button onClick={conectar} disabled={conectando || configIncompleta}
-              className="btn-primary flex items-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
-              {conectando ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}
-              {conectando ? 'Gerando…' : 'Conectar'}
-            </button>
-            {configIncompleta && (
-              <p className="text-warning text-xs text-center flex items-center gap-1">
-                <AlertTriangle size={11} /> Conexão indisponível até o servidor ser configurado.
-              </p>
+            {ehSuperAdmin && (
+              <button onClick={parear} disabled={conectando}
+                className="btn-primary flex items-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
+                {conectando ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}
+                {conectando ? 'Gerando…' : 'Parear robô'}
+              </button>
             )}
-            <div className="w-full max-w-xs">
-              <ComoConectar />
-            </div>
           </div>
         )}
       </div>
 
-      {/* Configurações por empresa */}
-      <div className="px-4 mt-8 space-y-4">
-        <h2 className="font-display font-bold text-white text-base">Configurações</h2>
-
-        {/* Grupo de resumo */}
-        <div className="card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-white text-sm font-semibold flex items-center gap-2"><Users size={15} /> Grupo de resumos</p>
-            <button onClick={carregarGrupos} disabled={estado !== 'conectado' || carregandoGrupos}
-              className="text-muted text-xs flex items-center gap-1 disabled:opacity-40">
-              {carregandoGrupos ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Atualizar
-            </button>
-          </div>
-          <p className="text-muted text-xs mb-2">Grupo que recebe o resumo de cada serviço concluído.</p>
-          <select
-            value={config.grupoJid ?? ''}
-            onChange={(e) => setConfig((c) => ({ ...c, grupoJid: e.target.value || null }))}
-            disabled={estado !== 'conectado'}
-            className="input w-full disabled:opacity-50"
-          >
-            <option value="">— Nenhum grupo selecionado —</option>
-            {grupos.map((g) => (
-              <option key={g.id} value={g.id}>{g.nome} ({g.participantes})</option>
-            ))}
-          </select>
-          {estado !== 'conectado' && <p className="text-muted text-xs mt-1">Conecte o WhatsApp para listar os grupos.</p>}
-          {estado === 'conectado' && !carregandoGrupos && grupos.length === 0 && (
-            <p className="text-muted text-xs mt-1">Nenhum grupo encontrado — confirme que o número do bot participa de algum grupo.</p>
-          )}
-        </div>
-
-        {/* Avaliação do cliente */}
-        <div className="card p-4 space-y-3">
-          <p className="text-white text-sm font-semibold flex items-center gap-2"><Star size={15} /> Avaliação do cliente</p>
-          <div>
-            <label className="text-muted text-xs">Atraso para pedir avaliação (horas)</label>
-            <input type="number" min="0" max="168" value={config.reviewDelayHoras}
-              onChange={(e) => setConfig((c) => ({ ...c, reviewDelayHoras: e.target.value }))}
-              className="input w-full mt-1" />
-          </div>
-          <div>
-            <label className="text-muted text-xs flex items-center gap-1"><LinkIcon size={11} /> Link de avaliação</label>
-            <input type="url" placeholder="https://g.page/sua-empresa/review" value={config.reviewLink}
-              onChange={(e) => setConfig((c) => ({ ...c, reviewLink: e.target.value }))}
-              className="input w-full mt-1" />
+      {/* Ações de super-admin */}
+      {ehSuperAdmin && !carregando && (
+        <div className="px-4 mt-6">
+          <div className="card p-4 space-y-3">
+            <p className="text-white text-sm font-semibold flex items-center gap-2">
+              <ShieldCheck size={15} className="text-accent-300" /> Gestão técnica do robô
+            </p>
+            <p className="text-muted text-xs">Estas ações afetam o número único do robô para todas as empresas.</p>
+            <div className="flex gap-3">
+              <button onClick={parear} disabled={conectando || estado === 'conectado'}
+                className="btn-ghost flex-1 flex items-center justify-center gap-1.5 disabled:opacity-40">
+                {conectando ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Parear
+              </button>
+              <button onClick={desconectar} disabled={desconectando}
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-danger/30 text-danger text-sm font-medium hover:bg-danger/10 transition-colors disabled:opacity-50">
+                {desconectando ? <Loader2 size={14} className="animate-spin" /> : <Power size={14} />}
+                {desconectando ? 'Desconectando…' : 'Desconectar'}
+              </button>
+            </div>
+            {atualizadoEm && (
+              <p className="text-dark-500 text-[11px]">Última atualização de estado: {new Date(atualizadoEm).toLocaleString('pt-BR')}</p>
+            )}
           </div>
         </div>
+      )}
 
-        <button onClick={salvarConfig} disabled={salvando} className="btn-primary w-full flex items-center justify-center gap-2">
-          {salvando ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-          {salvo ? 'Salvo!' : 'Salvar configurações'}
-        </button>
-      </div>
+      {/* Nota para usuário comum */}
+      {!ehSuperAdmin && !carregando && (
+        <div className="px-4 mt-6">
+          <div className="bg-dark-700/60 border border-dark-600 rounded-xl px-4 py-3">
+            <div className="flex items-start gap-2.5">
+              <Info size={16} className="text-accent-300 shrink-0 mt-0.5" strokeWidth={1.8} />
+              <div className="min-w-0">
+                <p className="text-white text-sm font-semibold">Conexão gerenciada pela equipe técnica</p>
+                <p className="text-muted text-xs mt-1">
+                  Você não precisa parear nada — o robô usa um número único mantido pelo suporte.
+                </p>
+                <Link to="/ajuda" className="text-accent-300 text-xs font-medium inline-flex items-center gap-1 mt-2 hover:underline">
+                  <HelpCircle size={12} /> Central de ajuda
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

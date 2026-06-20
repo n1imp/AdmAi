@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
+import { formatarMoedaInput, moedaParaNumero } from '../lib/moeda.js';
 import BackHeader from '../components/BackHeader.jsx';
+import MaterialPicker from '../components/MaterialPicker.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useFormPersist } from '../hooks/useFormPersist.js';
 import { useAnalytics } from '../hooks/useAnalytics.js';
@@ -19,6 +21,7 @@ const FORM_INICIAL = {
   valorMaterial: '',
   clienteNome: '',
   clienteTelefone: '',
+  materiais: [],
 };
 
 export default function NovoServico() {
@@ -39,13 +42,22 @@ export default function NovoServico() {
     api.get('/tecnicos').then(({ data }) => setTecnicos(data.filter((t) => t.ativo)));
   }, []);
 
-  const valorCobradoNum = parseFloat(form.valorCobrado.replace(',', '.')) || 0;
-  const valorMaterialNum = parseFloat(form.valorMaterial.replace(',', '.')) || 0;
+  // Os campos de valor guardam a string mascarada (ex.: "1.234,56"); aqui
+  // convertemos para Number tanto para o cálculo do líquido quanto para a API.
+  const valorCobradoNum = moedaParaNumero(form.valorCobrado);
+  const valorMaterialNum = moedaParaNumero(form.valorMaterial);
   const valorLiquido = valorCobradoNum - valorMaterialNum;
 
   function atualizar(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
+
+  // Aplica a máscara de moeda BRL conforme o usuário digita.
+  function atualizarMoeda(campo, valorBruto) {
+    setForm((prev) => ({ ...prev, [campo]: formatarMoedaInput(valorBruto) }));
+  }
+
+  const materiaisSelecionados = Array.isArray(form.materiais) ? form.materiais : [];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -57,6 +69,11 @@ export default function NovoServico() {
 
     setEnviando(true);
     try {
+      // Materiais do catálogo no formato do contrato do backend.
+      const materiais = materiaisSelecionados
+        .filter((m) => m.materialId && Number(m.quantidade) > 0)
+        .map((m) => ({ materialId: Number(m.materialId), quantidade: Number(m.quantidade) }));
+
       await api.post('/servicos', {
         tecnico: form.tecnico,
         local: form.local,
@@ -67,6 +84,7 @@ export default function NovoServico() {
         valorMaterial: valorMaterialNum,
         clienteNome: form.clienteNome || null,
         clienteTelefone: form.clienteTelefone || null,
+        materiais,
       });
 
       clearForm();
@@ -173,6 +191,18 @@ export default function NovoServico() {
           />
         </div>
 
+        {/* Materiais do catálogo (dá baixa no estoque) */}
+        <div>
+          <label className="kpi-label block mb-2">Materiais do catálogo</label>
+          <MaterialPicker
+            value={materiaisSelecionados}
+            onChange={(materiais) => atualizar('materiais', materiais)}
+          />
+          <p className="text-[11px] text-muted mt-2">
+            Selecione os materiais usados para dar baixa automática no estoque.
+          </p>
+        </div>
+
         {/* Cliente atendido (para avaliação pós-serviço) */}
         <div className="card-accent space-y-3">
           <p className="section-label">CLIENTE ATENDIDO</p>
@@ -198,26 +228,24 @@ export default function NovoServico() {
           <div>
             <label className="kpi-label block mb-2">Valor cobrado (R$) *</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.valorCobrado}
-              onChange={(e) => atualizar('valorCobrado', e.target.value)}
+              onChange={(e) => atualizarMoeda('valorCobrado', e.target.value)}
               placeholder="0,00"
-              step="0.01"
-              min="0"
-              className="input"
+              className="input tnum"
               required
             />
           </div>
           <div>
             <label className="kpi-label block mb-2">Valor material (R$)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.valorMaterial}
-              onChange={(e) => atualizar('valorMaterial', e.target.value)}
+              onChange={(e) => atualizarMoeda('valorMaterial', e.target.value)}
               placeholder="0,00"
-              step="0.01"
-              min="0"
-              className="input"
+              className="input tnum"
             />
           </div>
         </div>

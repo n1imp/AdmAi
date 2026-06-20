@@ -10,8 +10,12 @@ export function useFormPersist(key, initialValues) {
     }
   });
 
+  // Debounce: evita gravar no localStorage a cada tecla digitada.
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(values));
+    const id = setTimeout(() => {
+      localStorage.setItem(key, JSON.stringify(values));
+    }, 300);
+    return () => clearTimeout(id);
   }, [key, values]);
 
   function clear() {

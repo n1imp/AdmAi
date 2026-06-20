@@ -91,6 +91,18 @@
            rounded-md py-2.5 px-4 text-sm font-medium transition-colors;
   }
 
+  /* ── Botão social (login com provedor — só ícone, fileira de 3) ─────────── */
+  .btn-social {
+    @apply relative inline-flex items-center justify-center h-12 w-full rounded-lg
+           bg-dark-700 border border-dark-600 text-white
+           transition-all duration-200 ease-out
+           hover:border-accent-400/60 hover:bg-dark-600 hover:-translate-y-0.5
+           hover:shadow-[0_10px_26px_-12px_rgba(34,211,238,0.55)]
+           active:translate-y-0
+           disabled:cursor-not-allowed disabled:hover:translate-y-0
+           disabled:hover:bg-dark-700 disabled:hover:border-dark-600 disabled:hover:shadow-none;
+  }
+
   /* ── Badge ────────────────────────────────────────────────────────────── */
   .badge {
     @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium

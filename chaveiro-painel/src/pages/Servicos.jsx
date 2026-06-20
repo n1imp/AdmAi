@@ -158,7 +158,9 @@ export default function Servicos() {
   const [filtroEndereco, setFiltroEndereco] = useState('');
 
   const buscar = useCallback(
-    async (novaPagina = 1, acumular = false) => {
+    // `guard` permite cancelar os setState após desmontar/refazer o efeito.
+    async (novaPagina = 1, acumular = false, guard) => {
+      const estaAtivo = typeof guard === 'function' ? guard : () => true;
       const params = new URLSearchParams({ page: String(novaPagina), limit: '15' });
       if (filtroLocal !== 'Todos') params.set('local', filtroLocal);
       if (filtroTecnico.trim()) params.set('tecnico', filtroTecnico.trim());
@@ -166,23 +168,28 @@ export default function Servicos() {
 
       try {
         const { data } = await api.get(`/servicos?${params}`);
+        if (!estaAtivo()) return;
         setTotal(data.total);
         setServicos((prev) => (acumular ? [...prev, ...data.data] : data.data));
         setErro(null);
       } catch {
-        setErro('Não foi possível carregar os serviços.');
+        if (estaAtivo()) setErro('Não foi possível carregar os serviços.');
       } finally {
-        setCarregando(false);
-        setCarregandoMais(false);
+        if (estaAtivo()) {
+          setCarregando(false);
+          setCarregandoMais(false);
+        }
       }
     },
     [filtroLocal, filtroTecnico, filtroEndereco]
   );
 
   useEffect(() => {
+    let active = true;
     setCarregando(true);
     setPage(1);
-    buscar(1, false);
+    buscar(1, false, () => active);
+    return () => { active = false; };
   }, [buscar]);
 
   async function carregarMais() {
