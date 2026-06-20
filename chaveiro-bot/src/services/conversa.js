@@ -19,6 +19,12 @@ import { converterValor } from './parser.js';
 
 const INATIVIDADE_MIN = 30;
 const GATILHO = /^\s*servi[çc]o\s*$/i;
+const GATILHO_PONTO = /^\s*ponto\s*$/i;
+
+/** Detecta o gatilho do ponto eletrônico ("ponto", case-insensitive). */
+export function ehGatilhoPonto(texto) {
+  return GATILHO_PONTO.test(texto ?? '');
+}
 
 /**
  * Normaliza um telefone brasileiro para o formato que a Evolution aceita ao
@@ -157,11 +163,14 @@ export function ehGatilho(texto) {
   return GATILHO.test(texto ?? '');
 }
 
-/** Carrega a sessão ativa (não expirada) de um JID na empresa. */
-export async function carregarSessao(empresaId, jid) {
-  const s = await prisma.sessaoConversa.findUnique({
-    where: { empresaId_jid: { empresaId, jid } },
-  });
+/**
+ * Carrega a sessão ativa (não expirada) de um JID.
+ *
+ * Modelo de número único: a sessão é chaveada SÓ por `jid` (uma conversa ativa por
+ * telefone). A `empresaId` resolvida fica gravada na própria sessão.
+ */
+export async function carregarSessao(jid) {
+  const s = await prisma.sessaoConversa.findUnique({ where: { jid } });
   if (!s) return null;
   const limite = Date.now() - INATIVIDADE_MIN * 60_000;
   if (new Date(s.atualizadoEm).getTime() < limite) {
@@ -171,59 +180,120 @@ export async function carregarSessao(empresaId, jid) {
   return s;
 }
 
-async function salvarSessao(empresaId, jid, tecnicoId, estadoAtual, dadosParciais) {
+async function salvarSessao(jid, { empresaId = null, tecnicoId = null, fluxo = 'registro_servico', estadoAtual, dadosParciais }) {
   return prisma.sessaoConversa.upsert({
-    where: { empresaId_jid: { empresaId, jid } },
-    create: { empresaId, jid, tecnicoId, estadoAtual, dadosParciais },
-    update: { estadoAtual, dadosParciais, tecnicoId },
+    where: { jid },
+    create: { jid, empresaId, tecnicoId, fluxo, estadoAtual, dadosParciais },
+    update: { empresaId, tecnicoId, fluxo, estadoAtual, dadosParciais },
   });
 }
 
-async function encerrarSessao(empresaId, jid) {
-  await prisma.sessaoConversa.deleteMany({ where: { empresaId, jid } }).catch(() => {});
+async function encerrarSessao(jid) {
+  await prisma.sessaoConversa.deleteMany({ where: { jid } }).catch(() => {});
+}
+
+function montarMenuEmpresas(candidatos) {
+  return (
+    `🏢 Seu número está cadastrado em mais de uma empresa.\n` +
+    `Para qual deseja registrar o serviço?\n\n` +
+    candidatos.map((c, i) => `${i + 1}. ${c.empresaNome}`).join('\n') +
+    `\n\nResponda com o número. Ou digite *cancelar* para sair.`
+  );
 }
 
 /**
- * Processa UMA mensagem inbound no privado.
+ * Inicia o fluxo de registro para uma empresa+técnico JÁ resolvidos (1 vínculo ou
+ * após a desambiguação). Grava a sessão e envia a saudação + 1ª pergunta.
  *
- * @param {object} ctx
- * @param {number} ctx.empresaId
- * @param {string} ctx.jid               JID do técnico
- * @param {object|null} ctx.tecnico      Técnico identificado (ou null se não cadastrado)
- * @param {string} ctx.texto             Texto da mensagem (pode ser '')
- * @param {string|null} ctx.imagemUrl    URL da foto já salva (se a msg trouxe imagem)
- * @param {(texto:string)=>Promise} ctx.responder   Envia resposta ao técnico
- * @param {(dados:object)=>Promise} ctx.concluir     Registra o serviço (recebe os dados coletados)
- * @returns {Promise<{tratado:boolean}>}  tratado=true se a mensagem pertenceu a um fluxo
+ * @param {{jid:string, empresaId:number, tecnico:{id:number,nome:string},
+ *   responder:(t:string)=>Promise}} args
  */
-export async function processarMensagemPrivada(ctx) {
-  const { empresaId, jid, tecnico, texto = '', imagemUrl = null, responder, concluir } = ctx;
-  const txt = (texto ?? '').trim();
-  const sessao = await carregarSessao(empresaId, jid);
+export async function iniciarRegistro({ jid, empresaId, tecnico, responder }) {
+  const primeiro = PASSOS[0];
+  await salvarSessao(jid, {
+    empresaId, tecnicoId: tecnico.id, fluxo: 'registro_servico',
+    estadoAtual: primeiro.id, dadosParciais: {},
+  });
+  await responder(
+    `👋 Olá, ${tecnico.nome}! Vamos registrar um serviço.\n` +
+    `A qualquer momento digite *cancelar* para sair.\n\n` + primeiro.pergunta({})
+  );
+  return { tratado: true };
+}
 
-  // ── Início de fluxo ──────────────────────────────────────────────────────
-  if (!sessao) {
-    if (!ehGatilho(txt)) return { tratado: false };
-    if (!tecnico) {
-      await responder(
-        `⚠️ Seu número não está cadastrado como técnico nesta empresa.\n` +
-        `Peça ao administrador para cadastrá-lo no painel.`
-      );
-      return { tratado: true };
-    }
-    const primeiro = PASSOS[0];
-    await salvarSessao(empresaId, jid, tecnico.id, primeiro.id, {});
-    await responder(
-      `👋 Olá, ${tecnico.nome}! Vamos registrar um serviço.\n` +
-      `A qualquer momento digite *cancelar* para sair.\n\n` + primeiro.pergunta({})
-    );
+/**
+ * Inicia a DESAMBIGUAÇÃO quando o remetente tem ≥2 empresas. Grava a sessão no
+ * fluxo `selecao_empresa` (empresaId nulo) com os candidatos e envia o menu numerado.
+ *
+ * @param {{jid:string, vinculos:Array<{empresaId:number,empresaNome:string,
+ *   tecnicoId:number,tecnicoNome:string}>, responder:(t:string)=>Promise}} args
+ */
+export async function iniciarSelecaoEmpresa({ jid, vinculos, responder }) {
+  const candidatos = vinculos.map((v) => ({
+    empresaId: v.empresaId, empresaNome: v.empresaNome,
+    tecnicoId: v.tecnicoId, tecnicoNome: v.tecnicoNome,
+  }));
+  await salvarSessao(jid, {
+    empresaId: null, tecnicoId: null, fluxo: 'selecao_empresa',
+    estadoAtual: 'aguardando_escolha', dadosParciais: { candidatos },
+  });
+  await responder(montarMenuEmpresas(candidatos));
+  return { tratado: true };
+}
+
+/**
+ * Processa a resposta do passo de desambiguação (sessão `selecao_empresa`). Um número
+ * válido seleciona a empresa e arranca o registro; inválido repete o menu.
+ *
+ * @param {{jid:string, texto:string, sessao:object, responder:(t:string)=>Promise}} args
+ */
+export async function tratarSelecaoEmpresa({ jid, texto, sessao, responder }) {
+  const txt = (texto ?? '').trim();
+  const candidatos = sessao.dadosParciais?.candidatos ?? [];
+  if (txt.toLowerCase() === 'cancelar') {
+    await encerrarSessao(jid);
+    await responder(`❌ Cancelado. Quando quiser, mande *serviço* para começar de novo.`);
     return { tratado: true };
   }
+  const n = parseInt(txt, 10);
+  if (!Number.isInteger(n) || n < 1 || n > candidatos.length) {
+    await responder(`⚠️ Escolha um número de 1 a ${candidatos.length}.\n\n${montarMenuEmpresas(candidatos)}`);
+    return { tratado: true };
+  }
+  const escolha = candidatos[n - 1];
+  return iniciarRegistro({
+    jid, empresaId: escolha.empresaId,
+    tecnico: { id: escolha.tecnicoId, nome: escolha.tecnicoNome }, responder,
+  });
+}
+
+/**
+ * Processa UMA mensagem inbound no privado para uma sessão de registro JÁ existente.
+ *
+ * O INÍCIO do fluxo (resolução de empresa/técnico e desambiguação) é decidido pelo
+ * inbound.js — esta função só dá andamento à máquina de estados (cancelar/voltar/
+ * validar/confirmar) usando a empresaId e o técnico gravados na sessão.
+ *
+ * @param {object} ctx
+ * @param {string} ctx.jid               JID do remetente
+ * @param {string} ctx.texto             Texto da mensagem (pode ser '')
+ * @param {string|null} ctx.imagemUrl    URL da foto já salva (se a msg trouxe imagem)
+ * @param {(texto:string)=>Promise} ctx.responder   Envia resposta ao remetente
+ * @param {(empresaId:number, tecnicoId:number, dados:object)=>Promise} ctx.concluir
+ *        Registra o serviço com a empresa/técnico da sessão e os dados coletados.
+ * @returns {Promise<{tratado:boolean}>}  tratado=true se a mensagem pertenceu ao fluxo
+ */
+export async function processarMensagemPrivada(ctx) {
+  const { jid, texto = '', imagemUrl = null, responder, concluir } = ctx;
+  const txt = (texto ?? '').trim();
+  const sessao = await carregarSessao(jid);
+  // Sem sessão de registro ativa → o inbound trata início/desambiguação/avaliação.
+  if (!sessao || sessao.fluxo !== 'registro_servico') return { tratado: false };
 
   // ── Comandos globais ──────────────────────────────────────────────────────
   const cmd = txt.toLowerCase();
   if (cmd === 'cancelar') {
-    await encerrarSessao(empresaId, jid);
+    await encerrarSessao(jid);
     await responder(`❌ Registro cancelado. Quando quiser, mande *serviço* para começar de novo.`);
     return { tratado: true };
   }
@@ -231,6 +301,7 @@ export async function processarMensagemPrivada(ctx) {
   const dados = sessao.dadosParciais ?? {};
   let idxAtual = IDX[sessao.estadoAtual] ?? 0;
   const passoAtual = PASSOS[idxAtual];
+  const base = { empresaId: sessao.empresaId, tecnicoId: sessao.tecnicoId, fluxo: 'registro_servico' };
 
   if (cmd === 'voltar') {
     if (idxAtual === 0) {
@@ -239,7 +310,7 @@ export async function processarMensagemPrivada(ctx) {
     }
     const anterior = PASSOS[idxAtual - 1];
     delete dados[anterior.id];
-    await salvarSessao(empresaId, jid, sessao.tecnicoId, anterior.id, dados);
+    await salvarSessao(jid, { ...base, estadoAtual: anterior.id, dadosParciais: dados });
     await responder(`↩️ Voltando.\n\n${anterior.pergunta(dados)}`);
     return { tratado: true };
   }
@@ -254,14 +325,14 @@ export async function processarMensagemPrivada(ctx) {
   // Passo de confirmação
   if (passoAtual.id === 'confirmar') {
     if (resultado.valor === 'nao') {
-      await encerrarSessao(empresaId, jid);
+      await encerrarSessao(jid);
       await responder(`❌ Registro cancelado.`);
       return { tratado: true };
     }
     // Confirmado → registra
     try {
-      await concluir({ ...dados, tecnicoId: sessao.tecnicoId });
-      await encerrarSessao(empresaId, jid);
+      await concluir(sessao.empresaId, sessao.tecnicoId, dados);
+      await encerrarSessao(jid);
     } catch (e) {
       logger.error('Falha ao concluir registro via conversa', { erro: e.message });
       await responder(`⚠️ Não consegui registrar o serviço agora. Tente novamente em instantes.`);
@@ -272,7 +343,7 @@ export async function processarMensagemPrivada(ctx) {
   // Demais passos: salva valor e avança
   dados[passoAtual.id] = resultado.valor;
   const proximo = PASSOS[idxAtual + 1];
-  await salvarSessao(empresaId, jid, sessao.tecnicoId, proximo.id, dados);
+  await salvarSessao(jid, { ...base, estadoAtual: proximo.id, dadosParciais: dados });
   await responder(proximo.pergunta(dados));
   return { tratado: true };
 }

@@ -1,25 +1,9 @@
 /**
- * Parser de mensagens de serviço enviadas no grupo WhatsApp.
+ * Utilitários de parsing/normalização para o robô de número único.
  *
- * O técnico NÃO precisa informar o próprio nome — o sistema o identifica
- * automaticamente pelo número de telefone de quem enviou a mensagem.
- *
- * O campo "Líquido" é calculado automaticamente (cobrado − material).
- *
- * O VALOR do material não é mais informado pelo técnico: ele informa apenas
- * o nome e a quantidade, e o valor é calculado a partir do catálogo (ver
- * services/catalogo.js). O campo "Valor do material" do template antigo ainda
- * é lido para retrocompatibilidade, mas é ignorado quando há material de catálogo.
+ * `converterValor` é reusado pela máquina de conversa (passo de valores monetários);
+ * as funções de telefone identificam o remetente pelo número (roteamento por telefone).
  */
-
-function extrairCampo(texto, ...labels) {
-  for (const label of labels) {
-    const regex = new RegExp(`${label}:\\s*(.+)`, 'i');
-    const match = texto.match(regex);
-    if (match) return match[1].trim();
-  }
-  return null;
-}
 
 // Exportado para reuso na máquina de conversa (passo de valores monetários).
 export function converterValor(str) {
@@ -32,52 +16,6 @@ export function converterValor(str) {
 }
 
 /**
- * Parseia uma mensagem de serviço concluído.
- * O técnico é identificado pelo remetente (número de telefone), não pelo template.
- *
- * @param {string} texto - Texto cru da mensagem
- * @returns {{ valido: boolean, camposFaltando?: string[], ... }}
- */
-export function parsearMensagem(texto) {
-  const local = extrairCampo(texto, 'Local', 'local');
-  const endereco = extrairCampo(texto, 'Endereço', 'Endereco', 'endereço', 'endereco');
-  const descricao = extrairCampo(texto, 'Serviço', 'Servico', 'serviço', 'servico');
-  const material = extrairCampo(texto, 'Material', 'material');
-
-  const valorCobradoStr = extrairCampo(texto, 'Valor cobrado', 'valor cobrado');
-  // Lido apenas para retrocompatibilidade — ignorado quando o material vem do catálogo.
-  const valorMaterialStr = extrairCampo(texto, 'Valor do material', 'valor do material', 'Valor material');
-
-  // Campo "Técnico" ainda aceito para retrocompatibilidade
-  const tecnicoNome = extrairCampo(texto, 'Técnico', 'Tecnico', 'técnico', 'tecnico');
-
-  const valorCobrado = converterValor(valorCobradoStr);
-  const valorMaterialInformado = converterValor(valorMaterialStr);
-
-  const camposFaltando = [];
-  if (!local) camposFaltando.push('Local');
-  if (!descricao) camposFaltando.push('Serviço');
-  if (!valorCobradoStr || valorCobrado === 0) camposFaltando.push('Valor cobrado');
-
-  if (camposFaltando.length > 0) {
-    return { valido: false, camposFaltando };
-  }
-
-  return {
-    valido: true,
-    tecnicoNome: tecnicoNome?.trim() ?? null, // null = identificar pelo telefone
-    local: local.trim(),
-    endereco: endereco && endereco.toUpperCase() !== 'N/A' ? endereco.trim() : null,
-    descricao: descricao.trim(),
-    // Texto cru do material — resolvido contra o catálogo em services/catalogo.js
-    material: material && material.toLowerCase() !== 'nenhum' ? material.trim() : null,
-    valorCobrado,
-    // Fallback legado: usado só se não houver material de catálogo a resolver
-    valorMaterialInformado,
-  };
-}
-
-/**
  * Normaliza um número de telefone para o formato usado como identificador.
  * Remove espaços, traços, parênteses e o prefixo +.
  * Ex: "+55 (11) 9 9408-9030" → "5511994089030"
@@ -87,6 +25,44 @@ export function parsearMensagem(texto) {
  */
 export function normalizarTelefone(jid) {
   // JIDs multi-device têm formato "numero:dispositivo@host" — strip do sufixo :N antes de remover não-dígitos
-  const numero = jid.split('@')[0].split(':')[0];
+  const numero = String(jid ?? '').split('@')[0].split(':')[0];
   return numero.replace(/\D/g, '');
+}
+
+/**
+ * Canoniza um telefone BR para dígitos com DDI 55 sempre que possível. Aceita JID,
+ * número formatado ou dígitos crus — base para identificar o remetente no robô.
+ *   "+55 (11) 9 9408-9030" / "5511994089030@s.whatsapp.net" → "5511994089030"
+ *   "11994089030" → "5511994089030"  (adiciona o DDI)
+ * Best-effort: sem DDD identificável, devolve só os dígitos.
+ */
+export function canonizarTelefone(valor) {
+  const d = normalizarTelefone(valor);
+  if (!d) return '';
+  if (d.startsWith('55') && d.length >= 12) return d; // já tem DDI 55
+  if (d.length === 10 || d.length === 11) return '55' + d; // DDD + número
+  return d; // sem DDD: não dá para inferir o DDI com segurança
+}
+
+/**
+ * Gera as variantes de um telefone BR para casamento TOLERANTE ao 9º dígito — o mesmo
+ * número pode estar gravado com ou sem o 9 (ex.: cadastro vs. o que o WhatsApp entrega).
+ *   "5511994089030" → ["5511994089030", "551194089030"]
+ *   "551133224455"  → ["551133224455", "5511933224455"]
+ * Use em `where: { telefone: { in: variantesTelefone(x) } }`.
+ */
+export function variantesTelefone(valor) {
+  const base = canonizarTelefone(valor);
+  if (!base) return [];
+  const set = new Set([base]);
+  if (base.startsWith('55') && base.length >= 12) {
+    const ddd = base.slice(2, 4);
+    const local = base.slice(4);
+    if (local.length === 9 && local.startsWith('9')) {
+      set.add('55' + ddd + local.slice(1)); // remove o 9
+    } else if (local.length === 8) {
+      set.add('55' + ddd + '9' + local); // adiciona o 9
+    }
+  }
+  return [...set];
 }

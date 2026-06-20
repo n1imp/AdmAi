@@ -9,8 +9,8 @@ import { iniciarSentry } from './config/sentry.js';
 import { criarApp } from './app.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
-import { iniciarWhatsApp } from './services/baileys.js';
 import { iniciarAgendamentos } from './services/agendador.js';
+import { bootstrapAdmin } from './services/bootstrap.js';
 
 // Sentry deve inicializar antes de tudo para capturar erros de boot.
 iniciarSentry();
@@ -21,7 +21,7 @@ const PORT = parseInt(env.PORT);
 const server = app.listen(PORT, async () => {
   logger.info(`🔑 ChaveiroBot iniciado na porta ${PORT}`, {
     ambiente: env.NODE_ENV,
-    whatsapp: env.EVOLUTION_HOST ? 'evolution' : (env.GROUP_JID ? 'baileys-legado' : 'nenhum'),
+    whatsapp: env.EVOLUTION_HOST ? 'evolution' : 'nenhum',
   });
 
   try {
@@ -32,17 +32,16 @@ const server = app.listen(PORT, async () => {
     process.exit(1);
   }
 
-  // Camada WhatsApp:
-  // - Se a Evolution estiver configurada (EVOLUTION_HOST), o gateway multi-tenant assume.
-  // - Senão, mantém o fluxo legado Baileys (grupo único) para não quebrar o ambiente atual.
+  // Cria o admin de dev a partir do .env se o banco estiver vazio (idempotente).
+  await bootstrapAdmin();
+
+  // Camada WhatsApp: o robô de número único usa a Evolution API global (EVOLUTION_HOST)
+  // ou a Cloud API (Meta) atrás da flag WHATSAPP_PROVIDER. O webhook global roteia o
+  // inbound pelo telefone do remetente — não há boot de socket aqui.
   if (env.EVOLUTION_HOST) {
     logger.info('🌐 Gateway WhatsApp via Evolution API ativo', { host: env.EVOLUTION_HOST });
-  } else if (env.GROUP_JID) {
-    iniciarWhatsApp().catch((erro) =>
-      logger.error('Falha ao iniciar WhatsApp (legado Baileys)', { erro: erro.message })
-    );
   } else {
-    logger.warn('Nenhuma camada WhatsApp configurada (defina EVOLUTION_HOST ou GROUP_JID).');
+    logger.warn('Nenhuma camada WhatsApp configurada (defina EVOLUTION_HOST).');
   }
 
   iniciarAgendamentos();

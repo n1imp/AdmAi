@@ -4,25 +4,36 @@ import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
 import { normalizarTelefone } from './parser.js';
-import { processarMensagemPrivada } from './conversa.js';
+import {
+  processarMensagemPrivada, carregarSessao, ehGatilho, ehGatilhoPonto,
+  iniciarRegistro, iniciarSelecaoEmpresa, tratarSelecaoEmpresa,
+} from './conversa.js';
+import { resolverRemetente } from './identidade.js';
+import { registrarPonto } from './ponto.js';
 import { resolverMateriaisDoServico } from './catalogo.js';
 import { registrarServico, formatarData, formatarMoeda } from './servico.js';
-import { enviarMensagemEmpresa } from './whatsapp/gateway.js';
+import { enviarMensagem } from './whatsapp/gateway.js';
 import { agendarAvaliacao, tentarCapturarResposta } from './avaliacao.js';
 
 const UPLOADS_DIR = path.resolve('./uploads');
 
 /**
- * Roteia um evento MESSAGES_UPSERT da Evolution para o fluxo de conversa privada.
+ * Roteia um evento MESSAGES_UPSERT do robô de NÚMERO ÚNICO para o fluxo correto.
  *
- * Só trata mensagens:
- *   - recebidas (não enviadas por nós: fromMe = false)
- *   - de chat PRIVADO (remoteJid termina em @s.whatsapp.net, não @g.us)
+ * Não recebe empresaId: a empresa é descoberta pelo TELEFONE do remetente.
+ * Precedência:
+ *   1) sessão ativa por jid (continuação de registro OU desambiguação em curso);
+ *   2) sem sessão → captura GLOBAL de avaliação (cliente respondendo a nota);
+ *   3) resolução do remetente em vínculos de técnico:
+ *        0 → "não cadastrado" só no gatilho 'serviço'; senão silêncio;
+ *        1 → inicia o registro direto;
+ *       >1 → desambiguação (menu de empresas), apenas no gatilho.
  *
- * @param {number} empresaId
+ * Só trata mensagens recebidas (fromMe=false) de chat PRIVADO (@s.whatsapp.net).
+ *
  * @param {object} evento  Evento já validado (shape Evolution v2)
  */
-export async function rotearMensagemInbound(empresaId, evento) {
+export async function rotearMensagemInbound(evento) {
   const msg = extrairMensagem(evento);
   if (!msg) return { tratado: false };
 
@@ -31,47 +42,90 @@ export async function rotearMensagemInbound(empresaId, evento) {
   if (msg.remoteJid.endsWith('@g.us')) return { tratado: false };
   if (!msg.remoteJid.endsWith('@s.whatsapp.net')) return { tratado: false };
 
-  const telefone = normalizarTelefone(msg.remoteJid);
-  const tecnico = await prisma.tecnico.findFirst({ where: { empresaId, telefone } });
-
-  const responder = (texto) => enviarMensagemEmpresa(empresaId, msg.remoteJid, texto);
-
-  // Captura de avaliação: se este número tem uma avaliação ENVIADA aguardando
-  // resposta e NÃO está no meio de um fluxo de registro de técnico, tratamos a
-  // mensagem como a nota do cliente. (Técnico em fluxo ativo tem prioridade.)
-  const sessaoAtiva = await prisma.sessaoConversa.findUnique({
-    where: { empresaId_jid: { empresaId, jid: msg.remoteJid } },
-    select: { id: true },
-  });
-  if (!sessaoAtiva) {
-    const captura = await tentarCapturarResposta(empresaId, telefone, msg.texto);
-    if (captura.capturado) {
-      if (captura.resposta) await responder(captura.resposta);
-      return { tratado: true };
-    }
-  }
+  const jid = msg.remoteJid;
+  const telefone = normalizarTelefone(jid);
+  const responder = (texto) => enviarMensagem(jid, texto);
 
   // Foto: se a mensagem trouxe imagem em base64, salva e gera URL pública
   const imagemUrl = msg.imagemBase64 ? await salvarFotoBase64(msg.imagemBase64, msg.mimetype) : null;
 
-  const concluir = (dados) => concluirRegistro(empresaId, msg.remoteJid, tecnico, dados, responder);
+  // 1) Há uma sessão ativa por este telefone? Continua o fluxo dela.
+  const sessao = await carregarSessao(jid);
+  if (sessao?.fluxo === 'selecao_empresa') {
+    return tratarSelecaoEmpresa({ jid, texto: msg.texto, sessao, responder });
+  }
+  if (sessao?.fluxo === 'registro_servico') {
+    const concluir = (empresaId, tecnicoId, dados) =>
+      concluirRegistro(empresaId, jid, tecnicoId, dados, responder);
+    return processarMensagemPrivada({ jid, texto: msg.texto, imagemUrl, responder, concluir });
+  }
 
-  return processarMensagemPrivada({
-    empresaId,
-    jid: msg.remoteJid,
-    tecnico,
-    texto: msg.texto,
-    imagemUrl,
-    responder,
-    concluir,
-  });
+  // 2) Sem sessão → captura GLOBAL de avaliação (o número do robô é único).
+  const captura = await tentarCapturarResposta(telefone, msg.texto);
+  if (captura.capturado) {
+    if (captura.resposta) await responder(captura.resposta);
+    return { tratado: true };
+  }
+
+  // 2.5) PONTO eletrônico: técnico cadastrado mandando "Ponto" → avança a máquina do dia.
+  if (ehGatilhoPonto(msg.texto)) {
+    const vinculosPonto = await resolverRemetente(telefone);
+    if (vinculosPonto.length === 0) {
+      await responder('Número não reconhecido. Fale com o administrador.');
+      return { tratado: true };
+    }
+    // Ponto é por pessoa; se o telefone está em N empresas, usa a 1ª (determinístico).
+    const v = vinculosPonto[0];
+    const { resposta } = await registrarPonto({
+      empresaId: v.empresaId, tecnicoId: v.tecnicoId, agora: new Date(),
+    });
+    await responder(resposta);
+    return { tratado: true };
+  }
+
+  // 3) Resolve o remetente em vínculos de técnico (por telefone, tolerante ao 9º dígito).
+  const vinculos = await resolverRemetente(telefone);
+  const gatilho = ehGatilho(msg.texto);
+
+  if (vinculos.length === 0) {
+    // Decisão de produto: só orienta no gatilho 'serviço'; senão fica em silêncio
+    // (reduz o risco de ban do número único por responder a desconhecidos).
+    if (gatilho) {
+      await responder(
+        `⚠️ Seu número ainda não está cadastrado.\n` +
+        `Crie sua conta no painel ou peça ao administrador para cadastrá-lo como técnico.`
+      );
+      return { tratado: true };
+    }
+    return { tratado: false };
+  }
+
+  // Início de registro/desambiguação só acontece no gatilho.
+  if (!gatilho) return { tratado: false };
+
+  if (vinculos.length === 1) {
+    const v = vinculos[0];
+    return iniciarRegistro({
+      jid, empresaId: v.empresaId,
+      tecnico: { id: v.tecnicoId, nome: v.tecnicoNome }, responder,
+    });
+  }
+
+  return iniciarSelecaoEmpresa({ jid, vinculos, responder });
 }
 
 /**
  * Registra o serviço a partir dos dados coletados na conversa, resolve materiais
  * no catálogo, posta o resumo no grupo da empresa e confirma ao técnico.
+ *
+ * Carrega o técnico por id (a empresa/técnico vêm da sessão resolvida por telefone).
  */
-async function concluirRegistro(empresaId, jidTecnico, tecnico, dados, responder) {
+async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, responder) {
+  const tecnico = await prisma.tecnico.findUnique({ where: { id: tecnicoId } });
+  if (!tecnico) {
+    await responder(`⚠️ Não encontrei seu cadastro de técnico. Peça ao administrador para verificar.`);
+    throw new Error('técnico não encontrado ao concluir registro');
+  }
   // Resolve materiais no catálogo (mesma regra do fluxo de grupo)
   let itens = [], naoEncontrados = [], valorMaterial = 0;
   if (dados.material) {
@@ -135,7 +189,7 @@ async function concluirRegistro(empresaId, jidTecnico, tecnico, dados, responder
   });
   if (cfg?.grupoJid) {
     const resumo = montarResumoGrupo({ tecnico, dados, valorCobrado, valorMaterial, valorLiquido, comissaoGerada, itens, servico });
-    await enviarMensagemEmpresa(empresaId, cfg.grupoJid, resumo).catch((e) =>
+    await enviarMensagem(cfg.grupoJid, resumo).catch((e) =>
       logger.warn('Falha ao postar resumo no grupo', { empresaId, erro: e.message })
     );
   } else {

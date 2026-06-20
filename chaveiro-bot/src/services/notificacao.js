@@ -69,16 +69,24 @@ export async function alertarEstoqueBaixo(material, tx = prisma) {
   if (material.estoqueMinimo == null) return;
   if (material.quantidadeAtual > material.estoqueMinimo) return;
 
+  const empresaId = material.empresaId;
   const titulo = `Estoque baixo: ${material.nome}`;
   const mensagem = `Saldo atual de ${material.quantidadeAtual} ${material.unidade} ` +
     `(mínimo ${material.estoqueMinimo} ${material.unidade}). Considere repor.`;
 
-  // Evita spam: só cria se não houver alerta não lido recente para este material
+  // Evita spam: só cria se não houver alerta não lido recente para este material.
+  // ESCOPADO à empresa do material (via usuario.empresaId) — sem isso, um título
+  // homônimo em OUTRA empresa suprimiria o alerta desta (vazamento cross-tenant).
   const jaExiste = await tx.notificacao.findFirst({
-    where: { tipo: 'estoque_baixo', lida: false, titulo },
+    where: {
+      tipo: 'estoque_baixo',
+      lida: false,
+      titulo,
+      ...(empresaId ? { usuario: { empresaId } } : {}),
+    },
   });
   if (jaExiste) return;
 
-  await notificarAdmins({ tipo: 'estoque_baixo', titulo, mensagem, link: '/estoque' }, tx);
-  logger.info('alerta_estoque_baixo', { materialId: material.id });
+  await notificarAdmins({ tipo: 'estoque_baixo', titulo, mensagem, link: '/estoque', empresaId }, tx);
+  logger.info('alerta_estoque_baixo', { materialId: material.id, empresaId });
 }

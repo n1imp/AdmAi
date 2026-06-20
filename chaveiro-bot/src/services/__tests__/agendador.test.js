@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Isola o agendador de efeitos colaterais: WhatsApp, notificações e cron.
-vi.mock('../baileys.js', () => ({ enviarMensagem: vi.fn() }));
+vi.mock('../whatsapp/gateway.js', () => ({ enviarMensagem: vi.fn() }));
 vi.mock('../notificacao.js', () => ({ notificarAdmins: vi.fn() }));
 vi.mock('../avaliacao.js', () => ({ dispararAvaliacoesPendentes: vi.fn() }));
 vi.mock('node-cron', () => ({ default: { schedule: vi.fn() } }));
@@ -12,7 +12,7 @@ vi.mock('../../db/prisma.js', () => ({
   prisma: {
     servico: { findMany: (...a) => findManyMock(...a) },
     empresa: { findFirst: async () => ({ id: 1 }) },
-    empresaWhatsapp: { findFirst: async () => null },
+    empresaWhatsapp: { findMany: async () => [] },
   },
 }));
 

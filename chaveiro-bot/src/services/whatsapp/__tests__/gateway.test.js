@@ -61,6 +61,41 @@ describe('mapearEstado', () => {
   });
 });
 
+describe('extrairQr', () => {
+  let extrairQr;
+  beforeEach(async () => {
+    envMock = {};
+    ({ extrairQr } = await carregarGateway());
+  });
+
+  it('extrai de { qrcode: { base64 } } (forma usual do create v2)', () => {
+    expect(extrairQr({ qrcode: { base64: 'data:image/png;base64,AAA' } })).toBe('data:image/png;base64,AAA');
+  });
+
+  it('extrai de { qrcode: { code } }', () => {
+    expect(extrairQr({ qrcode: { code: 'codigo-qr' } })).toBe('codigo-qr');
+  });
+
+  it('extrai de { base64 } no nível raiz (forma do connect)', () => {
+    expect(extrairQr({ base64: 'data:image/png;base64,BBB' })).toBe('data:image/png;base64,BBB');
+  });
+
+  it('extrai de { code } no nível raiz', () => {
+    expect(extrairQr({ code: 'so-code' })).toBe('so-code');
+  });
+
+  it('extrai de { qr: "..." } string direta', () => {
+    expect(extrairQr({ qr: 'data:image/png;base64,CCC' })).toBe('data:image/png;base64,CCC');
+  });
+
+  it('retorna null para payload vazio/sem QR', () => {
+    expect(extrairQr(null)).toBeNull();
+    expect(extrairQr(undefined)).toBeNull();
+    expect(extrairQr({})).toBeNull();
+    expect(extrairQr({ qrcode: {} })).toBeNull();
+  });
+});
+
 describe('configWhatsappFaltando', () => {
   let configWhatsappFaltando;
 

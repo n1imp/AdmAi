@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsearMensagem, converterValor, normalizarTelefone } from '../parser.js';
+import { converterValor, normalizarTelefone } from '../parser.js';
 
 describe('converterValor', () => {
   it('converte valores em formato pt-BR (milhar com ponto, decimal com vírgula)', () => {
@@ -32,60 +32,5 @@ describe('normalizarTelefone', () => {
 
   it('remove símbolos e espaços', () => {
     expect(normalizarTelefone('+55 (11) 9 9408-9030@s.whatsapp.net')).toBe('5511994089030');
-  });
-});
-
-describe('parsearMensagem', () => {
-  const valida = [
-    'Local: Casa do cliente',
-    'Endereço: Rua X, 123',
-    'Serviço: Troca de fechadura',
-    'Material: Fechadura tetra',
-    'Valor cobrado: R$ 250,00',
-  ].join('\n');
-
-  it('parseia uma mensagem completa válida', () => {
-    const r = parsearMensagem(valida);
-    expect(r.valido).toBe(true);
-    expect(r.local).toBe('Casa do cliente');
-    expect(r.endereco).toBe('Rua X, 123');
-    expect(r.descricao).toBe('Troca de fechadura');
-    expect(r.material).toBe('Fechadura tetra');
-    expect(r.valorCobrado).toBe(250);
-  });
-
-  it('reporta campos faltando quando local/serviço/valor ausentes', () => {
-    const r = parsearMensagem('Endereço: Rua X');
-    expect(r.valido).toBe(false);
-    expect(r.camposFaltando).toContain('Local');
-    expect(r.camposFaltando).toContain('Serviço');
-    expect(r.camposFaltando).toContain('Valor cobrado');
-  });
-
-  it('considera valor cobrado 0 como faltando', () => {
-    const txt = 'Local: X\nServiço: Y\nValor cobrado: R$ 0';
-    const r = parsearMensagem(txt);
-    expect(r.valido).toBe(false);
-    expect(r.camposFaltando).toContain('Valor cobrado');
-  });
-
-  it('normaliza endereço "N/A" para null', () => {
-    const txt = 'Local: X\nEndereço: N/A\nServiço: Y\nValor cobrado: R$ 50';
-    const r = parsearMensagem(txt);
-    expect(r.valido).toBe(true);
-    expect(r.endereco).toBeNull();
-  });
-
-  it('normaliza material "nenhum" para null', () => {
-    const txt = 'Local: X\nServiço: Y\nMaterial: Nenhum\nValor cobrado: R$ 50';
-    const r = parsearMensagem(txt);
-    expect(r.material).toBeNull();
-  });
-
-  it('aceita rótulos sem acento (retrocompatibilidade)', () => {
-    const txt = 'Local: X\nServico: Y\nValor cobrado: R$ 50';
-    const r = parsearMensagem(txt);
-    expect(r.valido).toBe(true);
-    expect(r.descricao).toBe('Y');
   });
 });

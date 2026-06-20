@@ -30,14 +30,22 @@ export function encrypt(texto) {
   return [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');
 }
 
-/** Decifra um texto produzido por encrypt(). Retorna null se entrada vazia. */
+/**
+ * Decifra um texto produzido por encrypt(). Retorna null se entrada vazia, mal
+ * formada, ou se a decifragem falhar (chave rotacionada/tampering) — em vez de
+ * lançar, para que o chamador trate graciosamente sem derrubar a requisição (500).
+ */
 export function decrypt(blob) {
   if (blob == null || blob === '') return null;
-  const [ivB64, tagB64, ctB64] = String(blob).split(':');
-  if (!ivB64 || !tagB64 || !ctB64) throw new Error('Formato de segredo cifrado inválido');
-  const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'));
-  decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
-  return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
+  try {
+    const [ivB64, tagB64, ctB64] = String(blob).split(':');
+    if (!ivB64 || !tagB64 || !ctB64) return null;
+    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'));
+    decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
+    return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
+  } catch {
+    return null;
+  }
 }
 
 /** Gera um segredo aleatório (para webhookSecret). */
@@ -56,6 +64,20 @@ export function verificarHmac(payloadRaw, assinatura, segredo) {
   const esperado = crypto.createHmac('sha256', segredo).update(payloadRaw).digest('hex');
   const a = Buffer.from(assinatura);
   const b = Buffer.from(esperado);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Compara um token recebido com o segredo em tempo constante (anti-timing).
+ * Substitui o `===`, que vaza o tamanho/posição do mismatch.
+ * @param {string} recebido  Token enviado pelo cliente (header).
+ * @param {string} segredo   Segredo esperado em claro.
+ */
+export function compararToken(recebido, segredo) {
+  if (!recebido || !segredo) return false;
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(segredo);
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }
