@@ -72,8 +72,8 @@ ao confirmar, grava via Prisma e agenda a avaliação do cliente.
 **Camada WhatsApp (dois modos):**
 - **Evolution API multi-instância** (recomendado / multi-tenant): cada empresa tem sua
   própria instância e webhook. Ativado quando `EVOLUTION_HOST` está definido.
-- **Baileys legado** (grupo único): fallback ativado por `GROUP_JID` quando não há
-  Evolution. Mantido para não quebrar o ambiente antigo.
+- **WhatsApp Cloud API (Meta)** (oficial): ativado por `WHATSAPP_PROVIDER=cloud`. Usa o
+  access token e o segredo da Meta (cifrados em repouso) e valida o webhook por assinatura.
 
 ---
 
@@ -84,7 +84,7 @@ ao confirmar, grava via Prisma e agenda a avaliação do cliente.
 | Runtime / build | Node.js 20, ESM | Vite 7 |
 | Framework | Express 4 | React 18 |
 | Dados | Prisma 5 + PostgreSQL 16 | — |
-| WhatsApp | Evolution API v2 + Baileys (legado) | — |
+| WhatsApp | Evolution API v2 + WhatsApp Cloud API (Meta) | — |
 | Auth | jsonwebtoken, jose (OIDC), bcryptjs, otplib (TOTP) | React Router 6 (guards) |
 | Agendamento | node-cron | — |
 | Validação | Zod | — |
@@ -330,7 +330,7 @@ Validadas por Zod no boot — ver [`config/env.js`](chaveiro-bot/src/config/env.
 | `EVOLUTION_API_KEY` | se `EVOLUTION_HOST` | API key global da Evolution |
 | `ENCRYPTION_KEY` | se `EVOLUTION_HOST` | Chave mestra p/ cifrar segredos por empresa (≥16; ≥32 recomendado) |
 | `PUBLIC_URL` | recomendada | URL pública do backend (monta o webhook) |
-| `GROUP_JID` | legado | Ativa o fluxo Baileys de grupo único (sem Evolution) |
+| `WHATSAPP_PROVIDER` | — | Provedor WhatsApp: `evolution` (padrão) ou `cloud` (Meta) |
 | `GOOGLE_CLIENT_ID` · `MICROSOFT_CLIENT_ID` · `MICROSOFT_TENANT` · `APPLE_CLIENT_ID` | — | Habilitam login social por provedor |
 | `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio |
 | `SENTRY_DSN` · `LOG_LEVEL` · `APP_VERSION` | — | Observabilidade (ausente = Sentry off) |
@@ -377,7 +377,7 @@ AdmAi/
 │   │   │   └── whatsapp.js        # Gateway + webhook inbound por empresa
 │   │   └── services/
 │   │       ├── auth.js  oauth.js  totp.js  senha.js   # autenticação
-│   │       ├── baileys.js  whatsapp/gateway.js  whatsapp/crypto.js  whatsapp/evolution-client.js
+│   │       ├── whatsapp/gateway.js  whatsapp/cloud-gateway.js  whatsapp/crypto.js  whatsapp/evolution-client.js  whatsapp/cloud-client.js
 │   │       ├── inbound.js  conversa.js                # roteamento + máquina de estados
 │   │       ├── parser.js  servico.js                  # parsing e CRUD de serviço
 │   │       ├── estoque.js  catalogo.js                # materiais e estoque
