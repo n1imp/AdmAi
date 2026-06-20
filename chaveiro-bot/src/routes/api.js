@@ -1,20 +1,32 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import QRCode from 'qrcode';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { prismaParaEmpresa } from '../db/tenant.js';
-import { gerarRelatorioPDF } from '../services/relatorio.js';
+import { gerarRelatorioPDF, gerarRelatorioPonto, gerarCsvPonto } from '../services/relatorio.js';
+import { resumoMes } from '../services/ponto.js';
 import { buscarOuCriarTecnico } from '../services/servico.js';
 import { movimentarEstoque, darBaixaPorServico } from '../services/estoque.js';
 import { agendarAvaliacao } from '../services/avaliacao.js';
 import { resolverPreferencias } from '../services/notificacao.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { contemInsensivel } from '../utils/busca.js';
 import { gerarJWT, verificarJWT, tokenAindaValido } from '../services/auth.js';
 import { avaliarForcaSenha } from '../services/senha.js';
+import {
+  gerarSegredoTotp, montarOtpauthUrl, verificarCodigo,
+  cifrarSegredo, decifrarSegredo,
+} from '../services/totp.js';
+import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
+import { canonizarTelefone } from '../services/parser.js';
+import { enviarMensagem } from '../services/whatsapp/gateway.js';
+import { verificarIdToken, provedoresHabilitados, OAuthError } from '../services/oauth.js';
 
 export const apiRouter = Router();
 
@@ -31,7 +43,9 @@ async function requireAuth(req, res, next) {
     if (!tokenAindaValido(payload, usuario.tokenValidoApos)) {
       return res.status(401).json({ erro: 'Sessão expirada. Faça login novamente.' });
     }
-    req.user = { id: usuario.id, nome: usuario.nome, admin: usuario.admin, empresaId: usuario.empresaId };
+    // Usa o empresaId AUTORITATIVO do banco — nunca o derivado do token (pode estar
+    // defasado se o vínculo da empresa mudou após a emissão do JWT).
+    req.user = { id: usuario.id, nome: usuario.nome, username: usuario.username, admin: usuario.admin, empresaId: usuario.empresaId };
     // Client Prisma escopado à empresa do usuário — TODA query de negócio usa req.db.
     req.db = prismaParaEmpresa(usuario.empresaId);
     next();
@@ -48,6 +62,16 @@ function adminOnly(req, res, next) {
 export { requireAuth };
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
+
+// Teto de linhas para findMany de agregação (dashboard/perfil). Evita carregar a
+// tabela inteira em memória num intervalo amplo; um valor alto cobre os casos reais
+// sem sobrecarregar o processo.
+const MAX_AGREGACAO = 10_000;
+
+// Verifica se um Date é válido (não NaN) — evita propagar Invalid Date às queries.
+function dataValida(d) {
+  return d instanceof Date && !Number.isNaN(d.getTime());
+}
 
 function construirFiltroPeriodo(periodo, inicio, fim) {
   const agora = new Date();
@@ -68,14 +92,20 @@ function construirFiltroPeriodo(periodo, inicio, fim) {
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     return { gte: inicioMes, lte: agora };
   }
-  if (inicio && fim) {
-    return { gte: new Date(inicio), lte: new Date(fim + 'T23:59:59.999Z') };
+  // Datas vindas da query (strings) são validadas: strings malformadas são
+  // tratadas como ausentes para nunca enviar `Invalid Date` ao Prisma.
+  const dInicio = inicio ? new Date(inicio) : null;
+  const dFim = fim ? new Date(fim + 'T23:59:59.999Z') : null;
+  const inicioOk = dataValida(dInicio);
+  const fimOk = dataValida(dFim);
+  if (inicioOk && fimOk) {
+    return { gte: dInicio, lte: dFim };
   }
-  if (inicio) {
-    return { gte: new Date(inicio), lte: agora };
+  if (inicioOk) {
+    return { gte: dInicio, lte: agora };
   }
-  if (fim) {
-    return { gte: new Date('2000-01-01'), lte: new Date(fim + 'T23:59:59.999Z') };
+  if (fimOk) {
+    return { gte: new Date('2000-01-01'), lte: dFim };
   }
   const umMesAtras = new Date(hoje);
   umMesAtras.setMonth(hoje.getMonth() - 1);
@@ -114,6 +144,68 @@ async function gerarSlugEmpresa(nome) {
   return slug;
 }
 
+// Gera um username único a partir de um e-mail/nome (mesma ideia do slug, mas com
+// `_` e respeitando o regex de username). Usado no cadastro via login social, onde
+// o usuário não escolhe um username.
+async function gerarUsernameUnico(base) {
+  const limpo = String(base || '')
+    .split('@')[0]
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
+    .toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
+    .slice(0, 24) || 'usuario';
+  let username = limpo;
+  let n = 1;
+  while (await prisma.usuario.findUnique({ where: { username } })) {
+    username = `${limpo}_${n++}`;
+  }
+  return username;
+}
+
+// Emite a sessão padrão pós-autenticação. Reusa a MESMA regra do login por senha:
+// se o 2FA está ativo (com segredo TOTP), devolve um desafio curto em vez do token.
+function responderSessao(res, usuario, via) {
+  if (usuario.twoFactorAtivo && usuario.totpSecret) {
+    logger.info('login_2fa_required', { userId: usuario.id, via });
+    return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id) });
+  }
+  const token = gerarJWT(usuario);
+  logger.info('login_success', { userId: usuario.id, via });
+  return res.json({ token, nome: usuario.nome, admin: usuario.admin });
+}
+
+// ── DESAFIO 2FA (JWT curto entre senha-OK e código TOTP) ──────────────────────
+// Após a senha conferir, se o 2FA está ativo emitimos um "desafio" de 5 min
+// (assinado com o JWT_SECRET, payload { sub, tipo:'2fa' }). O cliente troca esse
+// desafio + o código de 6 dígitos pelo token de sessão normal. O desafio NÃO
+// autentica sessão alguma — só prova que a etapa de senha passou recentemente.
+function gerarDesafio2fa(userId) {
+  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: '5m',
+  });
+}
+
+function verificarDesafio2fa(desafio) {
+  const payload = jwt.verify(desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
+  if (payload?.tipo !== '2fa' || !payload?.sub) {
+    throw new Error('Desafio 2FA inválido');
+  }
+  return payload;
+}
+
+// ── OTP DE TELEFONE (entregue pelo WhatsApp do robô) ──────────────────────────
+// Gera um código, persiste cifrado no usuário e entrega via WhatsApp. Best-effort:
+// se o robô estiver offline o fluxo não falha (o usuário pode reenviar). Nunca loga
+// o código.
+async function gerarEEnviarOtp(userId, telefone) {
+  const codigo = await definirOtpTelefone(userId);
+  const destino = canonizarTelefone(telefone);
+  if (destino) {
+    await enviarMensagem(destino, `🔑 Seu código de verificação ADMAI é *${codigo}* (válido por 10 minutos).`)
+      .catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
+  }
+}
+
 // ── ROTAS PÚBLICAS (sem auth) ─────────────────────────────────────────────────
 
 // POST /api/auth/login
@@ -136,16 +228,111 @@ apiRouter.post('/auth/login', async (req, res) => {
       logger.info('login_failure', { username, motivo: 'user_inactive' });
       return res.status(401).json({ erro: 'Usuário inativo' });
     }
+    // Conta criada só por login social não tem senha — orienta a entrar pelo provedor.
+    if (!usuario.senhaHash) {
+      logger.info('login_failure', { username, motivo: 'sem_senha_social' });
+      return res.status(401).json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
+    }
     const senhaCorreta = await bcrypt.compare(password, usuario.senhaHash);
     if (!senhaCorreta) {
       logger.info('login_failure', { username, motivo: 'invalid_password' });
       return res.status(401).json({ erro: 'Credenciais inválidas' });
+    }
+    // 2FA ativo → não emite o token de sessão; devolve um desafio curto. O cliente
+    // completa em POST /auth/login/2fa com o código do app autenticador.
+    // Guarda defensiva: só exige 2FA quando há um segredo TOTP de fato. Usuários
+    // que ficaram com o flag legado (antigo PATCH /me/2fa booleano, sem segredo)
+    // NÃO ficam trancados para fora — entram normalmente.
+    if (usuario.twoFactorAtivo && usuario.totpSecret) {
+      logger.info('login_2fa_required', { userId: usuario.id, metodo: 'totp' });
+      return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id), metodo: 'totp' });
+    }
+    // 2FA por TELEFONE (OTP via WhatsApp). Só vale com telefone presente.
+    if (usuario.phone2faAtivo && usuario.telefone) {
+      await gerarEEnviarOtp(usuario.id, usuario.telefone);
+      logger.info('login_2fa_required', { userId: usuario.id, metodo: 'telefone' });
+      return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id), metodo: 'telefone' });
     }
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id });
     res.json({ token, nome: usuario.nome, admin: usuario.admin });
   } catch (erro) {
     logger.error('Erro POST /auth/login', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/auth/login/2fa — segunda etapa do login quando o 2FA está ativo.
+// Troca { desafio, codigo } pelo token de sessão (mesmo shape do login normal).
+apiRouter.post('/auth/login/2fa', async (req, res) => {
+  const schema = z.object({
+    desafio: z.string().min(1),
+    codigo: z.string().min(1),
+  });
+  const parse = schema.safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+  try {
+    let payload;
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
+
+    const segredo = decifrarSegredo(usuario.totpSecret);
+    const ok = await verificarCodigo(segredo, parse.data.codigo);
+    if (!ok) {
+      logger.info('login_2fa_failure', { userId: usuario.id });
+      // 400 (não 401) de propósito: o interceptor do painel redireciona p/ /login
+      // em qualquer 401, o que descartaria o passo do 2FA. 400 mantém o erro inline
+      // e permite o usuário tentar o código de novo na mesma tela.
+      return res.status(400).json({ erro: 'Código inválido' });
+    }
+    const token = gerarJWT(usuario);
+    logger.info('login_success', { userId: usuario.id, via: '2fa' });
+    res.json({ token, nome: usuario.nome, admin: usuario.admin });
+  } catch (erro) {
+    logger.error('Erro POST /auth/login/2fa', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/auth/login/2fa-telefone — segunda etapa quando o 2FA por TELEFONE está
+// ativo. Espelha /auth/login/2fa, mas valida o OTP entregue por WhatsApp.
+apiRouter.post('/auth/login/2fa-telefone', async (req, res) => {
+  const schema = z.object({
+    desafio: z.string().min(1),
+    codigo: z.string().min(1),
+  });
+  const parse = schema.safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+  try {
+    let payload;
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario.phone2faAtivo) return res.status(400).json({ erro: '2FA por telefone não está ativo' });
+
+    if (!validarOtpTelefone(usuario, parse.data.codigo)) {
+      logger.info('login_2fa_telefone_failure', { userId: usuario.id });
+      // 400 (não 401) de propósito: mantém o erro inline no painel (ver /auth/login/2fa).
+      return res.status(400).json({ erro: 'Código inválido ou expirado' });
+    }
+    await limparOtpTelefone(usuario.id);
+    const token = gerarJWT(usuario);
+    logger.info('login_success', { userId: usuario.id, via: '2fa-telefone' });
+    res.json({ token, nome: usuario.nome, admin: usuario.admin });
+  } catch (erro) {
+    logger.error('Erro POST /auth/login/2fa-telefone', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -188,13 +375,14 @@ apiRouter.post('/setup', async (req, res) => {
 });
 
 // POST /api/auth/register — auto-cadastro público (usuário comum)
-// Cadastro rígido: e-mail obrigatório e único, senha forte.
+// Cadastro rígido: e-mail e TELEFONE obrigatórios, senha forte. O telefone é a
+// identidade do dono no robô de número único — verificado por OTP via WhatsApp.
 const registerSchema = z.object({
   nome:        z.string().min(2),
   nomeEmpresa: z.string().min(2),
   username:    z.string().min(3).regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
   email:       z.string().email(),
-  telefone:    z.string().min(8).max(20).optional().nullable(),
+  telefone:    z.string().min(8).max(20),
   senha:       z.string().min(8),
 });
 
@@ -207,6 +395,7 @@ apiRouter.post('/auth/register', async (req, res) => {
   if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
 
   const senhaHash = await bcrypt.hash(senha, 12);
+  const telefoneCanonico = canonizarTelefone(telefone);
 
   try {
     const slug = await gerarSlugEmpresa(nomeEmpresa);
@@ -215,10 +404,12 @@ apiRouter.post('/auth/register', async (req, res) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
       return tx.usuario.create({
-        data: { nome, username, email, telefone: telefone ?? null, senhaHash, admin: true, empresaId: empresa.id },
-        select: { id: true, nome: true, username: true, email: true, admin: true, ativo: true, empresaId: true, criadoEm: true },
+        data: { nome, username, email, telefone: telefoneCanonico, senhaHash, admin: true, empresaId: empresa.id },
+        select: { id: true, nome: true, username: true, email: true, telefone: true, admin: true, ativo: true, telefoneVerificado: true, empresaId: true, criadoEm: true },
       });
     });
+    // Envia o OTP de verificação do telefone (best-effort; o painel mostra a etapa).
+    await gerarEEnviarOtp(usuario.id, telefoneCanonico);
     const token = gerarJWT(usuario);
     logger.info({ event: 'user_registered', userId: usuario.id });
     return res.status(201).json({ token, ...usuario });
@@ -228,6 +419,110 @@ apiRouter.post('/auth/register', async (req, res) => {
       return res.status(409).json({ erro: `${campo} já em uso` });
     }
     logger.error('Erro POST /auth/register', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── LOGIN SOCIAL (OIDC: Google / Microsoft / Apple) ───────────────────────────
+
+// GET /api/auth/providers — quais provedores estão habilitados (client id
+// configurada). O painel usa isso para exibir apenas os botões disponíveis.
+apiRouter.get('/auth/providers', (req, res) => {
+  res.json(provedoresHabilitados());
+});
+
+const PROVEDORES_VALIDOS = new Set(['google', 'microsoft', 'apple']);
+const oauthSchema = z.object({
+  idToken: z.string().min(1),
+  nonce: z.string().min(1).optional(),
+});
+
+// POST /api/auth/oauth/:provedor — entra/cadastra com login social.
+// Verifica o ID token → acha vínculo (provedor,sub) → ou vincula por e-mail
+// verificado → ou cria conta+empresa nova. Emite a MESMA sessão do login normal.
+apiRouter.post('/auth/oauth/:provedor', async (req, res) => {
+  const provedor = String(req.params.provedor || '').toLowerCase();
+  if (!PROVEDORES_VALIDOS.has(provedor)) {
+    return res.status(404).json({ erro: 'Provedor não suportado' });
+  }
+  const parse = oauthSchema.safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+  let identidade;
+  try {
+    identidade = await verificarIdToken(provedor, parse.data.idToken, parse.data.nonce);
+  } catch (erro) {
+    if (erro instanceof OAuthError) {
+      logger.info('oauth_falha', { provedor, codigo: erro.codigo });
+      // 400 (não 401) em falha de validação de token: o interceptor do painel
+      // redireciona p/ /login em qualquer 401, descartando o erro inline. 404 só
+      // para provedor indisponível/desconhecido.
+      const status = erro.status === 404 ? 404 : 400;
+      const msg = status === 404
+        ? 'Provedor indisponível'
+        : 'Não foi possível validar o login social. Tente novamente.';
+      return res.status(status).json({ erro: msg });
+    }
+    logger.error('Erro verificar ID token', { provedor, erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+
+  const { sub, email, emailVerificado, nome } = identidade;
+
+  try {
+    // 1) Já existe vínculo (provedor, sub)? Login direto.
+    const vinculo = await prisma.contaSocial.findUnique({
+      where: { provedor_provedorSub: { provedor, provedorSub: sub } },
+      include: { usuario: true },
+    });
+    if (vinculo) {
+      if (!vinculo.usuario.ativo) return res.status(403).json({ erro: 'Usuário inativo' });
+      return responderSessao(res, vinculo.usuario, `oauth:${provedor}`);
+    }
+
+    // 2) Sem vínculo: se o provedor CONFIRMA o e-mail, vincula a uma conta existente.
+    //    Só com e-mail verificado — evita account-takeover por e-mail forjado.
+    if (email && emailVerificado) {
+      const existente = await prisma.usuario.findUnique({ where: { email } });
+      if (existente) {
+        if (!existente.ativo) return res.status(403).json({ erro: 'Usuário inativo' });
+        await prisma.contaSocial.create({
+          data: { usuarioId: existente.id, provedor, provedorSub: sub, email },
+        });
+        logger.info('oauth_vinculo_email', { userId: existente.id, provedor });
+        return responderSessao(res, existente, `oauth:${provedor}`);
+      }
+    }
+
+    // 3) Conta nova: cria empresa + whatsapp + usuário (admin, sem senha) + vínculo.
+    //    Só guardamos o e-mail no Usuario quando verificado (mantém a coluna confiável
+    //    e livre de colisões); o e-mail bruto fica em ContaSocial para referência.
+    const emailConfiavel = email && emailVerificado ? email : null;
+    const nomeEmpresa = `Empresa de ${nome}`.slice(0, 60);
+    const slug = await gerarSlugEmpresa(nomeEmpresa);
+    const username = await gerarUsernameUnico(email || nome);
+    const usuario = await prisma.$transaction(async (tx) => {
+      const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
+      await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      const novo = await tx.usuario.create({
+        data: {
+          nome, username, email: emailConfiavel,
+          senhaHash: null, admin: true, empresaId: empresa.id,
+          emailVerificado: Boolean(emailConfiavel),
+        },
+      });
+      await tx.contaSocial.create({
+        data: { usuarioId: novo.id, provedor, provedorSub: sub, email: email ?? null },
+      });
+      return novo;
+    });
+    logger.info('oauth_cadastro', { userId: usuario.id, provedor });
+    return responderSessao(res, usuario, `oauth:${provedor}`);
+  } catch (erro) {
+    if (erro.code === 'P2002') {
+      return res.status(409).json({ erro: 'Conflito ao criar a conta. Tente novamente.' });
+    }
+    logger.error('Erro POST /auth/oauth', { provedor, erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -311,10 +606,14 @@ apiRouter.patch('/me/senha', async (req, res) => {
 
     const senhaHash = await bcrypt.hash(novaSenha, 12);
     const agora = new Date();
+    // Corte 1s no passado: o `iat` do JWT é em segundos (arredondado para baixo),
+    // então um corte = agora poderia invalidar o token recém-emitido na mesma
+    // janela de segundo. Recuar 1s garante que o novo token permaneça válido.
+    const corte = new Date(agora.getTime() - 1000);
     // Invalida todas as sessões antigas — o próprio cliente recebe novo token
     await prisma.usuario.update({
       where: { id: req.user.id },
-      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora },
+      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: corte },
     });
     const token = gerarJWT(usuario);
     logger.info('senha_alterada', { userId: req.user.id });
@@ -325,20 +624,199 @@ apiRouter.patch('/me/senha', async (req, res) => {
   }
 });
 
-// PATCH /api/me/2fa — ativa/desativa 2FA (estrutura; fluxo TOTP plugável depois)
-apiRouter.patch('/me/2fa', async (req, res) => {
+// PATCH /api/me/2fa — REMOVIDO. O 2FA real é TOTP (app autenticador), via os
+// endpoints /me/2fa/setup, /me/2fa/ativar e /me/2fa/desativar abaixo. Mantemos um
+// 410 Gone para o frontend antigo parar de alternar o boolean (que deslogava).
+apiRouter.patch('/me/2fa', async (_req, res) => {
+  res.status(410).json({ erro: 'Use /me/2fa/setup, /me/2fa/ativar e /me/2fa/desativar (TOTP).' });
+});
+
+// POST /api/me/2fa/setup — inicia a configuração: gera um segredo TOTP pendente
+// (cifrado), monta a URI otpauth e o QR (data URL) para o usuário escanear no app.
+// O 2FA só passa a valer após confirmar um código em /me/2fa/ativar.
+apiRouter.post('/me/2fa/setup', async (req, res) => {
   try {
-    const schema = z.object({ ativo: z.boolean() });
+    const secret = gerarSegredoTotp();
+    const otpauthUrl = montarOtpauthUrl(secret, req.user.nome);
+    const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
+    // Guarda o segredo como PENDENTE (cifrado); não ativa ainda.
+    await prisma.usuario.update({
+      where: { id: req.user.id },
+      data: { totpPendente: cifrarSegredo(secret) },
+    });
+    res.json({ secret, otpauthUrl, qrDataUrl });
+  } catch (erro) {
+    logger.error('Erro POST /me/2fa/setup', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/me/2fa/ativar — confirma o setup verificando um código de 6 dígitos
+// contra o segredo pendente. Se válido, promove pendente→totpSecret e ativa o 2FA.
+apiRouter.post('/me/2fa/ativar', async (req, res) => {
+  try {
+    const schema = z.object({ codigo: z.string().min(1) });
     const parse = schema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-    const usuario = await prisma.usuario.update({
+
+    const usuario = await prisma.usuario.findUnique({
       where: { id: req.user.id },
-      data: { twoFactorAtivo: parse.data.ativo },
-      select: SELECT_ME,
+      select: { totpPendente: true },
     });
-    res.json(usuario);
+    const segredo = decifrarSegredo(usuario?.totpPendente);
+    if (!segredo) return res.status(400).json({ erro: 'Inicie a configuração em /me/2fa/setup' });
+
+    const ok = await verificarCodigo(segredo, parse.data.codigo);
+    if (!ok) return res.status(400).json({ erro: 'Código inválido' });
+
+    await prisma.usuario.update({
+      where: { id: req.user.id },
+      data: {
+        totpSecret: cifrarSegredo(segredo),
+        totpPendente: null,
+        twoFactorAtivo: true,
+      },
+    });
+    logger.info('2fa_ativado', { userId: req.user.id });
+    res.json({ twoFactorAtivo: true });
   } catch (erro) {
-    logger.error('Erro PATCH /me/2fa', { erro: erro.message });
+    logger.error('Erro POST /me/2fa/ativar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/me/2fa/desativar — desliga o 2FA verificando um código atual.
+// Limpa o segredo confirmado e qualquer pendência.
+apiRouter.post('/me/2fa/desativar', async (req, res) => {
+  try {
+    const schema = z.object({ codigo: z.string().min(1) });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { totpSecret: true, twoFactorAtivo: true },
+    });
+    if (!usuario?.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
+
+    const segredo = decifrarSegredo(usuario.totpSecret);
+    const ok = await verificarCodigo(segredo, parse.data.codigo);
+    if (!ok) return res.status(400).json({ erro: 'Código inválido' });
+
+    await prisma.usuario.update({
+      where: { id: req.user.id },
+      data: { twoFactorAtivo: false, totpSecret: null, totpPendente: null },
+    });
+    logger.info('2fa_desativado', { userId: req.user.id });
+    res.json({ twoFactorAtivo: false });
+  } catch (erro) {
+    logger.error('Erro POST /me/2fa/desativar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── VERIFICAÇÃO / 2FA POR TELEFONE (OTP via WhatsApp do robô) ─────────────────
+
+// POST /api/me/telefone/otp/enviar — (re)gera e envia o OTP ao telefone do usuário.
+apiRouter.post('/me/telefone/otp/enviar', async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { telefone: true },
+    });
+    if (!usuario?.telefone) return res.status(400).json({ erro: 'Cadastre um telefone primeiro' });
+    await gerarEEnviarOtp(req.user.id, usuario.telefone);
+    res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /me/telefone/otp/enviar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/me/telefone/otp/verificar — confirma o código; marca telefoneVerificado
+// e cria/vincula o Técnico do DONO (identidade no robô de número único).
+apiRouter.post('/me/telefone/otp/verificar', async (req, res) => {
+  try {
+    const schema = z.object({ codigo: z.string().min(1) });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, nome: true, telefone: true, empresaId: true, telefoneOtpHash: true, telefoneOtpExpira: true },
+    });
+    if (!usuario?.telefone) return res.status(400).json({ erro: 'Cadastre um telefone primeiro' });
+    if (!validarOtpTelefone(usuario, parse.data.codigo)) {
+      return res.status(400).json({ erro: 'Código inválido ou expirado' });
+    }
+
+    const telefone = canonizarTelefone(usuario.telefone);
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { telefoneVerificado: true, telefoneOtpHash: null, telefoneOtpExpira: null },
+    });
+
+    // Dono → Técnico: cria (ou vincula) o técnico-self do dono na empresa, para que o
+    // robô reconheça o remetente pelo telefone. Tolera técnico pré-existente.
+    try {
+      const existente = await prisma.tecnico.findFirst({
+        where: { empresaId: usuario.empresaId, telefone },
+      });
+      if (existente) {
+        if (existente.usuarioId == null) {
+          await prisma.tecnico.update({ where: { id: existente.id }, data: { usuarioId: usuario.id, ativo: true } });
+        } else if (existente.usuarioId !== usuario.id) {
+          // Já vinculado a OUTRO usuário na mesma empresa (não deveria ocorrer: cada
+          // dono cria a própria empresa vazia). Não sobrescreve o vínculo — só registra.
+          logger.warn('Técnico do telefone já vinculado a outro usuário', {
+            userId: usuario.id, tecnicoId: existente.id, empresaId: usuario.empresaId,
+          });
+        }
+      } else {
+        await prisma.tecnico.create({
+          data: { empresaId: usuario.empresaId, nome: usuario.nome, telefone, telefoneDisplay: telefone, usuarioId: usuario.id },
+        });
+      }
+    } catch (e) {
+      // Não falha a verificação por causa do técnico (ex.: corrida/duplicidade).
+      logger.warn('Falha ao criar técnico do dono na verificação', { userId: usuario.id, erro: e.message });
+    }
+
+    logger.info('telefone_verificado', { userId: usuario.id });
+    res.json({ telefoneVerificado: true });
+  } catch (erro) {
+    logger.error('Erro POST /me/telefone/otp/verificar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/me/telefone/2fa/ativar — liga o 2FA por telefone (exige telefone verificado).
+apiRouter.post('/me/telefone/2fa/ativar', async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { telefoneVerificado: true },
+    });
+    if (!usuario?.telefoneVerificado) {
+      return res.status(400).json({ erro: 'Verifique seu telefone antes de ativar o 2FA por telefone' });
+    }
+    await prisma.usuario.update({ where: { id: req.user.id }, data: { phone2faAtivo: true } });
+    logger.info('phone2fa_ativado', { userId: req.user.id });
+    res.json({ phone2faAtivo: true });
+  } catch (erro) {
+    logger.error('Erro POST /me/telefone/2fa/ativar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/me/telefone/2fa/desativar — desliga o 2FA por telefone.
+apiRouter.post('/me/telefone/2fa/desativar', async (req, res) => {
+  try {
+    await prisma.usuario.update({ where: { id: req.user.id }, data: { phone2faAtivo: false } });
+    logger.info('phone2fa_desativado', { userId: req.user.id });
+    res.json({ phone2faAtivo: false });
+  } catch (erro) {
+    logger.error('Erro POST /me/telefone/2fa/desativar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -480,9 +958,9 @@ apiRouter.get('/servicos', async (req, res) => {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
     const where = {};
-    if (tecnico) where.tecnico = { nome: { contains: tecnico, mode: 'insensitive' } };
-    if (local) where.local = { contains: local, mode: 'insensitive' };
-    if (endereco) where.endereco = { contains: endereco, mode: 'insensitive' };
+    if (tecnico) where.tecnico = { nome: contemInsensivel(tecnico) };
+    if (local) where.local = contemInsensivel(local);
+    if (endereco) where.endereco = contemInsensivel(endereco);
     if (inicio || fim) where.criadoEm = construirFiltroPeriodo('custom', inicio, fim);
 
     const [servicos, total] = await Promise.all([
@@ -651,6 +1129,58 @@ apiRouter.get('/avaliacoes', async (req, res) => {
   }
 });
 
+// ── GET /api/avaliacoes/config ────────────────────────────────────────────────
+// Config da solicitação de avaliação (migrada da aba WhatsApp): ativar/desativar,
+// template da mensagem, intervalo (horas) e link. Vive em EmpresaWhatsapp.
+apiRouter.get('/avaliacoes/config', async (req, res) => {
+  try {
+    const cfg = await req.db.empresaWhatsapp.findUnique({
+      where: { empresaId: req.user.empresaId },
+      select: { reviewAtivo: true, reviewTemplate: true, reviewDelayHoras: true, reviewLink: true },
+    });
+    res.json({
+      reviewAtivo: cfg?.reviewAtivo ?? true,
+      reviewTemplate: cfg?.reviewTemplate ?? null,
+      reviewDelayHoras: cfg?.reviewDelayHoras ?? 2,
+      reviewLink: cfg?.reviewLink ?? null,
+    });
+  } catch (erro) {
+    logger.error('Erro GET /avaliacoes/config', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── PATCH /api/avaliacoes/config ──────────────────────────────────────────────
+apiRouter.patch('/avaliacoes/config', async (req, res) => {
+  try {
+    const schema = z.object({
+      reviewAtivo: z.boolean().optional(),
+      reviewTemplate: z.string().max(1000).nullable().optional().or(z.literal('')),
+      reviewDelayHoras: z.number().int().min(0).max(720).optional(),
+      reviewLink: z.string().max(500).nullable().optional().or(z.literal('')),
+    });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+
+    const data = {};
+    if (parse.data.reviewAtivo !== undefined) data.reviewAtivo = parse.data.reviewAtivo;
+    if (parse.data.reviewTemplate !== undefined) data.reviewTemplate = parse.data.reviewTemplate === '' ? null : parse.data.reviewTemplate;
+    if (parse.data.reviewDelayHoras !== undefined) data.reviewDelayHoras = parse.data.reviewDelayHoras;
+    if (parse.data.reviewLink !== undefined) data.reviewLink = parse.data.reviewLink === '' ? null : parse.data.reviewLink;
+
+    // updateMany escopado (empresaWhatsapp já é escopado por req.db).
+    await req.db.empresaWhatsapp.updateMany({ where: { empresaId: req.user.empresaId }, data });
+    const cfg = await req.db.empresaWhatsapp.findUnique({
+      where: { empresaId: req.user.empresaId },
+      select: { reviewAtivo: true, reviewTemplate: true, reviewDelayHoras: true, reviewLink: true },
+    });
+    res.json(cfg);
+  } catch (erro) {
+    logger.error('Erro PATCH /avaliacoes/config', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 // ── GET /api/dashboard ────────────────────────────────────────────────────────
 apiRouter.get('/dashboard', async (req, res) => {
   try {
@@ -663,10 +1193,12 @@ apiRouter.get('/dashboard', async (req, res) => {
         where: { criadoEm: filtroDatas },
         include: { tecnico: { select: { nome: true } } },
         orderBy: { criadoEm: 'asc' },
+        take: MAX_AGREGACAO,
       }),
       req.db.servico.findMany({
         where: { criadoEm: filtroAnterior },
         select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true },
+        take: MAX_AGREGACAO,
       }),
     ]);
 
@@ -758,6 +1290,8 @@ apiRouter.get('/tecnicos', async (req, res) => {
         metaMensal: t.metaMensal,
         fotoPerfil: t.fotoPerfil,
         ativo: t.ativo,
+        // Dono (técnico-self criado no cadastro) vs. funcionário comum.
+        ehDono: t.usuarioId != null,
         criadoEm: t.criadoEm,
         totalServicos: t.servicos.length,
         receitaBruta: t.servicos.reduce((s, x) => s + x.valorCobrado, 0),
@@ -775,21 +1309,148 @@ apiRouter.get('/tecnicos', async (req, res) => {
 });
 
 // ── POST /api/tecnicos ────────────────────────────────────────────────────────
+// Cadastro em wizard: além dos campos básicos, aceita os dados de RH (datas ISO →
+// Date, modalidade do vínculo, valores numéricos). Tudo opcional/aditivo.
+const MODALIDADES = ['clt', 'clt_meio', 'clt_12x36', 'intermitente', 'autonomo'];
+// "YYYY-MM-DD" ou ISO completo → Date (ou null). Inválido lança no superRefine abaixo.
+const dataOpcional = z.union([z.string(), z.null()]).optional().transform((v) => {
+  if (v == null || v === '') return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? undefined : d; // undefined sinaliza inválido
+});
+
+const schemaNovoTecnico = z.object({
+  nome: z.string().min(2),
+  telefone: z.string().min(10).optional().nullable(),
+  comissao: z.number().min(0).max(100).default(0),
+  metaMensal: z.number().nonnegative().nullable().optional(),
+  // RH
+  cpf: z.string().max(20).optional().nullable(),
+  dataNascimento: dataOpcional,
+  endereco: z.string().max(300).optional().nullable(),
+  nivelAcesso: z.string().max(40).optional().nullable(),
+  modalidade: z.enum(MODALIDADES).optional().nullable(),
+  salarioBase: z.number().nonnegative().optional().nullable(),
+  dataAdmissao: dataOpcional,
+  horaExtraAtiva: z.boolean().optional(),
+  horaExtraPercentual: z.number().nonnegative().optional().nullable(),
+  adicionalNoturno: z.boolean().optional(),
+  valorHora: z.number().nonnegative().optional().nullable(),
+  jornadaDiariaMin: z.number().int().positive().optional().nullable(),
+  jornadaSemanalMin: z.number().int().positive().optional().nullable(),
+  fotoPerfil: z.string().optional().nullable(), // URL ou data-URL (foto opcional do cadastro)
+}).superRefine((d, ctx) => {
+  // dataOpcional vira `undefined` quando a string é uma data inválida.
+  if (d.dataNascimento === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dataNascimento'], message: 'Data inválida' });
+  }
+  if (d.dataAdmissao === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dataAdmissao'], message: 'Data inválida' });
+  }
+});
+
 apiRouter.post('/tecnicos', async (req, res) => {
   try {
-    const schema = z.object({
-      nome: z.string().min(2),
-      telefone: z.string().min(10).optional().nullable(),
-      comissao: z.number().min(0).max(100).default(0),
-    });
-    const parse = schema.safeParse(req.body);
+    const parse = schemaNovoTecnico.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
-    const { nome, telefone, comissao } = parse.data;
-    const tecnico = await req.db.tecnico.create({ data: { nome, telefone: telefone ?? null, comissao } });
+    const d = parse.data;
+    // Canoniza o telefone para o robô casar o remetente; guarda o cru como display.
+    const canonico = d.telefone ? canonizarTelefone(d.telefone) : null;
+    const tecnico = await req.db.tecnico.create({
+      data: {
+        nome: d.nome,
+        telefone: canonico,
+        telefoneDisplay: d.telefone ?? null,
+        comissao: d.comissao,
+        metaMensal: d.metaMensal ?? null,
+        cpf: d.cpf ?? null,
+        dataNascimento: d.dataNascimento ?? null,
+        endereco: d.endereco ?? null,
+        nivelAcesso: d.nivelAcesso ?? null,
+        modalidade: d.modalidade ?? null,
+        salarioBase: d.salarioBase ?? null,
+        dataAdmissao: d.dataAdmissao ?? null,
+        horaExtraAtiva: d.horaExtraAtiva ?? false,
+        horaExtraPercentual: d.horaExtraPercentual ?? null,
+        adicionalNoturno: d.adicionalNoturno ?? false,
+        valorHora: d.valorHora ?? null,
+        jornadaDiariaMin: d.jornadaDiariaMin ?? null,
+        jornadaSemanalMin: d.jornadaSemanalMin ?? null,
+        fotoPerfil: d.fotoPerfil ?? null,
+      },
+    });
     res.status(201).json(tecnico);
   } catch (erro) {
     if (erro.code === 'P2002') return res.status(409).json({ erro: 'Telefone já cadastrado' });
     logger.error('Erro POST /tecnicos', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── GET /api/tecnicos/:id/ponto?mes=YYYY-MM ───────────────────────────────────
+// Banco de horas do mês: registros + agregados (total trabalhado, saldo, HE),
+// calculados no backend conforme a modalidade do técnico.
+const MES_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+function intervaloMes(mes) {
+  const [ano, m] = mes.split('-').map(Number);
+  return { inicio: new Date(Date.UTC(ano, m - 1, 1)), fim: new Date(Date.UTC(ano, m, 1)) };
+}
+
+apiRouter.get('/tecnicos/:id/ponto', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const mes = String(req.query.mes ?? '');
+    if (!MES_RE.test(mes)) return res.status(400).json({ erro: 'Parâmetro mes inválido (use YYYY-MM)' });
+
+    const tecnico = await req.db.tecnico.findUnique({ where: { id } });
+    if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
+
+    const { inicio, fim } = intervaloMes(mes);
+    const registros = await req.db.registroPonto.findMany({
+      where: { tecnicoId: id, data: { gte: inicio, lt: fim } },
+      orderBy: { data: 'asc' },
+      take: MAX_AGREGACAO,
+    });
+    const resumo = resumoMes(tecnico, registros);
+    res.json({
+      mes,
+      tecnico: { id: tecnico.id, nome: tecnico.nome, modalidade: tecnico.modalidade },
+      ...resumo,
+    });
+  } catch (erro) {
+    logger.error('Erro GET /tecnicos/:id/ponto', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── GET /api/tecnicos/:id/ponto/relatorio?mes=&formato=pdf|csv ────────────────
+apiRouter.get('/tecnicos/:id/ponto/relatorio', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const mes = String(req.query.mes ?? '');
+    if (!MES_RE.test(mes)) return res.status(400).json({ erro: 'Parâmetro mes inválido (use YYYY-MM)' });
+    const formato = String(req.query.formato ?? 'pdf').toLowerCase();
+    const empresaId = req.user.empresaId;
+
+    // Garante que o técnico é da empresa (req.db escopa por empresaId).
+    const tecnico = await req.db.tecnico.findUnique({ where: { id } });
+    if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
+
+    if (formato === 'csv') {
+      const csv = await gerarCsvPonto(empresaId, id, mes);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="ponto-${id}-${mes}.csv"`);
+      return res.send('﻿' + csv); // BOM para Excel reconhecer UTF-8
+    }
+    const pdf = await gerarRelatorioPonto(empresaId, id, mes);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="ponto-${id}-${mes}.pdf"`);
+    return res.send(pdf);
+  } catch (erro) {
+    logger.error('Erro GET /tecnicos/:id/ponto/relatorio', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -806,10 +1467,10 @@ apiRouter.get('/tecnicos/:id/perfil', async (req, res) => {
 
     const [tecnico, servicosPeriodo, todosServicos, pagamentos, servicosMesAtual] = await Promise.all([
       req.db.tecnico.findUnique({ where: { id } }),
-      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroDatas }, orderBy: { criadoEm: 'desc' } }),
-      req.db.servico.findMany({ where: { tecnicoId: id }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true, criadoEm: true } }),
-      req.db.pagamento.findMany({ where: { tecnicoId: id }, orderBy: { criadoEm: 'desc' } }),
-      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroMesAtual }, select: { valorLiquido: true } }),
+      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroDatas }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true, criadoEm: true }, take: MAX_AGREGACAO }),
+      req.db.pagamento.findMany({ where: { tecnicoId: id }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroMesAtual }, select: { valorLiquido: true }, take: MAX_AGREGACAO }),
     ]);
     if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
 
@@ -1035,7 +1696,10 @@ apiRouter.delete('/materiais/:id', async (req, res) => {
     // Confirma que o material é da empresa antes de qualquer operação (anti-IDOR)
     const mat = await req.db.material.findUnique({ where: { id }, select: { id: true } });
     if (!mat) return res.status(404).json({ erro: 'Material não encontrado' });
-    const count = await prisma.servicoMaterial.count({ where: { materialId: id } });
+    // Usa req.db por consistência tenant. O material já foi confirmado da empresa
+    // acima; ServicoMaterial é isolado pela relação com Servico (não escopado direto),
+    // então o filtro por materialId já é seguro contra IDOR.
+    const count = await req.db.servicoMaterial.count({ where: { materialId: id } });
     if (count > 0) return res.status(409).json({ erro: 'Material em uso em serviços e não pode ser removido' });
     await req.db.material.deleteMany({ where: { id } });
     res.json({ mensagem: 'Material removido com sucesso' });
@@ -1050,7 +1714,7 @@ apiRouter.delete('/materiais/:id', async (req, res) => {
 // Saldo real de todos os materiais + consumo no período (para contexto).
 apiRouter.get('/estoque', async (req, res) => {
   try {
-    const diasNum = Math.max(1, parseInt(req.query.periodo ?? '30'));
+    const diasNum = Math.max(1, Number.parseInt(req.query.periodo ?? '30', 10) || 30);
     const dataInicio = new Date();
     dataInicio.setDate(dataInicio.getDate() - diasNum);
 
@@ -1154,7 +1818,9 @@ apiRouter.get('/relatorio/pdf', async (req, res) => {
     if (!inicio || !fim) return res.status(400).json({ erro: 'Parâmetros "inicio" e "fim" são obrigatórios (YYYY-MM-DD)' });
     const dataInicio = new Date(inicio);
     const dataFim = new Date(fim + 'T23:59:59.999Z');
-    if (isNaN(dataInicio) || isNaN(dataFim)) return res.status(400).json({ erro: 'Datas inválidas' });
+    if (Number.isNaN(dataInicio.getTime()) || Number.isNaN(dataFim.getTime())) {
+      return res.status(400).json({ erro: 'Datas inválidas' });
+    }
     const pdfBuffer = await gerarRelatorioPDF(dataInicio, dataFim, req.user.empresaId);
     const nomeArquivo = `relatorio_${inicio}_${fim}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
@@ -1257,6 +1923,41 @@ apiRouter.delete('/usuarios/:id', adminOnly, async (req, res) => {
   } catch (erro) {
     if (erro.code === 'P2025') return res.status(404).json({ erro: 'Usuário não encontrado' });
     logger.error('Erro DELETE /usuarios/:id', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── LGPD: direitos do titular ────────────────────────────────────────────────
+// POST /api/lgpd/anonimizar-cliente — "direito ao esquecimento" (LGPD art. 18).
+// Remove os dados pessoais de um cliente final (nome, telefone, comentário) dos
+// serviços e avaliações DA EMPRESA, preservando os registros financeiros/estatísticos
+// (valores, nota). Admin apenas; escopado por empresa via req.db (anti-IDOR).
+apiRouter.post('/lgpd/anonimizar-cliente', adminOnly, async (req, res) => {
+  try {
+    const schema = z.object({ telefone: z.string().trim().min(8, 'Telefone inválido') });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Informe o telefone do cliente.' });
+
+    // Casa tanto o valor bruto quanto só os dígitos (formatos variam entre origens).
+    const bruto = parse.data.telefone;
+    const digitos = bruto.replace(/\D/g, '');
+    const alvo = { OR: [{ clienteTelefone: bruto }, { clienteTelefone: digitos }] };
+
+    const [servicos, avaliacoes] = await Promise.all([
+      // Servico.clienteTelefone é nullable → anonimiza para null.
+      req.db.servico.updateMany({ where: alvo, data: { clienteNome: null, clienteTelefone: null } }),
+      // Avaliacao.clienteTelefone é obrigatório → esvazia (não pode ser null).
+      req.db.avaliacao.updateMany({ where: alvo, data: { clienteNome: null, clienteTelefone: '', comentario: null } }),
+    ]);
+
+    logger.info('lgpd_anonimizar_cliente', {
+      empresaId: req.user.empresaId,
+      servicos: servicos.count,
+      avaliacoes: avaliacoes.count,
+    });
+    res.json({ ok: true, servicosAnonimizados: servicos.count, avaliacoesAnonimizadas: avaliacoes.count });
+  } catch (erro) {
+    logger.error('Erro POST /lgpd/anonimizar-cliente', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
