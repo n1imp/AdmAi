@@ -1,9 +1,12 @@
+// ⚠️ Artefato só de DEV (SQLite). Gerado a partir de prisma/schema.prisma.
+// Ao REGERAR: mantenha provider = "sqlite" e NÃO inclua a linha `directUrl`
+// (existe no schema Postgres p/ o pooler do Supabase; o SQLite não a suporta).
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -24,18 +27,24 @@ model Empresa {
   criadoEm  DateTime @default(now())
 }
 
-// Configurações de WhatsApp POR EMPRESA (settings do robô de número único + Cloud API).
-// A CONEXÃO em si (instância/QR/estado) vive no singleton ConexaoBot — aqui ficam apenas
-// o grupo de resumo, os parâmetros de avaliação e as credenciais da Cloud API (Meta).
+// Configuração da conexão WhatsApp por empresa (gateway Evolution API multi-instância).
+// Tabela dedicada (não colunas em Empresa) para isolar credenciais e estado de conexão.
 model EmpresaWhatsapp {
   id               Int      @id @default(autoincrement())
   empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   empresaId        Int      @unique
+  instanceName     String?  @unique  // nome da instância no Evolution API
+  apiKeyEnc        String?            // token da instância, criptografado em repouso
+  numeroDisplay    String?            // número exibido no painel
+  estadoConexao    String   @default("desconectado")
   grupoJid         String?            // grupo que recebe o resumo do serviço
   reviewDelayHoras Int      @default(2)   // atraso (h) para pedir avaliação ao cliente
   reviewLink       String?            // link de avaliação da empresa (Google, site, etc.)
-  reviewAtivo      Boolean  @default(true) // liga/desliga o envio automático da solicitação
-  reviewTemplate   String?            // template da mensagem de solicitação (null = padrão)
+  webhookSecret    String?            // segredo HMAC/token do webhook desta empresa
+  // QR de pareamento capturado via webhook QRCODE_UPDATED da Evolution.
+  // Persistido (data URL/base64) para o painel exibir enquanto aguarda leitura;
+  // limpo quando a conexão abre (CONNECTION_UPDATE open).
+  qrCode           String?            // data URL/base64 do QR atual (null quando conectado)
   // ── WhatsApp Cloud API (Meta) — usados quando provider='cloud' ─────────────
   // provider seleciona a camada de WhatsApp desta empresa. 'evolution' (não-oficial,
   // QR/instância) é o padrão atual; 'cloud' usa a API oficial da Meta (sem QR).
@@ -58,26 +67,11 @@ model Tecnico {
   fotoPerfil      String?     // URL da foto de perfil do WhatsApp
   ativo           Boolean     @default(true)
   // Liga o "técnico do dono" ao Usuario que o criou (no cadastro). null = funcionário comum.
+  // Permite o robô saber se o remetente é DONO (usuarioId != null) ou funcionário.
   usuarioId       Int?        @unique
   usuario         Usuario?    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
-  // ── Dados de RH (cadastro em etapas) ──────────────────────────────────────
-  cpf                 String?
-  dataNascimento      DateTime?
-  endereco            String?
-  nivelAcesso         String?   // papel no painel (ex.: "tecnico" | "gestor")
-  // Vínculo contratual: "clt" | "clt_meio" | "clt_12x36" | "intermitente" | "autonomo"
-  modalidade          String?
-  salarioBase         Float?
-  dataAdmissao        DateTime?
-  horaExtraAtiva      Boolean   @default(false)
-  horaExtraPercentual Float?    // % sobre a hora normal (ex.: 50 = +50%)
-  adicionalNoturno    Boolean   @default(false)
-  valorHora           Float?    // usado na modalidade intermitente
-  jornadaDiariaMin    Int?      // jornada contratual do dia em minutos (default por modalidade)
-  jornadaSemanalMin   Int?      // jornada contratual semanal em minutos
   servicos        Servico[]
   pagamentos      Pagamento[]
-  pontos          RegistroPonto[]
   criadoEm       DateTime    @default(now())
 
   // telefone é único POR EMPRESA (o mesmo número pode existir em empresas diferentes)
@@ -179,43 +173,51 @@ model Usuario {
   username            String    @unique
   email               String?   @unique
   telefone            String?
-  senhaHash           String?   // null em contas só de login social
+  // Nullable: contas criadas só por login social (Google/Microsoft/Apple) não têm
+  // senha. O login por usuário+senha rejeita contas sem senhaHash com mensagem clara.
+  senhaHash           String?
   admin               Boolean   @default(false)
   ativo               Boolean   @default(true)
-  // Verificação
+  // Verificação (estrutura — envio de e-mail/OTP plugável depois)
   emailVerificado     Boolean   @default(false)
   telefoneVerificado  Boolean   @default(false)
-  // 2FA TOTP (app autenticador)
+  // 2FA TOTP (app autenticador + códigos de 6 dígitos, padrão Google/GitHub)
   twoFactorAtivo      Boolean   @default(false)
-  twoFactorSecret     String?   // legado (flag booleano antigo)
+  twoFactorSecret     String?   // legado (estrutura antiga; substituído por totpSecret)
   totpSecret          String?   // segredo TOTP confirmado (cifrado em repouso)
-  totpPendente        String?   // segredo TOTP aguardando confirmação
-  // 2FA / verificação por TELEFONE (OTP via WhatsApp do robô)
-  phone2faAtivo       Boolean   @default(false)
-  telefoneOtpHash     String?   // OTP do telefone cifrado em repouso
-  telefoneOtpExpira   DateTime?
+  totpPendente        String?   // segredo gerado no setup, antes da confirmação (cifrado)
+  // 2FA / verificação por TELEFONE (OTP entregue pelo WhatsApp do robô)
+  phone2faAtivo       Boolean   @default(false) // exige código por WhatsApp no login
+  telefoneOtpHash     String?   // hash do OTP em trânsito (cadastro/login), cifrado
+  telefoneOtpExpira   DateTime? // validade do OTP atual
   // Segurança de sessão: tokens emitidos antes desta data são inválidos
+  // (permite "sair de todos os dispositivos" e invalidação após troca de senha)
   tokenValidoApos     DateTime?
   senhaAlteradaEm     DateTime?
   // Preferências de notificação (toggles liga/desliga). null = usa padrões.
-  notificacoes        Json?
+  notificacoes        String?
   avisos              Notificacao[]
+  // Provedores de login social vinculados a esta conta (1 usuário → N provedores).
   contasSociais       ContaSocial[]
+  // Técnico-self do dono (criado no cadastro), para registrar serviços pelo robô.
   tecnico             Tecnico?
   criadoEm           DateTime  @default(now())
 
   @@index([empresaId])
+  // Detectar o dono pelo telefone do remetente no robô de número único.
   @@index([telefone])
 }
 
-// Conta de login social (OIDC) vinculada a um usuário (Google/Microsoft/Apple).
+// Vínculo entre um Usuario e um provedor de login social (Google/Microsoft/Apple).
+// O identificador estável é (provedor, provedorSub) — `sub` é o id do usuário no
+// provedor; o e-mail pode mudar/ser de relay (Apple) e por isso NÃO é a chave.
 model ContaSocial {
   id          Int      @id @default(autoincrement())
   usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   usuarioId   Int
   provedor    String   // "google" | "microsoft" | "apple"
-  provedorSub String   // claim `sub` estável do provedor
-  email       String?
+  provedorSub String   // claim `sub` — id estável do usuário no provedor
+  email       String?  // e-mail informado pelo provedor (pode ser relay/privado)
   criadoEm    DateTime @default(now())
 
   @@unique([provedor, provedorSub])
@@ -253,24 +255,26 @@ model Pagamento {
 }
 
 // Sessão de conversa do bot no PRIVADO (fluxo passo a passo de registro de serviço).
-// Número único: UMA sessão ATIVA por `jid` (telefone). `empresaId` é nulo durante a
-// desambiguação (fluxo "selecao_empresa"), antes de a empresa ser escolhida.
+// Persistida no banco para sobreviver a restart e funcionar com escala horizontal.
+// Uma sessão ATIVA por (empresaId, jid) — o índice único garante isso.
 model SessaoConversa {
   id            Int      @id @default(autoincrement())
-  empresaId     Int?     // resolvido pelo telefone; nulo durante a desambiguação
+  empresaId     Int
   tecnicoId     Int?
-  jid           String   // JID/numero do WhatsApp do remetente no privado
-  fluxo         String   @default("registro_servico") // "registro_servico" | "selecao_empresa"
+  jid           String   // JID/numero do WhatsApp do técnico no privado
+  fluxo         String   @default("registro_servico") // tipo de fluxo
   estadoAtual   String   // passo atual da máquina de estados (ex.: "local", "endereco", ...)
-  dadosParciais Json     @default("{}") // respostas coletadas até agora
+  dadosParciais String     @default("{}") // respostas coletadas até agora
   atualizadoEm  DateTime @updatedAt
   criadoEm      DateTime @default(now())
 
-  @@unique([jid])
+  @@unique([empresaId, jid])
   @@index([atualizadoEm])
 }
 
 // Avaliação do cliente após a conclusão de um serviço.
+// Fila por due-time: o cron varre as pendentes com agendadoPara <= now e envia
+// a solicitação (nota 1–5 + link). A resposta do cliente preenche `nota`.
 // status: "pendente" (agendada) → "enviada" → "respondida" | "expirada"
 model Avaliacao {
   id              Int       @id @default(autoincrement())
@@ -292,7 +296,8 @@ model Avaliacao {
 }
 
 // Conexão ÚNICA do robô (modelo de número único): uma instância global atende todas
-// as empresas. Singleton (id sempre = 1).
+// as empresas. Singleton (id sempre = 1). Substitui a conexão por-empresa do
+// EmpresaWhatsapp — que permanece apenas para SETTINGS por empresa (grupoJid, review*).
 model ConexaoBot {
   id            Int      @id @default(1)
   instanceName  String?  // nome da instância Evolution global (ex.: "admai-bot")
@@ -301,70 +306,4 @@ model ConexaoBot {
   webhookSecret String?  // segredo do webhook global
   numeroDisplay String?  // número do robô (exibição)
   atualizadoEm  DateTime @updatedAt
-}
-
-// Registro de PONTO eletrônico do técnico (banco de horas). Um registro por dia por
-// técnico. Os horários são SEMPRE o timestamp do servidor no momento em que o bot
-// recebe a mensagem "Ponto". Cálculos (totalMinutos, horaExtraMinutos) no backend.
-model RegistroPonto {
-  id              Int       @id @default(autoincrement())
-  empresaId       Int
-  tecnico         Tecnico   @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
-  tecnicoId       Int
-  data            DateTime  @db.Date            // dia do ponto (YYYY-MM-DD)
-  entradaEm       DateTime?
-  almocoSaidaEm   DateTime?
-  almocoVoltaEm   DateTime?
-  saidaEm         DateTime?
-  totalMinutos    Int?      // minutos trabalhados no dia (descontado o almoço)
-  horaExtraMinutos Int?     // minutos de hora extra conforme a modalidade
-  criadoEm        DateTime  @default(now())
-
-  @@unique([tecnicoId, data])
-  @@index([empresaId, data])
-}
-
-// Conexão Google Business Profile por empresa (OAuth2). Tokens CIFRADOS em repouso.
-// Singleton por empresa (1:1). Usada para listar/responder avaliações do Google.
-model GoogleConta {
-  id              Int      @id @default(autoincrement())
-  empresaId       Int      @unique
-  placeId         String?  // ID do local no Google Maps
-  accountId       String?  // accounts/{id} da Business Profile API
-  locationId      String?  // locations/{id}
-  accessTokenEnc  String?  // access token cifrado
-  refreshTokenEnc String?  // refresh token cifrado (offline access)
-  tokenExpira     DateTime?
-  escopo          String?
-  conectadoEm     DateTime?
-  atualizadoEm    DateTime @updatedAt
-}
-
-// Avaliação coletada do Google (Business Profile). reviewId é o id estável do Google.
-model AvaliacaoGoogle {
-  id              Int       @id @default(autoincrement())
-  empresaId       Int
-  reviewId        String    @unique
-  autorNome       String?
-  nota            Int?      // 1..5
-  comentario      String?
-  criadoEmGoogle  DateTime?
-  respondida      Boolean   @default(false)
-  respostaTexto   String?
-  respondidoEm    DateTime?
-  analiseJson     Json?     // sugestão de resposta / temas (IA); null = não analisada
-  sincronizadoEm  DateTime  @default(now())
-
-  @@index([empresaId, respondida])
-  @@index([empresaId, nota])
-}
-
-// Cache do resumo agregado das avaliações por empresa (análise por IA). 1:1 com empresa.
-model AnaliseAvaliacoes {
-  id                    Int      @id @default(autoincrement())
-  empresaId             Int      @unique
-  resumoElogios         String?
-  resumoCriticas        String?
-  ultimoReviewAnalisado String?  // reviewId do último analisado (incremental)
-  atualizadoEm          DateTime @updatedAt
 }

@@ -28,6 +28,7 @@ const MODELOS_ESCOPADOS = new Set([
   'EmpresaWhatsapp',
   'Avaliacao',
   'SessaoConversa',
+  'RegistroPonto',
 ]);
 
 // Operações de LEITURA que aceitam `where` e devem receber o filtro empresaId.
@@ -56,6 +57,10 @@ function mesclarWhere(where, empresaId) {
   return { ...(where ?? {}), empresaId };
 }
 
+// Cache LRU com teto: evita vazar um client estendido por empresaId para sempre.
+// Ao exceder MAX_CACHE_CLIENTS, descarta o menos recentemente usado (1ª chave do Map,
+// que preserva a ordem de inserção/uso). Reinserir uma chave a move para o fim (MRU).
+const MAX_CACHE_CLIENTS = 100;
 const cacheClients = new Map();
 
 /**
@@ -66,7 +71,13 @@ export function prismaParaEmpresa(empresaId) {
   if (!Number.isInteger(empresaId) || empresaId <= 0) {
     throw new Error('empresaId inválido para client escopado');
   }
-  if (cacheClients.has(empresaId)) return cacheClients.get(empresaId);
+  if (cacheClients.has(empresaId)) {
+    // Toca a entrada para marcá-la como recém-usada (move para o fim do Map).
+    const existente = cacheClients.get(empresaId);
+    cacheClients.delete(empresaId);
+    cacheClients.set(empresaId, existente);
+    return existente;
+  }
 
   const client = prisma.$extends({
     name: `tenant-${empresaId}`,
@@ -104,6 +115,11 @@ export function prismaParaEmpresa(empresaId) {
     },
   });
 
+  // Evicção LRU: se o cache está cheio, remove a entrada mais antiga antes de inserir.
+  if (cacheClients.size >= MAX_CACHE_CLIENTS) {
+    const maisAntiga = cacheClients.keys().next().value;
+    cacheClients.delete(maisAntiga);
+  }
   cacheClients.set(empresaId, client);
   return client;
 }

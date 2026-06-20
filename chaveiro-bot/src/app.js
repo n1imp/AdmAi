@@ -14,7 +14,6 @@ import { metricsMiddleware, metricsHandler } from './config/metrics.js';
 import { apiRouter } from './routes/api.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
-import { getEstado } from './services/baileys.js';
 import { whatsappRouter } from './routes/whatsapp.js';
 
 /**
@@ -111,7 +110,7 @@ export function criarApp() {
     }
     const saude = {
       status: 'ok',
-      whatsapp: getEstado(),
+      whatsapp: 'desconhecido',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       checks: { database: 'unknown' },
@@ -119,6 +118,9 @@ export function criarApp() {
     try {
       await prisma.$queryRaw`SELECT 1`;
       saude.checks.database = 'ok';
+      // Estado da conexão ÚNICA do robô (número único) — singleton ConexaoBot (id=1).
+      const conexao = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { estadoConexao: true } });
+      saude.whatsapp = conexao?.estadoConexao ?? 'desconectado';
     } catch {
       saude.checks.database = 'error';
       saude.status = 'degraded';
