@@ -1,0 +1,13 @@
+# Reverse proxy + HTTPS automático (Let's Encrypt) do ChaveiroBot.
+# Os domínios vêm do .env (CADDY_APP_DOMAIN / CADDY_API_DOMAIN), passados ao
+# container caddy pelo docker-compose.prod.yml. Caddy emite e renova o TLS sozinho.
+
+{$CADDY_APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy painel:80
+}
+
+{$CADDY_API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy backend:3000
+}
