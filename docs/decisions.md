@@ -78,3 +78,25 @@ pronta). Decisões fechadas com o dono do produto:
 Backend: 166 testes unitários ✓, 0 erros de lint. Painel: build ✓, 19 testes ✓.
 Pendências conhecidas em "próximos passos" do resumo final (ex.: rodar `test:integration`
 contra Postgres real; aplicar a migration em staging).
+
+---
+
+## 2026-06-21 — Pendência: retenção e transparência LGPD da selfie/geo de ponto
+
+Registrado para decisão/implementação futura (NÃO implementado ainda):
+
+- **Retenção das provas de ponto (selfie + geolocalização).** A batida de ponto passou a
+  guardar selfie (volume de uploads) + lat/lng em `BatidaPonto` como prova anti-fraude. Hoje
+  esses arquivos/coordenadas ficam **indefinidamente**. Definir uma **política de retenção**
+  (ex.: apagar selfies/geo após N dias, ou após o fechamento do mês/cálculo do banco de
+  horas) e um job de expurgo (estende `services/agendador.js`). Decidir N com base no prazo
+  trabalhista de contestação do ponto. Dado de **funcionário** (titular), então minimização
+  e prazo definido são exigências da LGPD (art. 15/16 — término do tratamento).
+- **Transparência no momento da coleta.** A tela de bater ponto (`MeuPonto.jsx` +
+  `CapturaSelfie.jsx`) precisa **avisar explicitamente** o funcionário, antes da captura, de
+  que **selfie e localização são coletadas** (finalidade: comprovação de jornada/anti-fraude),
+  com link para a Política de Privacidade. Requisito de transparência/consentimento informado
+  da LGPD por envolver dado pessoal de funcionário — não basta coletar silenciosamente.
+
+Motivo de ficar pendente: é decisão de política (prazo N + texto jurídico) que envolve o dono
+do produto, não só código. Anotado aqui para não se perder.

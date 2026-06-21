@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Cliente Axios com token de autenticação injetado automaticamente
 const api = axios.create({
-  baseURL: '/api',
+  // Web: '/api' (mesma origem, proxy do nginx). App Capacitor: VITE_API_URL absoluto
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 15000,
 });
 

@@ -159,6 +159,14 @@ agendamento de avaliação.
 - **Segredos cifrados em repouso** (`ENCRYPTION_KEY`): apikey de instância e `webhookSecret`.
 - **Webhook autenticado** por HMAC `x-hub-signature-256` **ou** token, comparados em
   **tempo constante** (`timingSafeEqual`) — ver [`whatsapp/crypto.js`](chaveiro-bot/src/services/whatsapp/crypto.js).
+- **RBAC do painel** (`dono` / `gestor` / `funcionario` + overrides por módulo): a permissão
+  é **sempre** checada no servidor (`requirePermissao`); esconder no front não é segurança. O
+  funcionário é **self-scoped** (`req.user.tecnicoId` do banco — nunca confia em `tecnicoId`
+  do cliente) — ver [`permissoes.js`](chaveiro-bot/src/services/permissoes.js).
+- **Acesso de funcionário por PIN**: o dono cria a conta e repassa um **PIN provisório**;
+  enquanto `senhaProvisoria` for true, o backend bloqueia tudo (403 `senha_provisoria`)
+  exceto `GET /me` e `PATCH /me/senha`, forçando a troca no 1º acesso — ver
+  [`credenciais.js`](chaveiro-bot/src/services/credenciais.js).
 
 ---
 
@@ -170,8 +178,9 @@ As rotas de negócio são **escopadas por empresa** via `req.db`.
 ### Públicas (sem auth)
 | Método | Rota | Descrição |
 |---|---|---|
-| `POST` | `/api/auth/login` | Login por usuário/senha (pode devolver desafio 2FA) |
+| `POST` | `/api/auth/login` | Login por **usuário/senha** (dono) **ou telefone + PIN** (funcionário). Telefone ambíguo entre empresas devolve `desambiguacao` |
 | `POST` | `/api/auth/login/2fa` | 2ª etapa: troca desafio + código TOTP por token |
+| `POST` | `/api/auth/login/2fa-telefone` | 2ª etapa do 2FA por telefone (OTP via WhatsApp) |
 | `POST` | `/api/setup` | Cria o 1º admin/empresa (bloqueia se já houver usuário) |
 | `POST` | `/api/auth/register` | Auto-cadastro público (cria empresa + admin) |
 | `GET` | `/api/auth/providers` | Provedores de login social habilitados |
@@ -181,8 +190,13 @@ As rotas de negócio são **escopadas por empresa** via `req.db`.
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` `PATCH` | `/api/me` | Lê / atualiza nome, e-mail, telefone |
-| `PATCH` | `/api/me/senha` | Troca de senha (invalida sessões antigas) |
+| `PATCH` | `/api/me/senha` | Troca de senha (invalida sessões antigas; limpa `senhaProvisoria`) |
+| `GET` | `/api/me/permissoes` | Papel + permissões **efetivas** do usuário (RBAC — guia a navegação do painel) |
+| `GET` | `/api/me/metricas` | Métricas do **próprio** funcionário (self-scope: comissão, meta, pendentes) |
+| `GET` | `/api/me/servicos` | Os **próprios** serviços do funcionário (inclui pendentes/rejeitados) |
 | `POST` | `/api/me/2fa/setup` · `/ativar` · `/desativar` | Configura/ativa/desativa TOTP |
+| `POST` | `/api/me/telefone/otp/enviar` · `/verificar` | Verificação de telefone por OTP (WhatsApp) |
+| `POST` | `/api/me/telefone/2fa/ativar` · `/desativar` | Liga/desliga 2FA por telefone |
 | `POST` | `/api/me/logout-all` | Encerra sessões em todos os dispositivos |
 | `GET` `PATCH` | `/api/me/notificacoes` | Preferências de notificação (toggles) |
 
@@ -206,7 +220,27 @@ As rotas de negócio são **escopadas por empresa** via `req.db`.
 | `POST` | `/api/tecnicos` | Cria técnico |
 | `GET` | `/api/tecnicos/:id/perfil` | Perfil + histórico + meta |
 | `PATCH` | `/api/tecnicos/:id` | Atualiza/ativa/desativa |
-| `POST` | `/api/pagamentos` | Registra pagamento de comissão |
+| `POST` | `/api/pagamentos` | Registra pagamento de comissão (`financeiro.editar`) |
+
+### RBAC, contas de funcionário (PIN) & aprovação de serviço
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/permissoes/catalogo` | Módulos/ações/papéis + presets — monta a matriz de permissões (**admin**) |
+| `POST` | `/api/tecnicos` (campo `criarAcesso`) | Ao criar técnico com telefone, gera o acesso (login por telefone + **PIN provisório**) |
+| `POST` | `/api/tecnicos/:id/acesso` | Cria acesso ao painel de um técnico sem conta (devolve o PIN uma vez) |
+| `POST` | `/api/tecnicos/:id/acesso/reset` | Reemite o PIN provisório (esqueceu a senha) e invalida sessões |
+| `GET` | `/api/servicos/pendentes` | Fila de aprovação (serviços de funcionário aguardando) — `aprovacoes.ver` |
+| `POST` | `/api/servicos/:id/aprovar` | Aprova: passa a contar comissão/receita, baixa estoque, agenda avaliação |
+| `POST` | `/api/servicos/:id/rejeitar` | Rejeita o serviço pendente (não conta, não baixa estoque) |
+| `GET` `PATCH` | `/api/config/empresa` | Opções da empresa (ex.: `aprovacaoServico`) — `configuracao` (**dono**) |
+
+### Ponto eletrônico (RH)
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/api/ponto/bater` | Funcionário bate o ponto pelo painel: hora do servidor + **geolocalização + selfie** |
+| `GET` | `/api/ponto/hoje` | Estado do ponto do dia do funcionário (só as batidas — nunca o banco de horas) |
+| `GET` | `/api/tecnicos/:id/ponto?mes=YYYY-MM` | Banco de horas do mês (saldo/HE) — dono/gestor (`ponto.ver`) |
+| `GET` | `/api/tecnicos/:id/ponto/relatorio?mes=&formato=pdf\|csv` | Exporta o ponto do mês (PDF/CSV) |
 
 ### Materiais & estoque
 | Método | Rota | Descrição |
@@ -222,9 +256,11 @@ As rotas de negócio são **escopadas por empresa** via `req.db`.
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/api/avaliacoes` | Lista + média e distribuição de notas |
+| `GET` `PATCH` | `/api/avaliacoes/config` | Config da solicitação de avaliação (ativar, template, atraso, link) |
 | `GET` | `/api/relatorio/pdf` | PDF de fechamento do período |
-| `GET` `POST` | `/api/usuarios` | Lista / cria usuário (**admin**) |
-| `PATCH` `DELETE` | `/api/usuarios/:id` | Atualiza / remove (**admin**) |
+| `GET` `POST` | `/api/usuarios` | Lista / cria usuário com `papel` + `permissoes` (**admin**) |
+| `PATCH` `DELETE` | `/api/usuarios/:id` | Atualiza papel/permissões / remove (**admin**) |
+| `POST` | `/api/lgpd/anonimizar-cliente` | Anonimiza dados de um cliente final (LGPD art. 18) (**admin**) |
 
 ### Gateway WhatsApp & infraestrutura
 | Método | Rota | Descrição |
@@ -256,8 +292,10 @@ logadas; `RequireAdmin` restringe gestão de usuários. **Sidebar** no desktop (
 | `/materiais` · `/estoque` | Catálogo / controle de estoque |
 | `/mais` · `/ajuda` | Menu "mais" / ajuda e tour |
 | `/configuracao` | Configurações (hub) |
-| `/configuracao/perfil` · `/seguranca` · `/notificacoes` · `/whatsapp` | Conta, segurança/2FA, preferências, conexão WhatsApp |
-| `/configuracao/usuarios` | Gestão de usuários (**admin**) |
+| `/configuracao/perfil` · `/seguranca` · `/notificacoes` · `/whatsapp` | Conta, segurança/2FA, preferências, conexão WhatsApp (**"Em breve"** — robô desligado) |
+| `/configuracao/usuarios` | Gestão de usuários + **matriz de permissões** (**admin**) |
+| `/aprovacoes` | Fila de aprovação de serviços de funcionário (dono/gestor) |
+| `/` (funcionário) · `/meu-ponto` · `/meus-servicos` · `/meus-servicos/novo` | Painel do **funcionário**: `/` mostra MeuPainel (métricas próprias), bater ponto (selfie/geo) e próprios serviços |
 
 **Identidade visual:** tema dark com destaque âmbar/dourado; display **Barlow Condensed**,
 corpo **DM Sans**; mobile-first (375–428px) com layout responsivo até desktop.
@@ -331,8 +369,12 @@ Validadas por Zod no boot — ver [`config/env.js`](chaveiro-bot/src/config/env.
 | `ENCRYPTION_KEY` | se `EVOLUTION_HOST` | Chave mestra p/ cifrar segredos por empresa (≥16; ≥32 recomendado) |
 | `PUBLIC_URL` | recomendada | URL pública do backend (monta o webhook) |
 | `WHATSAPP_PROVIDER` | — | Provedor WhatsApp: `evolution` (padrão) ou `cloud` (Meta) |
+| `WHATSAPP_HABILITADO` | — | Liga o robô do WhatsApp (feature futura). `"true"` processa eventos inbound; ausente/qualquer outro valor = **inerte** (o webhook ainda responde 200, mas nada é processado) |
+| `BOT_INSTANCE_NAME` · `SUPER_ADMIN_USERNAME` | — | Robô de número único: nome da instância Evolution global e username que gerencia a conexão |
+| `GOOGLE_REVIEWS_ENABLED` · `GOOGLE_OAUTH_CLIENT_ID` · `GOOGLE_OAUTH_CLIENT_SECRET` · `GOOGLE_OAUTH_REDIRECT_URI` · `GOOGLE_BUSINESS_VALIDATE_ONLY` | — | Integração Google Business Profile (avaliações). Flag off = mocks/`validateOnly`, não publica |
+| `ANTHROPIC_API_KEY` · `AI_REVIEWS_MODEL` | — | Análise de avaliações por IA (ausente = desligada; modelo padrão `claude-haiku-4-5`) |
 | `GOOGLE_CLIENT_ID` · `MICROSOFT_CLIENT_ID` · `MICROSOFT_TENANT` · `APPLE_CLIENT_ID` | — | Habilitam login social por provedor |
-| `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio |
+| `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio (`ADMIN_PASSWORD` mín. 8 chars) |
 | `SENTRY_DSN` · `LOG_LEVEL` · `APP_VERSION` | — | Observabilidade (ausente = Sentry off) |
 
 > Em produção, lembrar também de `DIRECT_URL` (migrations via Session pooler do Supabase) e `WHATSAPP_PROVIDER` — ver `instrucoes-deploy.md`.

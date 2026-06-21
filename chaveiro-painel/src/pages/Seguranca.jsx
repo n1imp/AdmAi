@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, LogOut, Check, X, Loader2, Copy, UserX } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, LogOut, Check, X, Loader2, Copy, UserX, Trash2 } from 'lucide-react';
 import api from '../lib/api.js';
 import { avaliarForcaSenha } from '../lib/senha.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -133,6 +133,13 @@ export default function Seguranca() {
   const [telefoneLgpd, setTelefoneLgpd] = useState('');
   const [confirmarLgpd, setConfirmarLgpd] = useState(false);
   const [anonimizando, setAnonimizando] = useState(false);
+
+  // Exclusão de conta (autoexclusão) — reautenticação por senha (+2FA se ativo)
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+  const [senhaExclusao, setSenhaExclusao] = useState('');
+  const [codigoExclusao, setCodigoExclusao] = useState('');
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState('');
 
   const buscar = useCallback(async () => {
     try {
@@ -278,6 +285,22 @@ export default function Seguranca() {
     }
   }
 
+  // Autoexclusão de conta. Para o único dono, o backend apaga a empresa inteira em
+  // cascata; para os demais, apaga só a própria conta. Em qualquer caso, deslogamos.
+  async function excluirConta() {
+    setExcluindo(true);
+    setErroExclusao('');
+    try {
+      await api.delete('/me/conta', { data: { senha: senhaExclusao, codigo: codigoExclusao } });
+      toast('Conta excluída', 'success');
+      logout();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      setErroExclusao(err.response?.data?.erro ?? 'Erro ao excluir conta');
+      setExcluindo(false);
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <BackHeader titulo="Segurança" />
@@ -378,6 +401,24 @@ export default function Seguranca() {
             </div>
           </section>
         )}
+
+        {/* Excluir conta (autoexclusão) — exigência da LGPD e da Play Store */}
+        <section>
+          <p className="section-label mb-2 px-1">Excluir conta</p>
+          <div className="card flex flex-col gap-3 border border-danger/30">
+            <p className="text-muted text-xs leading-relaxed">
+              {isAdmin
+                ? 'Exclui permanentemente a sua conta. Se você for o único dono da empresa, TODOS os dados da empresa (técnicos, serviços, estoque, avaliações e usuários) serão apagados em cascata. Esta ação é irreversível.'
+                : 'Exclui permanentemente a sua conta de acesso. Esta ação é irreversível.'}
+            </p>
+            <button
+              onClick={() => { setSenhaExclusao(''); setCodigoExclusao(''); setErroExclusao(''); setConfirmarExclusao(true); }}
+              className="btn-danger"
+            >
+              <Trash2 size={16} /> Excluir minha conta
+            </button>
+          </div>
+        </section>
       </div>
 
       {/* Modal — ativar 2FA */}
@@ -455,6 +496,33 @@ export default function Seguranca() {
           <button onClick={anonimizarCliente} disabled={anonimizando} className="btn-danger">
             {anonimizando ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} />}
             {anonimizando ? 'Anonimizando…' : 'Confirmar anonimização'}
+          </button>
+        </Modal>
+      )}
+
+      {/* Modal — confirmar exclusão de conta */}
+      {confirmarExclusao && (
+        <Modal titulo="Excluir conta" onClose={() => setConfirmarExclusao(false)}>
+          <p className="text-muted text-xs leading-relaxed">
+            {isAdmin
+              ? 'Atenção: se você for o único dono, isso apaga a EMPRESA INTEIRA e todos os seus dados, permanentemente. Confirme com sua senha para continuar.'
+              : 'Isso apaga sua conta permanentemente. Confirme com sua senha para continuar.'}
+          </p>
+          <CampoSenha label="Sua senha" valor={senhaExclusao} onChange={setSenhaExclusao} autoComplete="current-password" />
+          {dados?.twoFactorAtivo && (
+            <div>
+              <label className="kpi-label block mb-2">Código 2FA</label>
+              <CampoCodigo valor={codigoExclusao} onChange={setCodigoExclusao} onEnter={excluirConta} />
+            </div>
+          )}
+          {erroExclusao && <p className="text-danger text-xs">{erroExclusao}</p>}
+          <button
+            onClick={excluirConta}
+            disabled={excluindo || !senhaExclusao || (dados?.twoFactorAtivo && codigoExclusao.length !== 6)}
+            className="btn-danger disabled:opacity-50"
+          >
+            {excluindo ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+            {excluindo ? 'Excluindo…' : 'Excluir permanentemente'}
           </button>
         </Modal>
       )}

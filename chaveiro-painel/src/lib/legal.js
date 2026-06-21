@@ -86,7 +86,15 @@ export const politicaPrivacidade = {
       ],
     },
     {
-      titulo: '11. Contato',
+      titulo: '11. Exclusão de conta e dados',
+      paragrafos: [
+        'Você pode excluir sua conta a qualquer momento, sem precisar falar com o suporte, diretamente no painel ou no aplicativo: acesse Configuração → Segurança → "Excluir minha conta" e confirme com a sua senha (e o código 2FA, se estiver ativo).',
+        'O que é apagado: se você for o único dono da empresa, a exclusão remove permanentemente a empresa e todos os dados associados (usuários, técnicos, serviços, estoque, registros de ponto e avaliações). Para os demais usuários, apagamos apenas a sua conta de acesso.',
+        'Alternativa pela web: também é possível solicitar a exclusão por [privacidade@seudominio.com]; concluiremos em até 15 dias, ressalvados os dados que a lei exige reter (ex.: obrigações fiscais).',
+      ],
+    },
+    {
+      titulo: '12. Contato',
       paragrafos: [
         'Dúvidas sobre privacidade: [privacidade@seudominio.com]. Encarregado (DPO): [NOME]. ANPD: gov.br/anpd.',
       ],

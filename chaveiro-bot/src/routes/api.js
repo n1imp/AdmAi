@@ -782,6 +782,82 @@ apiRouter.patch('/me/senha', async (req, res) => {
   }
 });
 
+// Apaga uma empresa e TODOS os seus dados numa transação única, respeitando a ordem
+// de dependência das FKs (a maioria das relações com Empresa NÃO tem onDelete: Cascade,
+// então os filhos precisam sair antes do pai). Os modelos com cascade real no schema
+// (BatidaPonto←RegistroPonto, ServicoMaterial/MovimentacaoEstoque←Servico/Material,
+// Notificacao/ContaSocial←Usuario, EmpresaWhatsapp←Empresa) saem junto dos pais.
+async function apagarEmpresaEmCascata(empresaId) {
+  const where = { empresaId };
+  await prisma.$transaction([
+    prisma.registroPonto.deleteMany({ where }),    // → BatidaPonto (cascade)
+    prisma.avaliacao.deleteMany({ where }),
+    prisma.avaliacaoGoogle.deleteMany({ where }),
+    prisma.analiseAvaliacoes.deleteMany({ where }),
+    prisma.googleConta.deleteMany({ where }),
+    prisma.pagamento.deleteMany({ where }),
+    prisma.servico.deleteMany({ where }),          // → ServicoMaterial (cascade); MovEstoque.servicoId → null
+    prisma.material.deleteMany({ where }),          // → MovimentacaoEstoque (cascade)
+    prisma.tecnico.deleteMany({ where }),
+    prisma.sessaoConversa.deleteMany({ where }),
+    prisma.usuario.deleteMany({ where }),           // → Notificacao, ContaSocial (cascade)
+    prisma.empresaWhatsapp.deleteMany({ where }),
+    prisma.empresa.delete({ where: { id: empresaId } }),
+  ]);
+}
+
+// DELETE /api/me/conta — autoexclusão de conta (LGPD art. 18 + requisito da Play Store).
+// Exige reautenticação (senha + código 2FA TOTP quando ativo). Se o usuário for o ÚNICO
+// admin/dono ATIVO da empresa, apagar sua conta deixaria o tenant sem dono → apagamos a
+// EMPRESA INTEIRA em cascata. Caso contrário, removemos apenas a própria conta (a empresa
+// e os colegas permanecem; o vínculo Tecnico.usuarioId vira null por onDelete: SetNull).
+apiRouter.delete('/me/conta', async (req, res) => {
+  try {
+    const schema = z.object({
+      senha: z.string().optional(),
+      codigo: z.string().optional(),
+    });
+    const parse = schema.safeParse(req.body ?? {});
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
+
+    // Reautenticação por senha (contas com senha definida) — barra sequestro de sessão.
+    // Usa 403 (e não 401): a sessão é válida; o que falhou foi a autorização elevada
+    // para uma ação destrutiva. 401 dispararia o logout automático no interceptor do front.
+    if (usuario.senhaHash) {
+      const confere = await bcrypt.compare(parse.data.senha ?? '', usuario.senhaHash);
+      if (!confere) return res.status(403).json({ erro: 'Senha incorreta' });
+    }
+    // Se houver 2FA TOTP ativo, exige um código válido além da senha.
+    if (usuario.twoFactorAtivo) {
+      const segredo = decifrarSegredo(usuario.totpSecret);
+      const ok = segredo && (await verificarCodigo(segredo, parse.data.codigo ?? ''));
+      if (!ok) return res.status(403).json({ erro: 'Código 2FA inválido' });
+    }
+
+    const { empresaId } = usuario;
+    const adminsAtivos = await prisma.usuario.count({
+      where: { empresaId, ativo: true, admin: true },
+    });
+    const apagaEmpresa = usuario.admin && adminsAtivos <= 1;
+
+    if (apagaEmpresa) {
+      await apagarEmpresaEmCascata(empresaId);
+      logger.info('conta_excluida_empresa', { userId: usuario.id, empresaId });
+      return res.json({ ok: true, escopo: 'empresa', mensagem: 'Conta e empresa excluídas permanentemente' });
+    }
+
+    await prisma.usuario.delete({ where: { id: usuario.id } });
+    logger.info('conta_excluida_usuario', { userId: usuario.id, empresaId });
+    return res.json({ ok: true, escopo: 'usuario', mensagem: 'Conta excluída permanentemente' });
+  } catch (erro) {
+    logger.error('Erro DELETE /me/conta', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 // PATCH /api/me/2fa — REMOVIDO. O 2FA real é TOTP (app autenticador), via os
 // endpoints /me/2fa/setup, /me/2fa/ativar e /me/2fa/desativar abaixo. Mantemos um
 // 410 Gone para o frontend antigo parar de alternar o boolean (que deslogava).
@@ -1536,6 +1612,10 @@ apiRouter.get('/tecnicos', requirePermissao('tecnicos', 'ver'), async (req, res)
       include: {
         servicos: { where: { status: 'ativo' }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true } },
         pagamentos: { select: { valor: true } },
+        // admin do usuário vinculado distingue o DONO do funcionário. Desde que todo
+        // técnico passou a ganhar um login (RBAC), `usuarioId != null` deixou de
+        // identificar o dono — agora vale para qualquer funcionário com acesso.
+        usuario: { select: { admin: true } },
       },
       orderBy: { nome: 'asc' },
     });
@@ -1551,8 +1631,10 @@ apiRouter.get('/tecnicos', requirePermissao('tecnicos', 'ver'), async (req, res)
         metaMensal: t.metaMensal,
         fotoPerfil: t.fotoPerfil,
         ativo: t.ativo,
-        // Dono (técnico-self criado no cadastro) vs. funcionário comum.
-        ehDono: t.usuarioId != null,
+        // Dono (técnico-self do dono) vs. funcionário comum: o vínculo com um usuário
+        // admin marca o dono. `usuarioId != null` sozinho não serve mais (todo técnico
+        // ganha login no RBAC), senão todo funcionário apareceria como "Dono".
+        ehDono: t.usuario?.admin === true,
         criadoEm: t.criadoEm,
         totalServicos: t.servicos.length,
         receitaBruta: t.servicos.reduce((s, x) => s + x.valorCobrado, 0),

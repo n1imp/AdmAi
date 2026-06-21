@@ -12,6 +12,17 @@ process.env.JWT_SECRET ??= '0123456789012345678901234567890123456789';
 // ligamos a flag para exercitar o roteamento inbound (número único) — é código válido.
 process.env.WHATSAPP_HABILITADO ??= 'true';
 
+// Paridade com vitest.config.js: o .env do host pode trazer ADMIN_USERNAME/ADMIN_PASSWORD
+// inválidos (ex.: senha < 8 chars, ou um `#` que o dotenv corta como comentário inline),
+// o que faria env.js abortar (process.exit) ao subir os workers de integração. Como o
+// dotenv (dentro de env.js) NÃO sobrescreve vars já definidas, fixamos valores válidos aqui.
+if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 8) {
+  process.env.ADMIN_PASSWORD = 'test-admin-pass';
+}
+if (!process.env.ADMIN_USERNAME || !/^[a-zA-Z0-9_]{3,}$/.test(process.env.ADMIN_USERNAME)) {
+  process.env.ADMIN_USERNAME = 'testadmin';
+}
+
 export default defineConfig({
   test: {
     environment: 'node',

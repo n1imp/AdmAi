@@ -1,0 +1,13 @@
+{
+  "appId": "com.chaveirobot.app",
+  "appName": "ChaveiroBot",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
