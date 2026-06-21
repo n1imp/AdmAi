@@ -50,6 +50,7 @@ export async function bootstrapAdmin() {
           username: env.ADMIN_USERNAME,
           senhaHash,
           admin: true,
+          papel: 'dono',
           empresaId: empresa.id,
         },
       });

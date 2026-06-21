@@ -8,6 +8,9 @@ carregarEnv({ path: '.env.test' });
 process.env.NODE_ENV = 'test';
 process.env.API_TOKEN ??= 'test-api-token';
 process.env.JWT_SECRET ??= '0123456789012345678901234567890123456789';
+// O robô do WhatsApp é uma feature futura (inerte por padrão). Nos testes de integração
+// ligamos a flag para exercitar o roteamento inbound (número único) — é código válido.
+process.env.WHATSAPP_HABILITADO ??= 'true';
 
 export default defineConfig({
   test: {

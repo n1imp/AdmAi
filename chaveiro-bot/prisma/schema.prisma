@@ -15,6 +15,9 @@ model Empresa {
   nome      String
   slug      String   @unique
   ativo     Boolean  @default(true)
+  // Quando true, serviços registrados por funcionários entram como "pendente" e só
+  // contam (comissão/estoque) após aprovação do dono/gestor. Toggle por empresa.
+  aprovacaoServico Boolean @default(false)
   whatsapp  EmpresaWhatsapp?
   usuarios  Usuario[]
   tecnicos  Tecnico[]
@@ -107,12 +110,18 @@ model Servico {
   clienteTelefone String?
   msgOriginal    String
   remetenteWpp   String
+  // Fluxo de aprovação: "ativo" (conta normalmente) | "pendente" (aguarda dono/gestor) |
+  // "rejeitado". Serviços "pendente"/"rejeitado" NÃO geram comissão nem baixam estoque.
+  status         String            @default("ativo")
+  aprovadoPor    Int?              // Usuario que aprovou (auditoria)
+  aprovadoEm     DateTime?
   materiais      ServicoMaterial[]
   movimentacoes  MovimentacaoEstoque[]
   criadoEm      DateTime          @default(now())
 
   @@index([empresaId])
   @@index([empresaId, criadoEm])
+  @@index([empresaId, status])
   @@index([tecnicoId])
   @@index([local])
   @@index([endereco])
@@ -180,7 +189,15 @@ model Usuario {
   email               String?   @unique
   telefone            String?
   senhaHash           String?   // null em contas só de login social
-  admin               Boolean   @default(false)
+  admin               Boolean   @default(false)  // legado/compat: equivale a papel == "dono"
+  // ── RBAC do painel ────────────────────────────────────────────────────────
+  // papel: "dono" (acesso total) | "gestor" (operação) | "funcionario" (só o próprio).
+  papel               String    @default("funcionario")
+  // Overrides granulares sobre o preset do papel: { modulo: { acao: bool }, proprio: {...} }.
+  // null = usa o preset puro do papel (ver services/permissoes.js).
+  permissoes          Json?
+  // PIN inicial entregue pelo dono: enquanto true, força troca de senha no 1º acesso.
+  senhaProvisoria     Boolean   @default(false)
   ativo               Boolean   @default(true)
   // Verificação
   emailVerificado     Boolean   @default(false)
@@ -318,10 +335,30 @@ model RegistroPonto {
   saidaEm         DateTime?
   totalMinutos    Int?      // minutos trabalhados no dia (descontado o almoço)
   horaExtraMinutos Int?     // minutos de hora extra conforme a modalidade
+  batidas         BatidaPonto[]
   criadoEm        DateTime  @default(now())
 
   @@unique([tecnicoId, data])
   @@index([empresaId, data])
+}
+
+// Prova de cada BATIDA de ponto (uma por evento do dia). Guarda hora do servidor +
+// geolocalização + selfie como evidência anti-fraude. O agregado do dia continua em
+// RegistroPonto; aqui ficam as provas individuais (padrão de MovimentacaoEstoque).
+model BatidaPonto {
+  id         Int           @id @default(autoincrement())
+  registro   RegistroPonto @relation(fields: [registroId], references: [id], onDelete: Cascade)
+  registroId Int
+  tipo       String        // "entrada" | "almoco_saida" | "almoco_volta" | "saida"
+  em         DateTime      // timestamp do SERVIDOR no momento da batida
+  lat        Float?        // latitude capturada do navegador
+  lng        Float?        // longitude capturada do navegador
+  precisao   Float?        // precisão do GPS em metros (accuracy)
+  selfieUrl  String?       // caminho/URL da selfie de prova (volume de uploads)
+  origem     String        @default("painel") // "painel" | "whatsapp"
+  criadoEm   DateTime      @default(now())
+
+  @@index([registroId])
 }
 
 // Conexão Google Business Profile por empresa (OAuth2). Tokens CIFRADOS em repouso.

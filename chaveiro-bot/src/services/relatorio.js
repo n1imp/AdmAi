@@ -15,7 +15,8 @@ import { resumoMes, formatarDuracao } from './ponto.js';
 export async function gerarRelatorioPDF(inicio, fim, empresaId) {
   if (!empresaId) throw new Error('empresaId obrigatório para gerar relatório');
   const servicos = await prisma.servico.findMany({
-    where: { empresaId, criadoEm: { gte: inicio, lte: fim } },
+    // status 'ativo': serviços pendentes/rejeitados (aprovação) não entram no fechamento.
+    where: { empresaId, status: 'ativo', criadoEm: { gte: inicio, lte: fim } },
     include: { tecnico: true },
     orderBy: { criadoEm: 'asc' },
   });

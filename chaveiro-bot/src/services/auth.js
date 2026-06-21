@@ -3,7 +3,14 @@ import { env } from '../config/env.js';
 
 export function gerarJWT(usuario) {
   return jwt.sign(
-    { id: usuario.id, nome: usuario.nome, admin: usuario.admin, empresaId: usuario.empresaId },
+    {
+      id: usuario.id,
+      nome: usuario.nome,
+      admin: usuario.admin,
+      papel: usuario.papel ?? (usuario.admin ? 'dono' : 'funcionario'),
+      senhaProvisoria: Boolean(usuario.senhaProvisoria),
+      empresaId: usuario.empresaId,
+    },
     env.JWT_SECRET,
     { algorithm: 'HS256', expiresIn: '24h' }
   );

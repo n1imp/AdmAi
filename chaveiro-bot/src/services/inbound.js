@@ -2,6 +2,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
+import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { normalizarTelefone } from './parser.js';
 import {
@@ -34,6 +35,12 @@ const UPLOADS_DIR = path.resolve('./uploads');
  * @param {object} evento  Evento já validado (shape Evolution v2)
  */
 export async function rotearMensagemInbound(evento) {
+  // Robô do WhatsApp é uma FEATURE FUTURA: enquanto WHATSAPP_HABILITADO !== 'true', o
+  // bot fica inerte (o webhook ainda responde 200, mas nenhum evento é processado).
+  // Toda a estrutura (Evolution, conversa, ponto/serviço via chat) segue pronta para
+  // religar só virando a flag.
+  if (env.WHATSAPP_HABILITADO !== 'true') return { tratado: false, ignorado: 'whatsapp_desabilitado' };
+
   const msg = extrairMensagem(evento);
   if (!msg) return { tratado: false };
 

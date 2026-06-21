@@ -9,7 +9,7 @@ import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { prismaParaEmpresa } from '../db/tenant.js';
 import { gerarRelatorioPDF, gerarRelatorioPonto, gerarCsvPonto } from '../services/relatorio.js';
-import { resumoMes } from '../services/ponto.js';
+import { resumoMes, registrarPonto, diaLocal, ROTULO_BATIDA } from '../services/ponto.js';
 import { buscarOuCriarTecnico } from '../services/servico.js';
 import { movimentarEstoque, darBaixaPorServico } from '../services/estoque.js';
 import { agendarAvaliacao } from '../services/avaliacao.js';
@@ -18,13 +18,18 @@ import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { contemInsensivel } from '../utils/busca.js';
 import { gerarJWT, verificarJWT, tokenAindaValido } from '../services/auth.js';
+import {
+  permissoesEfetivas, pode, podeProprio, sanitizarPermissoes, presetDoPapel,
+  PAPEIS, MODULOS, ACOES_POR_MODULO, CAPACIDADES_PROPRIO,
+} from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import {
   gerarSegredoTotp, montarOtpauthUrl, verificarCodigo,
   cifrarSegredo, decifrarSegredo,
 } from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
-import { canonizarTelefone } from '../services/parser.js';
+import { canonizarTelefone, variantesTelefone } from '../services/parser.js';
+import { criarAcessoTecnico, resetarPin } from '../services/credenciais.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { verificarIdToken, provedoresHabilitados, OAuthError } from '../services/oauth.js';
 
@@ -38,14 +43,29 @@ async function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ erro: 'Token ausente' });
   try {
     const payload = verificarJWT(token);
-    const usuario = await prisma.usuario.findUnique({ where: { id: payload.id } });
+    // Carrega o técnico vinculado (escopo "próprio" do funcionário) num único round-trip.
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: payload.id },
+      include: { tecnico: { select: { id: true } } },
+    });
     if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
     if (!tokenAindaValido(payload, usuario.tokenValidoApos)) {
       return res.status(401).json({ erro: 'Sessão expirada. Faça login novamente.' });
     }
     // Usa o empresaId AUTORITATIVO do banco — nunca o derivado do token (pode estar
-    // defasado se o vínculo da empresa mudou após a emissão do JWT).
-    req.user = { id: usuario.id, nome: usuario.nome, username: usuario.username, admin: usuario.admin, empresaId: usuario.empresaId };
+    // defasado se o vínculo da empresa mudou após a emissão do JWT). O mesmo vale para
+    // `papel`/`permissoes`: são sempre do banco, o token é só um espelho para o front.
+    req.user = {
+      id: usuario.id,
+      nome: usuario.nome,
+      username: usuario.username,
+      admin: usuario.admin,
+      papel: usuario.papel,
+      empresaId: usuario.empresaId,
+      tecnicoId: usuario.tecnico?.id ?? null,        // escopo "próprio" (nunca confiar no client)
+      senhaProvisoria: usuario.senhaProvisoria,
+      permissoesEfetivas: permissoesEfetivas(usuario),
+    };
     // Client Prisma escopado à empresa do usuário — TODA query de negócio usa req.db.
     req.db = prismaParaEmpresa(usuario.empresaId);
     next();
@@ -54,9 +74,19 @@ async function requireAuth(req, res, next) {
   }
 }
 
+// Restringe a administradores (dono). Mantido para rotas legadas; novas rotas devem
+// preferir requirePermissao(modulo, acao), que respeita papel + overrides.
 function adminOnly(req, res, next) {
   if (!req.user?.admin) return res.status(403).json({ erro: 'Acesso restrito a administradores' });
   next();
+}
+
+// Exige uma permissão de módulo/ação (RBAC granular). Ex.: requirePermissao('usuarios','editar').
+function requirePermissao(modulo, acao) {
+  return (req, res, next) => {
+    if (pode(req.user, modulo, acao)) return next();
+    return res.status(403).json({ erro: 'Sem permissão para esta ação' });
+  };
 }
 
 export { requireAuth };
@@ -161,6 +191,18 @@ async function gerarUsernameUnico(base) {
   return username;
 }
 
+// Shape padrão da resposta de login bem-sucedido. `papel` e `senhaProvisoria` guiam o
+// painel (RBAC + tela de troca de senha forçada). O token também os carrega.
+function payloadSessao(usuario, token) {
+  return {
+    token,
+    nome: usuario.nome,
+    admin: usuario.admin,
+    papel: usuario.papel ?? (usuario.admin ? 'dono' : 'funcionario'),
+    senhaProvisoria: Boolean(usuario.senhaProvisoria),
+  };
+}
+
 // Emite a sessão padrão pós-autenticação. Reusa a MESMA regra do login por senha:
 // se o 2FA está ativo (com segredo TOTP), devolve um desafio curto em vez do token.
 function responderSessao(res, usuario, via) {
@@ -170,7 +212,7 @@ function responderSessao(res, usuario, via) {
   }
   const token = gerarJWT(usuario);
   logger.info('login_success', { userId: usuario.id, via });
-  return res.json({ token, nome: usuario.nome, admin: usuario.admin });
+  return res.json(payloadSessao(usuario, token));
 }
 
 // ── DESAFIO 2FA (JWT curto entre senha-OK e código TOTP) ──────────────────────
@@ -208,34 +250,64 @@ async function gerarEEnviarOtp(userId, telefone) {
 
 // ── ROTAS PÚBLICAS (sem auth) ─────────────────────────────────────────────────
 
-// POST /api/auth/login
+// POST /api/auth/login — por USERNAME (dono) ou TELEFONE (funcionário).
+// O técnico entra pelo telefone (modelo de número único). Como o mesmo telefone pode
+// existir em mais de uma empresa, quando há ambiguidade devolvemos a lista de empresas
+// (`desambiguacao`) e o cliente repete o login com `usuarioId`.
 apiRouter.post('/auth/login', async (req, res) => {
   const schema = z.object({
-    username: z.string().min(1),
+    username: z.string().min(1).optional(),
+    telefone: z.string().min(1).optional(),
+    usuarioId: z.number().int().positive().optional(),
     password: z.string().min(1),
+  }).refine((d) => d.username || d.telefone || d.usuarioId, {
+    message: 'Informe usuário ou telefone',
   });
   const parse = schema.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
 
-  const { username, password } = parse.data;
+  const { username, telefone, usuarioId, password } = parse.data;
+  const ref = username ?? telefone ?? `id:${usuarioId}`;
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { username } });
+    let usuario = null;
+    if (usuarioId) {
+      usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+    } else if (username) {
+      usuario = await prisma.usuario.findUnique({ where: { username } });
+    } else {
+      // Login por telefone: casa por variantes (tolerante ao 9º dígito BR).
+      const variantes = variantesTelefone(telefone);
+      const candidatos = variantes.length
+        ? await prisma.usuario.findMany({
+            where: { telefone: { in: variantes }, ativo: true },
+            include: { empresa: { select: { nome: true } } },
+          })
+        : [];
+      if (candidatos.length > 1) {
+        // Ambiguidade entre empresas → o cliente escolhe e refaz com usuarioId.
+        logger.info('login_desambiguacao', { telefone: '***', n: candidatos.length });
+        return res.json({
+          desambiguacao: candidatos.map((c) => ({ usuarioId: c.id, empresa: c.empresa?.nome ?? '—' })),
+        });
+      }
+      usuario = candidatos[0] ?? null;
+    }
     if (!usuario) {
-      logger.info('login_failure', { username, motivo: 'user_not_found' });
+      logger.info('login_failure', { ref, motivo: 'user_not_found' });
       return res.status(401).json({ erro: 'Credenciais inválidas' });
     }
     if (!usuario.ativo) {
-      logger.info('login_failure', { username, motivo: 'user_inactive' });
+      logger.info('login_failure', { ref, motivo: 'user_inactive' });
       return res.status(401).json({ erro: 'Usuário inativo' });
     }
     // Conta criada só por login social não tem senha — orienta a entrar pelo provedor.
     if (!usuario.senhaHash) {
-      logger.info('login_failure', { username, motivo: 'sem_senha_social' });
+      logger.info('login_failure', { ref, motivo: 'sem_senha_social' });
       return res.status(401).json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
     }
     const senhaCorreta = await bcrypt.compare(password, usuario.senhaHash);
     if (!senhaCorreta) {
-      logger.info('login_failure', { username, motivo: 'invalid_password' });
+      logger.info('login_failure', { ref, motivo: 'invalid_password' });
       return res.status(401).json({ erro: 'Credenciais inválidas' });
     }
     // 2FA ativo → não emite o token de sessão; devolve um desafio curto. O cliente
@@ -255,7 +327,7 @@ apiRouter.post('/auth/login', async (req, res) => {
     }
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id });
-    res.json({ token, nome: usuario.nome, admin: usuario.admin });
+    res.json(payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -294,7 +366,7 @@ apiRouter.post('/auth/login/2fa', async (req, res) => {
     }
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa' });
-    res.json({ token, nome: usuario.nome, admin: usuario.admin });
+    res.json(payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -330,7 +402,7 @@ apiRouter.post('/auth/login/2fa-telefone', async (req, res) => {
     await limparOtpTelefone(usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa-telefone' });
-    res.json({ token, nome: usuario.nome, admin: usuario.admin });
+    res.json(payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa-telefone', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -361,8 +433,8 @@ apiRouter.post('/setup', async (req, res) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
       return tx.usuario.create({
-        data: { nome, username, senhaHash, admin: true, empresaId: empresa.id },
-        select: { id: true, nome: true, username: true, admin: true, empresaId: true },
+        data: { nome, username, senhaHash, admin: true, papel: 'dono', empresaId: empresa.id },
+        select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true },
       });
     });
     const token = gerarJWT(usuario);
@@ -404,7 +476,7 @@ apiRouter.post('/auth/register', async (req, res) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
       return tx.usuario.create({
-        data: { nome, username, email, telefone: telefoneCanonico, senhaHash, admin: true, empresaId: empresa.id },
+        data: { nome, username, email, telefone: telefoneCanonico, senhaHash, admin: true, papel: 'dono', empresaId: empresa.id },
         select: { id: true, nome: true, username: true, email: true, telefone: true, admin: true, ativo: true, telefoneVerificado: true, empresaId: true, criadoEm: true },
       });
     });
@@ -507,7 +579,7 @@ apiRouter.post('/auth/oauth/:provedor', async (req, res) => {
       const novo = await tx.usuario.create({
         data: {
           nome, username, email: emailConfiavel,
-          senhaHash: null, admin: true, empresaId: empresa.id,
+          senhaHash: null, admin: true, papel: 'dono', empresaId: empresa.id,
           emailVerificado: Boolean(emailConfiavel),
         },
       });
@@ -530,11 +602,25 @@ apiRouter.post('/auth/oauth/:provedor', async (req, res) => {
 // ── MIDDLEWARE GLOBAL — aplica às rotas abaixo ────────────────────────────────
 apiRouter.use(requireAuth);
 
+// Senha provisória (PIN inicial): bloqueia tudo no servidor até o funcionário definir
+// uma senha definitiva. Allow-list mínima: ler o próprio /me e trocar a senha. Devolve
+// 403 com `codigo` (o painel intercepta e força a tela de nova senha). Não é 401 de
+// propósito — 401 dispara o redirect para /login e descartaria o fluxo.
+apiRouter.use((req, res, next) => {
+  if (!req.user?.senhaProvisoria) return next();
+  const liberado =
+    (req.method === 'GET' && req.path === '/me') ||
+    (req.method === 'PATCH' && req.path === '/me/senha');
+  if (liberado) return next();
+  return res.status(403).json({ erro: 'Defina uma nova senha para continuar', codigo: 'senha_provisoria' });
+});
+
 // ── CONTA DO USUÁRIO LOGADO (/me) ─────────────────────────────────────────────
 
 const SELECT_ME = {
   id: true, nome: true, username: true, email: true, telefone: true,
-  admin: true, ativo: true, emailVerificado: true, telefoneVerificado: true,
+  admin: true, papel: true, senhaProvisoria: true, ativo: true,
+  emailVerificado: true, telefoneVerificado: true,
   twoFactorAtivo: true, senhaAlteradaEm: true, criadoEm: true,
 };
 
@@ -546,6 +632,76 @@ apiRouter.get('/me', async (req, res) => {
     res.json(usuario);
   } catch (erro) {
     logger.error('Erro GET /me', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// GET /api/me/permissoes — papel + permissões EFETIVAS do usuário logado.
+// O painel usa isto para mostrar/esconder navegação e telas (a checagem real é no
+// servidor; isto é só UX). Disponível para qualquer usuário autenticado (vê o próprio).
+apiRouter.get('/me/permissoes', (req, res) => {
+  res.json({
+    papel: req.user.papel,
+    admin: req.user.admin,
+    permissoes: req.user.permissoesEfetivas,
+  });
+});
+
+// GET /api/me/metricas — métricas do PRÓPRIO funcionário (self-scope). Nunca expõe
+// dados de outros técnicos. tecnicoId vem de req.user (autoritativo do banco).
+apiRouter.get('/me/metricas', async (req, res) => {
+  try {
+    if (!podeProprio(req.user, 'ver_metricas')) return res.status(403).json({ erro: 'Sem permissão' });
+    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    const id = req.user.tecnicoId;
+    const filtroMes = construirFiltroPeriodo('mes');
+    const [tecnico, todos, pagamentos, doMes, pendentes] = await Promise.all([
+      req.db.tecnico.findUnique({ where: { id } }),
+      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo' }, select: { valorLiquido: true, comissaoGerada: true }, take: MAX_AGREGACAO }),
+      req.db.pagamento.findMany({ where: { tecnicoId: id }, select: { valor: true }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMes }, select: { valorLiquido: true, comissaoGerada: true }, take: MAX_AGREGACAO }),
+      req.db.servico.count({ where: { tecnicoId: id, status: 'pendente' } }),
+    ]);
+    if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
+    const comissaoGanha = todos.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
+    const recebido = pagamentos.reduce((s, x) => s + x.valor, 0);
+    const receitaMes = doMes.reduce((s, x) => s + x.valorLiquido, 0);
+    const comissaoMes = doMes.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
+    res.json({
+      tecnico: { id: tecnico.id, nome: tecnico.nome, comissao: tecnico.comissao, metaMensal: tecnico.metaMensal, fotoPerfil: tecnico.fotoPerfil },
+      totalServicos: todos.length,
+      comissaoGanha: parseFloat(comissaoGanha.toFixed(2)),
+      totalRecebido: parseFloat(recebido.toFixed(2)),
+      saldoPendente: parseFloat((comissaoGanha - recebido).toFixed(2)),
+      servicosPendentes: pendentes,
+      mesAtual: {
+        receitaLiquida: parseFloat(receitaMes.toFixed(2)),
+        comissao: parseFloat(comissaoMes.toFixed(2)),
+        meta: tecnico.metaMensal ?? null,
+        progressoMeta: tecnico.metaMensal ? Math.min(100, Math.round((receitaMes / tecnico.metaMensal) * 100)) : null,
+      },
+    });
+  } catch (erro) {
+    logger.error('Erro GET /me/metricas', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// GET /api/me/servicos — os PRÓPRIOS serviços do funcionário (inclui pendentes/rejeitados).
+apiRouter.get('/me/servicos', async (req, res) => {
+  try {
+    if (!podeProprio(req.user, 'ver_metricas') && !podeProprio(req.user, 'registrar_servico')) {
+      return res.status(403).json({ erro: 'Sem permissão' });
+    }
+    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    const servicos = await req.db.servico.findMany({
+      where: { tecnicoId: req.user.tecnicoId },
+      orderBy: { criadoEm: 'desc' },
+      take: 100,
+    });
+    res.json(servicos);
+  } catch (erro) {
+    logger.error('Erro GET /me/servicos', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -610,12 +766,14 @@ apiRouter.patch('/me/senha', async (req, res) => {
     // então um corte = agora poderia invalidar o token recém-emitido na mesma
     // janela de segundo. Recuar 1s garante que o novo token permaneça válido.
     const corte = new Date(agora.getTime() - 1000);
-    // Invalida todas as sessões antigas — o próprio cliente recebe novo token
-    await prisma.usuario.update({
+    // Invalida todas as sessões antigas — o próprio cliente recebe novo token.
+    // Limpa senhaProvisoria: se era um PIN inicial, agora vira senha definitiva.
+    const atualizado = await prisma.usuario.update({
       where: { id: req.user.id },
-      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: corte },
+      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: corte, senhaProvisoria: false },
     });
-    const token = gerarJWT(usuario);
+    // Emite o novo token a partir do registro ATUALIZADO (senhaProvisoria já = false).
+    const token = gerarJWT(atualizado);
     logger.info('senha_alterada', { userId: req.user.id });
     res.json({ mensagem: 'Senha alterada com sucesso', token });
   } catch (erro) {
@@ -952,12 +1110,14 @@ apiRouter.delete('/notificacoes/:id', async (req, res) => {
 });
 
 // ── GET /api/servicos ─────────────────────────────────────────────────────────
-apiRouter.get('/servicos', async (req, res) => {
+apiRouter.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) => {
   try {
     const { tecnico, local, endereco, inicio, fim, page = '1', limit = '20' } = req.query;
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
-    const where = {};
+    // Por padrão a lista mostra só serviços que CONTAM (ativo). Pendentes/rejeitados
+    // ficam na fila de aprovação; um ?status explícito permite filtrá-los.
+    const where = { status: req.query.status ? String(req.query.status) : 'ativo' };
     if (tecnico) where.tecnico = { nome: contemInsensivel(tecnico) };
     if (local) where.local = contemInsensivel(local);
     if (endereco) where.endereco = contemInsensivel(endereco);
@@ -980,8 +1140,26 @@ apiRouter.get('/servicos', async (req, res) => {
   }
 });
 
+// ── GET /api/servicos/pendentes ───────────────────────────────────────────────
+// Fila de aprovação (dono/gestor). DEVE vir antes de /servicos/:id (senão ":id"
+// captura "pendentes").
+apiRouter.get('/servicos/pendentes', requirePermissao('aprovacoes', 'ver'), async (req, res) => {
+  try {
+    const pendentes = await req.db.servico.findMany({
+      where: { status: 'pendente' },
+      include: { tecnico: { select: { id: true, nome: true } } },
+      orderBy: { criadoEm: 'asc' },
+      take: 200,
+    });
+    res.json(pendentes);
+  } catch (erro) {
+    logger.error('Erro GET /servicos/pendentes', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 // ── GET /api/servicos/:id ─────────────────────────────────────────────────────
-apiRouter.get('/servicos/:id', async (req, res) => {
+apiRouter.get('/servicos/:id', requirePermissao('servicos', 'ver'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -996,7 +1174,9 @@ apiRouter.get('/servicos/:id', async (req, res) => {
 
 // ── POST /api/servicos ────────────────────────────────────────────────────────
 const schemaServico = z.object({
-  tecnico: z.string().min(2),
+  // Opcional: o funcionário registra SEMPRE como ele mesmo (tecnico ignorado e forçado
+  // para o próprio). Dono/gestor informam o técnico (validado no handler).
+  tecnico: z.string().min(2).optional().nullable(),
   local: z.string().min(2),
   endereco: z.string().optional().nullable(),
   descricao: z.string().min(3),
@@ -1012,20 +1192,49 @@ const schemaServico = z.object({
   })).optional().default([]),
 });
 
-apiRouter.post('/servicos', async (req, res) => {
+// Pode registrar serviço quem tem servicos.criar (dono/gestor) OU a capacidade própria
+// do funcionário (registrar o PRÓPRIO serviço).
+function podeRegistrarServico(req, res, next) {
+  if (pode(req.user, 'servicos', 'criar') || podeProprio(req.user, 'registrar_servico')) return next();
+  return res.status(403).json({ erro: 'Sem permissão para registrar serviço' });
+}
+
+apiRouter.post('/servicos', podeRegistrarServico, async (req, res) => {
   try {
     const parse = schemaServico.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const dados = parse.data;
     const empresaId = req.user.empresaId;
-    const tecnico = await buscarOuCriarTecnico(dados.tecnico, empresaId);
+    const ehFuncionario = req.user.papel === 'funcionario';
+
+    // Funcionário registra SEMPRE como ele mesmo (self-scope no servidor, nunca confia no
+    // client) e NÃO mexe no catálogo de estoque (não tem acesso a estoque).
+    let tecnico;
+    let materiais = dados.materiais;
+    if (ehFuncionario) {
+      if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+      tecnico = await prisma.tecnico.findUnique({ where: { id: req.user.tecnicoId } });
+      if (!tecnico) return res.status(400).json({ erro: 'Técnico não encontrado' });
+      materiais = []; // funcionário não baixa estoque do catálogo
+    } else {
+      if (!dados.tecnico) return res.status(400).json({ erro: 'Informe o técnico' });
+      tecnico = await buscarOuCriarTecnico(dados.tecnico, empresaId);
+    }
+
     const valorLiquido = dados.valorCobrado - dados.valorMaterial;
     const comissaoGerada = parseFloat((valorLiquido * (tecnico.comissao / 100)).toFixed(2));
 
+    // Aprovação: só serviço de FUNCIONÁRIO numa empresa com aprovacaoServico ligada entra
+    // como "pendente" (não conta comissão/receita/estoque até a aprovação do dono/gestor).
+    let status = 'ativo';
+    if (ehFuncionario) {
+      const emp = await prisma.empresa.findUnique({ where: { id: empresaId }, select: { aprovacaoServico: true } });
+      if (emp?.aprovacaoServico) status = 'pendente';
+    }
+
     const servico = await prisma.$transaction(async (tx) => {
-      // Garante que os materiais consumidos pertencem à empresa (evita IDOR)
-      if (dados.materiais.length > 0) {
-        const ids = dados.materiais.map((m) => m.materialId);
+      if (materiais.length > 0) {
+        const ids = materiais.map((m) => m.materialId);
         const validos = await tx.material.count({ where: { id: { in: ids }, empresaId } });
         if (validos !== ids.length) throw new Error('Material de outra empresa');
       }
@@ -1041,30 +1250,28 @@ apiRouter.post('/servicos', async (req, res) => {
           valorMaterial: dados.valorMaterial,
           valorLiquido,
           comissaoGerada,
+          status,
           clienteNome: dados.clienteNome ?? null,
           clienteTelefone: dados.clienteTelefone ?? null,
-          msgOriginal: 'CADASTRO_MANUAL',
-          remetenteWpp: 'painel-admin',
-          materiais: dados.materiais.length > 0
-            ? { create: dados.materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })) }
+          msgOriginal: ehFuncionario ? 'CADASTRO_FUNCIONARIO' : 'CADASTRO_MANUAL',
+          remetenteWpp: ehFuncionario ? `painel-func:${req.user.id}` : 'painel-admin',
+          materiais: materiais.length > 0
+            ? { create: materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })) }
             : undefined,
         },
         include: { tecnico: true },
       });
-      // Baixa automática no estoque dos materiais consumidos
-      if (dados.materiais.length > 0) {
-        await darBaixaPorServico(criado.id, dados.materiais, tx);
+      // Pendente NÃO baixa estoque nem agenda avaliação — isso ocorre na aprovação.
+      if (status === 'ativo' && materiais.length > 0) {
+        await darBaixaPorServico(criado.id, materiais, tx);
       }
       return criado;
     });
 
-    // Agenda a avaliação do cliente (mesma regra do fluxo via WhatsApp)
-    if (dados.clienteTelefone) {
+    if (status === 'ativo' && dados.clienteTelefone) {
       agendarAvaliacao({
-        empresaId,
-        servicoId: servico.id,
-        clienteTelefone: dados.clienteTelefone,
-        clienteNome: dados.clienteNome ?? null,
+        empresaId, servicoId: servico.id,
+        clienteTelefone: dados.clienteTelefone, clienteNome: dados.clienteNome ?? null,
       }).catch((e) => logger.warn('Falha ao agendar avaliação (manual)', { erro: e.message }));
     }
 
@@ -1075,8 +1282,62 @@ apiRouter.post('/servicos', async (req, res) => {
   }
 });
 
+// POST /api/servicos/:id/aprovar — aprova um serviço pendente: passa a contar
+// (comissão/receita), baixa o estoque dos materiais (se houver) e agenda a avaliação.
+apiRouter.post('/servicos/:id/aprovar', requirePermissao('aprovacoes', 'aprovar'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const servico = await req.db.servico.findUnique({
+      where: { id },
+      include: { materiais: { select: { materialId: true, quantidade: true } } },
+    });
+    if (!servico) return res.status(404).json({ erro: 'Serviço não encontrado' });
+    if (servico.status !== 'pendente') return res.status(409).json({ erro: 'Serviço não está pendente' });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.servico.update({
+        where: { id },
+        data: { status: 'ativo', aprovadoPor: req.user.id, aprovadoEm: new Date() },
+      });
+      if (servico.materiais.length > 0) {
+        await darBaixaPorServico(id, servico.materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })), tx);
+      }
+    });
+    if (servico.clienteTelefone) {
+      agendarAvaliacao({
+        empresaId: req.user.empresaId, servicoId: id,
+        clienteTelefone: servico.clienteTelefone, clienteNome: servico.clienteNome ?? null,
+      }).catch((e) => logger.warn('Falha ao agendar avaliação (aprovação)', { erro: e.message }));
+    }
+    logger.info('servico_aprovado', { id, aprovadoPor: req.user.id });
+    res.json({ mensagem: 'Serviço aprovado', id, status: 'ativo' });
+  } catch (erro) {
+    logger.error('Erro POST /servicos/:id/aprovar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/servicos/:id/rejeitar — rejeita um serviço pendente (não conta, não baixa).
+apiRouter.post('/servicos/:id/rejeitar', requirePermissao('aprovacoes', 'aprovar'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const r = await req.db.servico.updateMany({
+      where: { id, status: 'pendente' },
+      data: { status: 'rejeitado', aprovadoPor: req.user.id, aprovadoEm: new Date() },
+    });
+    if (r.count === 0) return res.status(404).json({ erro: 'Serviço pendente não encontrado' });
+    logger.info('servico_rejeitado', { id, por: req.user.id });
+    res.json({ mensagem: 'Serviço rejeitado', id, status: 'rejeitado' });
+  } catch (erro) {
+    logger.error('Erro POST /servicos/:id/rejeitar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 // ── DELETE /api/servicos/:id ──────────────────────────────────────────────────
-apiRouter.delete('/servicos/:id', adminOnly, async (req, res) => {
+apiRouter.delete('/servicos/:id', requirePermissao('servicos', 'deletar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1093,7 +1354,7 @@ apiRouter.delete('/servicos/:id', adminOnly, async (req, res) => {
 
 // ── GET /api/avaliacoes ───────────────────────────────────────────────────────
 // Lista as avaliações da empresa (com o serviço relacionado) + resumo de média.
-apiRouter.get('/avaliacoes', async (req, res) => {
+apiRouter.get('/avaliacoes', requirePermissao('avaliacoes', 'ver'), async (req, res) => {
   try {
     const empresaId = req.user.empresaId;
     const { status } = req.query;
@@ -1132,7 +1393,7 @@ apiRouter.get('/avaliacoes', async (req, res) => {
 // ── GET /api/avaliacoes/config ────────────────────────────────────────────────
 // Config da solicitação de avaliação (migrada da aba WhatsApp): ativar/desativar,
 // template da mensagem, intervalo (horas) e link. Vive em EmpresaWhatsapp.
-apiRouter.get('/avaliacoes/config', async (req, res) => {
+apiRouter.get('/avaliacoes/config', requirePermissao('avaliacoes', 'ver'), async (req, res) => {
   try {
     const cfg = await req.db.empresaWhatsapp.findUnique({
       where: { empresaId: req.user.empresaId },
@@ -1151,7 +1412,7 @@ apiRouter.get('/avaliacoes/config', async (req, res) => {
 });
 
 // ── PATCH /api/avaliacoes/config ──────────────────────────────────────────────
-apiRouter.patch('/avaliacoes/config', async (req, res) => {
+apiRouter.patch('/avaliacoes/config', requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       reviewAtivo: z.boolean().optional(),
@@ -1182,7 +1443,7 @@ apiRouter.patch('/avaliacoes/config', async (req, res) => {
 });
 
 // ── GET /api/dashboard ────────────────────────────────────────────────────────
-apiRouter.get('/dashboard', async (req, res) => {
+apiRouter.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) => {
   try {
     const { periodo = 'mes', inicio, fim } = req.query;
     const filtroDatas = construirFiltroPeriodo(periodo, inicio, fim);
@@ -1190,13 +1451,13 @@ apiRouter.get('/dashboard', async (req, res) => {
 
     const [servicos, servicosAnterior] = await Promise.all([
       req.db.servico.findMany({
-        where: { criadoEm: filtroDatas },
+        where: { status: 'ativo', criadoEm: filtroDatas },
         include: { tecnico: { select: { nome: true } } },
         orderBy: { criadoEm: 'asc' },
         take: MAX_AGREGACAO,
       }),
       req.db.servico.findMany({
-        where: { criadoEm: filtroAnterior },
+        where: { status: 'ativo', criadoEm: filtroAnterior },
         select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true },
         take: MAX_AGREGACAO,
       }),
@@ -1269,11 +1530,11 @@ apiRouter.get('/dashboard', async (req, res) => {
 });
 
 // ── GET /api/tecnicos ─────────────────────────────────────────────────────────
-apiRouter.get('/tecnicos', async (req, res) => {
+apiRouter.get('/tecnicos', requirePermissao('tecnicos', 'ver'), async (req, res) => {
   try {
     const tecnicos = await req.db.tecnico.findMany({
       include: {
-        servicos: { select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true } },
+        servicos: { where: { status: 'ativo' }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true } },
         pagamentos: { select: { valor: true } },
       },
       orderBy: { nome: 'asc' },
@@ -1339,6 +1600,8 @@ const schemaNovoTecnico = z.object({
   jornadaDiariaMin: z.number().int().positive().optional().nullable(),
   jornadaSemanalMin: z.number().int().positive().optional().nullable(),
   fotoPerfil: z.string().optional().nullable(), // URL ou data-URL (foto opcional do cadastro)
+  // Por padrão todo técnico vira usuário (login por telefone + PIN). false p/ não criar.
+  criarAcesso: z.boolean().optional(),
 }).superRefine((d, ctx) => {
   // dataOpcional vira `undefined` quando a string é uma data inválida.
   if (d.dataNascimento === undefined) {
@@ -1349,7 +1612,7 @@ const schemaNovoTecnico = z.object({
   }
 });
 
-apiRouter.post('/tecnicos', async (req, res) => {
+apiRouter.post('/tecnicos', requirePermissao('tecnicos', 'editar'), async (req, res) => {
   try {
     const parse = schemaNovoTecnico.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
@@ -1379,10 +1642,69 @@ apiRouter.post('/tecnicos', async (req, res) => {
         fotoPerfil: d.fotoPerfil ?? null,
       },
     });
-    res.status(201).json(tecnico);
+
+    // Acesso ao painel: por padrão todo técnico vira usuário (login por telefone + PIN).
+    // Só o DONO pode atribuir papel "gestor" (via nivelAcesso); demais → "funcionario"
+    // (impede escalonamento por quem só edita técnicos). Falha aqui não desfaz o técnico:
+    // o dono pode usar "criar acesso" depois.
+    let acesso = null;
+    if (d.criarAcesso !== false && canonico) {
+      const papel = (req.user.papel === 'dono' && d.nivelAcesso === 'gestor') ? 'gestor' : 'funcionario';
+      try {
+        const r = await criarAcessoTecnico({ tecnico, empresaId: req.user.empresaId, papel });
+        acesso = { usuarioId: r.usuario.id, username: r.usuario.username, telefone: r.usuario.telefone, pin: r.pin, papel };
+      } catch (e) {
+        logger.warn('Técnico criado, mas acesso falhou', { tecnicoId: tecnico.id, erro: e.message });
+      }
+    }
+    res.status(201).json({ ...tecnico, acesso });
   } catch (erro) {
     if (erro.code === 'P2002') return res.status(409).json({ erro: 'Telefone já cadastrado' });
     logger.error('Erro POST /tecnicos', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/tecnicos/:id/acesso — cria acesso ao painel para um técnico que ainda não
+// tem conta (login por telefone + PIN provisório). Só o dono pode conceder papel "gestor".
+apiRouter.post('/tecnicos/:id/acesso', requirePermissao('tecnicos', 'editar'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const tecnico = await req.db.tecnico.findUnique({ where: { id } });
+    if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
+    if (tecnico.usuarioId) return res.status(409).json({ erro: 'Técnico já tem acesso ao painel' });
+    const papel = (req.user.papel === 'dono' && req.body?.papel === 'gestor') ? 'gestor' : 'funcionario';
+    try {
+      const r = await criarAcessoTecnico({ tecnico, empresaId: req.user.empresaId, papel });
+      logger.info('acesso_tecnico_criado', { tecnicoId: id, usuarioId: r.usuario.id, papel });
+      return res.status(201).json({ usuarioId: r.usuario.id, username: r.usuario.username, telefone: r.usuario.telefone, pin: r.pin, papel });
+    } catch (e) {
+      if (e.codigo === 'sem_telefone') {
+        return res.status(400).json({ erro: 'Técnico sem telefone — adicione um telefone antes de criar o acesso' });
+      }
+      throw e;
+    }
+  } catch (erro) {
+    logger.error('Erro POST /tecnicos/:id/acesso', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// POST /api/tecnicos/:id/acesso/reset — reemite o PIN provisório (funcionário esqueceu
+// a senha). Invalida as sessões antigas e exige nova senha no próximo login.
+apiRouter.post('/tecnicos/:id/acesso/reset', requirePermissao('tecnicos', 'editar'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+    const tecnico = await req.db.tecnico.findUnique({ where: { id } });
+    if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
+    if (!tecnico.usuarioId) return res.status(409).json({ erro: 'Técnico ainda não tem acesso ao painel' });
+    const pin = await resetarPin(tecnico.usuarioId);
+    logger.info('acesso_tecnico_reset', { tecnicoId: id, usuarioId: tecnico.usuarioId });
+    res.json({ usuarioId: tecnico.usuarioId, pin });
+  } catch (erro) {
+    logger.error('Erro POST /tecnicos/:id/acesso/reset', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -1397,7 +1719,7 @@ function intervaloMes(mes) {
   return { inicio: new Date(Date.UTC(ano, m - 1, 1)), fim: new Date(Date.UTC(ano, m, 1)) };
 }
 
-apiRouter.get('/tecnicos/:id/ponto', async (req, res) => {
+apiRouter.get('/tecnicos/:id/ponto', requirePermissao('ponto', 'ver'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1426,7 +1748,7 @@ apiRouter.get('/tecnicos/:id/ponto', async (req, res) => {
 });
 
 // ── GET /api/tecnicos/:id/ponto/relatorio?mes=&formato=pdf|csv ────────────────
-apiRouter.get('/tecnicos/:id/ponto/relatorio', async (req, res) => {
+apiRouter.get('/tecnicos/:id/ponto/relatorio', requirePermissao('ponto', 'ver'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1456,7 +1778,7 @@ apiRouter.get('/tecnicos/:id/ponto/relatorio', async (req, res) => {
 });
 
 // ── GET /api/tecnicos/:id/perfil ──────────────────────────────────────────────
-apiRouter.get('/tecnicos/:id/perfil', async (req, res) => {
+apiRouter.get('/tecnicos/:id/perfil', requirePermissao('tecnicos', 'ver'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1467,10 +1789,10 @@ apiRouter.get('/tecnicos/:id/perfil', async (req, res) => {
 
     const [tecnico, servicosPeriodo, todosServicos, pagamentos, servicosMesAtual] = await Promise.all([
       req.db.tecnico.findUnique({ where: { id } }),
-      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroDatas }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { tecnicoId: id }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true, criadoEm: true }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroDatas }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo' }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true, criadoEm: true }, take: MAX_AGREGACAO }),
       req.db.pagamento.findMany({ where: { tecnicoId: id }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { tecnicoId: id, criadoEm: filtroMesAtual }, select: { valorLiquido: true }, take: MAX_AGREGACAO }),
+      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMesAtual }, select: { valorLiquido: true }, take: MAX_AGREGACAO }),
     ]);
     if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
 
@@ -1514,7 +1836,7 @@ apiRouter.get('/tecnicos/:id/perfil', async (req, res) => {
 });
 
 // ── PATCH /api/tecnicos/:id ───────────────────────────────────────────────────
-apiRouter.patch('/tecnicos/:id', async (req, res) => {
+apiRouter.patch('/tecnicos/:id', requirePermissao('tecnicos', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1541,7 +1863,7 @@ apiRouter.patch('/tecnicos/:id', async (req, res) => {
 });
 
 // ── POST /api/pagamentos ──────────────────────────────────────────────────────
-apiRouter.post('/pagamentos', async (req, res) => {
+apiRouter.post('/pagamentos', requirePermissao('financeiro', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       tecnicoId: z.number().int().positive(),
@@ -1562,8 +1884,115 @@ apiRouter.post('/pagamentos', async (req, res) => {
   }
 });
 
+// ── PONTO PELO PAINEL (funcionário, escopo "próprio") ─────────────────────────
+// O funcionário bate o ponto pelo painel: hora do SERVIDOR + geolocalização + selfie
+// (anti-fraude). Ele vê só as batidas do DIA — o banco de horas (saldo/HE) é exclusivo
+// do dono/gestor (GET /tecnicos/:id/ponto). tecnicoId vem SEMPRE de req.user (self).
+
+// Salva a selfie (data URL base64) da batida em /uploads e devolve o caminho.
+const SELFIE_PONTO_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+async function salvarSelfiePonto(dataUrl) {
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/s.exec(dataUrl ?? '');
+  if (!m) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
+  const buffer = Buffer.from(m[2], 'base64');
+  if (buffer.length > 5 * 1024 * 1024) { const e = new Error('selfie grande'); e.codigo = 'selfie'; throw e; }
+  const dir = path.resolve('./uploads');
+  await mkdir(dir, { recursive: true });
+  const nome = `ponto-${randomUUID()}.${SELFIE_PONTO_MIME[m[1]] ?? 'jpg'}`;
+  await writeFile(path.join(dir, nome), buffer);
+  return `/uploads/${nome}`;
+}
+
+// Estado do ponto de HOJE (só as batidas — nunca saldo/HE). Base prisma filtrada por
+// tecnicoId self (autoritativo de req.user), portanto sem risco cross-tenant.
+async function carregarPontoHoje(tecnicoId, agora) {
+  const data = diaLocal(agora);
+  const reg = await prisma.registroPonto.findUnique({
+    where: { tecnicoId_data: { tecnicoId, data } },
+    include: { batidas: { orderBy: { em: 'asc' } } },
+  });
+  const proximo = !reg || !reg.entradaEm ? 'entrada'
+    : !reg.almocoSaidaEm ? 'almoco_saida'
+    : !reg.almocoVoltaEm ? 'almoco_volta'
+    : !reg.saidaEm ? 'saida'
+    : null;
+  return {
+    data,
+    entradaEm: reg?.entradaEm ?? null,
+    almocoSaidaEm: reg?.almocoSaidaEm ?? null,
+    almocoVoltaEm: reg?.almocoVoltaEm ?? null,
+    saidaEm: reg?.saidaEm ?? null,
+    completo: proximo === null,
+    proximaBatida: proximo,
+    proximaBatidaRotulo: proximo ? ROTULO_BATIDA[proximo] : null,
+    batidas: (reg?.batidas ?? []).map((b) => ({
+      tipo: b.tipo, rotulo: ROTULO_BATIDA[b.tipo] ?? b.tipo, em: b.em,
+      lat: b.lat, lng: b.lng, temSelfie: Boolean(b.selfieUrl), selfieUrl: b.selfieUrl,
+    })),
+  };
+}
+
+const pontoBaterSchema = z.object({
+  lat: z.number().optional().nullable(),
+  lng: z.number().optional().nullable(),
+  precisao: z.number().optional().nullable(),
+  selfie: z.string().optional().nullable(), // data URL base64 (JPEG/PNG/WEBP)
+});
+
+// POST /api/ponto/bater — registra a próxima batida do dia (entrada→almoço→volta→saída).
+apiRouter.post('/ponto/bater', async (req, res) => {
+  try {
+    if (!podeProprio(req.user, 'bater_ponto')) return res.status(403).json({ erro: 'Sem permissão para bater ponto' });
+    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    const parse = pontoBaterSchema.safeParse(req.body ?? {});
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+    const agora = new Date();
+    // Avança a máquina do dia (timestamp do servidor). tipo=null → dia já completo.
+    const r = await registrarPonto({ empresaId: req.user.empresaId, tecnicoId: req.user.tecnicoId, agora });
+    if (r.tipo) {
+      // Só salva a selfie quando houve batida de fato (evita arquivo órfão no dia completo).
+      let selfieUrl = null;
+      if (parse.data.selfie) {
+        try { selfieUrl = await salvarSelfiePonto(parse.data.selfie); }
+        catch { return res.status(400).json({ erro: 'Selfie inválida (use JPEG/PNG/WEBP até 5MB)' }); }
+      }
+      await prisma.batidaPonto.create({
+        data: {
+          registroId: r.registroId, tipo: r.tipo, em: agora,
+          lat: parse.data.lat ?? null, lng: parse.data.lng ?? null,
+          precisao: parse.data.precisao ?? null, selfieUrl, origem: 'painel',
+        },
+      });
+      logger.info('ponto_batido_painel', { tecnicoId: req.user.tecnicoId, tipo: r.tipo, geo: parse.data.lat != null, selfie: Boolean(selfieUrl) });
+    }
+    const dia = await carregarPontoHoje(req.user.tecnicoId, agora);
+    res.status(r.tipo ? 201 : 200).json({
+      tipo: r.tipo,
+      rotulo: r.tipo ? ROTULO_BATIDA[r.tipo] : null,
+      jaCompleto: r.tipo === null,
+      ...dia,
+    });
+  } catch (erro) {
+    logger.error('Erro POST /ponto/bater', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// GET /api/ponto/hoje — estado do ponto do dia do funcionário (só as batidas).
+apiRouter.get('/ponto/hoje', async (req, res) => {
+  try {
+    if (!podeProprio(req.user, 'bater_ponto')) return res.status(403).json({ erro: 'Sem permissão' });
+    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    res.json(await carregarPontoHoje(req.user.tecnicoId, new Date()));
+  } catch (erro) {
+    logger.error('Erro GET /ponto/hoje', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 // ── GET /api/materiais ────────────────────────────────────────────────────────
-apiRouter.get('/materiais', async (req, res) => {
+apiRouter.get('/materiais', requirePermissao('estoque', 'ver'), async (req, res) => {
   try {
     const materiais = await req.db.material.findMany({
       include: { _count: { select: { servicos: true } } },
@@ -1601,7 +2030,7 @@ const imagemUrlSchema = z
   .optional()
   .nullable();
 
-apiRouter.post('/materiais/upload', async (req, res) => {
+apiRouter.post('/materiais/upload', requirePermissao('estoque', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       // data URL: "data:image/png;base64,...."
@@ -1634,7 +2063,7 @@ apiRouter.post('/materiais/upload', async (req, res) => {
 });
 
 // ── POST /api/materiais ───────────────────────────────────────────────────────
-apiRouter.post('/materiais', async (req, res) => {
+apiRouter.post('/materiais', requirePermissao('estoque', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       nome: z.string().min(1),
@@ -1659,7 +2088,7 @@ apiRouter.post('/materiais', async (req, res) => {
 });
 
 // ── PATCH /api/materiais/:id ──────────────────────────────────────────────────
-apiRouter.patch('/materiais/:id', async (req, res) => {
+apiRouter.patch('/materiais/:id', requirePermissao('estoque', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1689,7 +2118,7 @@ apiRouter.patch('/materiais/:id', async (req, res) => {
 });
 
 // ── DELETE /api/materiais/:id ─────────────────────────────────────────────────
-apiRouter.delete('/materiais/:id', async (req, res) => {
+apiRouter.delete('/materiais/:id', requirePermissao('estoque', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1712,7 +2141,7 @@ apiRouter.delete('/materiais/:id', async (req, res) => {
 
 // ── GET /api/estoque ──────────────────────────────────────────────────────────
 // Saldo real de todos os materiais + consumo no período (para contexto).
-apiRouter.get('/estoque', async (req, res) => {
+apiRouter.get('/estoque', requirePermissao('estoque', 'ver'), async (req, res) => {
   try {
     const diasNum = Math.max(1, Number.parseInt(req.query.periodo ?? '30', 10) || 30);
     const dataInicio = new Date();
@@ -1759,7 +2188,7 @@ apiRouter.get('/estoque', async (req, res) => {
 
 // ── POST /api/materiais/:id/movimentacao ──────────────────────────────────────
 // Entrada manual / ajuste de estoque a partir do material do catálogo.
-apiRouter.post('/materiais/:id/movimentacao', async (req, res) => {
+apiRouter.post('/materiais/:id/movimentacao', requirePermissao('estoque', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1792,7 +2221,7 @@ apiRouter.post('/materiais/:id/movimentacao', async (req, res) => {
 });
 
 // ── GET /api/materiais/:id/movimentacoes ──────────────────────────────────────
-apiRouter.get('/materiais/:id/movimentacoes', async (req, res) => {
+apiRouter.get('/materiais/:id/movimentacoes', requirePermissao('estoque', 'ver'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
@@ -1812,7 +2241,7 @@ apiRouter.get('/materiais/:id/movimentacoes', async (req, res) => {
 });
 
 // ── GET /api/relatorio/pdf ────────────────────────────────────────────────────
-apiRouter.get('/relatorio/pdf', async (req, res) => {
+apiRouter.get('/relatorio/pdf', requirePermissao('financeiro', 'ver'), async (req, res) => {
   try {
     const { inicio, fim } = req.query;
     if (!inicio || !fim) return res.status(400).json({ erro: 'Parâmetros "inicio" e "fim" são obrigatórios (YYYY-MM-DD)' });
@@ -1832,17 +2261,70 @@ apiRouter.get('/relatorio/pdf', async (req, res) => {
   }
 });
 
-// ── USUÁRIOS (admin only) ─────────────────────────────────────────────────────
+// ── CONFIGURAÇÃO DA EMPRESA ───────────────────────────────────────────────────
+// GET/PATCH /api/config/empresa — opções gerais (ex.: exigir aprovação dos serviços
+// registrados por funcionários). Só quem tem permissão de configuração (dono).
+apiRouter.get('/config/empresa', requirePermissao('configuracao', 'ver'), async (req, res) => {
+  try {
+    const empresa = await prisma.empresa.findUnique({
+      where: { id: req.user.empresaId },
+      select: { nome: true, aprovacaoServico: true },
+    });
+    res.json({ nome: empresa?.nome ?? null, aprovacaoServico: empresa?.aprovacaoServico ?? false });
+  } catch (erro) {
+    logger.error('Erro GET /config/empresa', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+apiRouter.patch('/config/empresa', requirePermissao('configuracao', 'editar'), async (req, res) => {
+  try {
+    const schema = z.object({ aprovacaoServico: z.boolean().optional() });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+    const empresa = await prisma.empresa.update({
+      where: { id: req.user.empresaId },
+      data: parse.data,
+      select: { nome: true, aprovacaoServico: true },
+    });
+    res.json(empresa);
+  } catch (erro) {
+    logger.error('Erro PATCH /config/empresa', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── USUÁRIOS (gestão de contas e permissões — só DONO) ────────────────────────
+
+const SELECT_USUARIO = {
+  id: true, nome: true, username: true, telefone: true, admin: true,
+  papel: true, permissoes: true, senhaProvisoria: true, ativo: true,
+  tecnico: { select: { id: true } }, criadoEm: true,
+};
+
+// GET /api/permissoes/catalogo — módulos/ações/papéis para montar a matriz no painel.
+apiRouter.get('/permissoes/catalogo', requirePermissao('usuarios', 'ver'), (req, res) => {
+  res.json({
+    papeis: PAPEIS,
+    modulos: MODULOS,
+    acoesPorModulo: ACOES_POR_MODULO,
+    capacidadesProprio: CAPACIDADES_PROPRIO,
+    // Presets por papel — o painel inicializa a matriz a partir daqui ao escolher o papel.
+    presets: Object.fromEntries(PAPEIS.map((p) => [p, presetDoPapel(p)])),
+  });
+});
 
 // GET /api/usuarios
-apiRouter.get('/usuarios', adminOnly, async (req, res) => {
+apiRouter.get('/usuarios', requirePermissao('usuarios', 'ver'), async (req, res) => {
   try {
     const usuarios = await prisma.usuario.findMany({
       where: { empresaId: req.user.empresaId },
-      select: { id: true, nome: true, username: true, admin: true, ativo: true, criadoEm: true },
+      select: SELECT_USUARIO,
       orderBy: { criadoEm: 'asc' },
     });
-    res.json(usuarios);
+    // Expõe as permissões EFETIVAS (preset ⊕ override) para a matriz não precisar
+    // recalcular o preset no front.
+    res.json(usuarios.map((u) => ({ ...u, permissoesEfetivas: permissoesEfetivas(u) })));
   } catch (erro) {
     logger.error('Erro GET /usuarios', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -1850,25 +2332,32 @@ apiRouter.get('/usuarios', adminOnly, async (req, res) => {
 });
 
 // POST /api/usuarios
-apiRouter.post('/usuarios', adminOnly, async (req, res) => {
+apiRouter.post('/usuarios', requirePermissao('usuarios', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       nome: z.string().min(2),
       username: z.string().min(3).regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
       senha: z.string().min(6),
-      admin: z.boolean().default(false),
+      papel: z.enum(PAPEIS).default('gestor'),
+      permissoes: z.any().optional(),
     });
     const parse = schema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
-    const { nome, username, senha, admin } = parse.data;
+    const { nome, username, senha, papel } = parse.data;
     const senhaHash = await bcrypt.hash(senha, 12);
-    // Novo usuário pertence à MESMA empresa do admin que o cria
+    // Novo usuário pertence à MESMA empresa de quem cria. `admin` espelha papel "dono"
+    // (compat). Overrides são sanitizados (só módulos/ações conhecidos).
     const usuario = await prisma.usuario.create({
-      data: { nome, username, senhaHash, admin, empresaId: req.user.empresaId },
-      select: { id: true, nome: true, username: true, admin: true, ativo: true, criadoEm: true },
+      data: {
+        nome, username, senhaHash, papel,
+        admin: papel === 'dono',
+        permissoes: sanitizarPermissoes(parse.data.permissoes),
+        empresaId: req.user.empresaId,
+      },
+      select: SELECT_USUARIO,
     });
-    logger.info('user_created', { adminId: req.user.id, novoUserId: usuario.id });
-    res.status(201).json(usuario);
+    logger.info('user_created', { adminId: req.user.id, novoUserId: usuario.id, papel });
+    res.status(201).json({ ...usuario, permissoesEfetivas: permissoesEfetivas(usuario) });
   } catch (erro) {
     if (erro.code === 'P2002') return res.status(409).json({ erro: 'Username já em uso' });
     logger.error('Erro POST /usuarios', { erro: erro.message });
@@ -1877,32 +2366,46 @@ apiRouter.post('/usuarios', adminOnly, async (req, res) => {
 });
 
 // PATCH /api/usuarios/:id
-apiRouter.patch('/usuarios/:id', adminOnly, async (req, res) => {
+apiRouter.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
     const schema = z.object({
       nome: z.string().min(2).optional(),
       ativo: z.boolean().optional(),
-      admin: z.boolean().optional(),
+      papel: z.enum(PAPEIS).optional(),
+      permissoes: z.any().optional(),
       senha: z.string().min(6).optional(),
     });
     const parse = schema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-    const data = { ...parse.data };
-    if (data.senha) {
-      data.senhaHash = await bcrypt.hash(data.senha, 12);
-      delete data.senha;
+
+    // Salvaguarda: ninguém rebaixa/desativa a própria conta (evita o dono se trancar
+    // pra fora ou perder o último acesso administrativo por engano).
+    if (id === req.user.id) {
+      if (parse.data.papel && parse.data.papel !== req.user.papel) {
+        return res.status(400).json({ erro: 'Você não pode alterar o próprio papel' });
+      }
+      if (parse.data.ativo === false) {
+        return res.status(400).json({ erro: 'Você não pode desativar a própria conta' });
+      }
     }
+
+    const { senha, permissoes, papel, ...resto } = parse.data;
+    const data = { ...resto };
+    if (papel !== undefined) {
+      data.papel = papel;
+      data.admin = papel === 'dono'; // mantém o booleano legado em sincronia
+    }
+    if (permissoes !== undefined) data.permissoes = sanitizarPermissoes(permissoes);
+    if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
+
     // Só atualiza se o usuário-alvo for da mesma empresa (anti-IDOR cross-tenant)
     const r = await prisma.usuario.updateMany({ where: { id, empresaId: req.user.empresaId }, data });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
-    const usuario = await prisma.usuario.findUnique({
-      where: { id },
-      select: { id: true, nome: true, username: true, admin: true, ativo: true, criadoEm: true },
-    });
+    const usuario = await prisma.usuario.findUnique({ where: { id }, select: SELECT_USUARIO });
     if (parse.data.ativo === false) logger.info('user_deactivated', { adminId: req.user.id, userId: id });
-    res.json(usuario);
+    res.json({ ...usuario, permissoesEfetivas: permissoesEfetivas(usuario) });
   } catch (erro) {
     if (erro.code === 'P2025') return res.status(404).json({ erro: 'Usuário não encontrado' });
     logger.error('Erro PATCH /usuarios/:id', { erro: erro.message });
@@ -1911,7 +2414,7 @@ apiRouter.patch('/usuarios/:id', adminOnly, async (req, res) => {
 });
 
 // DELETE /api/usuarios/:id
-apiRouter.delete('/usuarios/:id', adminOnly, async (req, res) => {
+apiRouter.delete('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });

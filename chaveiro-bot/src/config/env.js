@@ -33,6 +33,10 @@ export const schema = z.object({
   PUBLIC_URL: z.string().optional(),
   // Chave mestra para cifrar segredos em repouso (tokens Cloud/Google, OTP, webhookSecret).
   ENCRYPTION_KEY: z.string().min(16).optional(),
+  // ── Liga/desliga o robô do WhatsApp (feature futura) ──────────────────────
+  // "true" processa eventos inbound; ausente/qualquer outro = INERTE (webhook ainda
+  // responde 200, mas nada é processado). A estrutura fica pronta para religar depois.
+  WHATSAPP_HABILITADO: z.string().optional(),
   // ── Seleção do provider de WhatsApp ───────────────────────────────────────
   // 'evolution' (padrão): número único via Evolution API. 'cloud': API oficial da Meta.
   WHATSAPP_PROVIDER: z.enum(['evolution', 'cloud']).default('evolution'),

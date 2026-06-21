@@ -14,6 +14,14 @@ import { logger } from '../utils/logger.js';
 
 const TZ = 'America/Sao_Paulo';
 
+// Rótulo pt-BR de cada batida (usado na confirmação ao funcionário, sem expor banco de horas).
+export const ROTULO_BATIDA = {
+  entrada: 'Entrada',
+  almoco_saida: 'Saída para o almoço',
+  almoco_volta: 'Volta do almoço',
+  saida: 'Saída',
+};
+
 // Jornada/limite de hora extra (minutos/dia) por modalidade contratual.
 //   clt        → 8h/dia (HE acima de 8h)
 //   clt_meio   → 6h/dia (HE acima de 6h)
@@ -131,17 +139,17 @@ export async function registrarPonto({ empresaId, tecnicoId, tecnico = null, ago
   // Estado 0 — sem entrada → registra ENTRADA
   if (!reg.entradaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { entradaEm: agora } });
-    return { resposta: `✅ Entrada registrada: ${fmtHora(agora)} do dia ${fmtData(agora)}` };
+    return { resposta: `✅ Entrada registrada: ${fmtHora(agora)} do dia ${fmtData(agora)}`, tipo: 'entrada', registroId: reg.id };
   }
   // Estado 1 — entrada feita → SAÍDA ALMOÇO
   if (!reg.almocoSaidaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { almocoSaidaEm: agora } });
-    return { resposta: `✅ Saída para almoço: ${fmtHora(agora)}` };
+    return { resposta: `✅ Saída para almoço: ${fmtHora(agora)}`, tipo: 'almoco_saida', registroId: reg.id };
   }
   // Estado 2 — almoço saída feita → VOLTA ALMOÇO
   if (!reg.almocoVoltaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { almocoVoltaEm: agora } });
-    return { resposta: `✅ Volta do almoço: ${fmtHora(agora)}` };
+    return { resposta: `✅ Volta do almoço: ${fmtHora(agora)}`, tipo: 'almoco_volta', registroId: reg.id };
   }
   // Estado 3 — volta feita → SAÍDA FINAL (calcula total + HE)
   if (!reg.saidaEm) {
@@ -156,7 +164,7 @@ export async function registrarPonto({ empresaId, tecnicoId, tecnico = null, ago
       `✅ Saída registrada: ${fmtHora(agora)}\n` +
       `📊 Horas hoje: ${formatarDuracao(totalMinutos)}`;
     if (horaExtraMinutos > 0) resposta += `\n⚠️ Hora extra: ${formatarDuracao(horaExtraMinutos)}`;
-    return { resposta };
+    return { resposta, tipo: 'saida', registroId: reg.id };
   }
 
   // Já completo — informa o estado atual e que o ponto do dia está encerrado.
@@ -165,5 +173,7 @@ export async function registrarPonto({ empresaId, tecnicoId, tecnico = null, ago
       `✅ Seu ponto de hoje já está completo.\n` +
       `📊 Horas hoje: ${formatarDuracao(reg.totalMinutos)}` +
       (reg.horaExtraMinutos > 0 ? `\n⚠️ Hora extra: ${formatarDuracao(reg.horaExtraMinutos)}` : ''),
+    tipo: null,
+    registroId: reg.id,
   };
 }
