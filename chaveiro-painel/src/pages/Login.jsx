@@ -28,6 +28,11 @@ export default function Login() {
   const [codigoOtp, setCodigoOtp] = useState('');
   const [info, setInfo] = useState('');
 
+  // Entrar por "Usuário" (dono) ou por "Telefone" (funcionário).
+  const [tipoLogin, setTipoLogin] = useState('usuario'); // 'usuario' | 'telefone'
+  // Ambiguidade: o mesmo telefone existe em +1 empresa — usuário escolhe qual.
+  const [desambiguacao, setDesambiguacao] = useState(null); // [{ usuarioId, empresa }]
+
   // campos
   const [form, setForm] = useState({
     username: '', password: '', nome: '', nomeEmpresa: '', email: '', telefone: '',
@@ -36,18 +41,38 @@ export default function Login() {
 
   async function entrar(e) {
     e.preventDefault();
-    if (!form.username.trim() || !form.password.trim()) {
-      setErro('Preencha usuário e senha.');
+    const ehTelefone = tipoLogin === 'telefone';
+    const identificador = ehTelefone ? form.telefone.replace(/\D/g, '') : form.username.trim();
+    if (!identificador || !form.password.trim()) {
+      setErro(ehTelefone ? 'Preencha telefone e senha.' : 'Preencha usuário e senha.');
       return;
     }
     setCarregando(true); setErro('');
     try {
-      const { data } = await api.post('/auth/login', { username: form.username.trim(), password: form.password });
-      // Login validou usuário/senha — emite token ou, se 2FA ativo, troca p/ o passo do código.
+      const corpo = ehTelefone
+        ? { telefone: identificador, password: form.password }
+        : { username: identificador, password: form.password };
+      const { data } = await api.post('/auth/login', corpo);
+      // Login validou identificador/senha — emite token, exige 2FA ou pede para
+      // desambiguar a empresa (mesmo telefone em mais de uma conta).
       tratarSessao(data);
     } catch (err) {
       setErro(err.response?.status === 401
-        ? err.response.data?.erro ?? 'Usuário ou senha incorretos.'
+        ? err.response.data?.erro ?? (ehTelefone ? 'Telefone ou senha incorretos.' : 'Usuário ou senha incorretos.')
+        : 'Não foi possível conectar à API. Verifique se o servidor está rodando.');
+    } finally { setCarregando(false); }
+  }
+
+  // Desambiguação: usuário escolheu a empresa — refaz o login com o usuarioId.
+  async function escolherEmpresa(usuarioId) {
+    setCarregando(true); setErro('');
+    try {
+      const { data } = await api.post('/auth/login', { usuarioId, password: form.password });
+      setDesambiguacao(null);
+      tratarSessao(data);
+    } catch (err) {
+      setErro(err.response?.status === 401
+        ? err.response.data?.erro ?? 'Não foi possível entrar nesta empresa.'
         : 'Não foi possível conectar à API. Verifique se o servidor está rodando.');
     } finally { setCarregando(false); }
   }
@@ -72,15 +97,28 @@ export default function Login() {
   function voltarLogin() {
     setDesafio2fa(null);
     setCodigo2fa('');
+    setDesambiguacao(null);
     setErro('');
   }
 
-  // Trata a resposta de sessão (login normal OU social): token direto ou desafio 2FA.
+  // Trata a resposta de sessão (login normal OU social): token direto, desafio 2FA
+  // ou lista de empresas para desambiguar (mesmo telefone em +1 conta).
   function tratarSessao(data) {
+    if (data.desambiguacao) {
+      setDesambiguacao(data.desambiguacao);
+      setErro('');
+      return;
+    }
     if (data.twoFactorRequerido) {
       setDesafio2fa(data.desafio);
       setMetodo2fa(data.metodo === 'telefone' ? 'telefone' : 'totp');
       setCodigo2fa('');
+      return;
+    }
+    // Funcionário com PIN provisório: força a troca de senha antes de entrar.
+    if (data.senhaProvisoria) {
+      login(data.token);
+      navigate('/trocar-senha', { replace: true });
       return;
     }
     login(data.token);
@@ -277,6 +315,45 @@ export default function Login() {
                   </div>
                 </form>
               </div>
+            ) : desambiguacao ? (
+              /* ── Desambiguação — mesmo telefone em mais de uma empresa ──── */
+              <div className="animate-rise">
+                <div className="flex flex-col items-center text-center mb-6">
+                  <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
+                    <Building2 size={24} className="text-accent-300" />
+                  </div>
+                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">Escolha a empresa</p>
+                  <p className="text-muted text-sm mt-1">Seu telefone está em mais de uma empresa. Selecione em qual deseja entrar.</p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {desambiguacao.map((d) => (
+                    <button
+                      key={d.usuarioId}
+                      type="button"
+                      onClick={() => escolherEmpresa(d.usuarioId)}
+                      disabled={carregando}
+                      className="w-full flex items-center justify-between gap-3 rounded-lg border border-dark-600 bg-dark-700 px-4 py-3 text-left transition-colors hover:border-accent-400/50 disabled:opacity-50"
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <Building2 size={18} className="text-accent-300 shrink-0" />
+                        <span className="text-white text-sm font-medium truncate">{d.empresa}</span>
+                      </span>
+                      <ArrowRight size={16} className="text-muted shrink-0" />
+                    </button>
+                  ))}
+                </div>
+
+                {erro && <div className="mt-4"><BannerErro>{erro}</BannerErro></div>}
+
+                <button
+                  type="button"
+                  onClick={voltarLogin}
+                  className="mt-5 w-full flex items-center justify-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
+                >
+                  <ArrowLeft size={14} /> Voltar
+                </button>
+              </div>
             ) : desafio2fa ? (
               /* ── Passo 2FA — código do app ou do WhatsApp ───────────────── */
               <div className="animate-rise">
@@ -368,9 +445,38 @@ export default function Login() {
                     </>
                   )}
 
-                  <Campo label="Usuário" Icon={User}>
-                    <input className="input pl-10" placeholder="seu_usuario" value={form.username} onChange={set('username')} autoComplete="username" autoFocus={!ehCadastro} />
-                  </Campo>
+                  {ehCadastro ? (
+                    <Campo label="Usuário" Icon={User}>
+                      <input className="input pl-10" placeholder="seu_usuario" value={form.username} onChange={set('username')} autoComplete="username" />
+                    </Campo>
+                  ) : (
+                    <div>
+                      {/* Seletor: entrar por usuário (dono) ou por telefone (funcionário) */}
+                      <div className="flex p-1 bg-dark-900/70 border border-dark-700 rounded-lg mb-3">
+                        {[['usuario', 'Usuário'], ['telefone', 'Telefone']].map(([v, lbl]) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => { setTipoLogin(v); setErro(''); }}
+                            className={`flex-1 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
+                              tipoLogin === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)]' : 'text-muted hover:text-white'
+                            }`}
+                          >
+                            {lbl}
+                          </button>
+                        ))}
+                      </div>
+                      {tipoLogin === 'telefone' ? (
+                        <Campo label="Telefone" Icon={Phone}>
+                          <input type="tel" inputMode="numeric" className="input pl-10" placeholder="11999990000" value={form.telefone} onChange={set('telefone')} autoComplete="tel" autoFocus />
+                        </Campo>
+                      ) : (
+                        <Campo label="Usuário" Icon={User}>
+                          <input className="input pl-10" placeholder="seu_usuario" value={form.username} onChange={set('username')} autoComplete="username" autoFocus />
+                        </Campo>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label className="kpi-label block mb-1.5">Senha</label>

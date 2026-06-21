@@ -18,7 +18,36 @@ function normalizarQr(qr) {
   return qr.startsWith('data:') ? qr : `data:image/png;base64,${qr}`;
 }
 
+// ── "Em breve" ────────────────────────────────────────────────────────────────
+// O robô do WhatsApp é uma FEATURE FUTURA. A implementação real fica preservada abaixo
+// (ConfiguracaoBotLegado) e a flag de backend WHATSAPP_HABILITADO mantém o bot inerte.
+// Para religar: trocar o export default por ConfiguracaoBotLegado e ligar a flag.
 export default function ConfiguracaoBot() {
+  return (
+    <div className="flex flex-col h-full">
+      <BackHeader titulo="WhatsApp" />
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mb-5">
+          <Smartphone size={30} className="text-success" strokeWidth={1.6} />
+        </div>
+        <span className="badge text-[10px] mb-3">Em breve</span>
+        <h2 className="font-display text-xl font-bold text-white uppercase tracking-wide">
+          Robô do WhatsApp
+        </h2>
+        <p className="text-muted text-sm mt-2 max-w-sm leading-relaxed">
+          Em breve seus técnicos vão poder registrar serviços e bater ponto conversando com
+          o robô no WhatsApp, e os clientes receberão a pesquisa de avaliação automaticamente.
+          Estamos finalizando essa integração.
+        </p>
+        <p className="text-dark-500 text-xs mt-6 max-w-sm">
+          Por enquanto, tudo é feito pelo painel: serviços, ponto e avaliações.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ConfiguracaoBotLegado() {
   const [estado, setEstado] = useState('desconectado');
   const [qr, setQr] = useState(null);
   const [instanceName, setInstanceName] = useState(null);

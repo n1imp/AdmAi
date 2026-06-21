@@ -23,13 +23,19 @@ export function limparSessao() {
   window.dispatchEvent(new Event('chaveiro:logout'));
 }
 
-// Redireciona para login em caso de 401
+// Redireciona para login em caso de 401; força a troca de senha em caso de PIN inicial.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const { status, data } = error.response ?? {};
+    if (status === 401) {
       limparSessao();
       window.location.href = '/login';
+    } else if (status === 403 && data?.codigo === 'senha_provisoria') {
+      // Sessão é válida — só falta definir a senha definitiva. NÃO limpa o token.
+      if (!window.location.pathname.startsWith('/trocar-senha')) {
+        window.location.href = '/trocar-senha';
+      }
     }
     return Promise.reject(error);
   }

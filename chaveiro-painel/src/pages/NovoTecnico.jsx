@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Phone, CreditCard, Calendar, MapPin, Briefcase, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { User, Phone, CreditCard, Calendar, MapPin, Briefcase, ShieldCheck, Image as ImageIcon, KeyRound, Copy, Check, AlertTriangle } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatarMoedaInput, moedaParaNumero } from '../lib/moeda.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -39,6 +39,8 @@ export default function NovoTecnico() {
   const navigate = useNavigate();
   const toast = useToast();
   const [salvando, setSalvando] = useState(false);
+  // Credenciais do funcionário recém-criado (o PIN só aparece uma vez).
+  const [acesso, setAcesso] = useState(null);
 
   const [f, setF] = useState({
     nome: '', cpf: '', telefone: '', dataNascimento: '', endereco: '',
@@ -98,14 +100,27 @@ export default function NovoTecnico() {
         if (f.valorHora) payload.valorHora = moedaParaNumero(f.valorHora);
       }
 
-      await api.post('/tecnicos', payload);
+      const { data } = await api.post('/tecnicos', payload);
       toast('Técnico cadastrado', 'success');
-      navigate('/tecnicos');
+      // Se vier acesso, mostra o cartão de credenciais (PIN aparece uma única vez)
+      // e só redireciona quando o usuário fechar. Senão, volta direto à lista.
+      if (data?.acesso?.pin) {
+        setAcesso(data.acesso);
+      } else {
+        navigate('/tecnicos');
+      }
     } catch (e) {
       toast(e.response?.data?.erro ?? 'Erro ao cadastrar técnico', 'error');
     } finally {
       setSalvando(false);
     }
+  }
+
+  function copiarPin() {
+    if (!acesso?.pin) return;
+    navigator.clipboard?.writeText(acesso.pin)
+      .then(() => toast('PIN copiado', 'success'))
+      .catch(() => {});
   }
 
   const modalidadeLabel = MODALIDADES.find((m) => m.value === f.modalidade)?.label ?? f.modalidade;
@@ -253,6 +268,60 @@ export default function NovoTecnico() {
           </div>
         </Wizard>
       </div>
+
+      {/* Modal de credenciais — só quando o funcionário recebe acesso ao painel */}
+      {acesso && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise">
+          <div className="w-full max-w-sm card flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
+                <KeyRound size={24} className="text-accent-300" />
+              </div>
+              <p className="font-display font-bold text-lg text-white">Acesso do funcionário</p>
+              <p className="text-muted text-xs mt-1">
+                Entregue estas credenciais ao funcionário. Ele troca a senha no primeiro acesso.
+              </p>
+            </div>
+
+            {/* Telefone (login) */}
+            <div>
+              <label className="kpi-label block mb-1.5 flex items-center gap-1"><Phone size={11} /> Telefone (login)</label>
+              <div className="input flex items-center font-mono text-sm text-white">{acesso.telefone || '—'}</div>
+            </div>
+
+            {/* PIN em destaque */}
+            <div>
+              <label className="kpi-label block mb-1.5 flex items-center gap-1"><KeyRound size={11} /> PIN provisório</label>
+              <div className="rounded-lg border border-accent-400/40 bg-accent-400/10 px-4 py-4 flex items-center justify-between gap-3">
+                <span className="font-display font-bold text-3xl tracking-[0.2em] text-accent-300 tnum">{acesso.pin}</span>
+                <button
+                  type="button"
+                  onClick={copiarPin}
+                  className="flex items-center gap-1.5 text-xs text-white bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded-md px-3 py-2 transition-colors shrink-0"
+                >
+                  <Copy size={14} /> Copiar
+                </button>
+              </div>
+            </div>
+
+            {/* Aviso */}
+            <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2.5">
+              <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
+              <p className="text-warning text-xs leading-relaxed">
+                Anote o PIN — ele só aparece uma vez. O funcionário vai trocar a senha no primeiro acesso.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setAcesso(null); navigate('/tecnicos'); }}
+              className="btn-primary"
+            >
+              <Check size={16} /> Anotei, concluir
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
