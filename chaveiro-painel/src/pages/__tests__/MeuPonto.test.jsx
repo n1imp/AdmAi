@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import MeuPonto from '../MeuPonto.jsx';
 
 // Mocks dos colaboradores externos da página.
@@ -25,6 +25,7 @@ vi.mock('../../components/CapturaSelfie.jsx', () => ({
 describe('<MeuPonto>', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    try { localStorage.removeItem('ponto_aviso_lgpd'); } catch { /* sem storage */ }
   });
 
   it('mostra a timeline com horas batidas e destaca a próxima etapa', async () => {
@@ -76,5 +77,33 @@ describe('<MeuPonto>', () => {
 
     const botao = await screen.findByRole('button', { name: /Ponto de hoje concluído/i });
     expect(botao).toBeDisabled();
+  });
+
+  it('mostra o aviso de coleta (LGPD) antes da 1ª batida', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: '2026-06-20',
+        entradaEm: null, almocoSaidaEm: null, almocoVoltaEm: null, saidaEm: null,
+        completo: false,
+        proximaBatida: 'entrada',
+        proximaBatidaRotulo: 'Entrada',
+        batidas: [],
+      },
+    });
+
+    render(<MeuPonto />);
+
+    const botao = await screen.findByRole('button', { name: /Bater ponto — Entrada/i });
+    fireEvent.click(botao);
+
+    // O aviso explica a coleta de selfie + localização e linka a política.
+    expect(await screen.findByText(/Coleta de selfie e localização/i)).toBeInTheDocument();
+    const links = screen.getAllByRole('link', { name: /Política de Privacidade/i });
+    expect(links.length).toBeGreaterThan(0);
+    links.forEach((l) => expect(l).toHaveAttribute('href', '/privacidade'));
+
+    // Aceitar registra o consentimento no aparelho.
+    fireEvent.click(screen.getByRole('button', { name: /Entendi, continuar/i }));
+    await waitFor(() => expect(localStorage.getItem('ponto_aviso_lgpd')).toBe('1'));
   });
 });

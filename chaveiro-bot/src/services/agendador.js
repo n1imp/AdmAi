@@ -1,4 +1,6 @@
 import cron from 'node-cron';
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
 import { formatarMoeda } from '../utils/formatar.js';
@@ -134,28 +136,72 @@ export async function executarResumoSemanal() {
 // sobre TODAS as empresas (manutenção do sistema) — usa o prisma global de propósito.
 const RETENCAO_AVALIACAO_DIAS = 180; // após isso, anonimiza a PII do cliente na avaliação
 const RETENCAO_SESSAO_DIAS = 7;      // sessões de conversa mais antigas são removidas
+// Provas de ponto (selfie + geo) são dado pessoal de FUNCIONÁRIO (titular). Mantemos a
+// batida/hora (prova de jornada), mas descartamos a PII sensível após o prazo de
+// contestação trabalhista. Dado anti-fraude — minimização exigida pela LGPD (art. 15/16).
+const RETENCAO_PONTO_DIAS = 365;
 const UM_DIA_MS = 24 * 60 * 60 * 1000;
 
+// Diretório onde a selfie da batida é salva (espelha salvarSelfiePonto em routes/api.js,
+// que grava em ./uploads e referencia o arquivo como "/uploads/<nome>").
+const UPLOADS_DIR = path.resolve('./uploads');
+
 /**
- * Aplica a política de retenção (LGPD): remove sessões de conversa antigas e
- * anonimiza a PII de avaliações além do período de retenção. Idempotente.
- * @returns {Promise<{ sessoesRemovidas: number, avaliacoesAnonimizadas: number }>}
+ * Aplica a política de retenção (LGPD): remove sessões de conversa antigas, anonimiza a
+ * PII de avaliações e expurga as provas de ponto (selfie + geo) além do período de
+ * retenção — mantendo a batida/hora. Idempotente.
+ * @returns {Promise<{ sessoesRemovidas: number, avaliacoesAnonimizadas: number, pontoExpurgados: number }>}
  */
 export async function limparDadosAntigos(agora = new Date()) {
   const corteSessao = new Date(agora.getTime() - RETENCAO_SESSAO_DIAS * UM_DIA_MS);
   const corteAval = new Date(agora.getTime() - RETENCAO_AVALIACAO_DIAS * UM_DIA_MS);
+  const cortePonto = new Date(agora.getTime() - RETENCAO_PONTO_DIAS * UM_DIA_MS);
   try {
     const sessoes = await prisma.sessaoConversa.deleteMany({ where: { atualizadoEm: { lt: corteSessao } } });
     const avaliacoes = await prisma.avaliacao.updateMany({
       where: { criadoEm: { lt: corteAval }, clienteTelefone: { not: '' } },
       data: { clienteTelefone: '', clienteNome: null, comentario: null },
     });
-    logger.info('limpeza_lgpd', { sessoesRemovidas: sessoes.count, avaliacoesAnonimizadas: avaliacoes.count });
-    return { sessoesRemovidas: sessoes.count, avaliacoesAnonimizadas: avaliacoes.count };
+    const pontoExpurgados = await expurgarProvasPonto(cortePonto);
+    logger.info('limpeza_lgpd', {
+      sessoesRemovidas: sessoes.count,
+      avaliacoesAnonimizadas: avaliacoes.count,
+      pontoExpurgados,
+    });
+    return { sessoesRemovidas: sessoes.count, avaliacoesAnonimizadas: avaliacoes.count, pontoExpurgados };
   } catch (erro) {
     logger.error('Erro na limpeza LGPD', { erro: erro.message });
-    return { sessoesRemovidas: 0, avaliacoesAnonimizadas: 0 };
+    return { sessoesRemovidas: 0, avaliacoesAnonimizadas: 0, pontoExpurgados: 0 };
   }
+}
+
+/**
+ * Apaga o arquivo de selfie e zera selfie/geo das batidas anteriores a `corte`.
+ * A batida e a hora permanecem (prova de jornada); só a PII sensível é descartada.
+ * Tolerante a arquivo já ausente (idempotente). @returns nº de batidas expurgadas.
+ */
+async function expurgarProvasPonto(corte) {
+  const batidas = await prisma.batidaPonto.findMany({
+    where: {
+      em: { lt: corte },
+      OR: [{ selfieUrl: { not: null } }, { lat: { not: null } }, { lng: { not: null } }],
+    },
+    select: { id: true, selfieUrl: true },
+  });
+  if (batidas.length === 0) return 0;
+
+  for (const b of batidas) {
+    if (b.selfieUrl) {
+      // Usa só o basename para impedir path traversal vindo do valor armazenado.
+      const arquivo = path.join(UPLOADS_DIR, path.basename(b.selfieUrl));
+      await unlink(arquivo).catch(() => {}); // arquivo já removido = ok
+    }
+  }
+  await prisma.batidaPonto.updateMany({
+    where: { id: { in: batidas.map((b) => b.id) } },
+    data: { selfieUrl: null, lat: null, lng: null, precisao: null },
+  });
+  return batidas.length;
 }
 
 // ── Sincronização das avaliações do Google (a cada 6h) ────────────────────────
@@ -218,7 +264,8 @@ export async function sincronizarAvaliacoesGoogle() {
  *  - Resumo semanal: todo domingo às 18h (horário de São Paulo).
  *  - Avaliações: a cada 5 min, dispara as solicitações de avaliação vencidas.
  *  - Sync Google: a cada 6h, sincroniza avaliações do Google e roda a análise por IA.
- *  - Retenção LGPD: diariamente às 03:30, anonimiza/limpa dados antigos.
+ *  - Retenção LGPD: diariamente às 03:30, anonimiza/limpa dados antigos e expurga
+ *    selfie/geo de batidas de ponto antigas (mantém a hora como prova de jornada).
  */
 export function iniciarAgendamentos() {
   cron.schedule('0 18 * * 0', executarResumoSemanal, { timezone: TIMEZONE });

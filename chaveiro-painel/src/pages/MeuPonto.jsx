@@ -60,6 +60,7 @@ export default function MeuPonto() {
   const [erro, setErro] = useState(null);
   const [capturando, setCapturando] = useState(false); // modal de selfie aberto
   const [enviando, setEnviando] = useState(false);
+  const [mostrarAviso, setMostrarAviso] = useState(false); // consentimento LGPD (1ª vez)
 
   const buscar = useCallback(async () => {
     setErro(null);
@@ -76,8 +77,21 @@ export default function MeuPonto() {
   useEffect(() => { buscar(); }, [buscar]);
 
   // Abre o capturador de selfie (a batida só ocorre depois de confirmar a foto).
+  // Transparência LGPD: na 1ª batida no aparelho, mostra o aviso de coleta de
+  // selfie + localização (finalidade: comprovação de jornada/anti-fraude) antes
+  // de capturar. Depois de aceito, vai direto à captura (aviso fixo no rodapé).
   function iniciarBatida() {
     if (dia?.completo || enviando) return;
+    let aceito = false;
+    try { aceito = localStorage.getItem('ponto_aviso_lgpd') === '1'; } catch { /* storage off */ }
+    if (!aceito) { setMostrarAviso(true); return; }
+    setCapturando(true);
+  }
+
+  // Aceite do aviso de coleta: registra no aparelho e segue para a captura.
+  function aceitarAviso() {
+    try { localStorage.setItem('ponto_aviso_lgpd', '1'); } catch { /* storage off */ }
+    setMostrarAviso(false);
     setCapturando(true);
   }
 
@@ -202,7 +216,8 @@ export default function MeuPonto() {
               )}
             </button>
             <p className="text-muted text-xs -mt-2 text-center">
-              Ao bater, capturamos uma selfie e sua localização para confirmar o registro.
+              Ao bater, capturamos uma selfie e sua localização para comprovar a jornada.{' '}
+              <a href="/privacidade" className="underline hover:text-white">Política de Privacidade</a>.
             </p>
 
             {/* ── Histórico do dia ──────────────────────────────────────────── */}
@@ -236,6 +251,46 @@ export default function MeuPonto() {
           </div>
         ) : null}
       </div>
+
+      {/* Aviso de coleta (consentimento LGPD) — exibido antes da 1ª captura */}
+      {mostrarAviso && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
+          <div className="card p-5 w-full max-w-sm flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center shrink-0">
+                <Camera size={20} className="text-accent-300" strokeWidth={1.8} />
+              </div>
+              <h2 className="font-display text-lg font-bold text-white leading-tight">
+                Coleta de selfie e localização
+              </h2>
+            </div>
+            <p className="text-sm text-muted leading-relaxed">
+              Para comprovar sua jornada e prevenir fraudes, ao bater o ponto registramos uma{' '}
+              <span className="text-white">selfie</span> e sua{' '}
+              <span className="text-white">localização (GPS)</span> no momento da batida. Esses
+              dados ficam guardados pelo prazo da nossa política e depois são descartados.
+            </p>
+            <p className="text-xs text-muted">
+              Saiba mais na{' '}
+              <a href="/privacidade" className="underline text-accent-300 hover:text-white">
+                Política de Privacidade
+              </a>
+              .
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMostrarAviso(false)}
+                className="btn-ghost flex-1 py-2.5"
+              >
+                Agora não
+              </button>
+              <button onClick={aceitarAviso} className="btn-primary flex-1 py-2.5">
+                <Check size={16} /> Entendi, continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de captura de selfie */}
       <CapturaSelfie
