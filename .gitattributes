@@ -1,0 +1,5 @@
+# Força LF em scripts shell para não quebrar builds em Linux/containers quando o
+# repositório é clonado/checkout no Windows (autocrlf). docker-entrypoint.sh roda
+# em /bin/sh no container — CRLF causaria "bad interpreter".
+*.sh    text eol=lf
+gradlew text eol=lf
