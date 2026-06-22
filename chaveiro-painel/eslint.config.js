@@ -9,7 +9,10 @@ const vitestGlobals = {
 };
 
 export default [
-  { ignores: ['node_modules/**', 'dist/**', 'coverage/**'] },
+  // Ignora o que NÃO é código-fonte do painel: deps, build, e os bundles minificados
+  // que o `cap:sync` copia para android/ (senão o eslint "linta" o output do Vite).
+  // public/sw.js é service worker (globais próprios) e assets/ são fontes de ícone.
+  { ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'android/**', 'public/sw.js', 'assets/**'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],
