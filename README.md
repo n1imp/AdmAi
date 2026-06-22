@@ -377,7 +377,10 @@ Validadas por Zod no boot — ver [`config/env.js`](chaveiro-bot/src/config/env.
 | `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio (`ADMIN_PASSWORD` mín. 8 chars) |
 | `SENTRY_DSN` · `LOG_LEVEL` · `APP_VERSION` | — | Observabilidade (ausente = Sentry off) |
 
-> Em produção, lembrar também de `DIRECT_URL` (migrations via Session pooler do Supabase) e `WHATSAPP_PROVIDER` — ver `instrucoes-deploy.md`.
+> **Deploy:** a arquitetura de produção é **Railway** (backend, Docker + volume) + **Cloudflare
+> Pages** (painel estático) + **Supabase** (Postgres). O CI/CD e o inventário de variáveis por
+> plataforma estão em [`docs/CI_CD.md`](docs/CI_CD.md); o passo a passo manual em
+> [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 

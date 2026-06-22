@@ -32,7 +32,10 @@ npm run dev                   # http://localhost:5173
 1. Crie uma branch a partir de `master`: `feat/...`, `fix/...`, `docs/...`, `refactor/...`.
 2. Faça commits pequenos e descritivos.
 3. Abra um Pull Request para `master` com descrição do que mudou e por quê.
-4. O **CI precisa estar verde** (testes + build + audit) antes do merge.
+4. O **CI precisa estar verde** antes do merge — o check `ci-ok` agrega **lint + testes
+   (unit + integração) + build + `docker build` do backend + audit**. Ver [`docs/CI_CD.md`](docs/CI_CD.md).
+5. **Merge:** use **squash** na `master`. O merge dispara o **deploy automático** (Railway p/ o
+   backend, Cloudflare Pages p/ o painel) — não há passo manual de deploy da web.
 
 ### Convenção de commits
 
@@ -69,11 +72,13 @@ Antes de abrir o PR:
 ```bash
 # Backend
 cd chaveiro-bot
+npm run lint              # ESLint (gateado no CI)
 npm test                  # unitários (Vitest)
 npm run test:integration  # integração (Supertest + Postgres real) — se mexeu em rota/DB
 
 # Frontend
 cd chaveiro-painel
+npm run lint              # ESLint (gateado no CI)
 npm test                  # Vitest + Testing Library
 npm run build             # build de produção
 ```
