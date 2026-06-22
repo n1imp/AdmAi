@@ -64,17 +64,23 @@ npm i @capacitor/camera @capacitor/geolocation
    keytool -genkey -v -keystore chaveirobot-upload.jks -keyalg RSA -keysize 2048 \
      -validity 10000 -alias upload
    ```
-2. **Configurar a assinatura** em `android/app/build.gradle` (bloco `signingConfigs` +
-   `buildTypes.release`), lendo as senhas de variáveis de ambiente ou de
-   `android/keystore.properties` (NÃO commitar o `.jks` nem as senhas).
-3. **Gerar o bundle**:
+2. **Configurar a assinatura.** O `android/app/build.gradle` **já lê** as credenciais de
+   `android/keystore.properties` (assina o release só quando o arquivo existe). Basta copiar
+   o modelo e preencher — NÃO commitar o `.jks` nem as senhas (ambos já no `.gitignore`):
+   ```bash
+   cp android/keystore.properties.example android/keystore.properties
+   # edite storeFile/storePassword/keyAlias/keyPassword
+   ```
+3. **(Opcional) Ícone e splash**: ponha a arte em `assets/` (ver `assets/README.md`) e rode
+   `npm run cap:assets` antes do build.
+4. **Gerar o bundle**:
    ```bash
    $env:VITE_API_URL = 'https://api.SEU_DOMINIO'
    npm run cap:sync
    cd android
    ./gradlew bundleRelease        # gera app/build/outputs/bundle/release/app-release.aab
    ```
-4. Use **Play App Signing** no Console: você sobe o `.aab` assinado com a chave de upload; o
+5. Use **Play App Signing** no Console: você sobe o `.aab` assinado com a chave de upload; o
    Google gerencia a chave de assinatura final. Confirme o `targetSdkVersion` exigido pela Play
    em `android/variables.gradle`.
 

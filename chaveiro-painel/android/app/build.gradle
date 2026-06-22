@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Assinatura de release: lê as credenciais de `android/keystore.properties` (fora do
+// git — ver keystore.properties.example). Sem o arquivo, o release sai NÃO assinado,
+// para não quebrar `cap:sync`/CI/dev. Gere o `.aab` final numa máquina com o keystore.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
 android {
     namespace = "com.chaveirobot.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +25,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Só assina quando há keystore.properties; caso contrário, release não assinado.
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
