@@ -63,6 +63,15 @@ export const schema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   APP_VERSION: z.string().optional(),          // ex.: tag de release, usada no Sentry/logs
 }).superRefine((cfg, ctx) => {
+  // Em produção, CORS NUNCA pode cair no wildcard '*': exige uma origem explícita
+  // (o painel). Sem isso, qualquer site poderia chamar a API com credenciais do usuário.
+  if (cfg.NODE_ENV === 'production' && (!cfg.ALLOWED_ORIGIN || cfg.ALLOWED_ORIGIN === '*')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['ALLOWED_ORIGIN'],
+      message: 'ALLOWED_ORIGIN é obrigatória em produção (ex.: https://app.SEUDOMINIO) — sem wildcard.',
+    });
+  }
   // Cross-field: se o gateway Evolution está habilitado (EVOLUTION_HOST setado),
   // exigimos as vars sem as quais ele não funciona — falha rápida no boot.
   if (cfg.EVOLUTION_HOST) {

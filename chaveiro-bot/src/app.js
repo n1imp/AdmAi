@@ -93,6 +93,21 @@ export function criarApp() {
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
 
+  // Rate limit dedicado às etapas de 2FA, com a chave no DESAFIO (não no IP): cada
+  // desafio de 5 min só admite poucas tentativas de código, fechando brute force do
+  // OTP/TOTP de 6 dígitos mesmo que o atacante rode de vários IPs. Conta toda
+  // tentativa (sucesso encerra o fluxo de qualquer forma).
+  const twoFactorLimiter = rateLimit({
+    windowMs: 15 * 60_000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.body?.desafio || req.ip,
+    message: { erro: 'Muitas tentativas de verificação. Reinicie o login e tente de novo.' },
+  });
+  app.use('/api/auth/login/2fa', twoFactorLimiter);
+  app.use('/api/auth/login/2fa-telefone', twoFactorLimiter);
+
   // ── /metrics — scraping do Prometheus (sem auth, fora de /api) ─────────────
   app.get('/metrics', metricsHandler);
 

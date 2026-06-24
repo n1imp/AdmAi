@@ -17,6 +17,7 @@ import { resolverPreferencias } from '../services/notificacao.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { contemInsensivel } from '../utils/busca.js';
+import { conferirMagicBytes } from '../utils/upload.js';
 import { gerarJWT, verificarJWT, tokenAindaValido } from '../services/auth.js';
 import {
   permissoesEfetivas, pode, podeProprio, sanitizarPermissoes, presetDoPapel,
@@ -239,7 +240,20 @@ function verificarDesafio2fa(desafio) {
 // Gera um código, persiste cifrado no usuário e entrega via WhatsApp. Best-effort:
 // se o robô estiver offline o fluxo não falha (o usuário pode reenviar). Nunca loga
 // o código.
+// Throttle de reenvio: evita spam de OTP (e de mensagens WhatsApp) se o mesmo usuário
+// dispara vários logins seguidos. Mantém o OTP já válido (10 min) em vez de regerar.
+// In-memory (1 instância no Railway); reinício zera — aceitável para anti-spam.
+const ultimoOtpEnviado = new Map(); // userId -> timestamp(ms)
+const OTP_REENVIO_MS = 5 * 60_000;
+
 async function gerarEEnviarOtp(userId, telefone) {
+  const agora = Date.now();
+  const anterior = ultimoOtpEnviado.get(userId);
+  if (anterior && agora - anterior < OTP_REENVIO_MS) {
+    logger.info('otp_reenvio_throttled', { userId });
+    return; // OTP recente ainda é válido; não regenera nem reenvia.
+  }
+  ultimoOtpEnviado.set(userId, agora);
   const codigo = await definirOtpTelefone(userId);
   const destino = canonizarTelefone(telefone);
   if (destino) {
@@ -1978,6 +1992,7 @@ async function salvarSelfiePonto(dataUrl) {
   if (!m) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
   const buffer = Buffer.from(m[2], 'base64');
   if (buffer.length > 5 * 1024 * 1024) { const e = new Error('selfie grande'); e.codigo = 'selfie'; throw e; }
+  if (!conferirMagicBytes(buffer, m[1])) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
   const dir = path.resolve('./uploads');
   await mkdir(dir, { recursive: true });
   const nome = `ponto-${randomUUID()}.${SELFIE_PONTO_MIME[m[1]] ?? 'jpg'}`;
@@ -2129,6 +2144,11 @@ apiRouter.post('/materiais/upload', requirePermissao('estoque', 'editar'), async
     // Limite de tamanho (≈5MB) para não estourar disco com base64 grande
     if (buffer.length > 5 * 1024 * 1024) {
       return res.status(413).json({ erro: 'Imagem muito grande (máx. 5MB)' });
+    }
+
+    // Confere o conteúdo real (magic bytes), não só o MIME declarado no data-URL.
+    if (!conferirMagicBytes(buffer, mime)) {
+      return res.status(400).json({ erro: 'Imagem inválida (conteúdo não confere com o tipo)' });
     }
 
     await mkdir(UPLOADS_DIR, { recursive: true });
@@ -2482,11 +2502,31 @@ apiRouter.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (
     if (permissoes !== undefined) data.permissoes = sanitizarPermissoes(permissoes);
     if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
 
+    // Auditoria RBAC: captura o estado ANTERIOR quando papel/permissões mudam (mesmo
+    // escopo de empresa), para registrar a trilha após o update.
+    const auditarRbac = papel !== undefined || permissoes !== undefined;
+    const antes = auditarRbac
+      ? await prisma.usuario.findFirst({
+          where: { id, empresaId: req.user.empresaId },
+          select: { papel: true, permissoes: true },
+        })
+      : null;
+
     // Só atualiza se o usuário-alvo for da mesma empresa (anti-IDOR cross-tenant)
     const r = await prisma.usuario.updateMany({ where: { id, empresaId: req.user.empresaId }, data });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
     const usuario = await prisma.usuario.findUnique({ where: { id }, select: SELECT_USUARIO });
     if (parse.data.ativo === false) logger.info('user_deactivated', { adminId: req.user.id, userId: id });
+    if (auditarRbac && antes) {
+      logger.info('permissao_alterada', {
+        adminId: req.user.id,
+        userId: id,
+        papelAntes: antes.papel,
+        papelDepois: usuario.papel,
+        permissoesMudaram: permissoes !== undefined &&
+          JSON.stringify(antes.permissoes ?? null) !== JSON.stringify(usuario.permissoes ?? null),
+      });
+    }
     res.json({ ...usuario, permissoesEfetivas: permissoesEfetivas(usuario) });
   } catch (erro) {
     if (erro.code === 'P2025') return res.status(404).json({ erro: 'Usuário não encontrado' });
