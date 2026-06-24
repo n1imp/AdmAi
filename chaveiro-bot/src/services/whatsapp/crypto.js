@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { env } from '../../config/env.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Criptografia simétrica para segredos por-empresa em repouso
@@ -43,7 +44,10 @@ export function decrypt(blob) {
     const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'));
     decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
     return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
-  } catch {
+  } catch (erro) {
+    // Falha real de decifragem (auth tag/chave rotacionada/tampering): observabilidade
+    // sem derrubar a requisição. Não loga o blob (poderia conter ciphertext sensível).
+    logger.warn('decrypt_falhou', { motivo: erro.message });
     return null;
   }
 }

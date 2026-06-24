@@ -2482,6 +2482,12 @@ apiRouter.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (
     const parse = schema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
 
+    // Mesmo quando um admin redefine a senha de outro usuário, exige senha forte
+    // (mesma regra do cadastro/troca) — evita admin setar "123456".
+    if (parse.data.senha && !avaliarForcaSenha(parse.data.senha).valida) {
+      return res.status(400).json({ erro: 'Senha fraca: use ao menos 8 caracteres com letras, números e símbolos.' });
+    }
+
     // Salvaguarda: ninguém rebaixa/desativa a própria conta (evita o dono se trancar
     // pra fora ou perder o último acesso administrativo por engano).
     if (id === req.user.id) {
