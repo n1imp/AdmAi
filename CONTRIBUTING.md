@@ -97,3 +97,12 @@ npm run build             # build de produção
 - [ ] `npm test` (e `test:integration` se aplicável) passam no backend.
 - [ ] `npm test` + `npm run build` passam no painel.
 - [ ] Atualizei o `CHANGELOG.md` (seção *Não lançado*) quando relevante.
+
+### Segurança (não regredir)
+
+- [ ] Endpoint sensível novo (auth/2FA/OTP/upload) tem **rate limit** dedicado.
+- [ ] Não logo segredos/PII (o `logger` redige chaves sensíveis — não burle).
+- [ ] Upload de imagem valida **magic bytes** (`utils/upload.js`), não só o MIME do data-URL.
+- [ ] Mudança de RBAC/permissão deixa **trilha de auditoria** no log.
+- [ ] Em produção, `ALLOWED_ORIGIN` é explícito (sem wildcard).
+- [ ] O CI de segurança (`.github/workflows/security.yml`: Semgrep + gitleaks + audit) passa.
