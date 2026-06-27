@@ -58,6 +58,13 @@ export const schema = z.object({
   // ── IA (análise de avaliações) ─────────────────────────────────────────────
   ANTHROPIC_API_KEY: z.string().optional(),               // ausente = análise por IA desligada
   AI_REVIEWS_MODEL: z.string().default('claude-haiku-4-5'),
+  // ── Isolamento multi-tenant no banco (RLS) — defesa em profundidade ────────
+  // "true" faz o client escopado por empresa (prismaParaEmpresa) setar o GUC
+  // app.empresa_id por transação, ativando as policies de Row Level Security
+  // (ver prisma/rls/enable_rls.sql). Default OFF: comportamento idêntico ao atual
+  // (só o filtro app-level). LIGUE apenas após criar o role sem BYPASSRLS e validar
+  // em staging — RLS é fail-closed (sem o GUC, a policy retorna zero linhas).
+  RLS_ENABLED: z.string().optional(),
   // ── Observabilidade ───────────────────────────────────────────────────────
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
