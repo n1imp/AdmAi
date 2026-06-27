@@ -39,6 +39,7 @@ export function configProvedor(provedor) {
         audience: env.GOOGLE_CLIENT_ID,
         issuer: ['https://accounts.google.com', 'accounts.google.com'],
         jwksUri: 'https://www.googleapis.com/oauth2/v3/certs',
+        exigeNonce: true, // o painel envia o nonce e o Google o ecoa no ID token
       };
     case 'microsoft': {
       const tenant = env.MICROSOFT_TENANT || 'common';
@@ -48,6 +49,8 @@ export function configProvedor(provedor) {
         issuer: multiTenant ? null : `https://login.microsoftonline.com/${tenant}/v2.0`,
         issuerRegex: multiTenant ? ISS_MICROSOFT_RE : null,
         jwksUri: `https://login.microsoftonline.com/${tenant}/discovery/v2.0/keys`,
+        // MSAL valida o nonce no cliente; o painel não reenvia o nonce ao backend.
+        exigeNonce: false,
       };
     }
     case 'apple':
@@ -55,6 +58,7 @@ export function configProvedor(provedor) {
         audience: env.APPLE_CLIENT_ID,
         issuer: 'https://appleid.apple.com',
         jwksUri: 'https://appleid.apple.com/auth/keys',
+        exigeNonce: true, // o painel envia o nonce e a Apple o ecoa no ID token
       };
     default:
       return null;
@@ -133,8 +137,14 @@ export async function verificarIdToken(provedor, idToken, nonce) {
   if (cfg.issuerRegex && !cfg.issuerRegex.test(String(payload.iss || ''))) {
     throw new OAuthError('issuer_invalido', 401);
   }
-  // Anti-replay (defesa em profundidade): só exigimos nonce quando o cliente envia.
-  if (nonce && payload.nonce !== nonce) {
+  // Anti-replay. Provedores que ecoam o nonce no ID token (Google, Apple) o EXIGEM:
+  // o cliente precisa enviar o nonce e ele tem de bater com o do token — fecha o
+  // replay de um ID token interceptado. A Microsoft é validada pelo MSAL no cliente
+  // (o painel não reenvia o nonce), então só checamos quando, por acaso, vier um.
+  if (cfg.exigeNonce) {
+    if (!nonce) throw new OAuthError('nonce_ausente', 400);
+    if (payload.nonce !== nonce) throw new OAuthError('nonce_invalido', 401);
+  } else if (nonce && payload.nonce !== nonce) {
     throw new OAuthError('nonce_invalido', 401);
   }
   if (!payload.sub) throw new OAuthError('sub_ausente', 401);

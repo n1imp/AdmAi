@@ -83,19 +83,19 @@ describe('configProvedor', () => {
 describe('verificarIdToken', () => {
   it('Google: retorna identidade normalizada com email verificado', async () => {
     jwtVerifyMock.mockResolvedValue({
-      payload: { sub: 'g-1', email: 'joao@gmail.com', email_verified: true, name: 'João' },
+      payload: { sub: 'g-1', email: 'joao@gmail.com', email_verified: true, name: 'João', nonce: 'n1' },
     });
     const { verificarIdToken } = await carregar();
-    const id = await verificarIdToken('google', 'token-valido');
+    const id = await verificarIdToken('google', 'token-valido', 'n1');
     expect(id).toEqual({ sub: 'g-1', email: 'joao@gmail.com', emailVerificado: true, nome: 'João' });
   });
 
   it('Apple: email_verified como string "true" é normalizado para boolean', async () => {
     jwtVerifyMock.mockResolvedValue({
-      payload: { sub: 'a-1', email: 'priv@privaterelay.appleid.com', email_verified: 'true' },
+      payload: { sub: 'a-1', email: 'priv@privaterelay.appleid.com', email_verified: 'true', nonce: 'n1' },
     });
     const { verificarIdToken } = await carregar();
-    const id = await verificarIdToken('apple', 'tok');
+    const id = await verificarIdToken('apple', 'tok', 'n1');
     expect(id.emailVerificado).toBe(true);
     // nome cai para a parte local do e-mail quando o provedor não envia name.
     expect(id.nome).toBe('priv');
@@ -149,6 +149,22 @@ describe('verificarIdToken', () => {
     await expect(verificarIdToken('google', 'tok', 'do-cliente')).rejects.toMatchObject({ codigo: 'nonce_invalido' });
   });
 
+  it('Google sem nonce do cliente é rejeitado (nonce obrigatório)', async () => {
+    jwtVerifyMock.mockResolvedValue({ payload: { sub: 'g-9', nonce: 'do-token' } });
+    const { verificarIdToken } = await carregar();
+    await expect(verificarIdToken('google', 'tok')).rejects.toMatchObject({ codigo: 'nonce_ausente', status: 400 });
+  });
+
+  it('Microsoft não exige nonce (validado pelo MSAL no cliente)', async () => {
+    jwtVerifyMock.mockResolvedValue({
+      payload: { sub: 'm-3', preferred_username: 'bob@empresa.com', xms_edov: true,
+        iss: 'https://login.microsoftonline.com/tenant-x/v2.0' },
+    });
+    const { verificarIdToken } = await carregar();
+    const id = await verificarIdToken('microsoft', 'tok');
+    expect(id.sub).toBe('m-3');
+  });
+
   it('nonce correspondente passa', async () => {
     jwtVerifyMock.mockResolvedValue({ payload: { sub: 'g-9', email: 'a@b.com', email_verified: true, nonce: 'n1' } });
     const { verificarIdToken } = await carregar();
@@ -157,8 +173,8 @@ describe('verificarIdToken', () => {
   });
 
   it('payload sem sub é rejeitado', async () => {
-    jwtVerifyMock.mockResolvedValue({ payload: { email: 'a@b.com' } });
+    jwtVerifyMock.mockResolvedValue({ payload: { email: 'a@b.com', nonce: 'n1' } });
     const { verificarIdToken } = await carregar();
-    await expect(verificarIdToken('google', 'tok')).rejects.toMatchObject({ codigo: 'sub_ausente' });
+    await expect(verificarIdToken('google', 'tok', 'n1')).rejects.toMatchObject({ codigo: 'sub_ausente' });
   });
 });

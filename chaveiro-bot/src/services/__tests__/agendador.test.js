@@ -69,9 +69,13 @@ describe('limparDadosAntigos (retenção LGPD do ponto)', () => {
     const r = await limparDadosAntigos(new Date('2026-06-22T03:30:00Z'));
 
     expect(r.pontoExpurgados).toBe(2);
-    // só apaga arquivo quando há selfieUrl, usando o basename (anti path traversal)
-    expect(unlinkMock).toHaveBeenCalledTimes(1);
-    expect(unlinkMock.mock.calls[0][0]).toContain('ponto-aaa.jpg');
+    // só apaga arquivo quando há selfieUrl, usando o basename (anti path traversal).
+    // Tenta o diretório privado (atual) e o ./uploads legado — 2 unlinks por selfie.
+    expect(unlinkMock).toHaveBeenCalledTimes(2);
+    const caminhos = unlinkMock.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+    expect(caminhos.every((p) => p.endsWith('ponto-aaa.jpg'))).toBe(true);
+    expect(caminhos.some((p) => p.includes('uploads-ponto/'))).toBe(true);
+    expect(caminhos.some((p) => /\/uploads\/ponto-aaa\.jpg$/.test(p))).toBe(true);
     // zera os campos sensíveis das duas batidas numa única updateMany
     expect(batidaUpdateManyMock).toHaveBeenCalledWith({
       where: { id: { in: [10, 11] } },

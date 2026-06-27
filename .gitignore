@@ -30,6 +30,9 @@ chaveiro-bot/auth_info/
 # ── Uploads de mídia gerados em runtime ───────────────────────
 uploads/
 chaveiro-bot/uploads/
+# Selfies de ponto (biometria/PII LGPD): diretório PRIVADO, servido só via API autenticada
+uploads-ponto/
+chaveiro-bot/uploads-ponto/
 
 # ── Bancos / vetores locais ───────────────────────────────────
 *.db

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import { writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
@@ -1985,19 +1986,33 @@ apiRouter.post('/pagamentos', requirePermissao('financeiro', 'editar'), async (r
 // (anti-fraude). Ele vê só as batidas do DIA — o banco de horas (saldo/HE) é exclusivo
 // do dono/gestor (GET /tecnicos/:id/ponto). tecnicoId vem SEMPRE de req.user (self).
 
-// Salva a selfie (data URL base64) da batida em /uploads e devolve o caminho.
+// A selfie de ponto é BIOMETRIA (PII sensível, LGPD): NÃO é servida pelo /uploads
+// público — fica num diretório privado e só é acessível pelo endpoint autenticado e
+// escopado por empresa `GET /api/ponto/selfie/:arquivo`. O agendador (expurgo LGPD)
+// espelha PONTO_SELFIES_DIR.
+const PONTO_SELFIES_DIR = path.resolve('./uploads-ponto');
 const SELFIE_PONTO_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+// Aceita apenas o basename gerado por salvarSelfiePonto (anti path traversal/listagem).
+const SELFIE_ARQUIVO_RE = /^ponto-[0-9a-f-]{36}\.(?:jpg|png|webp)$/;
+
+// Caminho da selfie exposto ao painel: sempre o endpoint AUTENTICADO, nunca o arquivo.
+function urlSelfieApi(selfieUrl) {
+  return selfieUrl ? `/api/ponto/selfie/${path.basename(selfieUrl)}` : null;
+}
+
+// Salva a selfie (data URL base64) da batida no diretório PRIVADO e devolve o caminho
+// interno armazenado no banco (`/uploads-ponto/<nome>`), nunca exposto diretamente.
 async function salvarSelfiePonto(dataUrl) {
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/s.exec(dataUrl ?? '');
   if (!m) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
   const buffer = Buffer.from(m[2], 'base64');
   if (buffer.length > 5 * 1024 * 1024) { const e = new Error('selfie grande'); e.codigo = 'selfie'; throw e; }
   if (!conferirMagicBytes(buffer, m[1])) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
-  const dir = path.resolve('./uploads');
-  await mkdir(dir, { recursive: true });
+  await mkdir(PONTO_SELFIES_DIR, { recursive: true });
   const nome = `ponto-${randomUUID()}.${SELFIE_PONTO_MIME[m[1]] ?? 'jpg'}`;
-  await writeFile(path.join(dir, nome), buffer);
-  return `/uploads/${nome}`;
+  await writeFile(path.join(PONTO_SELFIES_DIR, nome), buffer);
+  return `/uploads-ponto/${nome}`;
 }
 
 // Estado do ponto de HOJE (só as batidas — nunca saldo/HE). Base prisma filtrada por
@@ -2024,7 +2039,7 @@ async function carregarPontoHoje(tecnicoId, agora) {
     proximaBatidaRotulo: proximo ? ROTULO_BATIDA[proximo] : null,
     batidas: (reg?.batidas ?? []).map((b) => ({
       tipo: b.tipo, rotulo: ROTULO_BATIDA[b.tipo] ?? b.tipo, em: b.em,
-      lat: b.lat, lng: b.lng, temSelfie: Boolean(b.selfieUrl), selfieUrl: b.selfieUrl,
+      lat: b.lat, lng: b.lng, temSelfie: Boolean(b.selfieUrl), selfieUrl: urlSelfieApi(b.selfieUrl),
     })),
   };
 }
@@ -2084,6 +2099,38 @@ apiRouter.get('/ponto/hoje', async (req, res) => {
     res.json(await carregarPontoHoje(req.user.tecnicoId, new Date()));
   } catch (erro) {
     logger.error('Erro GET /ponto/hoje', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// GET /api/ponto/selfie/:arquivo — serve a selfie de prova (biometria/LGPD) com auth.
+// Já passou por requireAuth. Aqui aplicamos o escopo: só o PRÓPRIO funcionário (dono da
+// batida) ou quem tem permissão de ver ponto (gestor/dono) — e SEMPRE da mesma empresa.
+// 404 (em vez de 403) quando é de outra empresa, para não revelar a existência do arquivo.
+apiRouter.get('/ponto/selfie/:arquivo', async (req, res) => {
+  try {
+    const arquivo = String(req.params.arquivo ?? '');
+    if (!SELFIE_ARQUIVO_RE.test(arquivo)) return res.status(400).json({ erro: 'Arquivo inválido' });
+
+    const batida = await prisma.batidaPonto.findFirst({
+      where: { selfieUrl: `/uploads-ponto/${arquivo}` },
+      select: { registro: { select: { empresaId: true, tecnicoId: true } } },
+    });
+    // Mesma empresa? Caso contrário, trate como inexistente (anti-IDOR, sem vazar).
+    if (!batida || batida.registro.empresaId !== req.user.empresaId) {
+      return res.status(404).json({ erro: 'Selfie não encontrada' });
+    }
+    const ehProprio = req.user.tecnicoId === batida.registro.tecnicoId;
+    if (!ehProprio && !pode(req.user, 'ponto', 'ver')) {
+      return res.status(403).json({ erro: 'Sem permissão para ver esta selfie' });
+    }
+
+    const caminho = path.join(PONTO_SELFIES_DIR, arquivo);
+    if (!existsSync(caminho)) return res.status(404).json({ erro: 'Selfie não encontrada' });
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.sendFile(caminho);
+  } catch (erro) {
+    logger.error('Erro GET /ponto/selfie', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

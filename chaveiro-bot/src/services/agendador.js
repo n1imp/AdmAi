@@ -142,9 +142,11 @@ const RETENCAO_SESSAO_DIAS = 7;      // sessões de conversa mais antigas são r
 const RETENCAO_PONTO_DIAS = 365;
 const UM_DIA_MS = 24 * 60 * 60 * 1000;
 
-// Diretório onde a selfie da batida é salva (espelha salvarSelfiePonto em routes/api.js,
-// que grava em ./uploads e referencia o arquivo como "/uploads/<nome>").
-const UPLOADS_DIR = path.resolve('./uploads');
+// Diretórios onde a selfie da batida pode estar (espelha salvarSelfiePonto em
+// routes/api.js). Atual: diretório PRIVADO ./uploads-ponto. Legado: ./uploads (antes de a
+// selfie virar privada) — limpamos ambos pelo basename para o expurgo ser idempotente.
+const PONTO_SELFIES_DIR = path.resolve('./uploads-ponto');
+const UPLOADS_DIR_LEGADO = path.resolve('./uploads');
 
 /**
  * Aplica a política de retenção (LGPD): remove sessões de conversa antigas, anonimiza a
@@ -193,8 +195,9 @@ async function expurgarProvasPonto(corte) {
   for (const b of batidas) {
     if (b.selfieUrl) {
       // Usa só o basename para impedir path traversal vindo do valor armazenado.
-      const arquivo = path.join(UPLOADS_DIR, path.basename(b.selfieUrl));
-      await unlink(arquivo).catch(() => {}); // arquivo já removido = ok
+      const nome = path.basename(b.selfieUrl);
+      await unlink(path.join(PONTO_SELFIES_DIR, nome)).catch(() => {}); // já removido = ok
+      await unlink(path.join(UPLOADS_DIR_LEGADO, nome)).catch(() => {}); // selfies legadas
     }
   }
   await prisma.batidaPonto.updateMany({
