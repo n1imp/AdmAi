@@ -12,6 +12,10 @@ import { logger } from '../../utils/logger.js';
  */
 
 const ALG = 'aes-256-gcm';
+// Tag de autenticação do GCM: SEMPRE 128 bits (16 bytes). Fixar isso no cipher e no
+// decipher faz o Node REJEITAR uma tag mais curta no setAuthTag — sem isso, um atacante
+// poderia forjar ciphertext com tag truncada (CWE-310). Ver sg.run/NbGG1.
+const TAG_BYTES = 16;
 
 function chave() {
   if (!env.ENCRYPTION_KEY) {
@@ -25,7 +29,7 @@ function chave() {
 export function encrypt(texto) {
   if (texto == null || texto === '') return null;
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALG, chave(), iv);
+  const cipher = crypto.createCipheriv(ALG, chave(), iv, { authTagLength: TAG_BYTES });
   const ct = Buffer.concat([cipher.update(String(texto), 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');
@@ -41,8 +45,12 @@ export function decrypt(blob) {
   try {
     const [ivB64, tagB64, ctB64] = String(blob).split(':');
     if (!ivB64 || !tagB64 || !ctB64) return null;
-    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'));
-    decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
+    const tag = Buffer.from(tagB64, 'base64');
+    // Rejeita tag fora dos 128 bits ANTES de decifrar (defesa explícita contra truncamento;
+    // o authTagLength abaixo também força isso no setAuthTag).
+    if (tag.length !== TAG_BYTES) return null;
+    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'), { authTagLength: TAG_BYTES });
+    decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
   } catch (erro) {
     // Falha real de decifragem (auth tag/chave rotacionada/tampering): observabilidade
