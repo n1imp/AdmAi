@@ -11,6 +11,7 @@ import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
 import { iniciarAgendamentos } from './services/agendador.js';
 import { bootstrapAdmin } from './services/bootstrap.js';
+import { iniciarWorkerInbound } from './workers/inbound-worker.js';
 
 // Sentry deve inicializar antes de tudo para capturar erros de boot.
 iniciarSentry();
@@ -27,6 +28,7 @@ const server = app.listen(PORT, async () => {
   try {
     await prisma.$connect();
     logger.info('✅ Banco de dados conectado');
+    iniciarWorkerInbound();
   } catch (erro) {
     logger.error('❌ Falha ao conectar ao banco', { erro: erro.message });
     process.exit(1);

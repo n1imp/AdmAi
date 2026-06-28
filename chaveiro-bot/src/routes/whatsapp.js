@@ -2,7 +2,7 @@ import { Router, raw } from 'express';
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { requireAuth } from './api.js';
+import { requireAuth } from '../middlewares/auth.js';
 import { verificarHmac, compararToken } from '../services/whatsapp/crypto.js';
 import { normalizarInboundCloud, salvarCredenciaisCloud } from '../services/whatsapp/cloud-gateway.js';
 import {
@@ -16,6 +16,7 @@ import {
   desconectarBot,
 } from '../services/whatsapp/gateway.js';
 import { rotearMensagemInbound } from '../services/inbound.js';
+import { filaMensagens } from '../queues/mensagens.js';
 
 export const whatsappRouter = Router();
 
@@ -249,9 +250,7 @@ async function processarEventoInboundBot(evento) {
   }
 
   if (tipo === 'messages.upsert' || tipo === 'MESSAGES_UPSERT') {
-    await rotearMensagemInbound(evento).catch((e) =>
-      logger.error('Erro no roteamento da conversa (global)', { erro: e.message })
-    );
+    await filaMensagens.add('mensagem', evento);
     return;
   }
 }

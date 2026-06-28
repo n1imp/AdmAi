@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { requireAuth } from './api.js';
+import { requireAuth } from '../middlewares/auth.js';
 import {
   urlAutorizacao, trocarCodigo, desconectar as desconectarGoogle,
 } from '../services/google/oauth.js';

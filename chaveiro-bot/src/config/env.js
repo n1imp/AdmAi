@@ -65,6 +65,7 @@ export const schema = z.object({
   // (só o filtro app-level). LIGUE apenas após criar o role sem BYPASSRLS e validar
   // em staging — RLS é fail-closed (sem o GUC, a policy retorna zero linhas).
   RLS_ENABLED: z.string().optional(),
+  REDIS_URL: z.string().url().default('redis://localhost:6379'),
   // ── Observabilidade ───────────────────────────────────────────────────────
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

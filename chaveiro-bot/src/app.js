@@ -7,6 +7,8 @@
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import Redis from 'ioredis';
+import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
 import { env } from './config/env.js';
 import { capturarErro } from './config/sentry.js';
@@ -15,6 +17,8 @@ import { apiRouter } from './routes/api.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
 import { whatsappRouter } from './routes/whatsapp.js';
+
+const redisClient = new Redis(env.REDIS_URL);
 
 /**
  * Monta o app. `estado.isShuttingDown` é lido pelo /health para responder 503
@@ -73,11 +77,11 @@ export function criarApp() {
     next();
   });
 
-  const limiter = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false });
+  const limiter = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
   app.use('/api', limiter);
 
   // Rate limit dedicado e mais permissivo para o webhook inbound (por IP da Evolution).
-  const webhookLimiter = rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false });
+  const webhookLimiter = rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
   app.use('/webhook', webhookLimiter);
 
   // Rate limit AGRESSIVO contra brute force em login/registro (guia §3.2).
@@ -89,6 +93,7 @@ export function criarApp() {
     legacyHeaders: false,
     keyGenerator: (req) => req.body?.username || req.ip,
     message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+    store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
@@ -104,6 +109,7 @@ export function criarApp() {
     legacyHeaders: false,
     keyGenerator: (req) => req.body?.desafio || req.ip,
     message: { erro: 'Muitas tentativas de verificação. Reinicie o login e tente de novo.' },
+    store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });
   app.use('/api/auth/login/2fa', twoFactorLimiter);
   app.use('/api/auth/login/2fa-telefone', twoFactorLimiter);
