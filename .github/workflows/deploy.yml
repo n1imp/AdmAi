@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: chaveiro-painel/package-lock.json
 
@@ -35,10 +35,8 @@ jobs:
         working-directory: chaveiro-painel
 
       - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: admai-painel
-          directory: chaveiro-painel/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy chaveiro-painel/dist --project-name=admai-painel --branch=master
