@@ -9,20 +9,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-backend:
-    name: Deploy Backend → Railway
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service admai-bot --detach
-
   deploy-frontend:
     name: Deploy Frontend → Cloudflare Pages
     runs-on: ubuntu-latest
