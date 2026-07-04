@@ -1,6 +1,6 @@
 {
-  "appId": "com.chaveirobot.app",
-  "appName": "ChaveiroBot",
+  "appId": "com.admai.app",
+  "appName": "AdmAi",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

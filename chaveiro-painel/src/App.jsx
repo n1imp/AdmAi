@@ -34,6 +34,12 @@ import Privacidade from './pages/Privacidade.jsx';
 import Termos from './pages/Termos.jsx';
 import Landing from './pages/Landing.jsx';
 import RodapeLegal from './components/RodapeLegal.jsx';
+import VerificarEmail from './pages/VerificarEmail.jsx';
+import RecuperarSenha from './pages/RecuperarSenha.jsx';
+import Cookies from './pages/Cookies.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
+import ConviteAceitar from './pages/ConviteAceitar.jsx';
+import MagicLink from './pages/MagicLink.jsx';
 
 function RequireAuth({ children }) {
   const { user, logout, senhaProvisoria } = useAuth();
@@ -76,6 +82,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <CookieBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
           {/* Troca de senha forçada (PIN provisório) — tela focada, sem Layout */}
@@ -83,6 +90,13 @@ export default function App() {
           {/* Documentos legais — públicos (acessíveis sem login) */}
           <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/termos" element={<Termos />} />
+          <Route path="/cookies" element={<Cookies />} />
+          {/* Fluxos de auth por e-mail — sem autenticação prévia */}
+          <Route path="/verificar-email" element={<VerificarEmail />} />
+          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/redefinir-senha" element={<RecuperarSenha />} />
+          <Route path="/convite/:token" element={<ConviteAceitar />} />
+          <Route path="/magic-link" element={<MagicLink />} />
 
           <Route path="/" element={<Home />} />
           <Route path="/servicos" element={<RequireAuth><Layout><Servicos /></Layout></RequireAuth>} />

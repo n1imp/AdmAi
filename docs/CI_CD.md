@@ -1,4 +1,4 @@
-# CI/CD — ChaveiroBot
+# CI/CD — AdmAi
 
 Como o projeto integra, testa e entrega. Arquitetura de produção: **backend → Railway**
 (Docker + Supabase), **painel → Cloudflare Pages** (estático), **app → Android `.aab`**.

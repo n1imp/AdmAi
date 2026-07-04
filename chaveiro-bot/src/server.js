@@ -12,6 +12,9 @@ import { prisma } from './db/prisma.js';
 import { iniciarAgendamentos } from './services/agendador.js';
 import { bootstrapAdmin } from './services/bootstrap.js';
 import { iniciarWorkerInbound } from './workers/inbound-worker.js';
+import { iniciarWorkerEmail } from './workers/email-worker.js';
+import { filaMensagens } from './queues/mensagens.js';
+import { atualizarMetricasFila } from './config/metrics.js';
 
 // Sentry deve inicializar antes de tudo para capturar erros de boot.
 iniciarSentry();
@@ -20,7 +23,7 @@ const { app, estado } = criarApp();
 const PORT = parseInt(env.PORT);
 
 const server = app.listen(PORT, async () => {
-  logger.info(`🔑 ChaveiroBot iniciado na porta ${PORT}`, {
+  logger.info(`🔑 AdmAi iniciado na porta ${PORT}`, {
     ambiente: env.NODE_ENV,
     whatsapp: env.EVOLUTION_HOST ? 'evolution' : 'nenhum',
   });
@@ -29,6 +32,7 @@ const server = app.listen(PORT, async () => {
     await prisma.$connect();
     logger.info('✅ Banco de dados conectado');
     iniciarWorkerInbound();
+    iniciarWorkerEmail();
   } catch (erro) {
     logger.error('❌ Falha ao conectar ao banco', { erro: erro.message });
     process.exit(1);
@@ -47,6 +51,9 @@ const server = app.listen(PORT, async () => {
   }
 
   iniciarAgendamentos();
+
+  // Atualiza métricas de profundidade das filas BullMQ a cada 30s.
+  setInterval(() => atualizarMetricasFila(filaMensagens), 30_000);
 });
 
 // ── Graceful shutdown (guia §5.2) ──────────────────────────────────────────

@@ -257,6 +257,7 @@ export default function Tecnicos() {
             <EstadoVazio
               mensagem="Nenhum técnico cadastrado"
               sub="Toque no + para adicionar um técnico, ou ele é criado automaticamente ao registrar serviços no WhatsApp"
+              cta={{ label: 'Adicionar técnico', to: '/tecnicos/novo' }}
             />
           </div>
         ) : (

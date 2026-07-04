@@ -70,9 +70,34 @@ export const schema = z.object({
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   APP_VERSION: z.string().optional(),          // ex.: tag de release, usada no Sentry/logs
+  // ── Email transacional (Resend) ───────────────────────────────────────────
+  RESEND_API_KEY: z.string().optional(),
+  FROM_EMAIL: z.string().email().default('noreply@barbers-flow.com'),
+  SUPPORT_EMAIL: z.string().email().default('suporte@barbers-flow.com'),
+  FRONTEND_URL: z.string().url().optional(),
+  // Quando true, bloqueia acesso de usuários com e-mail não verificado
+  REQUIRE_EMAIL_VERIFICATION: z.string().optional(),
+  // ── Billing (Stripe) ─────────────────────────────────────────────────────
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ID_PRO: z.string().optional(),
 }).superRefine((cfg, ctx) => {
   // Em produção, CORS NUNCA pode cair no wildcard '*': exige uma origem explícita
   // (o painel). Sem isso, qualquer site poderia chamar a API com credenciais do usuário.
+  if (cfg.NODE_ENV === 'production' && !cfg.RESEND_API_KEY) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['RESEND_API_KEY'],
+      message: 'RESEND_API_KEY é obrigatória em produção (email transacional).',
+    });
+  }
+  if (cfg.NODE_ENV === 'production' && !cfg.FRONTEND_URL) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['FRONTEND_URL'],
+      message: 'FRONTEND_URL é obrigatória em produção (links nos emails).',
+    });
+  }
   if (cfg.NODE_ENV === 'production' && (!cfg.ALLOWED_ORIGIN || cfg.ALLOWED_ORIGIN === '*')) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

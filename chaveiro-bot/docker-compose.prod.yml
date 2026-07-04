@@ -1,4 +1,4 @@
-# ── Stack de PRODUÇÃO do ChaveiroBot ──────────────────────────────────────────
+# ── Stack de PRODUÇÃO do AdmAi ──────────────────────────────────────────
 # Postgres + backend + painel + Caddy (HTTPS automático via Let's Encrypt).
 #
 # Diferenças para o docker-compose.yml (dev):
@@ -12,7 +12,7 @@
 #   1) Copie .env.example → .env e preencha os segredos (openssl rand -hex 32):
 #        POSTGRES_PASSWORD, DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, API_TOKEN,
 #        CADDY_APP_DOMAIN, CADDY_API_DOMAIN, ALLOWED_ORIGIN, PUBLIC_URL, NODE_ENV=production
-#      (DATABASE_URL deve usar host "postgres": postgresql://chaveiro:SENHA@postgres:5432/chaveirobot)
+#      (DATABASE_URL deve usar host "postgres": postgresql://chaveiro:SENHA@postgres:5432/admai)
 #   2) docker compose -f docker-compose.prod.yml up -d --build
 #   3) Verifique: https://$CADDY_API_DOMAIN/health → 200 {"database":"ok"}
 #
@@ -20,7 +20,7 @@
 # ANTES de subir, senão o Caddy não consegue emitir o certificado TLS.
 
 networks:
-  chaveiro-net:
+  admai-net:
     driver: bridge
 
 volumes:
@@ -31,19 +31,19 @@ volumes:
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: chaveiro-postgres
+    container_name: admai-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-chaveirobot}
+      POSTGRES_DB: ${POSTGRES_DB:-admai}
       POSTGRES_USER: ${POSTGRES_USER:-chaveiro}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - chaveiro-net
+      - admai-net
     # Sem `ports:` — o banco só é acessível na rede interna do compose.
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-chaveiro} -d ${POSTGRES_DB:-chaveirobot}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-chaveiro} -d ${POSTGRES_DB:-admai}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,11 +52,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: chaveiro-backend
+    container_name: admai-backend
     restart: unless-stopped
     env_file: .env          # DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, API_TOKEN, etc.
     networks:
-      - chaveiro-net
+      - admai-net
     # Sem `ports:` — só o Caddy alcança o backend (via rede interna em backend:3000).
     depends_on:
       postgres:
@@ -71,12 +71,12 @@ services:
 
   painel:
     build:
-      context: ../chaveiro-painel
+      context: ../admai-painel
       dockerfile: Dockerfile
-    container_name: chaveiro-painel
+    container_name: admai-painel
     restart: unless-stopped
     networks:
-      - chaveiro-net
+      - admai-net
     # Sem `ports:` — servido externamente pelo Caddy. O nginx interno faz proxy de
     # /api, /health, /uploads e /metrics para backend:3000 (ver nginx.conf).
     depends_on:
@@ -84,7 +84,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    container_name: chaveiro-caddy
+    container_name: admai-caddy
     restart: unless-stopped
     ports:
       - '80:80'
@@ -97,7 +97,7 @@ services:
       - caddy_data:/data       # certificados emitidos (persistir!)
       - caddy_config:/config
     networks:
-      - chaveiro-net
+      - admai-net
     depends_on:
       - backend
       - painel

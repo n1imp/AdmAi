@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#0E1014" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="ChaveiroBot" />
-    <meta name="description" content="Painel de gestão de serviços de chaveiro: WhatsApp, técnicos, estoque e avaliações." />
+    <meta name="apple-mobile-web-app-title" content="AdmAi" />
+    <meta name="description" content="Painel de gestão AdmAi: serviços, técnicos, estoque e avaliações." />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <title>ChaveiroBot — Painel</title>
+    <title>AdmAi — Painel</title>
     <!-- Fontes via Google Fonts: Saira Condensed (display) + Sora (corpo) + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,6 +19,16 @@
       href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <!-- Crisp.chat — suporte ao cliente (só inicializa se VITE_CRISP_ID estiver definido) -->
+    <script>
+      (function(){
+        var id = '%VITE_CRISP_ID%';
+        if (!id || id === '%VITE_CRISP_ID%') return;
+        window.$crisp=[];window.CRISP_WEBSITE_ID=id;
+        var d=document,s=d.createElement('script');
+        s.src='https://client.crisp.chat/l.js';s.async=1;d.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body class="bg-dark-900 text-white">
     <div id="root"></div>

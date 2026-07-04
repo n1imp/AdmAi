@@ -62,7 +62,7 @@ export async function gerarRelatorioPDF(inicio, fim, empresaId) {
       .fontSize(22)
       .font('Helvetica-Bold')
       .fillColor('#1a1a2e')
-      .text('🔑 ChaveiroBot', { align: 'center' });
+      .text('🔑 AdmAi', { align: 'center' });
 
     doc
       .fontSize(11)
@@ -260,7 +260,7 @@ export async function gerarRelatorioPonto(empresaId, tecnicoId, mes) {
     doc.on('data', (c) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-    doc.fontSize(20).font('Helvetica-Bold').fillColor('#1a1a2e').text('🔑 ChaveiroBot', { align: 'center' });
+    doc.fontSize(20).font('Helvetica-Bold').fillColor('#1a1a2e').text('🔑 AdmAi', { align: 'center' });
     doc.fontSize(11).font('Helvetica').fillColor('#555').text('Banco de Horas', { align: 'center' });
     doc.text(`${tecnico.nome} • ${mes}`, { align: 'center' }).moveDown(0.4);
     doc.fontSize(8).fillColor('#999')

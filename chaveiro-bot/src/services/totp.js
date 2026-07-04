@@ -13,7 +13,7 @@ import { encrypt, decrypt } from './whatsapp/crypto.js';
  * servidor e o celular do usuário, padrão dos apps autenticadores.
  */
 
-const EMISSOR = 'ChaveiroBot';
+const EMISSOR = 'AdmAi';
 const TOLERANCIA_SEGUNDOS = 30; // ±1 step de 30s para defasagem de relógio
 
 /** Gera um novo segredo TOTP em Base32 (compatível com apps autenticadores). */
@@ -21,7 +21,7 @@ export function gerarSegredoTotp() {
   return generateSecret();
 }
 
-/** Monta a URI otpauth:// para o QR (emissor "ChaveiroBot", label = username). */
+/** Monta a URI otpauth:// para o QR (emissor "AdmAi", label = username). */
 export function montarOtpauthUrl(secret, label) {
   return generateURI({ issuer: EMISSOR, label, secret });
 }

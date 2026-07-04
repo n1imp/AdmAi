@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { randomBytes, createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 
 export function gerarJWT(usuario) {
@@ -12,8 +13,20 @@ export function gerarJWT(usuario) {
       empresaId: usuario.empresaId,
     },
     env.JWT_SECRET,
-    { algorithm: 'HS256', expiresIn: '24h' }
+    { algorithm: 'HS256', expiresIn: '1h' }
   );
+}
+
+export function gerarRefreshTokenRaw() {
+  return randomBytes(32).toString('hex');
+}
+
+export function hashRefreshToken(raw) {
+  return createHash('sha256').update(raw).digest('hex');
+}
+
+export function dataExpiracaoRefresh() {
+  return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
 
 export function verificarJWT(token) {

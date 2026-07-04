@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrCode, ClipboardList, BarChart3, BookOpen, X } from 'lucide-react';
 
-const STORAGE_KEY = 'chaveiro_welcome_seen';
+const STORAGE_KEY = 'admai_welcome_seen';
 
 const ACOES = [
   { icon: QrCode, texto: 'Conectar o WhatsApp', cor: 'text-accent-300', bg: 'bg-accent-400/10' },
@@ -34,7 +34,7 @@ export default function WelcomeCard({ onVerTutorial }) {
         </button>
 
         <h2 className="font-display text-xl font-bold text-white pr-8">
-          Bem-vindo ao ChaveiroBot 👋
+          Bem-vindo ao AdmAi 👋
         </h2>
         <p className="text-muted text-sm mt-1">
           Seus serviços e finanças organizados direto do WhatsApp.

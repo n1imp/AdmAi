@@ -1,4 +1,4 @@
-# Política de Segurança — ChaveiroBot
+# Política de Segurança — AdmAi
 
 Levamos a segurança a sério. Esta política descreve como **reportar vulnerabilidades** e o que
 esperar do nosso processo.
@@ -53,4 +53,4 @@ ataques de engenharia social, DoS volumétrico, e relatórios automatizados sem 
 | `1.x` (atual) | ✅ |
 | `< 1.0` (pré-release) | ❌ |
 
-Obrigado por ajudar a manter o ChaveiroBot e seus usuários seguros. 🙏
+Obrigado por ajudar a manter o AdmAi e seus usuários seguros. 🙏

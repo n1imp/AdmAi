@@ -1,6 +1,6 @@
-# Política de Privacidade — ChaveiroBot
+# Política de Privacidade — AdmAi
 
-> ⚠️ **Aviso:** Este é um **modelo** preparado para o ChaveiroBot. Antes de publicar,
+> ⚠️ **Aviso:** Este é um **modelo** preparado para o AdmAi. Antes de publicar,
 > preencha os campos entre colchetes `[ ]` e **valide com um advogado**. Ele não substitui
 > aconselhamento jurídico.
 
@@ -11,7 +11,7 @@
 
 ## 1. Quem somos
 
-O **ChaveiroBot** ("Plataforma", "nós") é um serviço de software (SaaS) que permite a
+O **AdmAi** ("Plataforma", "nós") é um serviço de software (SaaS) que permite a
 empresas de chaveiro registrarem serviços de campo via WhatsApp e gerirem receita, comissões,
 estoque e avaliações por um painel web.
 
@@ -23,13 +23,13 @@ Esta Política descreve como tratamos dados pessoais conforme a **Lei nº 13.709
 
 ## 2. Papéis (LGPD): controlador x operador
 
-O ChaveiroBot atua em **dois papéis** distintos:
+O AdmAi atua em **dois papéis** distintos:
 
 - **Controlador** dos dados de **cadastro e uso da Plataforma** (donos e usuários do painel):
   nome, e-mail, telefone, credenciais, logs de acesso.
 - **Operador** dos dados que a **empresa-cliente (chaveiro)** insere sobre **seus próprios
   clientes finais** (ex.: telefone, nome e avaliação do cliente atendido). Nesses casos, a
-  **empresa-cliente é a Controladora** e o ChaveiroBot trata os dados **em seu nome**, seguindo
+  **empresa-cliente é a Controladora** e o AdmAi trata os dados **em seu nome**, seguindo
   suas instruções e esta Política.
 
 ## 3. Dados que coletamos

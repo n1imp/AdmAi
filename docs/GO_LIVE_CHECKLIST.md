@@ -1,7 +1,7 @@
-# Checklist de Go-Live — ChaveiroBot (web + Play Store)
+# Checklist de Go-Live — AdmAi (web + Play Store)
 
 Este documento cobre os passos **manuais** (dependem da sua infraestrutura e da conta Google)
-para colocar o ChaveiroBot no ar e publicá-lo na Play Store. O que já foi entregue em código
+para colocar o AdmAi no ar e publicá-lo na Play Store. O que já foi entregue em código
 está marcado como ✅ FEITO.
 
 Decisões desta entrega: app via **Capacitor**, hospedagem em **VPS (Docker + Caddy)**,

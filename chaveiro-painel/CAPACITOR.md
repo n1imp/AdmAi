@@ -1,10 +1,10 @@
-# App Android (Capacitor) — ChaveiroBot
+# App Android (Capacitor) — AdmAi
 
 O app Android é um wrapper [Capacitor](https://capacitorjs.com/) sobre o painel React
 deste diretório. Ele empacota o build estático (`dist/`) num WebView nativo e reaproveita
 100% da UI existente. Já está com o projeto nativo gerado em `android/`.
 
-- **appId:** `com.chaveirobot.app`  ·  **appName:** `ChaveiroBot`  ·  **webDir:** `dist`
+- **appId:** `com.admai.app`  ·  **appName:** `AdmAi`  ·  **webDir:** `dist`
 - Config: [`capacitor.config.json`](./capacitor.config.json)
 
 ## Pré-requisitos (na máquina de build)
@@ -61,7 +61,7 @@ npm i @capacitor/camera @capacitor/geolocation
 
 1. **Gerar o keystore de upload** (uma vez; guarde com segurança e faça backup):
    ```bash
-   keytool -genkey -v -keystore chaveirobot-upload.jks -keyalg RSA -keysize 2048 \
+   keytool -genkey -v -keystore admai-upload.jks -keyalg RSA -keysize 2048 \
      -validity 10000 -alias upload
    ```
 2. **Configurar a assinatura.** O `android/app/build.gradle` **já lê** as credenciais de

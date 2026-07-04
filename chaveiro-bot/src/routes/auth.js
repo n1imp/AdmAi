@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma.js';
-import { gerarJWT } from '../services/auth.js';
+import { gerarJWT, gerarRefreshTokenRaw, hashRefreshToken, dataExpiracaoRefresh } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { verificarCodigo, decifrarSegredo } from '../services/totp.js';
@@ -11,6 +11,9 @@ import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../se
 import { canonizarTelefone, variantesTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { verificarIdToken, provedoresHabilitados, OAuthError } from '../services/oauth.js';
+import { enviarEmailVerificacao, enviarEmailBoasVindas, enviarEmailResetSenha, enviarEmailMagicLink } from '../services/email.js';
+import { agendarSequencia } from '../services/onboarding.js';
+import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
@@ -39,6 +42,23 @@ async function gerarUsernameUnico(base) {
   return username;
 }
 
+const COOKIE_OPTS = {
+  httpOnly: true,
+  sameSite: 'strict',
+  path: '/api/auth',
+};
+
+async function emitirRefreshCookie(res, usuarioId) {
+  const raw = gerarRefreshTokenRaw();
+  const tokenHash = hashRefreshToken(raw);
+  await prisma.refreshToken.create({ data: { tokenHash, usuarioId, expiraEm: dataExpiracaoRefresh() } });
+  res.cookie('refresh_token', raw, {
+    ...COOKIE_OPTS,
+    secure: env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
 function payloadSessao(usuario, token) {
   return {
     token,
@@ -49,11 +69,12 @@ function payloadSessao(usuario, token) {
   };
 }
 
-function responderSessao(res, usuario, via) {
+async function responderSessao(res, usuario, via) {
   if (usuario.twoFactorAtivo && usuario.totpSecret) {
     logger.info('login_2fa_required', { userId: usuario.id, via });
     return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id) });
   }
+  await emitirRefreshCookie(res, usuario.id);
   const token = gerarJWT(usuario);
   logger.info('login_success', { userId: usuario.id, via });
   return res.json(payloadSessao(usuario, token));
@@ -146,6 +167,7 @@ router.post('/auth/login', async (req, res) => {
       logger.info('login_2fa_required', { userId: usuario.id, metodo: 'telefone' });
       return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id), metodo: 'telefone' });
     }
+    await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id });
     res.json(payloadSessao(usuario, token));
@@ -167,6 +189,7 @@ router.post('/auth/login/2fa', async (req, res) => {
     const segredo = decifrarSegredo(usuario.totpSecret);
     const ok = await verificarCodigo(segredo, parse.data.codigo);
     if (!ok) { logger.info('login_2fa_failure', { userId: usuario.id }); return res.status(400).json({ erro: 'Código inválido' }); }
+    await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa' });
     res.json(payloadSessao(usuario, token));
@@ -190,6 +213,7 @@ router.post('/auth/login/2fa-telefone', async (req, res) => {
       return res.status(400).json({ erro: 'Código inválido ou expirado' });
     }
     await limparOtpTelefone(usuario.id);
+    await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa-telefone' });
     res.json(payloadSessao(usuario, token));
@@ -222,6 +246,7 @@ router.post('/setup', async (req, res) => {
         select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true },
       });
     });
+    await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     res.status(201).json({ token, ...usuario });
   } catch (erro) {
@@ -250,6 +275,14 @@ router.post('/auth/register', async (req, res) => {
       });
     });
     await gerarEEnviarOtp(usuario.id, telefoneCanonico);
+
+    if (usuario.email) {
+      const tokenEmail = jwt.sign({ sub: usuario.id, tipo: 'email_verify', email: usuario.email }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+      enviarEmailVerificacao(usuario, tokenEmail).catch(() => {});
+      agendarSequencia(usuario.id, usuario.email, usuario.nome).catch(() => {});
+    }
+
+    await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info({ event: 'user_registered', userId: usuario.id });
     return res.status(201).json({ token, ...usuario });
@@ -259,6 +292,235 @@ router.post('/auth/register', async (req, res) => {
       return res.status(409).json({ erro: `${campo} já em uso` });
     }
     logger.error('Erro POST /auth/register', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+const authLimiter = (() => {
+  let _limiter = null;
+  return async (req, res, next) => {
+    if (!_limiter) {
+      const { rateLimit } = await import('express-rate-limit');
+      _limiter = rateLimit({ windowMs: 15 * 60_000, limit: 5, standardHeaders: true, legacyHeaders: false });
+    }
+    return _limiter(req, res, next);
+  };
+})();
+
+router.post('/auth/recuperar-senha', authLimiter, async (req, res) => {
+  const parse = z.object({ email: z.string().email() }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
+    if (usuario && usuario.email) {
+      const token = jwt.sign({ sub: usuario.id, tipo: 'password_reset' }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
+      enviarEmailResetSenha(usuario, token).catch(() => {});
+    }
+    // Sempre retorna OK para evitar user enumeration
+    return res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /auth/recuperar-senha', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
+  const parse = z.object({ token: z.string().min(1), novaSenha: z.string().min(8) }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    let payload;
+    try {
+      payload = jwt.verify(parse.data.token, env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (payload?.tipo !== 'password_reset' || !payload?.sub) throw new Error('Token inválido');
+    } catch {
+      return res.status(400).json({ erro: 'Link inválido ou expirado' });
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo) return res.status(404).json({ erro: 'Usuário não encontrado' });
+
+    // Token single-use: iat deve ser >= senhaAlteradaEm
+    const iatMs = payload.iat * 1000;
+    if (usuario.senhaAlteradaEm && iatMs < usuario.senhaAlteradaEm.getTime()) {
+      return res.status(400).json({ erro: 'Link já utilizado. Solicite um novo.' });
+    }
+
+    const { avaliarForcaSenha } = await import('../services/senha.js');
+    const forca = avaliarForcaSenha(parse.data.novaSenha);
+    if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
+
+    const bcrypt = await import('bcryptjs');
+    const senhaHash = await bcrypt.default.hash(parse.data.novaSenha, 12);
+    const agora = new Date();
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
+    });
+    logger.info('senha_redefinida_email', { userId: usuario.id });
+    return res.json({ ok: true });
+  } catch (erro) {
+    logger.error('Erro POST /auth/redefinir-senha', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.get('/auth/email/verificar', async (req, res) => {
+  const token = String(req.query.token ?? '');
+  if (!token) return res.status(400).json({ erro: 'Token ausente' });
+  try {
+    let payload;
+    try {
+      payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (payload?.tipo !== 'email_verify' || !payload?.sub) throw new Error('Token inválido');
+    } catch {
+      return res.status(400).json({ erro: 'Link inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    if (!usuario.emailVerificado) {
+      await prisma.usuario.update({ where: { id: usuario.id }, data: { emailVerificado: true } });
+      enviarEmailBoasVindas(usuario).catch(() => {});
+    }
+    logger.info('email_verificado', { userId: usuario.id });
+    return res.json({ verificado: true });
+  } catch (erro) {
+    logger.error('Erro GET /auth/email/verificar', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/auth/email/reenviar', async (req, res) => {
+  const parse = z.object({ email: z.string().email() }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
+    if (usuario && !usuario.emailVerificado && usuario.email) {
+      const token = jwt.sign({ sub: usuario.id, tipo: 'email_verify', email: usuario.email }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+      enviarEmailVerificacao(usuario, token).catch(() => {});
+    }
+    return res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /auth/email/reenviar', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.get('/convite/:token', async (req, res) => {
+  const tokenHash = createHash('sha256').update(req.params.token).digest('hex');
+  try {
+    const convite = await prisma.conviteUsuario.findFirst({ where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } } });
+    if (!convite) return res.status(404).json({ erro: 'Convite inválido ou expirado' });
+    const empresa = await prisma.empresa.findUnique({ where: { id: convite.empresaId }, select: { nome: true } });
+    res.json({ email: convite.email, papel: convite.papel, empresa: empresa?.nome ?? '', convidadoPor: convite.nomeConvidadoPor });
+  } catch (erro) {
+    logger.error('Erro GET /convite/:token', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/convite/:token/aceitar', async (req, res) => {
+  const tokenHash = createHash('sha256').update(req.params.token).digest('hex');
+  const parse = z.object({ nome: z.string().min(2), username: z.string().min(3).regex(/^[a-zA-Z0-9_]+$/), senha: z.string().min(8) }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+  try {
+    const convite = await prisma.conviteUsuario.findFirst({ where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } } });
+    if (!convite) return res.status(404).json({ erro: 'Convite inválido ou expirado' });
+    const forca = avaliarForcaSenha(parse.data.senha);
+    if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
+    const senhaHash = await bcrypt.hash(parse.data.senha, 12);
+    const usuario = await prisma.$transaction(async (tx) => {
+      const novo = await tx.usuario.create({
+        data: { nome: parse.data.nome, username: parse.data.username, email: convite.email, senhaHash, papel: convite.papel, admin: convite.papel === 'dono', emailVerificado: true, empresaId: convite.empresaId },
+        select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true, senhaProvisoria: true },
+      });
+      await tx.conviteUsuario.update({ where: { id: convite.id }, data: { aceitoEm: new Date() } });
+      return novo;
+    });
+    logger.info('convite_aceito', { userId: usuario.id, empresaId: convite.empresaId });
+    await emitirRefreshCookie(res, usuario.id);
+    const token = gerarJWT(usuario);
+    res.status(201).json(payloadSessao(usuario, token));
+  } catch (erro) {
+    if (erro.code === 'P2002') return res.status(409).json({ erro: 'Username ou e-mail já em uso' });
+    logger.error('Erro POST /convite/:token/aceitar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/auth/refresh', async (req, res) => {
+  const raw = req.cookies?.refresh_token;
+  if (!raw) return res.status(401).json({ erro: 'Refresh token ausente' });
+  try {
+    const tokenHash = hashRefreshToken(raw);
+    const registro = await prisma.refreshToken.findUnique({ where: { tokenHash }, include: { usuario: true } });
+    if (!registro || registro.expiraEm < new Date()) {
+      res.clearCookie('refresh_token', { ...COOKIE_OPTS });
+      return res.status(401).json({ erro: 'Sessão expirada' });
+    }
+    if (!registro.usuario.ativo) {
+      res.clearCookie('refresh_token', { ...COOKIE_OPTS });
+      return res.status(401).json({ erro: 'Usuário inativo' });
+    }
+    // Rotacionar: apagar o token usado e emitir um novo
+    await prisma.refreshToken.delete({ where: { id: registro.id } });
+    await emitirRefreshCookie(res, registro.usuario.id);
+    const token = gerarJWT(registro.usuario);
+    logger.info('token_refreshed', { userId: registro.usuario.id });
+    return res.json({ token });
+  } catch (erro) {
+    logger.error('Erro POST /auth/refresh', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/auth/logout', (req, res) => {
+  const raw = req.cookies?.refresh_token;
+  if (raw) {
+    const tokenHash = hashRefreshToken(raw);
+    prisma.refreshToken.deleteMany({ where: { tokenHash } }).catch(() => {});
+  }
+  res.clearCookie('refresh_token', { ...COOKIE_OPTS });
+  return res.json({ ok: true });
+});
+
+router.post('/auth/magic-link', authLimiter, async (req, res) => {
+  const parse = z.object({ email: z.string().email() }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
+    if (usuario && usuario.ativo && usuario.email) {
+      const token = jwt.sign({ sub: usuario.id, tipo: 'magic_link' }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '15m' });
+      enviarEmailMagicLink(usuario, token).catch(() => {});
+    }
+    return res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /auth/magic-link', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.get('/auth/magic-link/verificar', async (req, res) => {
+  const token = String(req.query.token ?? '');
+  if (!token) return res.status(400).json({ erro: 'Token ausente' });
+  try {
+    let payload;
+    try {
+      payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (payload?.tipo !== 'magic_link' || !payload?.sub) throw new Error('Token inválido');
+    } catch {
+      return res.status(400).json({ erro: 'Link inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    if (!usuario.emailVerificado) {
+      await prisma.usuario.update({ where: { id: usuario.id }, data: { emailVerificado: true } });
+    }
+    await emitirRefreshCookie(res, usuario.id);
+    const sessaoToken = gerarJWT(usuario);
+    logger.info('magic_link_login', { userId: usuario.id });
+    return res.json(payloadSessao(usuario, sessaoToken));
+  } catch (erro) {
+    logger.error('Erro GET /auth/magic-link/verificar', { erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });
   }
 });

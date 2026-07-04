@@ -99,7 +99,7 @@ export default function Sidebar() {
           <KeyRound size={18} className="text-accent-300" strokeWidth={2} />
         </div>
         <div className="leading-tight">
-          <p className="font-display font-bold text-white text-lg tracking-wide">CHAVEIRO<span className="text-accent-400">BOT</span></p>
+          <p className="font-display font-bold text-white text-lg tracking-wide">ADM<span className="text-accent-400">AI</span></p>
           <p className="text-[10px] text-dark-500 uppercase tracking-[0.2em] -mt-0.5">painel de controle</p>
         </div>
       </div>

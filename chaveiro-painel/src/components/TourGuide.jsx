@@ -10,12 +10,12 @@
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
-const STORAGE_KEY = 'chaveiro_tour_done';
-const STYLE_ID = 'chaveiro-tour-style';
+const STORAGE_KEY = 'admai_tour_done';
+const STYLE_ID = 'admai-tour-style';
 
 // Tema escuro do popover (paleta Industrial Técnico), injetado uma vez via <style>.
 const TOUR_CSS = `
-.driver-popover.chaveiro-tour {
+.driver-popover.admai-tour {
   background: #15181F;
   color: #E6E9EF;
   border: 1px solid #262B34;
@@ -24,22 +24,22 @@ const TOUR_CSS = `
   font-family: inherit;
   max-width: 320px;
 }
-.driver-popover.chaveiro-tour .driver-popover-title { color: #FFFFFF; font-size: 16px; font-weight: 700; }
-.driver-popover.chaveiro-tour .driver-popover-description { color: #9AA3B2; font-size: 13px; line-height: 1.5; }
-.driver-popover.chaveiro-tour .driver-popover-progress-text { color: #6B7280; font-size: 11px; letter-spacing: 0.04em; }
-.driver-popover.chaveiro-tour button.driver-popover-next-btn,
-.driver-popover.chaveiro-tour button.driver-popover-prev-btn {
+.driver-popover.admai-tour .driver-popover-title { color: #FFFFFF; font-size: 16px; font-weight: 700; }
+.driver-popover.admai-tour .driver-popover-description { color: #9AA3B2; font-size: 13px; line-height: 1.5; }
+.driver-popover.admai-tour .driver-popover-progress-text { color: #6B7280; font-size: 11px; letter-spacing: 0.04em; }
+.driver-popover.admai-tour button.driver-popover-next-btn,
+.driver-popover.admai-tour button.driver-popover-prev-btn {
   background: #1B1F27; color: #E6E9EF; border: 1px solid #2E343F; border-radius: 8px;
   text-shadow: none; font-weight: 600; font-size: 13px;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.driver-popover.chaveiro-tour button.driver-popover-next-btn:hover,
-.driver-popover.chaveiro-tour button.driver-popover-prev-btn:hover { background: #232833; color: #FFFFFF; }
-.driver-popover.chaveiro-tour button.driver-popover-next-btn { background: #22D3EE; color: #0A0C10; border-color: transparent; }
-.driver-popover.chaveiro-tour button.driver-popover-next-btn:hover { background: #38DDF5; color: #0A0C10; }
-.driver-popover.chaveiro-tour button.driver-popover-close-btn { color: #6B7280; transition: color 0.15s; }
-.driver-popover.chaveiro-tour button.driver-popover-close-btn:hover { color: #FFFFFF; }
-.driver-popover.chaveiro-tour .driver-popover-arrow { border-color: #15181F; }
+.driver-popover.admai-tour button.driver-popover-next-btn:hover,
+.driver-popover.admai-tour button.driver-popover-prev-btn:hover { background: #232833; color: #FFFFFF; }
+.driver-popover.admai-tour button.driver-popover-next-btn { background: #22D3EE; color: #0A0C10; border-color: transparent; }
+.driver-popover.admai-tour button.driver-popover-next-btn:hover { background: #38DDF5; color: #0A0C10; }
+.driver-popover.admai-tour button.driver-popover-close-btn { color: #6B7280; transition: color 0.15s; }
+.driver-popover.admai-tour button.driver-popover-close-btn:hover { color: #FFFFFF; }
+.driver-popover.admai-tour .driver-popover-arrow { border-color: #15181F; }
 `;
 
 function garantirEstilos() {
@@ -57,7 +57,7 @@ const PASSOS = [
   {
     route: '/',
     popover: {
-      title: '👋 Bem-vindo ao ChaveiroBot',
+      title: '👋 Bem-vindo ao AdmAi',
       description: 'Vou te mostrar em poucos passos como acompanhar seus serviços e finanças, passando por cada aba. Leva menos de um minuto — pode sair quando quiser com Esc.',
     },
   },
@@ -84,7 +84,7 @@ const PASSOS = [
   {
     route: '/configuracao/whatsapp',
     element: 'a[href="/configuracao/whatsapp"]',
-    popover: { title: 'Conecte o WhatsApp', description: 'O coração do ChaveiroBot. Aqui você conecta o número da empresa (via QR Code) para registrar serviços e atender clientes direto pelo WhatsApp.', side: 'right', align: 'start' },
+    popover: { title: 'Conecte o WhatsApp', description: 'O coração do AdmAi. Aqui você conecta o número da empresa (via QR Code) para registrar serviços e atender clientes direto pelo WhatsApp.', side: 'right', align: 'start' },
   },
   {
     route: '/',
@@ -172,7 +172,7 @@ export function startTour({ force = false, navigate } = {}) {
     stagePadding: 6,
     stageRadius: 10,
     smoothScroll: true,
-    popoverClass: 'chaveiro-tour',
+    popoverClass: 'admai-tour',
     progressText: '{{current}} de {{total}}',
     nextBtnText: 'Próximo',
     prevBtnText: 'Voltar',

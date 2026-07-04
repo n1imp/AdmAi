@@ -1,6 +1,6 @@
 # ── Observabilidade (opcional) ────────────────────────────────────────────────
 # Prometheus raspa o /metrics do backend; Grafana visualiza. Compartilha a rede
-# do compose principal (chaveiro-net). Suba junto com o compose base:
+# do compose principal (admai-net). Suba junto com o compose base:
 #
 #   docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
 #
@@ -9,7 +9,7 @@
 # e abra http://localhost:3001 (Grafana) / http://localhost:9090 (Prometheus).
 
 networks:
-  chaveiro-net:
+  admai-net:
     driver: bridge
 
 volumes:
@@ -19,19 +19,19 @@ volumes:
 services:
   prometheus:
     image: prom/prometheus:latest
-    container_name: chaveiro-prometheus
+    container_name: admai-prometheus
     restart: unless-stopped
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
-      - chaveiro-net
+      - admai-net
     ports:
       - '127.0.0.1:9090:9090'
 
   grafana:
     image: grafana/grafana:latest
-    container_name: chaveiro-grafana
+    container_name: admai-grafana
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
@@ -40,7 +40,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
-      - chaveiro-net
+      - admai-net
     ports:
       - '127.0.0.1:3001:3000'
     depends_on:

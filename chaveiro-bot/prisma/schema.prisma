@@ -18,13 +18,14 @@ model Empresa {
   // Quando true, serviços registrados por funcionários entram como "pendente" e só
   // contam (comissão/estoque) após aprovação do dono/gestor. Toggle por empresa.
   aprovacaoServico Boolean @default(false)
-  whatsapp  EmpresaWhatsapp?
-  usuarios  Usuario[]
-  tecnicos  Tecnico[]
-  servicos  Servico[]
-  materiais Material[]
+  whatsapp   EmpresaWhatsapp?
+  usuarios   Usuario[]
+  tecnicos   Tecnico[]
+  servicos   Servico[]
+  materiais  Material[]
   pagamentos Pagamento[]
-  criadoEm  DateTime @default(now())
+  assinatura Assinatura?
+  criadoEm   DateTime @default(now())
 }
 
 // Configurações de WhatsApp POR EMPRESA (settings do robô de número único + Cloud API).
@@ -219,6 +220,9 @@ model Usuario {
   avisos              Notificacao[]
   contasSociais       ContaSocial[]
   tecnico             Tecnico?
+  codigosRecuperacao  CodigoRecuperacaoTotp[]
+  refreshTokens       RefreshToken[]
+  sessoes             SessaoUsuario[]
   criadoEm           DateTime  @default(now())
 
   @@index([empresaId])
@@ -404,4 +408,95 @@ model AnaliseAvaliacoes {
   resumoCriticas        String?
   ultimoReviewAnalisado String?  // reviewId do último analisado (incremental)
   atualizadoEm          DateTime @updatedAt
+}
+
+// Códigos de recuperação TOTP (one-time, bcrypt hash). Gerados ao ativar o 2FA.
+model CodigoRecuperacaoTotp {
+  id         Int      @id @default(autoincrement())
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId  Int
+  codigoHash String
+  usado      Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+// Assinatura/plano por empresa (integração Stripe).
+model Assinatura {
+  id               Int       @id @default(autoincrement())
+  empresa          Empresa   @relation(fields: [empresaId], references: [id])
+  empresaId        Int       @unique
+  stripeCustomerId String?   @unique
+  stripeSubId      String?   @unique
+  stripePriceId    String?
+  // trialing | active | past_due | canceled | incomplete
+  status           String    @default("trialing")
+  trialFimEm       DateTime?
+  periodoFimEm     DateTime?
+  canceladoEm      DateTime?
+  atualizadoEm     DateTime  @updatedAt
+  criadoEm         DateTime  @default(now())
+}
+
+// Convite por email para entrar numa empresa.
+model ConviteUsuario {
+  id               Int       @id @default(autoincrement())
+  empresaId        Int
+  email            String
+  papel            String    @default("funcionario")
+  tokenHash        String    // bcrypt hash do token enviado por email
+  nomeConvidadoPor String?
+  aceitoEm         DateTime?
+  expiraEm         DateTime
+  criadoEm         DateTime  @default(now())
+
+  @@index([empresaId])
+  @@index([email, empresaId])
+}
+
+// Rastreamento de sessões ativas do painel (para listagem em Segurança → Sessões).
+// Cada JWT emitido tem um `iat` único que serve de chave de sessão.
+model SessaoUsuario {
+  id                Int      @id @default(autoincrement())
+  usuario           Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId         Int
+  jwtIat            Int      // payload.iat em segundos — ID estável desta sessão
+  ip                String?
+  userAgent         String?  @db.VarChar(300)
+  ultimaAtividadeEm DateTime @updatedAt
+  criadoEm          DateTime @default(now())
+
+  @@unique([usuarioId, jwtIat])
+  @@index([usuarioId])
+}
+
+// Refresh token de sessão (HttpOnly cookie). Hash SHA-256 do token cru.
+// Rotacionado a cada uso: delete old → insert new (token rotation).
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId Int
+  expiraEm  DateTime
+  criadoEm  DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+// Log de ações privilegiadas (auditoria imutável).
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  empresaId  Int
+  usuarioId  Int?
+  acao       String   // notação ponto: "usuario.excluido" | "papel.alterado"
+  entidade   String?
+  entidadeId Int?
+  antes      Json?
+  depois     Json?
+  ip         String?
+  criadoEm  DateTime @default(now())
+
+  @@index([empresaId, criadoEm])
+  @@index([usuarioId])
 }

@@ -22,7 +22,7 @@ else
   npx prisma migrate deploy
 fi
 
-echo "▶ Iniciando ChaveiroBot..."
+echo "▶ Iniciando AdmAi..."
 if [ "$AS_ROOT" = "1" ]; then
   exec su-exec "$RUN_AS" "$@"
 else

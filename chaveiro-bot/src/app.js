@@ -5,6 +5,7 @@
  * iniciar WhatsApp ou agendadores. server.js importa `criarApp()` e faz o listen.
  */
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import Redis from 'ioredis';
@@ -17,6 +18,7 @@ import { apiRouter } from './routes/api.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
 import { whatsappRouter } from './routes/whatsapp.js';
+import { stripeWebhookRouter } from './routes/billing.js';
 
 const redisClient = new Redis(env.REDIS_URL);
 
@@ -63,11 +65,14 @@ export function criarApp() {
   // Fotos de evidência salvas pelo bot — servidas estaticamente para o painel.
   app.use('/uploads', express.static(path.resolve('./uploads')));
 
+  app.use(cookieParser());
+
   app.use((req, res, next) => {
     const allowedOrigin = env.ALLOWED_ORIGIN ?? '*';
     res.header('Access-Control-Allow-Origin', allowedOrigin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (allowedOrigin !== '*') res.header('Access-Control-Allow-Credentials', 'true');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
   });
@@ -77,17 +82,17 @@ export function criarApp() {
     next();
   });
 
-  const limiter = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
+  const limiter = rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
   app.use('/api', limiter);
 
   // Rate limit dedicado e mais permissivo para o webhook inbound (por IP da Evolution).
-  const webhookLimiter = rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
+  const webhookLimiter = rateLimit({ windowMs: 60_000, limit: 600, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
   app.use('/webhook', webhookLimiter);
 
   // Rate limit AGRESSIVO contra brute force em login/registro (guia §3.2).
   const authLimiter = rateLimit({
     windowMs: 15 * 60_000,
-    max: 5,
+    limit: 5,
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
@@ -104,7 +109,7 @@ export function criarApp() {
   // tentativa (sucesso encerra o fluxo de qualquer forma).
   const twoFactorLimiter = rateLimit({
     windowMs: 15 * 60_000,
-    max: 5,
+    limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => req.body?.desafio || req.ip,
@@ -116,6 +121,10 @@ export function criarApp() {
 
   // ── /metrics — scraping do Prometheus (sem auth, fora de /api) ─────────────
   app.get('/metrics', metricsHandler);
+
+  // Webhook Stripe: corpo bruto (raw) necessário para validar assinatura HMAC.
+  // Montado ANTES do apiRouter e FORA do bypass do JSON parser (que já pula /webhook/).
+  app.use(stripeWebhookRouter);
 
   // Gateway WhatsApp (Evolution): rotas de painel (/api/whatsapp/*) + webhook inbound.
   // Montado ANTES do apiRouter para que /api/whatsapp/* tenha precedência.

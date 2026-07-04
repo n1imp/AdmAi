@@ -11,7 +11,7 @@
 import client from 'prom-client';
 
 export const registry = new client.Registry();
-registry.setDefaultLabels({ service: 'chaveiro-bot' });
+registry.setDefaultLabels({ service: 'admai-bot' });
 client.collectDefaultMetrics({ register: registry });
 
 const httpDuration = new client.Histogram({
@@ -34,6 +34,30 @@ export function metricsMiddleware(req, res, next) {
     fim({ method: req.method, route, status_code: res.statusCode });
   });
   next();
+}
+
+const bullmqJobsWaiting = new client.Gauge({
+  name: 'bullmq_jobs_waiting',
+  help: 'Número de jobs aguardando processamento na fila',
+  labelNames: ['queue'],
+  registers: [registry],
+});
+
+const bullmqJobsActive = new client.Gauge({
+  name: 'bullmq_jobs_active',
+  help: 'Número de jobs em processamento ativo na fila',
+  labelNames: ['queue'],
+  registers: [registry],
+});
+
+export async function atualizarMetricasFila(fila) {
+  try {
+    const [waiting, active] = await Promise.all([fila.getWaitingCount(), fila.getActiveCount()]);
+    bullmqJobsWaiting.set({ queue: fila.name }, waiting);
+    bullmqJobsActive.set({ queue: fila.name }, active);
+  } catch {
+    // não bloqueia o servidor se a fila estiver indisponível
+  }
 }
 
 /** Handler do endpoint /metrics. */

@@ -1,4 +1,4 @@
-# Log de decisões — ChaveiroBot
+# Log de decisões — AdmAi
 
 Registro persistente das decisões de arquitetura/trade-off (conforme o Guia para IAs do
 README). Decisão registrada aqui não é reinvestigada em tarefas futuras.

@@ -113,6 +113,7 @@ export default function MeusServicos() {
           <EstadoVazio
             mensagem="Nenhum serviço ainda"
             sub="Registre seu primeiro atendimento no botão acima"
+            cta={{ label: 'Registrar serviço', to: '/meus-servicos/novo' }}
           />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">

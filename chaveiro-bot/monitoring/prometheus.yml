@@ -1,13 +1,13 @@
-# Configuração do Prometheus para o ChaveiroBot.
+# Configuração do Prometheus para o AdmAi.
 # Raspa o endpoint /metrics do backend (prom-client) pela rede interna do compose.
 global:
   scrape_interval: 30s
   scrape_timeout: 10s
 
 scrape_configs:
-  - job_name: chaveiro-backend
+  - job_name: admai-backend
     metrics_path: /metrics
     static_configs:
       - targets: ['backend:3000']
         labels:
-          service: chaveiro-bot
+          service: admai-bot

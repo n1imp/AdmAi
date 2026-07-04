@@ -5,6 +5,7 @@ import servicosRouter from './servicos.js';
 import tecnicosRouter from './tecnicos.js';
 import estoqueRouter from './estoque.js';
 import adminRouter from './admin.js';
+import { billingRouter } from './billing.js';
 
 const router = Router();
 router.use('/', authRouter);
@@ -13,6 +14,7 @@ router.use('/', servicosRouter);
 router.use('/', tecnicosRouter);
 router.use('/', estoqueRouter);
 router.use('/', adminRouter);
+router.use('/', billingRouter);
 
 export { router as apiRouter };
 export default router;

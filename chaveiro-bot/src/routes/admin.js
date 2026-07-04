@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
 import { resolverPreferencias } from '../services/notificacao.js';
 import { permissoesEfetivas, sanitizarPermissoes, presetDoPapel, PAPEIS, MODULOS, ACOES_POR_MODULO, CAPACIDADES_PROPRIO } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { requireAuth, adminOnly, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
+import { registrar as registrarAudit } from '../services/auditoria.js';
+import { enviarEmailConvite } from '../services/email.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -162,6 +165,7 @@ router.post('/usuarios', requirePermissao('usuarios', 'editar'), async (req, res
       select: SELECT_USUARIO,
     });
     logger.info('user_created', { adminId: req.user.id, novoUserId: usuario.id, papel });
+    registrarAudit({ empresaId: req.user.empresaId, usuarioId: req.user.id, acao: 'usuario.criado', entidade: 'Usuario', entidadeId: usuario.id, depois: { nome: usuario.nome, papel: usuario.papel }, ip: req.ip }).catch(() => {});
     res.status(201).json({ ...usuario, permissoesEfetivas: permissoesEfetivas(usuario) });
   } catch (erro) {
     if (erro.code === 'P2002') return res.status(409).json({ erro: 'Username já em uso' });
@@ -199,12 +203,16 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
     const r = await prisma.usuario.updateMany({ where: { id, empresaId: req.user.empresaId }, data });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
     const usuario = await prisma.usuario.findUnique({ where: { id }, select: SELECT_USUARIO });
-    if (parse.data.ativo === false) logger.info('user_deactivated', { adminId: req.user.id, userId: id });
+    if (parse.data.ativo === false) {
+      logger.info('user_deactivated', { adminId: req.user.id, userId: id });
+      registrarAudit({ empresaId: req.user.empresaId, usuarioId: req.user.id, acao: 'usuario.desativado', entidade: 'Usuario', entidadeId: id, ip: req.ip }).catch(() => {});
+    }
     if (auditarRbac && antes) {
       logger.info('permissao_alterada', {
         adminId: req.user.id, userId: id, papelAntes: antes.papel, papelDepois: usuario.papel,
         permissoesMudaram: permissoes !== undefined && JSON.stringify(antes.permissoes ?? null) !== JSON.stringify(usuario.permissoes ?? null),
       });
+      registrarAudit({ empresaId: req.user.empresaId, usuarioId: req.user.id, acao: 'usuario.permissoes_alteradas', entidade: 'Usuario', entidadeId: id, antes: { papel: antes.papel, permissoes: antes.permissoes }, depois: { papel: usuario.papel, permissoes: usuario.permissoes }, ip: req.ip }).catch(() => {});
     }
     res.json({ ...usuario, permissoesEfetivas: permissoesEfetivas(usuario) });
   } catch (erro) {
@@ -219,12 +227,34 @@ router.delete('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (re
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
     if (id === req.user.id) return res.status(400).json({ erro: 'Não é possível remover o próprio usuário' });
+    const alvoDel = await prisma.usuario.findFirst({ where: { id, empresaId: req.user.empresaId }, select: { nome: true, papel: true } });
     const r = await prisma.usuario.deleteMany({ where: { id, empresaId: req.user.empresaId } });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    registrarAudit({ empresaId: req.user.empresaId, usuarioId: req.user.id, acao: 'usuario.excluido', entidade: 'Usuario', entidadeId: id, antes: alvoDel, ip: req.ip }).catch(() => {});
     res.json({ mensagem: 'Usuário removido' });
   } catch (erro) {
     if (erro.code === 'P2025') return res.status(404).json({ erro: 'Usuário não encontrado' });
     logger.error('Erro DELETE /usuarios/:id', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/usuarios/convidar', requirePermissao('usuarios', 'editar'), async (req, res) => {
+  const parse = z.object({ email: z.string().email(), papel: z.enum(PAPEIS).default('funcionario') }).safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiraEm = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await prisma.conviteUsuario.create({
+      data: { empresaId: req.user.empresaId, email: parse.data.email, papel: parse.data.papel, tokenHash, nomeConvidadoPor: req.user.nome, expiraEm },
+    });
+    const empresa = await prisma.empresa.findUnique({ where: { id: req.user.empresaId }, select: { nome: true } });
+    enviarEmailConvite(parse.data.email, empresa?.nome ?? 'AdmAi', parse.data.papel, token).catch(() => {});
+    registrarAudit({ empresaId: req.user.empresaId, usuarioId: req.user.id, acao: 'convite.enviado', depois: { email: parse.data.email, papel: parse.data.papel }, ip: req.ip }).catch(() => {});
+    res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /usuarios/convidar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

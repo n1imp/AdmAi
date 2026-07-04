@@ -38,7 +38,7 @@ export default function Landing() {
               <KeyRound size={18} className="text-accent-300" strokeWidth={2} />
             </div>
             <span className="font-display font-bold text-lg tracking-wide">
-              CHAVEIRO<span className="text-accent-400">BOT</span>
+              ADM<span className="text-accent-400">AI</span>
             </span>
           </div>
           <Link to="/login" className="text-sm text-muted hover:text-white transition-colors">

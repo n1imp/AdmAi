@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import {
-  MessageCircle, QrCode, FileText, Users, Bell, ChevronDown,
+  MessageCircle, QrCode, FileText, Users, Bell, ChevronDown, Headphones, Mail,
 } from 'lucide-react';
 import BackHeader from '../components/BackHeader.jsx';
+
+function abrirCrisp() {
+  if (typeof window !== 'undefined' && window.$crisp) {
+    window.$crisp.push(['do', 'chat:open']);
+  } else {
+    window.location.href = 'mailto:suporte@barbers-flow.com';
+  }
+}
 
 // Conteúdo do tutorial — cada seção é um passo-a-passo conciso e fiel ao app.
 const SECOES = [
@@ -154,7 +162,7 @@ export default function Ajuda() {
 
       <div className="flex-1 overflow-y-auto px-4 pt-2 pb-8 lg:max-w-2xl">
         <p className="text-muted text-sm mb-4">
-          Guia rápido do ChaveiroBot. Toque em uma seção para ver o passo a passo.
+          Guia rápido do AdmAi. Toque em uma seção para ver o passo a passo.
         </p>
 
         <div className="flex flex-col gap-3">
@@ -166,6 +174,32 @@ export default function Ajuda() {
               onToggle={() => setAberto((atual) => (atual === secao.id ? null : secao.id))}
             />
           ))}
+        </div>
+
+        {/* Suporte direto */}
+        <div className="mt-6 card p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-md bg-accent-400/10 border border-dark-600 flex items-center justify-center shrink-0">
+            <Headphones size={19} className="text-accent-300" strokeWidth={1.8} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white">Precisa de ajuda?</p>
+            <p className="text-xs text-muted mt-0.5">Fale com nossa equipe de suporte.</p>
+          </div>
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={abrirCrisp}
+              className="btn-primary text-xs py-1.5 px-3 gap-1.5"
+            >
+              <Headphones size={13} /> Chat
+            </button>
+            <a
+              href="mailto:suporte@barbers-flow.com"
+              className="btn-secondary text-xs py-1.5 px-3 gap-1.5 flex items-center justify-center"
+            >
+              <Mail size={13} /> E-mail
+            </a>
+          </div>
         </div>
       </div>
     </div>

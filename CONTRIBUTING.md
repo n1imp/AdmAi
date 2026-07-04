@@ -1,4 +1,4 @@
-# Contribuindo com o ChaveiroBot
+# Contribuindo com o AdmAi
 
 Obrigado por contribuir! Este guia resume as convenções do projeto. Para o contexto técnico
 completo, leia o [README](README.md) (em especial a seção *Guia para IAs & Agentes*) e o

@@ -45,16 +45,16 @@ jobs:
         env:
           POSTGRES_USER: chaveiro
           POSTGRES_PASSWORD: chaveiro123
-          POSTGRES_DB: chaveirobot_test
+          POSTGRES_DB: admai_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U chaveiro -d chaveirobot_test"
+          --health-cmd "pg_isready -U chaveiro -d admai_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
+      DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/admai_test
       NODE_ENV: test
       API_TOKEN: ci-api-token
       JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
@@ -91,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build da imagem de produção
-        run: docker build -t chaveiro-bot:ci ./chaveiro-bot
+        run: docker build -t admai-bot:ci ./chaveiro-bot
 
   # ── Frontend: lint + testes + build de produção + audit ────────────────────
   frontend:

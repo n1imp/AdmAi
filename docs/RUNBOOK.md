@@ -1,4 +1,4 @@
-# Runbook Operacional — ChaveiroBot
+# Runbook Operacional — AdmAi
 
 Procedimentos de operação do dia a dia e de incidentes em produção (VPS + Docker Compose).
 Comandos assumem que você está em `chaveiro-bot/` no servidor, com os arquivos

@@ -192,7 +192,7 @@ function ConfiguracaoBotLegado() {
             </div>
             <div className="text-center">
               <p className="font-display font-bold text-white text-lg">Robô conectado!</p>
-              <p className="text-muted text-sm mt-1">O ChaveiroBot está ativo e atendendo no WhatsApp.</p>
+              <p className="text-muted text-sm mt-1">O AdmAi está ativo e atendendo no WhatsApp.</p>
             </div>
             {instanceName && (
               <div className="flex items-center gap-1.5 text-muted text-xs bg-dark-700 border border-dark-600 rounded-lg px-3 py-1.5">

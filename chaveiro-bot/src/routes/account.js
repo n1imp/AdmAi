@@ -8,6 +8,7 @@ import { podeProprio } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { gerarSegredoTotp, montarOtpauthUrl, verificarCodigo, cifrarSegredo, decifrarSegredo } from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
+import { gerarCodigos, verificarCodigo as verificarCodigoRecuperacao } from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
@@ -243,11 +244,52 @@ router.post('/me/2fa/ativar', async (req, res) => {
     if (!segredo) return res.status(400).json({ erro: 'Inicie a configuração em /me/2fa/setup' });
     const ok = await verificarCodigo(segredo, parse.data.codigo);
     if (!ok) return res.status(400).json({ erro: 'Código inválido' });
-    await prisma.usuario.update({ where: { id: req.user.id }, data: { totpSecret: cifrarSegredo(segredo), totpPendente: null, twoFactorAtivo: true } });
+
+    let codigosRecuperacao;
+    await prisma.$transaction(async (tx) => {
+      await tx.usuario.update({ where: { id: req.user.id }, data: { totpSecret: cifrarSegredo(segredo), totpPendente: null, twoFactorAtivo: true } });
+      codigosRecuperacao = await gerarCodigos(req.user.id, tx);
+    });
+
     logger.info('2fa_ativado', { userId: req.user.id });
-    res.json({ twoFactorAtivo: true });
+    res.json({ twoFactorAtivo: true, codigosRecuperacao });
   } catch (erro) {
     logger.error('Erro POST /me/2fa/ativar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/me/2fa/recuperar', async (req, res) => {
+  try {
+    const parse = z.object({ desafio: z.string().min(1), codigo: z.string().min(1) }).safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+
+    let payload;
+    try {
+      const jwt = await import('jsonwebtoken');
+      const { env } = await import('../config/env.js');
+      payload = jwt.default.verify(parse.data.desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio inválido');
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário não encontrado' });
+    if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
+
+    const ok = await verificarCodigoRecuperacao(usuario.id, parse.data.codigo);
+    if (!ok) {
+      logger.info('recuperacao_2fa_falha', { userId: usuario.id });
+      return res.status(400).json({ erro: 'Código de recuperação inválido ou já utilizado' });
+    }
+
+    const { gerarJWT } = await import('../services/auth.js');
+    const token = gerarJWT(usuario);
+    logger.info('recuperacao_2fa_sucesso', { userId: usuario.id });
+    res.json({ token, nome: usuario.nome, admin: usuario.admin, papel: usuario.papel, senhaProvisoria: usuario.senhaProvisoria });
+  } catch (erro) {
+    logger.error('Erro POST /me/2fa/recuperar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
@@ -340,9 +382,29 @@ router.post('/me/telefone/2fa/desativar', async (req, res) => {
   }
 });
 
+router.get('/me/sessoes', async (req, res) => {
+  try {
+    const sessoes = await prisma.sessaoUsuario.findMany({
+      where: { usuarioId: req.user.id },
+      select: { jwtIat: true, ip: true, userAgent: true, ultimaAtividadeEm: true, criadoEm: true },
+      orderBy: { ultimaAtividadeEm: 'desc' },
+      take: 10,
+    });
+    return res.json(sessoes.map((s) => ({ ...s, atual: s.jwtIat === req.jwtIat })));
+  } catch (erro) {
+    logger.error('Erro GET /me/sessoes', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 router.post('/me/logout-all', async (req, res) => {
   try {
-    await prisma.usuario.update({ where: { id: req.user.id }, data: { tokenValidoApos: new Date() } });
+    await prisma.$transaction([
+      prisma.usuario.update({ where: { id: req.user.id }, data: { tokenValidoApos: new Date() } }),
+      prisma.refreshToken.deleteMany({ where: { usuarioId: req.user.id } }),
+      prisma.sessaoUsuario.deleteMany({ where: { usuarioId: req.user.id } }),
+    ]);
+    res.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict', path: '/api/auth' });
     logger.info('logout_all', { userId: req.user.id });
     res.json({ mensagem: 'Todas as sessões foram encerradas' });
   } catch (erro) {

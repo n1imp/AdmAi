@@ -141,7 +141,7 @@ export default function Login() {
       });
       // Guarda o token para autenticar a verificação por OTP, sem ativar a sessão
       // no contexto ainda (senão o painel já navegaria para fora da tela de OTP).
-      localStorage.setItem('chaveiro_token', data.token);
+      localStorage.setItem('admai_token', data.token);
       setTokenSessao(data.token);
       setEtapaOtp(true);
       setCodigoOtp('');
@@ -212,7 +212,7 @@ export default function Login() {
               <KeyRound size={22} className="text-accent-300" strokeWidth={2} />
             </div>
             <p className="font-display font-bold text-2xl tracking-wide text-white">
-              CHAVEIRO<span className="text-accent-400">BOT</span>
+              ADM<span className="text-accent-400">AI</span>
             </p>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function Login() {
               <KeyRound size={30} className="text-accent-300" strokeWidth={2} />
             </div>
             <p className="font-display font-bold text-2xl tracking-wide text-white">
-              CHAVEIRO<span className="text-accent-400">BOT</span>
+              ADM<span className="text-accent-400">AI</span>
             </p>
           </div>
 
@@ -505,6 +505,17 @@ export default function Login() {
                     {carregando ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
                     {carregando ? 'Aguarde…' : ehCadastro ? 'Criar conta' : 'Entrar'}
                   </button>
+
+                  {!ehCadastro && (
+                    <div className="flex justify-between text-xs">
+                      <a href="/recuperar-senha" className="text-muted hover:text-accent-300 transition-colors">
+                        Esqueci minha senha
+                      </a>
+                      <a href="/magic-link" className="text-muted hover:text-accent-300 transition-colors">
+                        Entrar sem senha
+                      </a>
+                    </div>
+                  )}
                 </form>
 
                 {/* Login social (Google / Microsoft / Apple) */}

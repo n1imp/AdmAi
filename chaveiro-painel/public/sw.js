@@ -1,4 +1,4 @@
-// Service worker mínimo do painel ChaveiroBot.
+// Service worker mínimo do painel AdmAi.
 // Objetivo: tornar o app instalável (PWA) e oferecer um fallback offline simples,
 // SEM prender o usuário em versões antigas (navegação é sempre network-first).
 

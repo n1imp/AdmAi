@@ -32,7 +32,7 @@ export default function NovoServico() {
   const [tecnicos, setTecnicos] = useState([]);
   const [enviando, setEnviando] = useState(false);
 
-  const [form, setForm, clearForm] = useFormPersist('chaveiro_novo_servico', FORM_INICIAL);
+  const [form, setForm, clearForm] = useFormPersist('admai_novo_servico', FORM_INICIAL);
 
   useEffect(() => {
     track('servico_iniciado');

@@ -1,4 +1,45 @@
-# 🔑 ChaveiroBot — Plataforma SaaS de Gestão para Chaveiros via WhatsApp
+# SKILL — Fluxo de Desenvolvimento AdmAi
+
+## Fluxo Padrão: Clarificar → Planejar → Executar
+
+### 1. Clarificar
+- Antes de qualquer código: leia o arquivo relevante inteiro
+- Se a tarefa tocar 3+ arquivos: acione o swarm (`/swarm-orchestration`)
+- Confirme o escopo com o usuário se houver ambiguidade de domínio
+
+### 2. Planejar (TDD-First)
+- Escreva o teste antes da implementação (`vitest`)
+- Defina os contratos de entrada/saída no teste
+- Use `npx @claude-flow/cli@latest memory search --query "[tarefa]"` para buscar padrões anteriores
+
+### 3. Executar
+- Implemente o mínimo para o teste passar
+- Rode `npm run build && npm test` antes de qualquer commit
+- Após sucesso: `npx @claude-flow/cli@latest memory store --namespace patterns --key "[nome]" --value "[o que funcionou]"`
+
+---
+
+## Checklist OWASP Mobile Top 10 (obrigatório em todo PR)
+
+| # | Risco | Verificação no AdmAi |
+|---|-------|----------------------|
+| M1 | Credenciais Impróprias | `.env` nunca comitado; tokens cifrados em BD (`accessTokenEnc`) |
+| M2 | Supply Chain | `npm audit` no CI; versões fixadas em `package-lock.json` |
+| M3 | Comunicação Insegura | HTTPS obrigatório via Caddy; `helmet` no Express |
+| M4 | Auth/AuthZ Insuficiente | RBAC verificado em todo endpoint; `papel` + `permissoes` no Prisma |
+| M5 | Controles de Privacidade | PII (CPF, telefone) nunca logados; Sentry com `beforeSend` filtrado |
+| M6 | Configuração Insegura | Sem segredos em variáveis de ambiente de produção sem cifragem |
+| M7 | Criptografia Fraca | `bcryptjs` para senhas; `jose` para JWT; `argon2` para tokens sensíveis |
+| M8 | Autenticação Incorreta | 2FA TOTP + OTP WhatsApp; `tokenValidoApos` invalida sessões antigas |
+| M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via Caddy headers |
+| M10 | Funcionalidade Excessiva | Endpoints de debug desabilitados em `NODE_ENV=production` |
+
+### Auditoria Automática do Ruflo
+```bash
+npx @claude-flow/cli@latest security scan
+npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
+
+# 🔑 AdmAi — Plataforma SaaS de Gestão para Chaveiros via WhatsApp
 
 > Plataforma **multi-empresa (SaaS)** onde os técnicos registram serviços **conversando
 > com um robô no WhatsApp** e o dono acompanha receita, comissões, estoque e avaliações
@@ -29,7 +70,7 @@
 
 ## 🎯 O que é
 
-ChaveiroBot resolve a dor de **registrar e contabilizar serviços de campo** sem fricção:
+AdmAi resolve a dor de **registrar e contabilizar serviços de campo** sem fricção:
 
 - **Técnico** abre o WhatsApp, manda `serviço` no privado do robô e responde uma pergunta
   por vez (local, valor, cliente, foto…). Ao confirmar, o serviço é salvo e um resumo é
@@ -456,7 +497,7 @@ AdmAi/
 ## 🤖 Guia para IAs & Agentes
 
 > Esta seção é a referência completa pra qualquer agente (orquestrador ou subagente) que
-> for trabalhar neste projeto — tanto as regras específicas do ChaveiroBot quanto a
+> for trabalhar neste projeto — tanto as regras específicas do AdmAi quanto a
 > política geral de como planejar, executar e reportar qualquer tarefa. Ela incorpora o
 > que antes vivia separado num `CLAUDE.md`, então este README passa a ser a referência
 > única — não é mais necessário consultar um arquivo separado de orquestração. Pra

@@ -5,7 +5,7 @@ name: Release
 #
 # Secrets/vars necessários (Settings → Secrets and variables → Actions):
 #   vars.VITE_API_URL            URL absoluta da API de produção (ex.: https://api.SEUDOMINIO)
-#   secrets.ANDROID_KEYSTORE_BASE64   keystore .jks em base64 (base64 -w0 chaveirobot-upload.jks)
+#   secrets.ANDROID_KEYSTORE_BASE64   keystore .jks em base64 (base64 -w0 admai-upload.jks)
 #   secrets.ANDROID_KEYSTORE_PASSWORD senha do keystore
 #   secrets.ANDROID_KEY_ALIAS         alias da chave (ex.: upload)
 #   secrets.ANDROID_KEY_PASSWORD      senha da chave
@@ -66,9 +66,9 @@ jobs:
             echo "::error::Secret ANDROID_KEYSTORE_BASE64 ausente — configure os secrets de assinatura."
             exit 1
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/chaveirobot-upload.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/admai-upload.jks
           cat > android/keystore.properties <<EOF
-          storeFile=chaveirobot-upload.jks
+          storeFile=admai-upload.jks
           storePassword=$ANDROID_KEYSTORE_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
           keyPassword=$ANDROID_KEY_PASSWORD
@@ -82,11 +82,11 @@ jobs:
 
       - name: Limpar segredos do runner
         if: always()
-        run: rm -f android/chaveirobot-upload.jks android/keystore.properties
+        run: rm -f android/admai-upload.jks android/keystore.properties
 
       - uses: actions/upload-artifact@v4
         with:
-          name: chaveirobot-release-aab
+          name: admai-release-aab
           path: chaveiro-painel/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
@@ -95,6 +95,6 @@ jobs:
       # - uses: r0adkll/upload-google-play@v1
       #   with:
       #     serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-      #     packageName: com.chaveirobot.app
+      #     packageName: com.admai.app
       #     releaseFiles: chaveiro-painel/android/app/build/outputs/bundle/release/app-release.aab
       #     track: internal

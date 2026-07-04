@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, LogOut, Check, X, Loader2, Copy, UserX, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, LogOut, Check, X, Loader2, Copy, UserX, Trash2, Monitor } from 'lucide-react';
 import api from '../lib/api.js';
 import { avaliarForcaSenha } from '../lib/senha.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -47,11 +47,13 @@ function MedidorForca({ senha }) {
 
 function CampoSenha({ label, valor, onChange, autoComplete }) {
   const [mostrar, setMostrar] = useState(false);
+  const id = useId();
   return (
     <div>
-      <label className="kpi-label block mb-2">{label}</label>
+      <label htmlFor={id} className="kpi-label block mb-2">{label}</label>
       <div className="relative">
         <input
+          id={id}
           type={mostrar ? 'text' : 'password'}
           value={valor}
           onChange={(e) => onChange(e.target.value)}
@@ -72,7 +74,7 @@ function CampoSenha({ label, valor, onChange, autoComplete }) {
 }
 
 // Campo de código de 6 dígitos (só números), reutilizado nos fluxos de 2FA.
-function CampoCodigo({ valor, onChange, onEnter, autoFocus }) {
+function CampoCodigo({ valor, onChange, onEnter, autoFocus, ariaLabel }) {
   return (
     <input
       inputMode="numeric"
@@ -83,6 +85,7 @@ function CampoCodigo({ valor, onChange, onEnter, autoFocus }) {
       onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
       onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter(); }}
       placeholder="000000"
+      aria-label={ariaLabel}
       className="input text-center text-2xl font-display tracking-[0.4em] font-bold"
     />
   );
@@ -90,11 +93,22 @@ function CampoCodigo({ valor, onChange, onEnter, autoFocus }) {
 
 // Overlay modal simples, consistente com o tema escuro do app.
 function Modal({ titulo, onClose, children }) {
+  const titleId = useId();
+  useEffect(() => {
+    function handleKey(e) { if (e.key === 'Escape') onClose(); }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise"
+    >
       <div className="w-full max-w-sm card flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <p className="font-display font-bold text-lg text-white">{titulo}</p>
+          <p id={titleId} className="font-display font-bold text-lg text-white">{titulo}</p>
           <button onClick={onClose} className="text-muted hover:text-white transition-colors" aria-label="Fechar">
             <X size={18} />
           </button>
@@ -116,6 +130,7 @@ export default function Seguranca() {
   const [confirma, setConfirma] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [sessoes, setSessoes] = useState(null);
 
   // 2FA — ativação (modal com QR + secret + código)
   const [setup2fa, setSetup2fa] = useState(null); // { secret, otpauthUrl, qrDataUrl }
@@ -143,8 +158,12 @@ export default function Seguranca() {
 
   const buscar = useCallback(async () => {
     try {
-      const { data } = await api.get('/me');
-      setDados(data);
+      const [{ data: me }, { data: ss }] = await Promise.all([
+        api.get('/me'),
+        api.get('/me/sessoes'),
+      ]);
+      setDados(me);
+      setSessoes(ss);
     } catch {
       // silencioso — a tela de senha funciona sem isso
     }
@@ -341,8 +360,10 @@ export default function Seguranca() {
             <button
               onClick={aoAlternar2fa}
               disabled={abrindoSetup || !dados}
+              role="switch"
+              aria-checked={dados?.twoFactorAtivo ?? false}
+              aria-label={dados?.twoFactorAtivo ? 'Desativar 2FA' : 'Ativar 2FA'}
               className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${dados?.twoFactorAtivo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
-              aria-label="Alternar 2FA"
             >
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${dados?.twoFactorAtivo ? 'left-6' : 'left-1'}`} />
             </button>
@@ -351,15 +372,37 @@ export default function Seguranca() {
 
         {/* Sessões */}
         <section>
-          <p className="section-label mb-2 px-1">Sessões</p>
+          <p className="section-label mb-2 px-1">Sessões ativas</p>
           <div className="card flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-success shrink-0 animate-pulse-glow" />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-white text-sm">Sessão atual</p>
-                <p className="text-muted text-xs">Este dispositivo</p>
+            {sessoes === null ? (
+              <div className="flex items-center gap-2 py-1 text-muted text-sm">
+                <Loader2 size={14} className="animate-spin shrink-0" />
+                Carregando sessões…
               </div>
-            </div>
+            ) : sessoes.length === 0 ? (
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-success shrink-0 animate-pulse-glow" />
+                <p className="text-white text-sm font-semibold">Sessão atual</p>
+              </div>
+            ) : (
+              <ul className="flex flex-col divide-y divide-dark-700 -my-1">
+                {sessoes.map((s) => (
+                  <li key={s.jwtIat} className="flex items-start gap-3 py-2.5">
+                    <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${s.atual ? 'bg-success animate-pulse-glow' : 'bg-dark-500'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium">
+                        {s.atual ? 'Este dispositivo' : <Monitor size={13} className="inline mr-1 text-muted" />}
+                        {!s.atual && (s.userAgent?.split(' ').slice(0, 3).join(' ') || 'Dispositivo desconhecido')}
+                      </p>
+                      <p className="text-muted text-xs mt-0.5">
+                        {s.ip ?? '—'} · Último acesso: {new Date(s.ultimaAtividadeEm).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    {s.atual && <span className="text-xs text-success font-medium shrink-0">Atual</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
             <button
               onClick={sairDeTudo}
               disabled={saindo}
@@ -455,7 +498,7 @@ export default function Seguranca() {
 
           <div>
             <label className="kpi-label block mb-2">Código de verificação</label>
-            <CampoCodigo valor={codigoAtivar} onChange={setCodigoAtivar} onEnter={ativar2fa} autoFocus />
+            <CampoCodigo valor={codigoAtivar} onChange={setCodigoAtivar} onEnter={ativar2fa} autoFocus ariaLabel="Código de verificação" />
             {erro2fa && <p className="text-danger text-xs mt-2">{erro2fa}</p>}
           </div>
 
@@ -474,7 +517,7 @@ export default function Seguranca() {
           </p>
           <div>
             <label className="kpi-label block mb-2">Código de verificação</label>
-            <CampoCodigo valor={codigoDesativar} onChange={setCodigoDesativar} onEnter={desativar2fa} autoFocus />
+            <CampoCodigo valor={codigoDesativar} onChange={setCodigoDesativar} onEnter={desativar2fa} autoFocus ariaLabel="Código de verificação" />
             {erro2fa && <p className="text-danger text-xs mt-2">{erro2fa}</p>}
           </div>
           <button onClick={desativar2fa} disabled={desativando || codigoDesativar.length !== 6} className="btn-danger">
@@ -512,7 +555,7 @@ export default function Seguranca() {
           {dados?.twoFactorAtivo && (
             <div>
               <label className="kpi-label block mb-2">Código 2FA</label>
-              <CampoCodigo valor={codigoExclusao} onChange={setCodigoExclusao} onEnter={excluirConta} />
+              <CampoCodigo valor={codigoExclusao} onChange={setCodigoExclusao} onEnter={excluirConta} ariaLabel="Código 2FA" />
             </div>
           )}
           {erroExclusao && <p className="text-danger text-xs">{erroExclusao}</p>}

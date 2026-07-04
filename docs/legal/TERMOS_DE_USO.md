@@ -1,4 +1,4 @@
-# Termos de Uso — ChaveiroBot
+# Termos de Uso — AdmAi
 
 > ⚠️ **Aviso:** Este é um **modelo**. Preencha os campos entre colchetes `[ ]` e **valide com
 > um advogado** antes de publicar. Não substitui aconselhamento jurídico.
@@ -10,13 +10,13 @@
 
 ## 1. Aceitação
 
-Ao criar uma conta ou usar o **ChaveiroBot** ("Plataforma"), você ("Cliente", "Usuário")
+Ao criar uma conta ou usar o **AdmAi** ("Plataforma"), você ("Cliente", "Usuário")
 concorda com estes Termos de Uso e com a [Política de Privacidade](./POLITICA_DE_PRIVACIDADE.md).
 Se não concordar, não utilize a Plataforma.
 
 ## 2. Descrição do serviço
 
-O ChaveiroBot é um SaaS que permite a empresas de chaveiro registrarem serviços via WhatsApp e
+O AdmAi é um SaaS que permite a empresas de chaveiro registrarem serviços via WhatsApp e
 gerirem receita, comissões, estoque e avaliações por um painel web. A Plataforma é fornecida no
 modelo **"como está" (as is)**, podendo evoluir, sendo ofertada inicialmente em **fase beta**.
 
@@ -66,7 +66,7 @@ especialmente durante o beta. Manutenções e indisponibilidades poderão ocorre
 
 ## 9. Propriedade intelectual
 
-O software, a marca "ChaveiroBot", o código e o design pertencem a [NOME DA EMPRESA OPERADORA].
+O software, a marca "AdmAi", o código e o design pertencem a [NOME DA EMPRESA OPERADORA].
 Você recebe uma licença **limitada, não exclusiva e revogável** de uso. Os **dados que você
 insere** permanecem seus.
 

@@ -1,6 +1,6 @@
 # Tutorial — WhatsApp Cloud API (developers.facebook.com)
 
-Passo a passo para obter as credenciais da Meta e ligar o ChaveiroBot à **API oficial do
+Passo a passo para obter as credenciais da Meta e ligar o AdmAi à **API oficial do
 WhatsApp (Cloud API)**. Ao final você terá tudo que o código precisa.
 
 > **O que só você pode fazer:** criar a conta, verificar telefone, aceitar Termos e gerar os
@@ -35,7 +35,7 @@ WHATSAPP_VERIFY_TOKEN=24e2f222c9f2c8e571d21712b359273103c79b1815014caf
    **Criar app**.
 3. Em *"Do que seu app precisa?"*, escolha o caso de uso **"Conectar-se a clientes pelo
    WhatsApp"** (ou tipo **Empresa/Business**).
-4. Preencha **nome do app** (ex.: `ChaveiroBot`) e **e-mail de contato**; vincule à sua
+4. Preencha **nome do app** (ex.: `AdmAi`) e **e-mail de contato**; vincule à sua
    **conta Business**. Clique em **Criar app** (pode pedir sua senha do Facebook).
 
 ---
@@ -53,7 +53,7 @@ WHATSAPP_VERIFY_TOKEN=24e2f222c9f2c8e571d21712b359273103c79b1815014caf
    seu **número real** (precisa ser um número **não usado** no WhatsApp comum) e verifique
    por **SMS/ligação**.
 
-> Guarde **Phone Number ID** e **WABA ID** — você vai colá-los no painel do ChaveiroBot.
+> Guarde **Phone Number ID** e **WABA ID** — você vai colá-los no painel do AdmAi.
 
 ---
 
@@ -114,7 +114,7 @@ Mensagens proativas (fora da janela de 24h) exigem **template aprovado**:
 
 ---
 
-## Parte 7 — Onde colar no ChaveiroBot
+## Parte 7 — Onde colar no AdmAi
 
 **No servidor** (`chaveiro-bot/.env`):
 ```dotenv

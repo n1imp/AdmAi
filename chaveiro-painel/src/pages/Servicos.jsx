@@ -280,6 +280,7 @@ export default function Servicos() {
           <EstadoVazio
             mensagem="Nenhum serviço encontrado"
             sub="Tente ajustar os filtros ou registre um novo serviço"
+            cta={{ label: 'Registrar serviço', to: '/servicos/novo' }}
           />
         ) : (
           <>

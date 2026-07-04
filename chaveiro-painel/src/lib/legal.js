@@ -2,7 +2,7 @@
 // ⚠️ MODELO: revise com um advogado e substitua os campos entre colchetes [ ]
 // antes do lançamento público. A versão integral (fonte) fica em docs/legal/.
 
-export const ATUALIZADO_EM = '[DD/MM/AAAA]';
+export const ATUALIZADO_EM = '28/06/2026';
 
 const AVISO_MODELO =
   'Este é um modelo. Substitua os dados entre colchetes e valide com um advogado antes de publicar.';
@@ -14,8 +14,8 @@ export const politicaPrivacidade = {
     {
       titulo: '1. Quem somos',
       paragrafos: [
-        'O ChaveiroBot é um serviço (SaaS) que permite a empresas de chaveiro registrarem serviços via WhatsApp e gerirem receita, comissões, estoque e avaliações por um painel web.',
-        'Controlador dos dados de conta: [NOME DA EMPRESA], CNPJ [CNPJ]. Encarregado (DPO): [NOME] — [privacidade@seudominio.com]. Tratamos dados conforme a LGPD (Lei nº 13.709/2018).',
+        'O AdmAi é um serviço (SaaS) que permite a empresas de chaveiro registrarem serviços via WhatsApp e gerirem receita, comissões, estoque e avaliações por um painel web.',
+        'Controlador dos dados de conta: [NOME DA EMPRESA], CNPJ [CNPJ]. Encarregado (DPO): [NOME] — privacidade@barbers-flow.com. Tratamos dados conforme a LGPD (Lei nº 13.709/2018).',
       ],
     },
     {
@@ -67,7 +67,7 @@ export const politicaPrivacidade = {
     {
       titulo: '8. Retenção e descarte',
       itens: [
-        'Conta: enquanto ativa e por até [X meses] após o encerramento, salvo obrigação legal.',
+        'Conta: enquanto ativa e por até 12 meses após o encerramento, salvo obrigação legal.',
         'Clientes finais: padrão de [180 dias], depois anonimizados ou eliminados.',
         'Logs técnicos: até [90 dias].',
       ],
@@ -76,7 +76,7 @@ export const politicaPrivacidade = {
       titulo: '9. Seus direitos (LGPD, art. 18)',
       paragrafos: [
         'Você pode solicitar confirmação, acesso, correção, anonimização, portabilidade, eliminação e revogação de consentimento.',
-        'Usuários do painel: via [privacidade@seudominio.com]. Clientes finais: direcione à empresa de chaveiro (Controladora). Prazo de resposta: até 15 dias.',
+        'Usuários do painel: via privacidade@barbers-flow.com. Clientes finais: direcione à empresa de chaveiro (Controladora). Prazo de resposta: até 15 dias.',
       ],
     },
     {
@@ -90,13 +90,13 @@ export const politicaPrivacidade = {
       paragrafos: [
         'Você pode excluir sua conta a qualquer momento, sem precisar falar com o suporte, diretamente no painel ou no aplicativo: acesse Configuração → Segurança → "Excluir minha conta" e confirme com a sua senha (e o código 2FA, se estiver ativo).',
         'O que é apagado: se você for o único dono da empresa, a exclusão remove permanentemente a empresa e todos os dados associados (usuários, técnicos, serviços, estoque, registros de ponto e avaliações). Para os demais usuários, apagamos apenas a sua conta de acesso.',
-        'Alternativa pela web: também é possível solicitar a exclusão por [privacidade@seudominio.com]; concluiremos em até 15 dias, ressalvados os dados que a lei exige reter (ex.: obrigações fiscais).',
+        'Alternativa pela web: também é possível solicitar a exclusão por privacidade@barbers-flow.com; concluiremos em até 15 dias, ressalvados os dados que a lei exige reter (ex.: obrigações fiscais).',
       ],
     },
     {
       titulo: '12. Contato',
       paragrafos: [
-        'Dúvidas sobre privacidade: [privacidade@seudominio.com]. Encarregado (DPO): [NOME]. ANPD: gov.br/anpd.',
+        'Dúvidas sobre privacidade: privacidade@barbers-flow.com. Encarregado (DPO): [NOME]. ANPD: gov.br/anpd.',
       ],
     },
   ],
@@ -109,13 +109,13 @@ export const termosDeUso = {
     {
       titulo: '1. Aceitação',
       paragrafos: [
-        'Ao criar uma conta ou usar o ChaveiroBot, você concorda com estes Termos e com a Política de Privacidade. Se não concordar, não utilize a plataforma.',
+        'Ao criar uma conta ou usar o AdmAi, você concorda com estes Termos e com a Política de Privacidade. Se não concordar, não utilize a plataforma.',
       ],
     },
     {
       titulo: '2. O serviço',
       paragrafos: [
-        'O ChaveiroBot permite registrar serviços via WhatsApp e gerir receita, comissões, estoque e avaliações. É fornecido no modelo "como está", podendo evoluir, e está inicialmente em fase beta.',
+        'O AdmAi permite registrar serviços via WhatsApp e gerir receita, comissões, estoque e avaliações. É fornecido no modelo "como está", podendo evoluir, e está inicialmente em fase beta.',
       ],
     },
     {
@@ -158,7 +158,7 @@ export const termosDeUso = {
     {
       titulo: '8. Disponibilidade e suporte',
       paragrafos: [
-        'Empenhamo-nos em manter a plataforma disponível, mas não garantimos operação ininterrupta, especialmente no beta. Suporte: [canal de suporte].',
+        'Empenhamo-nos em manter a plataforma disponível, mas não garantimos operação ininterrupta, especialmente no beta. Suporte: suporte@barbers-flow.com.',
       ],
     },
     {
@@ -182,12 +182,12 @@ export const termosDeUso = {
     {
       titulo: '12. Lei e foro',
       paragrafos: [
-        'Estes Termos são regidos pelas leis do Brasil. Fica eleito o foro da comarca de [CIDADE/UF], salvo direito do consumidor de optar pelo foro de seu domicílio.',
+        'Estes Termos são regidos pelas leis do Brasil. Fica eleito o foro da comarca de São Paulo/SP, salvo direito do consumidor de optar pelo foro de seu domicílio.',
       ],
     },
     {
       titulo: '13. Contato',
-      paragrafos: ['[NOME DA EMPRESA] — [contato@seudominio.com].'],
+      paragrafos: ['[NOME DA EMPRESA] — suporte@barbers-flow.com.'],
     },
   ],
 };

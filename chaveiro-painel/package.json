@@ -1,7 +1,7 @@
 {
-  "name": "chaveiro-painel",
+  "name": "admai-painel",
   "version": "1.0.0",
-  "description": "Painel administrativo mobile-first para gestão de serviços de chaveiro",
+  "description": "Painel administrativo mobile-first AdmAi",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,7 +27,9 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.3",
-    "recharts": "^2.12.2"
+    "posthog-js": "^1.257.0",
+    "recharts": "^2.12.2",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

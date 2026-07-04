@@ -1,6 +1,6 @@
-# Plano de Lançamento — ChaveiroBot
+# Plano de Lançamento — AdmAi
 
-Roadmap por fases para levar o ChaveiroBot a um lançamento público sério: **web em
+Roadmap por fases para levar o AdmAi a um lançamento público sério: **web em
 produção primeiro**, **app Android nativo (React Native/Expo) na Play Store** em seguida.
 Cada tarefa tem um **ID** (vira issue), **prioridade**, **critério de pronto (DoD)** e
 **esforço** estimado.
@@ -89,7 +89,7 @@ lançamento esperando o app. Sequência recomendada:
 | **F3-4** | **P0** | **Teste fechado** ≥ 12 testadores por **14 dias** (exigência p/ contas pessoais novas) | 12 testadores ativos por 14 dias corridos | L (prazo de calendário) |
 | **F3-5** | P0 | Submeter para **produção** e passar na revisão do Google | App publicado | M |
 
-**Saída da Fase 3:** ChaveiroBot público na Play Store.
+**Saída da Fase 3:** AdmAi público na Play Store.
 
 ---
 

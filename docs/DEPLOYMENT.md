@@ -1,6 +1,6 @@
-# Deploy em Produção — ChaveiroBot (VPS + Docker Compose)
+# Deploy em Produção — AdmAi (VPS + Docker Compose)
 
-Guia passo a passo para subir o ChaveiroBot num **VPS** (Ubuntu LTS) com **Docker Compose**,
+Guia passo a passo para subir o AdmAi num **VPS** (Ubuntu LTS) com **Docker Compose**,
 **HTTPS automático** (Caddy + Let's Encrypt) e **backups** do PostgreSQL.
 
 > Substitua os campos entre `[ ]` (domínios, e-mails, senhas) pelos seus valores reais.
