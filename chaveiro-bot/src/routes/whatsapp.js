@@ -1,18 +1,22 @@
 import { Router, raw } from 'express';
 import { z } from 'zod';
-import { prisma } from '../db/prisma.js';
+import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { requireAuth } from './api.js';
-import { verificarHmac } from '../services/whatsapp/crypto.js';
+import { requireAuth } from '../middlewares/auth.js';
+import { verificarHmac, compararToken } from '../services/whatsapp/crypto.js';
+import { normalizarInboundCloud, salvarCredenciaisCloud } from '../services/whatsapp/cloud-gateway.js';
 import {
-  provisionarEConectar,
-  statusConexao,
-  listarGrupos,
-  definirGrupo,
-  desconectar,
-  segredoWebhook,
+  extrairQr,
+  // Número único (conexão global do robô)
+  segredoWebhookBot,
+  salvarQrBot,
+  atualizarEstadoBot,
+  statusBot,
+  conectarBot,
+  desconectarBot,
 } from '../services/whatsapp/gateway.js';
 import { rotearMensagemInbound } from '../services/inbound.js';
+import { filaMensagens } from '../queues/mensagens.js';
 
 export const whatsappRouter = Router();
 
@@ -42,182 +46,211 @@ function mensagemErro(erro) {
   return 'Falha ao conectar ao gateway WhatsApp.';
 }
 
-// ── PAINEL (autenticado, escopado pela empresa do usuário) ────────────────────
+// ── CLOUD API (Meta) — credenciais por empresa (provider 'cloud') ─────────────
 
-// GET /api/whatsapp/status — estado + QR (se aguardando) da instância da empresa
-whatsappRouter.get('/api/whatsapp/status', requireAuth, async (req, res) => {
+// POST /api/whatsapp/cloud/credenciais — salva as credenciais da Cloud API (Meta)
+// da empresa (access token cifrado em repouso) e ativa o provider 'cloud' para ela.
+whatsappRouter.post('/api/whatsapp/cloud/credenciais', requireAuth, async (req, res) => {
   try {
-    const status = await statusConexao(req.user.empresaId);
-    res.json(status);
+    const schema = z.object({
+      phoneNumberId: z.string().min(1),
+      wabaId: z.string().optional().nullable(),
+      accessToken: z.string().min(1),
+    });
+    const parse = schema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    await salvarCredenciaisCloud(req.user.empresaId, parse.data);
+    res.json({ ok: true });
   } catch (erro) {
-    logger.error('Erro GET /whatsapp/status', { erro: erro.message });
+    logger.error('Erro POST /whatsapp/cloud/credenciais', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── BOT GLOBAL (número único) — só o SUPER-ADMIN pareia o número do robô ───────
+// O número único atende todas as empresas; quem o conecta/desconecta é um único
+// operador, identificado por SUPER_ADMIN_USERNAME (env) vs req.user.username.
+
+function requireSuperAdmin(req, res, next) {
+  if (!env.SUPER_ADMIN_USERNAME || req.user?.username !== env.SUPER_ADMIN_USERNAME) {
+    return res.status(403).json({ erro: 'Acesso restrito ao super-admin do robô' });
+  }
+  next();
+}
+
+// GET /api/bot/whatsapp/status — estado da conexão global do robô.
+// Visível a QUALQUER usuário autenticado (read-only); só o super-admin recebe o QR
+// e pode parear. `ehSuperAdmin` diz ao painel se deve mostrar o botão "Parear".
+whatsappRouter.get('/api/bot/whatsapp/status', requireAuth, async (req, res) => {
+  try {
+    const ehSuperAdmin = !!env.SUPER_ADMIN_USERNAME && req.user?.username === env.SUPER_ADMIN_USERNAME;
+    const status = await statusBot();
+    // Usuário comum não recebe o QR (dado operacional do pareamento).
+    if (!ehSuperAdmin) status.qr = null;
+    res.json({ ...status, ehSuperAdmin });
+  } catch (erro) {
+    logger.error('Erro GET /bot/whatsapp/status', { erro: erro.message });
     res.status(500).json({ erro: mensagemErro(erro) });
   }
 });
 
-// POST /api/whatsapp/conectar — provisiona a instância e devolve o QR
-whatsappRouter.post('/api/whatsapp/conectar', requireAuth, async (req, res) => {
+// POST /api/bot/whatsapp/conectar — provisiona a instância global e devolve o QR
+whatsappRouter.post('/api/bot/whatsapp/conectar', requireAuth, requireSuperAdmin, async (_req, res) => {
   try {
-    const r = await provisionarEConectar(req.user.empresaId);
-    res.json(r);
+    res.json(await conectarBot());
   } catch (erro) {
-    logger.error('Erro POST /whatsapp/conectar', { erro: erro.message });
-    // Config ausente no servidor → 500 (admin precisa configurar o .env).
-    // Falha de comunicação com a Evolution → 502 (gateway upstream).
+    logger.error('Erro POST /bot/whatsapp/conectar', { erro: erro.message });
     const msg = String(erro?.message ?? '');
     const ehConfig = /ENCRYPTION_KEY|EVOLUTION_HOST|EVOLUTION_API_KEY/.test(msg);
     res.status(ehConfig ? 500 : 502).json({ erro: mensagemErro(erro) });
   }
 });
 
-// POST /api/whatsapp/desconectar — deleta a instância e zera o estado da empresa
-whatsappRouter.post('/api/whatsapp/desconectar', requireAuth, async (req, res) => {
+// POST /api/bot/whatsapp/desconectar — deleta a instância global e zera o estado
+whatsappRouter.post('/api/bot/whatsapp/desconectar', requireAuth, requireSuperAdmin, async (_req, res) => {
   try {
-    const r = await desconectar(req.user.empresaId);
-    res.json(r);
+    res.json(await desconectarBot());
   } catch (erro) {
-    logger.error('Erro POST /whatsapp/desconectar', { erro: erro.message });
+    logger.error('Erro POST /bot/whatsapp/desconectar', { erro: erro.message });
     res.status(500).json({ erro: mensagemErro(erro) });
   }
 });
 
-// GET /api/whatsapp/grupos — lista grupos da instância (para escolher o de resumo)
-whatsappRouter.get('/api/whatsapp/grupos', requireAuth, async (req, res) => {
-  try {
-    const grupos = await listarGrupos(req.user.empresaId);
-    res.json(grupos.sort((a, b) => a.nome.localeCompare(b.nome)));
-  } catch (erro) {
-    if (erro.message === 'WhatsApp não conectado') return res.status(503).json({ erro: erro.message });
-    logger.error('Erro GET /whatsapp/grupos', { erro: erro.message });
-    res.status(500).json({ erro: mensagemErro(erro) });
-  }
-});
-
-// GET /api/whatsapp/config — config visível no painel (sem segredos)
-whatsappRouter.get('/api/whatsapp/config', requireAuth, async (req, res) => {
-  try {
-    const cfg = await prisma.empresaWhatsapp.findUnique({
-      where: { empresaId: req.user.empresaId },
-      select: {
-        instanceName: true, numeroDisplay: true, estadoConexao: true,
-        grupoJid: true, reviewDelayHoras: true, reviewLink: true,
-      },
-    });
-    res.json(cfg ?? {});
-  } catch (erro) {
-    logger.error('Erro GET /whatsapp/config', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro interno' });
-  }
-});
-
-// PATCH /api/whatsapp/config — grupo de resumo, link/atraso de avaliação, número exibido
-whatsappRouter.patch('/api/whatsapp/config', requireAuth, async (req, res) => {
-  try {
-    const schema = z.object({
-      grupoJid: z.string().optional().nullable(),
-      reviewDelayHoras: z.number().int().min(0).max(168).optional(),
-      reviewLink: z.string().url().optional().nullable().or(z.literal('')),
-      numeroDisplay: z.string().optional().nullable(),
-    });
-    const parse = schema.safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
-    const data = { ...parse.data };
-    if (data.reviewLink === '') data.reviewLink = null;
-
-    if (data.grupoJid !== undefined) {
-      await definirGrupo(req.user.empresaId, data.grupoJid);
-      delete data.grupoJid;
-    }
-    if (Object.keys(data).length > 0) {
-      await prisma.empresaWhatsapp.update({ where: { empresaId: req.user.empresaId }, data });
-    }
-    const cfg = await prisma.empresaWhatsapp.findUnique({
-      where: { empresaId: req.user.empresaId },
-      select: { instanceName: true, numeroDisplay: true, estadoConexao: true, grupoJid: true, reviewDelayHoras: true, reviewLink: true },
-    });
-    res.json(cfg);
-  } catch (erro) {
-    logger.error('Erro PATCH /whatsapp/config', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro interno' });
-  }
-});
-
-// ── WEBHOOK INBOUND (público, autenticado por HMAC por-empresa) ───────────────
-// Evolution chama POST /webhook/whatsapp/:empresaId com os eventos da instância.
-// Usamos raw body para validar a assinatura HMAC antes de confiar no payload.
-
+// Shape mínimo de um evento da Evolution (usado pelo webhook global do robô).
 const eventoSchema = z.object({
   event: z.string().optional(),
   instance: z.string().optional(),
   data: z.any().optional(),
 }).passthrough();
 
+// ── WEBHOOK GLOBAL (número único) ─────────────────────────────────────────────
+// Evolution chama POST /webhook/whatsapp (sem :empresaId) para a instância global
+// do robô. Autenticado pelo webhookSecret da ConexaoBot (via ?token= ou header
+// x-webhook-token, em tempo constante) ou HMAC. O roteamento descobre a empresa
+// pelo telefone do remetente (rotearMensagemInbound, sem empresaId).
 whatsappRouter.post(
-  '/webhook/whatsapp/:empresaId',
+  '/webhook/whatsapp',
+  raw({ type: '*/*', limit: '5mb' }),
+  async (req, res) => {
+    const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : '';
+    try {
+      const segredo = await segredoWebhookBot();
+      if (!segredo) {
+        logger.warn('Webhook global rejeitado (segredo não configurado)');
+        return res.status(401).json({ erro: 'Webhook não configurado' });
+      }
+      const assinatura = req.get('x-hub-signature-256') || req.get('x-webhook-signature') || '';
+      const tokenQuery = typeof req.query?.token === 'string' ? req.query.token : '';
+      const tokenHeader = req.get('x-webhook-token') || '';
+      const hmacOk = verificarHmac(rawBody, assinatura, segredo);
+      const tokenOk = compararToken(tokenQuery, segredo) || compararToken(tokenHeader, segredo);
+      if (!hmacOk && !tokenOk) {
+        logger.warn('Webhook global rejeitado (assinatura/token inválido)');
+        return res.status(401).json({ erro: 'Assinatura inválida' });
+      }
+
+      let json;
+      try { json = JSON.parse(rawBody); } catch { return res.status(400).json({ erro: 'JSON inválido' }); }
+      const parse = eventoSchema.safeParse(json);
+      if (!parse.success) return res.status(400).json({ erro: 'Payload inválido' });
+
+      res.status(200).json({ ok: true });
+
+      processarEventoInboundBot(parse.data).catch((e) =>
+        logger.error('Erro ao processar evento inbound (global)', {
+          tipo: parse.data?.event ?? 'desconhecido', erro: e.message,
+        })
+      );
+    } catch (erro) {
+      logger.error('Erro no webhook global', { erro: erro.message });
+      if (!res.headersSent) res.status(500).json({ erro: 'Erro interno' });
+    }
+  }
+);
+
+// ── WEBHOOK CLOUD API (Meta) — provider 'cloud' ───────────────────────────────
+// A Meta usa UMA URL de callback configurada no app. Verificação em dois passos:
+//   GET  — handshake: ecoa hub.challenge se hub.verify_token === WHATSAPP_VERIFY_TOKEN.
+//   POST — eventos assinados em X-Hub-Signature-256 (HMAC-SHA256 do corpo cru com
+//          META_APP_SECRET). Validada a assinatura, normalizamos para o shape
+//          Evolution e reusamos rotearMensagemInbound (inbound.js intocado).
+
+// GET — verificação do webhook (handshake da Meta).
+whatsappRouter.get('/webhook/whatsapp/cloud/:empresaId', (req, res) => {
+  const modo = req.query['hub.mode'];
+  const token = typeof req.query['hub.verify_token'] === 'string' ? req.query['hub.verify_token'] : '';
+  const challenge = req.query['hub.challenge'];
+  if (modo === 'subscribe' && env.WHATSAPP_VERIFY_TOKEN && compararToken(token, env.WHATSAPP_VERIFY_TOKEN)) {
+    return res.status(200).send(String(challenge ?? ''));
+  }
+  return res.sendStatus(403);
+});
+
+// POST — eventos inbound da Cloud API (assinatura HMAC com META_APP_SECRET).
+whatsappRouter.post(
+  '/webhook/whatsapp/cloud/:empresaId',
   raw({ type: '*/*', limit: '5mb' }),
   async (req, res) => {
     const empresaId = parseInt(req.params.empresaId);
     if (isNaN(empresaId)) return res.status(400).json({ erro: 'empresaId inválido' });
 
     const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : '';
-
     try {
-      // 1) Verifica HMAC (header configurável; Evolution assina o corpo).
-      const segredo = await segredoWebhook(empresaId);
-      const assinatura = req.get('x-hub-signature-256') || req.get('x-webhook-signature') || '';
-      // Em ambiente onde a Evolution não assina, exigimos o segredo via header simples.
-      const tokenHeader = req.get('x-webhook-token') || '';
-      const hmacOk = verificarHmac(rawBody, assinatura, segredo);
-      const tokenOk = !!segredo && tokenHeader === segredo;
-      if (!hmacOk && !tokenOk) {
-        logger.warn('Webhook WhatsApp rejeitado (assinatura inválida)', { empresaId });
+      const segredo = env.META_APP_SECRET;
+      if (!segredo) {
+        logger.warn('Webhook Cloud rejeitado (META_APP_SECRET ausente)', { empresaId });
+        return res.status(401).json({ erro: 'Webhook não configurado' });
+      }
+      // A Meta envia "sha256=<hex>"; verificarHmac compara o hex puro em tempo constante.
+      const assinatura = (req.get('x-hub-signature-256') || '').replace(/^sha256=/, '');
+      if (!verificarHmac(rawBody, assinatura, segredo)) {
+        logger.warn('Webhook Cloud rejeitado (assinatura inválida)', { empresaId });
         return res.status(401).json({ erro: 'Assinatura inválida' });
       }
 
-      // 2) Valida o shape do payload.
       let json;
       try { json = JSON.parse(rawBody); } catch { return res.status(400).json({ erro: 'JSON inválido' }); }
-      const parse = eventoSchema.safeParse(json);
-      if (!parse.success) return res.status(400).json({ erro: 'Payload inválido' });
 
-      // 3) Responde rápido (Evolution espera 2xx) e processa de forma assíncrona.
+      // Responde rápido (a Meta espera 2xx) e processa de forma assíncrona.
       res.status(200).json({ ok: true });
 
-      // 4) Roteamento do evento. A máquina de conversa (Fase 3) consome aqui.
-      processarEventoInbound(empresaId, parse.data).catch((e) =>
-        logger.error('Erro ao processar evento inbound', { empresaId, erro: e.message })
-      );
+      for (const evento of normalizarInboundCloud(json)) {
+        // Número único: o roteamento descobre a empresa pelo telefone do remetente.
+        rotearMensagemInbound(evento).catch((e) =>
+          logger.error('Erro no roteamento inbound (Cloud)', { empresaId, erro: e.message })
+        );
+      }
     } catch (erro) {
-      logger.error('Erro no webhook WhatsApp', { empresaId, erro: erro.message });
+      logger.error('Erro no webhook WhatsApp Cloud', { empresaId, erro: erro.message });
       if (!res.headersSent) res.status(500).json({ erro: 'Erro interno' });
     }
   }
 );
 
 /**
- * Processa um evento inbound da Evolution para a empresa.
- * Fase 2: identifica o tipo e registra. Fase 3 conecta a máquina de conversa
- * (mensagens privadas de técnico → fluxo de registro) e a captura de avaliação.
+ * Processa um evento inbound da conexão GLOBAL do robô (número único). Grava
+ * QR/estado na ConexaoBot e roteia a mensagem pelo telefone do remetente (sem empresaId).
  */
-async function processarEventoInbound(empresaId, evento) {
+async function processarEventoInboundBot(evento) {
   const tipo = evento.event ?? 'desconhecido';
-  logger.info('Webhook inbound recebido', { empresaId, tipo });
+  logger.info('Webhook global recebido', { tipo });
 
-  if (tipo === 'connection.update' || tipo === 'CONNECTION_UPDATE') {
-    const state = evento.data?.state;
-    const mapa = { open: 'conectado', connecting: 'conectando', close: 'desconectado' };
-    await prisma.empresaWhatsapp.update({
-      where: { empresaId },
-      data: { estadoConexao: mapa[state] ?? 'desconectado' },
-    }).catch(() => {});
+  if (tipo === 'qrcode.updated' || tipo === 'QRCODE_UPDATED') {
+    const qr = extrairQr(evento.data) ?? extrairQr(evento);
+    if (qr) {
+      await salvarQrBot(qr);
+      logger.info('QR global capturado via webhook');
+    }
     return;
   }
 
-  // MESSAGES_UPSERT → fluxo de conversa privada (registro de serviço).
+  if (tipo === 'connection.update' || tipo === 'CONNECTION_UPDATE') {
+    await atualizarEstadoBot(evento.data?.state);
+    return;
+  }
+
   if (tipo === 'messages.upsert' || tipo === 'MESSAGES_UPSERT') {
-    await rotearMensagemInbound(empresaId, evento).catch((e) =>
-      logger.error('Erro no roteamento da conversa', { empresaId, erro: e.message })
-    );
+    await filaMensagens.add('mensagem', evento);
     return;
   }
 }

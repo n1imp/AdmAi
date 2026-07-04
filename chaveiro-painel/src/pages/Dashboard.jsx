@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
@@ -11,6 +12,7 @@ import api, { formatarMoeda, formatarDataCurta } from '../lib/api.js';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import WelcomeCard from '../components/WelcomeCard.jsx';
+import { startTour } from '../components/TourGuide.jsx';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 
 const PERIODOS = [
@@ -81,17 +83,22 @@ function hojeISO() {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [periodo, setPeriodo] = useState('mes');
   const [inicio, setInicio] = useState(hojeISO());
   const [fim, setFim] = useState(hojeISO());
   const [dados, setDados] = useState(null);
   const [satisfacao, setSatisfacao] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState(null);
 
   const customInvalido = periodo === 'custom' && (!inicio || !fim || inicio > fim);
 
-  const buscar = useCallback(async () => {
+  // `guard` permite que o efeito cancele os setState após desmontar/refazer.
+  // Chamadas via onClick/pull-to-refresh passam outros args — ignorados aqui.
+  const buscar = useCallback(async (guard) => {
+    const estaAtivo = typeof guard === 'function' ? guard : () => true;
     if (periodo === 'custom' && (!inicio || !fim || inicio > fim)) return;
     setErro(null);
     try {
@@ -104,22 +111,46 @@ export default function Dashboard() {
         api.get(`/dashboard?${params}`),
         api.get('/avaliacoes').catch(() => ({ data: null })),
       ]);
+      if (!estaAtivo()) return;
       setDados(dash.data);
       setSatisfacao(aval.data?.resumo ?? null);
     } catch (e) {
-      setErro('Não foi possível carregar os dados.');
+      if (estaAtivo()) setErro('Não foi possível carregar os dados.');
     } finally {
-      setCarregando(false);
+      if (estaAtivo()) setCarregando(false);
     }
   }, [periodo, inicio, fim]);
 
   useEffect(() => {
+    let active = true;
     setCarregando(true);
-    buscar();
+    buscar(() => active);
+    return () => { active = false; };
   }, [buscar]);
+
+  // Auto-start do tour de onboarding na primeira visita ao Painel.
+  // Espera os KPIs renderizarem (carregando=false) para que os alvos existam no
+  // DOM; startTour respeita o flag `chaveiro_tour_done`, então não insiste.
+  useEffect(() => {
+    if (carregando) return;
+    const t = setTimeout(() => startTour({ navigate }), 600);
+    return () => clearTimeout(t);
+  }, [carregando, navigate]);
 
   const { containerRef, isRefreshing } = usePullToRefresh(buscar);
   const comp = dados?.comparativo ?? {};
+
+  // Atualização manual com trava anti duplo-clique (evita fetch em paralelo).
+  async function atualizarManual() {
+    if (atualizando) return;
+    setAtualizando(true);
+    try {
+      await buscar();
+    } finally {
+      setAtualizando(false);
+    }
+  }
+  const ocupado = atualizando || isRefreshing;
 
   return (
     <div ref={containerRef} className="overflow-y-auto h-full animate-fade-in">
@@ -130,15 +161,16 @@ export default function Dashboard() {
           <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">Painel</h1>
         </div>
         <button
-          onClick={buscar}
+          onClick={atualizarManual}
+          disabled={ocupado}
           aria-label="Atualizar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
+          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCw size={17} className={isRefreshing ? 'animate-spin' : ''} />
+          <RefreshCw size={17} className={ocupado ? 'animate-spin' : ''} />
         </button>
       </div>
 
-      {isRefreshing && (
+      {ocupado && (
         <div className="flex justify-center pb-3">
           <div className="flex items-center gap-2 text-accent-300 text-xs">
             <RefreshCw size={14} className="animate-spin" /> Atualizando...
@@ -147,10 +179,12 @@ export default function Dashboard() {
       )}
 
       {/* Cartão de boas-vindas (dispensável, some após o primeiro uso) */}
-      <WelcomeCard />
+      <div data-tour="welcome">
+        <WelcomeCard onVerTutorial={() => startTour({ force: true, navigate })} />
+      </div>
 
       {/* Seletor de período */}
-      <div className="px-4 flex gap-2 mb-4 flex-wrap">
+      <div data-tour="periodos" className="px-4 flex gap-2 mb-4 flex-wrap">
         {PERIODOS.map((p) => (
           <button
             key={p.value}
@@ -218,7 +252,7 @@ export default function Dashboard() {
       )}
 
       {/* KPIs */}
-      <div className="px-4 grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+      <div data-tour="kpis" className="px-4 grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {carregando ? (
           Array.from({ length: 6 }).map((_, i) => <SkeletonKpi key={i} />)
         ) : dados ? (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, X } from 'lucide-react';
 
 const ToastContext = createContext(null);
@@ -21,9 +21,10 @@ const BORDA = {
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const proximoId = useRef(0); // contador monotônico evita colisão de keys
 
   const toast = useCallback((mensagem, tipo = 'success') => {
-    const id = Date.now();
+    const id = proximoId.current++;
     setToasts((prev) => [...prev, { id, mensagem, tipo }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);

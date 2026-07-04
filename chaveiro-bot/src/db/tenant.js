@@ -1,4 +1,5 @@
 import { prisma } from './prisma.js';
+import { env } from '../config/env.js';
 
 /**
  * Isolamento multi-tenant via Prisma Client Extensions.
@@ -28,6 +29,7 @@ const MODELOS_ESCOPADOS = new Set([
   'EmpresaWhatsapp',
   'Avaliacao',
   'SessaoConversa',
+  'RegistroPonto',
 ]);
 
 // Operações de LEITURA que aceitam `where` e devem receber o filtro empresaId.
@@ -56,6 +58,38 @@ function mesclarWhere(where, empresaId) {
   return { ...(where ?? {}), empresaId };
 }
 
+// Defesa em profundidade no banco (RLS). Quando ligada, cada operação escopada roda
+// dentro de uma transação que crava o GUC `app.empresa_id` (transaction-local, 3º arg
+// `true`) ANTES da query — é esse valor que as policies de Row Level Security comparam
+// com a coluna empresaId. `local=true` é essencial sob connection pooling: o setting
+// morre no fim da transação e nunca vaza para a próxima requisição na mesma conexão.
+const RLS_ATIVA = env.RLS_ENABLED === 'true';
+const SQL_SET_EMPRESA = "SELECT set_config('app.empresa_id', $1, true)";
+
+// Calcula a operação efetiva e os args com empresaId injetado. O único caso em que a
+// operação muda é findUnique→findFirst (where não-único precisa de findFirst).
+function escoparOperacao(operation, args, empresaId) {
+  if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+    const op = operation === 'findUnique' ? 'findFirst' : 'findFirstOrThrow';
+    return { op, args: { ...args, where: mesclarWhere(args?.where, empresaId) } };
+  }
+  if (OPS_LEITURA_FILTRAVEIS.has(operation) || OPS_WHERE.has(operation)) {
+    return { op: operation, args: { ...args, where: mesclarWhere(args?.where, empresaId) } };
+  }
+  if (operation === 'create') {
+    return { op: operation, args: { ...args, data: { ...(args?.data ?? {}), empresaId } } };
+  }
+  if (operation === 'createMany') {
+    const data = Array.isArray(args?.data) ? args.data : [args?.data];
+    return { op: operation, args: { ...args, data: data.map((d) => ({ ...d, empresaId })) } };
+  }
+  return { op: operation, args };
+}
+
+// Cache LRU com teto: evita vazar um client estendido por empresaId para sempre.
+// Ao exceder MAX_CACHE_CLIENTS, descarta o menos recentemente usado (1ª chave do Map,
+// que preserva a ordem de inserção/uso). Reinserir uma chave a move para o fim (MRU).
+const MAX_CACHE_CLIENTS = 100;
 const cacheClients = new Map();
 
 /**
@@ -66,7 +100,13 @@ export function prismaParaEmpresa(empresaId) {
   if (!Number.isInteger(empresaId) || empresaId <= 0) {
     throw new Error('empresaId inválido para client escopado');
   }
-  if (cacheClients.has(empresaId)) return cacheClients.get(empresaId);
+  if (cacheClients.has(empresaId)) {
+    // Toca a entrada para marcá-la como recém-usada (move para o fim do Map).
+    const existente = cacheClients.get(empresaId);
+    cacheClients.delete(empresaId);
+    cacheClients.set(empresaId, existente);
+    return existente;
+  }
 
   const client = prisma.$extends({
     name: `tenant-${empresaId}`,
@@ -75,35 +115,32 @@ export function prismaParaEmpresa(empresaId) {
         async $allOperations({ model, operation, args, query }) {
           if (!MODELOS_ESCOPADOS.has(model)) return query(args);
 
-          // findUnique/findUniqueOrThrow não aceitam campos não-únicos em `where`.
-          // Reescrevemos para findFirst/findFirstOrThrow para poder cravar empresaId.
-          if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
-            const novoOp = operation === 'findUnique' ? 'findFirst' : 'findFirstOrThrow';
-            return client[modelDelegate(model)][novoOp]({
-              ...args,
-              where: mesclarWhere(args?.where, empresaId),
+          const { op, args: finalArgs } = escoparOperacao(operation, args, empresaId);
+
+          // RLS ligada: roda na transação que crava o GUC e despacha SEMPRE no `tx`
+          // (rodar via `query` executaria fora da transação, sem o GUC aplicado).
+          if (RLS_ATIVA) {
+            return prisma.$transaction(async (tx) => {
+              await tx.$executeRawUnsafe(SQL_SET_EMPRESA, String(empresaId));
+              return tx[modelDelegate(model)][op](finalArgs);
             });
           }
 
-          if (OPS_LEITURA_FILTRAVEIS.has(operation) || OPS_WHERE.has(operation)) {
-            args = { ...args, where: mesclarWhere(args?.where, empresaId) };
-          }
-
-          // create/createMany: injeta empresaId nos dados.
-          if (operation === 'create') {
-            args = { ...args, data: { ...(args?.data ?? {}), empresaId } };
-          }
-          if (operation === 'createMany') {
-            const data = Array.isArray(args?.data) ? args.data : [args?.data];
-            args = { ...args, data: data.map((d) => ({ ...d, empresaId })) };
-          }
-
-          return query(args);
+          // RLS desligada (default): só o filtro app-level. Quando a operação não muda,
+          // reusa `query` (caminho nativo); no rewrite findUnique→findFirst, despacha no
+          // client estendido (reinjeta empresaId — idempotente — e cai no caminho nativo).
+          if (op === operation) return query(finalArgs);
+          return client[modelDelegate(model)][op](finalArgs);
         },
       },
     },
   });
 
+  // Evicção LRU: se o cache está cheio, remove a entrada mais antiga antes de inserir.
+  if (cacheClients.size >= MAX_CACHE_CLIENTS) {
+    const maisAntiga = cacheClients.keys().next().value;
+    cacheClients.delete(maisAntiga);
+  }
   cacheClients.set(empresaId, client);
   return client;
 }

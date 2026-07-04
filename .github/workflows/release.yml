@@ -1,0 +1,100 @@
+name: Release
+
+# Build de artefatos de lançamento. Disparo MANUAL (workflow_dispatch) ou ao publicar
+# uma tag `v*`. Não substitui o CI (ci.yml continua rodando lint/test/build em cada push).
+#
+# Secrets/vars necessários (Settings → Secrets and variables → Actions):
+#   vars.VITE_API_URL            URL absoluta da API de produção (ex.: https://api.SEUDOMINIO)
+#   secrets.ANDROID_KEYSTORE_BASE64   keystore .jks em base64 (base64 -w0 admai-upload.jks)
+#   secrets.ANDROID_KEYSTORE_PASSWORD senha do keystore
+#   secrets.ANDROID_KEY_ALIAS         alias da chave (ex.: upload)
+#   secrets.ANDROID_KEY_PASSWORD      senha da chave
+#
+# Deploy da web NÃO fica aqui: backend (Railway) e painel (Cloudflare Pages) usam a
+# integração nativa com o GitHub (deploy ao merge na master). Ver docs/CI_CD.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_android:
+        description: 'Gerar o .aab assinado do app Android'
+        type: boolean
+        default: true
+  push:
+    tags: ['v*']
+
+jobs:
+  # ── App Android: gera o .aab assinado e publica como artifact ───────────────
+  android-aab:
+    if: ${{ github.event_name == 'push' || inputs.build_android }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chaveiro-painel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: chaveiro-painel/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - run: npm install -g npm@11
+      - run: npm ci
+
+      # Build web + sync Capacitor, com a URL ABSOLUTA da API (o app não usa o proxy nginx).
+      - name: Build web + cap sync
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+        run: npm run cap:sync
+
+      # Restaura o keystore e as credenciais de assinatura (lidas por app/build.gradle).
+      - name: Restaurar keystore de assinatura
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 ausente — configure os secrets de assinatura."
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/admai-upload.jks
+          cat > android/keystore.properties <<EOF
+          storeFile=admai-upload.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Gradle bundleRelease (.aab)
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Limpar segredos do runner
+        if: always()
+        run: rm -f android/admai-upload.jks android/keystore.properties
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: admai-release-aab
+          path: chaveiro-painel/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      # Upload automático à Play (opcional): descomente após criar a conta e a service
+      # account, e adicionar o secret PLAY_SERVICE_ACCOUNT_JSON.
+      # - uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      #     packageName: com.admai.app
+      #     releaseFiles: chaveiro-painel/android/app/build/outputs/bundle/release/app-release.aab
+      #     track: internal

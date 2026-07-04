@@ -1,22 +1,36 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Isola o agendador de efeitos colaterais: WhatsApp, notificações e cron.
-vi.mock('../baileys.js', () => ({ enviarMensagem: vi.fn() }));
+vi.mock('../whatsapp/gateway.js', () => ({ enviarMensagem: vi.fn() }));
 vi.mock('../notificacao.js', () => ({ notificarAdmins: vi.fn() }));
 vi.mock('../avaliacao.js', () => ({ dispararAvaliacoesPendentes: vi.fn() }));
 vi.mock('node-cron', () => ({ default: { schedule: vi.fn() } }));
 
-// prisma mockado: controla os serviços retornados para o resumo.
+// fs mockado: captura os arquivos de selfie que o expurgo de ponto tenta apagar.
+const unlinkMock = vi.fn(async () => {});
+vi.mock('node:fs/promises', () => ({ unlink: (...a) => unlinkMock(...a) }));
+
+// prisma mockado: controla os serviços retornados para o resumo e os dados de retenção.
 const findManyMock = vi.fn();
+const batidaFindManyMock = vi.fn();
+const batidaUpdateManyMock = vi.fn(async () => ({ count: 0 }));
 vi.mock('../../db/prisma.js', () => ({
   prisma: {
     servico: { findMany: (...a) => findManyMock(...a) },
     empresa: { findFirst: async () => ({ id: 1 }) },
-    empresaWhatsapp: { findFirst: async () => null },
+    empresaWhatsapp: { findMany: async () => [] },
+    sessaoConversa: { deleteMany: async () => ({ count: 0 }) },
+    avaliacao: { updateMany: async () => ({ count: 0 }) },
+    batidaPonto: {
+      findMany: (...a) => batidaFindManyMock(...a),
+      updateMany: (...a) => batidaUpdateManyMock(...a),
+    },
   },
 }));
 
-const { gerarResumoSemanal } = await import('../agendador.js');
+const { gerarResumoSemanal, limparDadosAntigos } = await import('../agendador.js');
+
+beforeEach(() => vi.clearAllMocks());
 
 describe('gerarResumoSemanal', () => {
   it('agrega receita líquida por técnico e ordena o ranking', async () => {
@@ -42,5 +56,38 @@ describe('gerarResumoSemanal', () => {
     expect(r.receitaTotal).toBe(0);
     expect(r.ranking).toEqual([]);
     expect(r.texto).toContain('Nenhum serviço registrado');
+  });
+});
+
+describe('limparDadosAntigos (retenção LGPD do ponto)', () => {
+  it('apaga o arquivo de selfie e zera selfie/geo das batidas antigas', async () => {
+    batidaFindManyMock.mockResolvedValueOnce([
+      { id: 10, selfieUrl: '/uploads/ponto-aaa.jpg' },
+      { id: 11, selfieUrl: null }, // batida antiga só com geo (sem selfie)
+    ]);
+
+    const r = await limparDadosAntigos(new Date('2026-06-22T03:30:00Z'));
+
+    expect(r.pontoExpurgados).toBe(2);
+    // só apaga arquivo quando há selfieUrl, usando o basename (anti path traversal).
+    // Tenta o diretório privado (atual) e o ./uploads legado — 2 unlinks por selfie.
+    expect(unlinkMock).toHaveBeenCalledTimes(2);
+    const caminhos = unlinkMock.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+    expect(caminhos.every((p) => p.endsWith('ponto-aaa.jpg'))).toBe(true);
+    expect(caminhos.some((p) => p.includes('uploads-ponto/'))).toBe(true);
+    expect(caminhos.some((p) => /\/uploads\/ponto-aaa\.jpg$/.test(p))).toBe(true);
+    // zera os campos sensíveis das duas batidas numa única updateMany
+    expect(batidaUpdateManyMock).toHaveBeenCalledWith({
+      where: { id: { in: [10, 11] } },
+      data: { selfieUrl: null, lat: null, lng: null, precisao: null },
+    });
+  });
+
+  it('é no-op quando não há batidas antigas a expurgar', async () => {
+    batidaFindManyMock.mockResolvedValueOnce([]);
+    const r = await limparDadosAntigos(new Date('2026-06-22T03:30:00Z'));
+    expect(r.pontoExpurgados).toBe(0);
+    expect(unlinkMock).not.toHaveBeenCalled();
+    expect(batidaUpdateManyMock).not.toHaveBeenCalled();
   });
 });

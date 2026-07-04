@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { env } from '../../config/env.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Criptografia simétrica para segredos por-empresa em repouso
@@ -11,6 +12,10 @@ import { env } from '../../config/env.js';
  */
 
 const ALG = 'aes-256-gcm';
+// Tag de autenticação do GCM: SEMPRE 128 bits (16 bytes). Fixar isso no cipher e no
+// decipher faz o Node REJEITAR uma tag mais curta no setAuthTag — sem isso, um atacante
+// poderia forjar ciphertext com tag truncada (CWE-310). Ver sg.run/NbGG1.
+const TAG_BYTES = 16;
 
 function chave() {
   if (!env.ENCRYPTION_KEY) {
@@ -24,20 +29,35 @@ function chave() {
 export function encrypt(texto) {
   if (texto == null || texto === '') return null;
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALG, chave(), iv);
+  const cipher = crypto.createCipheriv(ALG, chave(), iv, { authTagLength: TAG_BYTES });
   const ct = Buffer.concat([cipher.update(String(texto), 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');
 }
 
-/** Decifra um texto produzido por encrypt(). Retorna null se entrada vazia. */
+/**
+ * Decifra um texto produzido por encrypt(). Retorna null se entrada vazia, mal
+ * formada, ou se a decifragem falhar (chave rotacionada/tampering) — em vez de
+ * lançar, para que o chamador trate graciosamente sem derrubar a requisição (500).
+ */
 export function decrypt(blob) {
   if (blob == null || blob === '') return null;
-  const [ivB64, tagB64, ctB64] = String(blob).split(':');
-  if (!ivB64 || !tagB64 || !ctB64) throw new Error('Formato de segredo cifrado inválido');
-  const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'));
-  decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
-  return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
+  try {
+    const [ivB64, tagB64, ctB64] = String(blob).split(':');
+    if (!ivB64 || !tagB64 || !ctB64) return null;
+    const tag = Buffer.from(tagB64, 'base64');
+    // Rejeita tag fora dos 128 bits ANTES de decifrar (defesa explícita contra truncamento;
+    // o authTagLength abaixo também força isso no setAuthTag).
+    if (tag.length !== TAG_BYTES) return null;
+    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'), { authTagLength: TAG_BYTES });
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
+  } catch (erro) {
+    // Falha real de decifragem (auth tag/chave rotacionada/tampering): observabilidade
+    // sem derrubar a requisição. Não loga o blob (poderia conter ciphertext sensível).
+    logger.warn('decrypt_falhou', { motivo: erro.message });
+    return null;
+  }
 }
 
 /** Gera um segredo aleatório (para webhookSecret). */
@@ -56,6 +76,20 @@ export function verificarHmac(payloadRaw, assinatura, segredo) {
   const esperado = crypto.createHmac('sha256', segredo).update(payloadRaw).digest('hex');
   const a = Buffer.from(assinatura);
   const b = Buffer.from(esperado);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Compara um token recebido com o segredo em tempo constante (anti-timing).
+ * Substitui o `===`, que vaza o tamanho/posição do mismatch.
+ * @param {string} recebido  Token enviado pelo cliente (header).
+ * @param {string} segredo   Segredo esperado em claro.
+ */
+export function compararToken(recebido, segredo) {
+  if (!recebido || !segredo) return false;
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(segredo);
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }

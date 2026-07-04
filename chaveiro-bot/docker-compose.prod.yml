@@ -1,43 +1,103 @@
-# ── Override de PRODUÇÃO ───────────────────────────────────────────────────────
-# Usar SEMPRE junto com o compose base:
+# ── Stack de PRODUÇÃO do AdmAi ──────────────────────────────────────────
+# Postgres + backend + painel + Caddy (HTTPS automático via Let's Encrypt).
 #
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Diferenças para o docker-compose.yml (dev):
+#   • NÃO publica portas internas (postgres/backend/painel ficam só na rede interna);
+#     o único ingresso externo é o Caddy (80/443).
+#   • NÃO sobe Evolution API/Redis — o WhatsApp está desabilitado no lançamento.
+#   • Segredos vêm do .env (NÃO commitado). O docker compose carrega o .env deste
+#     diretório automaticamente para interpolar ${...} abaixo.
 #
-# O que muda em relação ao base:
-#   • adiciona o Caddy (reverse proxy + HTTPS automático) expondo só 80/443;
-#   • fecha as portas internas (backend/painel/evolution) — acessíveis apenas pela
-#     rede interna chaveiro-net (via `ports: !reset []`, requer Docker Compose ≥ 2.24).
+# Uso:
+#   1) Copie .env.example → .env e preencha os segredos (openssl rand -hex 32):
+#        POSTGRES_PASSWORD, DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, API_TOKEN,
+#        CADDY_APP_DOMAIN, CADDY_API_DOMAIN, ALLOWED_ORIGIN, PUBLIC_URL, NODE_ENV=production
+#      (DATABASE_URL deve usar host "postgres": postgresql://chaveiro:SENHA@postgres:5432/admai)
+#   2) docker compose -f docker-compose.prod.yml up -d --build
+#   3) Verifique: https://$CADDY_API_DOMAIN/health → 200 {"database":"ok"}
 #
-# Defina no .env: CADDY_APP_DOMAIN=app.seudominio.com e CADDY_API_DOMAIN=api.seudominio.com
+# DNS: aponte CADDY_APP_DOMAIN (painel) e CADDY_API_DOMAIN (api) para o IP do host
+# ANTES de subir, senão o Caddy não consegue emitir o certificado TLS.
+
+networks:
+  admai-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  caddy_data:    # certificados/ACME — NÃO apague (evita rate limit do Let's Encrypt)
+  caddy_config:
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: admai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-admai}
+      POSTGRES_USER: ${POSTGRES_USER:-chaveiro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - admai-net
+    # Sem `ports:` — o banco só é acessível na rede interna do compose.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-chaveiro} -d ${POSTGRES_DB:-admai}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: admai-backend
+    restart: unless-stopped
+    env_file: .env          # DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, API_TOKEN, etc.
+    networks:
+      - admai-net
+    # Sem `ports:` — só o Caddy alcança o backend (via rede interna em backend:3000).
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # docker-entrypoint.sh roda `prisma migrate deploy` antes de iniciar o servidor.
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  painel:
+    build:
+      context: ../admai-painel
+      dockerfile: Dockerfile
+    container_name: admai-painel
+    restart: unless-stopped
+    networks:
+      - admai-net
+    # Sem `ports:` — servido externamente pelo Caddy. O nginx interno faz proxy de
+    # /api, /health, /uploads e /metrics para backend:3000 (ver nginx.conf).
+    depends_on:
+      - backend
+
   caddy:
     image: caddy:2-alpine
-    container_name: chaveiro-caddy
+    container_name: admai-caddy
     restart: unless-stopped
     ports:
       - '80:80'
       - '443:443'
     environment:
-      CADDY_APP_DOMAIN: ${CADDY_APP_DOMAIN:?defina CADDY_APP_DOMAIN no .env}
-      CADDY_API_DOMAIN: ${CADDY_API_DOMAIN:?defina CADDY_API_DOMAIN no .env}
+      CADDY_APP_DOMAIN: ${CADDY_APP_DOMAIN:?defina o domínio do painel no .env}
+      CADDY_API_DOMAIN: ${CADDY_API_DOMAIN:?defina o domínio da API no .env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
+      - caddy_data:/data       # certificados emitidos (persistir!)
       - caddy_config:/config
     networks:
-      - chaveiro-net
+      - admai-net
     depends_on:
       - backend
       - painel
-
-  # Em produção, NÃO publicar portas no host — só o Caddy (80/443) fica exposto.
-  # (postgres/redis/evolution-api têm profile "local" e não sobem em produção.)
-  backend:
-    ports: !reset []
-  painel:
-    ports: !reset []
-
-volumes:
-  caddy_data:
-  caddy_config:

@@ -1,0 +1,74 @@
+import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
+
+let _stripe = null;
+
+export async function getStripe() {
+  if (!env.STRIPE_SECRET_KEY) return null;
+  if (!_stripe) {
+    const { default: Stripe } = await import('stripe');
+    _stripe = new Stripe(env.STRIPE_SECRET_KEY);
+  }
+  return _stripe;
+}
+
+export async function obterOuCriarCliente(empresa, email) {
+  const stripe = await getStripe();
+  if (!stripe) throw new Error('Stripe não configurado');
+
+  const { prisma } = await import('../db/prisma.js');
+  const assinatura = await prisma.assinatura.findUnique({ where: { empresaId: empresa.id } });
+
+  if (assinatura?.stripeCustomerId) {
+    return assinatura.stripeCustomerId;
+  }
+
+  const cliente = await stripe.customers.create({ email, name: empresa.nome, metadata: { empresaId: String(empresa.id) } });
+  await prisma.assinatura.upsert({
+    where: { empresaId: empresa.id },
+    create: { empresaId: empresa.id, stripeCustomerId: cliente.id },
+    update: { stripeCustomerId: cliente.id },
+  });
+  return cliente.id;
+}
+
+export async function criarCheckoutSession(empresaId, email, returnUrl) {
+  const stripe = await getStripe();
+  if (!stripe) throw new Error('Stripe não configurado');
+  if (!env.STRIPE_PRICE_ID_PRO) throw new Error('STRIPE_PRICE_ID_PRO não configurado');
+
+  const { prisma } = await import('../db/prisma.js');
+  const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+  const customerId = await obterOuCriarCliente(empresa, email);
+
+  return stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'subscription',
+    line_items: [{ price: env.STRIPE_PRICE_ID_PRO, quantity: 1 }],
+    success_url: `${returnUrl}?checkout=success`,
+    cancel_url: `${returnUrl}?checkout=cancel`,
+  });
+}
+
+export async function criarPortalSession(stripeCustomerId, returnUrl) {
+  const stripe = await getStripe();
+  if (!stripe) throw new Error('Stripe não configurado');
+  return stripe.billingPortal.sessions.create({ customer: stripeCustomerId, return_url: returnUrl });
+}
+
+export async function processarEvento(rawBody, signature) {
+  const stripe = await getStripe();
+  if (!stripe) throw new Error('Stripe não configurado');
+  if (!env.STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET não configurado');
+  return stripe.webhooks.constructEvent(rawBody, signature, env.STRIPE_WEBHOOK_SECRET);
+}
+
+export async function sincronizarAssinatura(empresaId, dados) {
+  const { prisma } = await import('../db/prisma.js');
+  await prisma.assinatura.upsert({
+    where: { empresaId },
+    create: { empresaId, ...dados },
+    update: dados,
+  });
+  logger.info('assinatura_sincronizada', { empresaId, status: dados.status });
+}

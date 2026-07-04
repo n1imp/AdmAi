@@ -17,9 +17,11 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # openssl é exigido pelo schema/query engine do Prisma em runtime (migrate deploy).
-RUN apk add --no-cache openssl libc6-compat
+# su-exec rebaixa privilégios no entrypoint depois de ajustar o volume de uploads.
+RUN apk add --no-cache openssl libc6-compat su-exec
 
-# Usuário sem privilégios (nunca rodar como root).
+# Usuário sem privilégios (a aplicação NUNCA roda como root — ver docker-entrypoint.sh,
+# que ajusta a permissão do volume de uploads como root e então faz `su-exec appuser`).
 RUN addgroup -S nodejs -g 1001 && adduser -S appuser -u 1001 -G nodejs
 
 # Copia node_modules (com Prisma Client gerado), schema e código.
@@ -29,8 +31,12 @@ COPY --chown=appuser:nodejs package*.json ./
 COPY --chown=appuser:nodejs src ./src
 COPY --chown=appuser:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
+# Garante a pasta de uploads existente (ponto de montagem do volume persistente).
+RUN mkdir -p /app/uploads && chown -R appuser:nodejs /app/uploads
 
-USER appuser
+# NÃO definimos `USER appuser` aqui de propósito: o entrypoint inicia como root só
+# para ajustar a permissão do volume montado em /app/uploads e logo rebaixa para
+# appuser via su-exec. O processo do servidor roda como não-root.
 EXPOSE 3000
 
 # Healthcheck nativo do container (complementa o do compose).

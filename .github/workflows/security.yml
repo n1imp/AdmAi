@@ -1,0 +1,81 @@
+name: Security
+
+# Varredura de segurança recorrente (não evento único): SAST (Semgrep, OWASP Top 10),
+# secret scanning (gitleaks) e auditoria de dependências. Roda em PR e toda segunda.
+# Observacao: enquanto o repo for privado no plano Free do GitHub, o Actions so executa
+# dentro da cota mensal — ver docs/CI_CD.md.
+
+on:
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * 1' # segunda-feira 06:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ── SAST: Semgrep com rulesets OWASP Top 10 + JavaScript ───────────────────
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      # 1) Relatório COMPLETO: imprime TODOS os achados (INFO/WARNING/ERROR) no log do
+      #    job para revisão humana. Não bloqueia — é visibilidade, não gate. Sem isso,
+      #    achados de severidade WARNING do OWASP ficariam invisíveis (só veríamos ERROR).
+      - name: Semgrep — relatório completo (todas as severidades, não bloqueia)
+        continue-on-error: true
+        run: |
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/javascript \
+            --metrics off \
+            chaveiro-bot/src chaveiro-painel/src
+      # 2) GATE: reprova o PR apenas em severidade ERROR (achado de alta confiança).
+      - name: Semgrep — gate (falha em severidade ERROR)
+        run: |
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/javascript \
+            --severity ERROR \
+            --error \
+            --metrics off \
+            chaveiro-bot/src chaveiro-painel/src
+
+  # ── Secret scanning: gitleaks no diff e no histórico ───────────────────────
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          # Necessário apenas em organizações; em repo pessoal o scan é gratuito.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # ── Auditoria de dependências (pega CVE novo sem precisar de novo commit) ───
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        proj: [chaveiro-bot, chaveiro-painel]
+    defaults:
+      run:
+        working-directory: ${{ matrix.proj }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.proj }}/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=high

@@ -1,7 +1,7 @@
 {
-  "name": "chaveiro-painel",
+  "name": "admai-painel",
   "version": "1.0.0",
-  "description": "Painel administrativo mobile-first para gestão de serviços de chaveiro",
+  "description": "Painel administrativo mobile-first AdmAi",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,17 +9,32 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\"",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:open": "npx cap open android",
+    "cap:assets": "capacitor-assets generate --android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@sentry/react": "^8.55.2",
     "axios": "^1.6.7",
+    "driver.js": "^1.4.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.3",
-    "recharts": "^2.12.2"
+    "posthog-js": "^1.257.0",
+    "recharts": "^2.12.2",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1",
+    "@eslint/js": "^9.39.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -27,8 +42,12 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.18",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.35",
+    "prettier": "^3.8.4",
     "tailwindcss": "^3.4.1",
     "vite": "^7.3.5",
     "vitest": "^4.1.8"

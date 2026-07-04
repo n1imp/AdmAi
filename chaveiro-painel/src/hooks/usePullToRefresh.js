@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 export function usePullToRefresh(onRefresh, threshold = 80) {
   const containerRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshing = useRef(false); // flag em ref evita closure obsoleta e churn de listener
   const startY = useRef(0);
   const pulling = useRef(false);
 
@@ -36,11 +37,13 @@ export function usePullToRefresh(onRefresh, threshold = 80) {
       pulling.current = false;
 
       const delta = e.changedTouches[0].clientY - startY.current;
-      if (delta > threshold && !isRefreshing) {
+      if (delta > threshold && !refreshing.current) {
+        refreshing.current = true;
         setIsRefreshing(true);
         try {
           await onRefresh();
         } finally {
+          refreshing.current = false;
           setIsRefreshing(false);
         }
       }
@@ -55,7 +58,7 @@ export function usePullToRefresh(onRefresh, threshold = 80) {
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
     };
-  }, [onRefresh, threshold, isRefreshing]);
+  }, [onRefresh, threshold]);
 
   return { containerRef, isRefreshing };
 }

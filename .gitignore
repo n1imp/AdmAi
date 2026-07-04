@@ -7,6 +7,17 @@ node_modules/
 !.env.example
 !.env.test.example
 
+# ── Chaves / segredos (NUNCA versionar) ───────────────────────
+# Chaves SSH, certificados e similares — mantenha sempre fora do repo.
+id_rsa
+id_ed25519
+ssh-*
+*.pem
+*.key
+*_rsa
+*_ed25519
+*.ppk
+
 # ── Builds / artefatos ────────────────────────────────────────
 dist/
 build/
@@ -19,6 +30,9 @@ chaveiro-bot/auth_info/
 # ── Uploads de mídia gerados em runtime ───────────────────────
 uploads/
 chaveiro-bot/uploads/
+# Selfies de ponto (biometria/PII LGPD): diretório PRIVADO, servido só via API autenticada
+uploads-ponto/
+chaveiro-bot/uploads-ponto/
 
 # ── Bancos / vetores locais ───────────────────────────────────
 *.db
@@ -26,9 +40,13 @@ chaveiro-bot/uploads/
 *.rvf
 *.rvf.lock
 
-# ── Ruflo / claude-flow / swarm ───────────────────────────────
+# ── Ruflo / claude-flow / swarm / tooling de IA (local, não versionar) ──
 .swarm/
 .claude-flow/
+.claude/
+claude/
+.mcp.json
+CLAUDE.md
 
 # ── Logs ──────────────────────────────────────────────────────
 *.log
@@ -44,3 +62,6 @@ Thumbs.db
 
 # ── Coverage de testes ────────────────────────────────────────
 coverage/
+
+# ── Quarentena (revisão manual antes de apagar de vez) ────────
+_quarentena/

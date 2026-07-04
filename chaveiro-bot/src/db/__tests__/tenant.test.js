@@ -86,3 +86,63 @@ describe('prismaParaEmpresa — isolamento (anti-IDOR)', () => {
     expect(args.where).toMatchObject({ id: 42, empresaId: 5 });
   });
 });
+
+/**
+ * Branch RLS (RLS_ENABLED=true): cada operação escopada deve rodar dentro de uma
+ * transação que crava o GUC app.empresa_id (transaction-local) ANTES da query. Aqui
+ * o client base expõe $transaction + delegates que registram o set_config e o despacho.
+ */
+describe('prismaParaEmpresa — RLS ligada (GUC por transação)', () => {
+  const setConfigCalls = [];
+  const txDispatch = [];
+
+  function fakeBaseClientRls() {
+    let handler;
+    const txClient = {
+      $executeRawUnsafe: (sql, ...vals) => { setConfigCalls.push({ sql, vals }); return Promise.resolve(1); },
+    };
+    const makeTxDelegate = (model) => {
+      const run = (operation) => (args) => { txDispatch.push({ model, operation, args }); return Promise.resolve({ ok: true }); };
+      return { findFirst: run('findFirst'), findMany: run('findMany'), create: run('create') };
+    };
+    for (const m of ['tecnico', 'material']) txClient[m] = makeTxDelegate(m.charAt(0).toUpperCase() + m.slice(1));
+
+    return {
+      $transaction: async (fn) => fn(txClient),
+      $extends: ({ query }) => {
+        handler = query.$allModels.$allOperations;
+        const ext = {};
+        for (const m of ['tecnico', 'material']) {
+          ext[m] = {
+            findMany: (args) => handler({ model: m.charAt(0).toUpperCase() + m.slice(1), operation: 'findMany', args, query: async () => ({}) }),
+            findUnique: (args) => handler({ model: m.charAt(0).toUpperCase() + m.slice(1), operation: 'findUnique', args, query: async () => ({}) }),
+          };
+        }
+        return ext;
+      },
+    };
+  }
+
+  it('crava o GUC e despacha no tx (não em query)', async () => {
+    vi.resetModules();
+    setConfigCalls.length = 0; txDispatch.length = 0;
+    vi.doMock('../prisma.js', () => ({ prisma: fakeBaseClientRls() }));
+    vi.doMock('../../config/env.js', () => ({ env: { RLS_ENABLED: 'true' } }));
+    const { prismaParaEmpresa: scoped } = await import('../tenant.js');
+
+    await scoped(9).tecnico.findMany({ where: { ativo: true } });
+
+    // setou o GUC com o empresaId como string, transaction-local
+    expect(setConfigCalls).toHaveLength(1);
+    expect(setConfigCalls[0].sql).toContain("set_config('app.empresa_id'");
+    expect(setConfigCalls[0].vals).toEqual(['9']);
+    // despachou findMany no tx com empresaId cravado no where
+    expect(txDispatch).toHaveLength(1);
+    expect(txDispatch[0]).toMatchObject({ model: 'Tecnico', operation: 'findMany' });
+    expect(txDispatch[0].args.where).toMatchObject({ ativo: true, empresaId: 9 });
+
+    vi.doUnmock('../prisma.js');
+    vi.doUnmock('../../config/env.js');
+    vi.resetModules();
+  });
+});

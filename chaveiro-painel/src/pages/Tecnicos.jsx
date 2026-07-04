@@ -134,6 +134,13 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
             }`}>
               {tecnico.ativo ? 'Ativo' : 'Inativo'}
             </span>
+            <span className={`badge ${
+              tecnico.ehDono
+                ? 'bg-accent-400/10 text-accent-300 border border-accent-400/20'
+                : 'bg-dark-700 text-muted border border-dark-600'
+            }`}>
+              {tecnico.ehDono ? 'Dono' : 'Funcionário'}
+            </span>
           </div>
           <p className="text-xs mt-0.5 flex items-center gap-1">
             <Phone size={11} className={telFormatado ? 'text-muted' : 'text-danger/60'} />
@@ -200,6 +207,7 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
 
 export default function Tecnicos() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [tecnicos, setTecnicos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
@@ -248,7 +256,8 @@ export default function Tecnicos() {
           <div className="lg:col-span-2 xl:col-span-3">
             <EstadoVazio
               mensagem="Nenhum técnico cadastrado"
-              sub="Os técnicos são criados automaticamente quando registram serviços no WhatsApp"
+              sub="Toque no + para adicionar um técnico, ou ele é criado automaticamente ao registrar serviços no WhatsApp"
+              cta={{ label: 'Adicionar técnico', to: '/tecnicos/novo' }}
             />
           </div>
         ) : (
@@ -257,6 +266,15 @@ export default function Tecnicos() {
           ))
         )}
       </div>
+
+      {/* FAB — adicionar técnico (wizard) */}
+      <button
+        onClick={() => navigate('/tecnicos/novo')}
+        aria-label="Adicionar técnico"
+        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(34,211,238,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light"
+      >
+        +
+      </button>
 
       {editando && (
         <ModalEdicao

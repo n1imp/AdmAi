@@ -24,14 +24,22 @@ export async function limparBanco() {
  * Usa register pois suporta múltiplas empresas (setup só funciona com banco vazio).
  * @returns {Promise<{ token: string, empresaId: number, userId: number }>}
  */
+let _ipSeq = 0;
 export async function criarEmpresaComAdmin(request, app, sufixo = '') {
+  // IP único por empresa (trust proxy:1 → req.ip vem do X-Forwarded-For). Evita que o
+  // rate limiter de /api/auth/register acumule entre testes e gere 429 espúrios — cada
+  // empresa onboard é, de fato, um cliente distinto.
+  const ip = `10.0.${Math.floor(++_ipSeq / 256) % 256}.${_ipSeq % 256}`;
   const res = await request(app)
     .post('/api/auth/register')
+    .set('X-Forwarded-For', ip)
     .send({
       nome: `Admin${sufixo}`,
       nomeEmpresa: `Empresa ${sufixo || 'A'}`,
       username: `admin${sufixo}${Date.now().toString().slice(-5)}`,
       email: `admin${sufixo}${Date.now()}@teste.com`,
+      // telefone agora é obrigatório no cadastro (identidade no robô de número único).
+      telefone: '5511' + String(_ipSeq).padStart(9, '0'),
       senha: 'SenhaForte1!',
     });
   if (res.status !== 201) {

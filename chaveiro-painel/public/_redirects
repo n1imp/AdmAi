@@ -1,0 +1,5 @@
+# Cloudflare Pages / Netlify — fallback de SPA.
+# O painel é React Router (client-side); sem isto, recarregar/deep-link em rotas como
+# /privacidade, /termos ou /app retornaria 404 no host estático. Serve index.html (200)
+# para qualquer caminho não-arquivo, deixando o roteamento para o front.
+/*  /index.html  200

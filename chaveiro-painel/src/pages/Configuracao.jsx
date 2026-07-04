@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Bell, MessageCircle, Users, CreditCard } from 'lucide-react';
+import { User, Lock, Bell, MessageCircle, Users, CreditCard, ShieldCheck } from 'lucide-react';
+import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -19,7 +21,7 @@ const SECOES = [
   {
     titulo: 'Integrações',
     cards: [
-      { to: '/configuracao/whatsapp', icon: MessageCircle, titulo: 'WhatsApp', sub: 'Status do bot e conexão', cor: 'text-success', bg: 'bg-success/10' },
+      { icon: MessageCircle, titulo: 'WhatsApp', sub: 'Registro e ponto pelo robô', cor: 'text-muted', bg: 'bg-dark-700', breve: true },
     ],
   },
   {
@@ -59,10 +61,71 @@ function CardLink({ card, onClick }) {
   );
 }
 
+// Toggle/switch no padrão do projeto (mesmo de Notificações).
+function Toggle({ ativo, onChange, disabled }) {
+  return (
+    <button
+      onClick={onChange}
+      disabled={disabled}
+      role="switch"
+      aria-checked={ativo}
+      className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${ativo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
+      aria-label="Alternar"
+    >
+      <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`} />
+    </button>
+  );
+}
+
+// Card de preferência da empresa: exigir aprovação dos serviços dos funcionários.
+function AprovacaoServico() {
+  const toast = useToast();
+  const [ativo, setAtivo] = useState(null); // null = carregando
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    api.get('/config/empresa')
+      .then(({ data }) => setAtivo(Boolean(data.aprovacaoServico)))
+      .catch(() => toast('Erro ao carregar configuração', 'error'));
+  }, [toast]);
+
+  async function alternar() {
+    const novo = !ativo;
+    setAtivo(novo); // otimista
+    setSalvando(true);
+    try {
+      await api.patch('/config/empresa', { aprovacaoServico: novo });
+    } catch {
+      setAtivo(!novo); // reverte
+      toast('Erro ao salvar', 'error');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div>
+      <p className="section-label mb-2 px-1">Operação</p>
+      <div className="card flex items-center gap-4">
+        <div className="w-11 h-11 rounded-md flex items-center justify-center shrink-0 border border-dark-600 bg-accent-400/10">
+          <ShieldCheck size={21} className="text-accent-300" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-white">Exigir aprovação dos serviços dos funcionários</p>
+          <p className="text-muted text-xs mt-0.5">
+            Serviços lançados por funcionários ficam pendentes até um gestor aprovar.
+          </p>
+        </div>
+        <Toggle ativo={!!ativo} onChange={alternar} disabled={ativo === null || salvando} />
+      </div>
+    </div>
+  );
+}
+
 export default function Configuracao() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, pode } = useAuth();
 
   const secoes = SECOES.map((s) =>
     s.titulo === 'Conta' && isAdmin ? { ...s, cards: [...s.cards, CARD_USUARIOS] } : s
@@ -78,6 +141,7 @@ export default function Configuracao() {
       <BackHeader titulo="Configurações" />
 
       <div className="px-4 pt-3 pb-8 flex flex-col gap-6 lg:max-w-3xl">
+        {pode('configuracao', 'editar') && <AprovacaoServico />}
         {secoes.map((secao) => (
           <div key={secao.titulo}>
             <p className="section-label mb-2 px-1">{secao.titulo}</p>

@@ -1,6 +1,7 @@
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
-import { enviarMensagemEmpresa } from './whatsapp/gateway.js';
+import { enviarMensagem } from './whatsapp/gateway.js';
+import { variantesTelefone } from './parser.js';
 
 /**
  * Avaliação do cliente após a conclusão de um serviço.
@@ -58,10 +59,19 @@ export async function dispararAvaliacoesPendentes(agora = new Date()) {
     try {
       const cfg = await prisma.empresaWhatsapp.findUnique({
         where: { empresaId: aval.empresaId },
-        select: { reviewLink: true },
+        select: { reviewLink: true, reviewAtivo: true, reviewTemplate: true },
       });
-      const texto = montarMensagemSolicitacao(aval.clienteNome, cfg?.reviewLink);
-      await enviarMensagemEmpresa(aval.empresaId, aval.clienteTelefone, texto);
+      // Respeita o toggle por empresa: se a solicitação está desativada, não envia.
+      // Marca como "cancelada" para sair da fila e não tentar de novo a cada ciclo.
+      if (cfg && cfg.reviewAtivo === false) {
+        await prisma.avaliacao.update({
+          where: { id: aval.id },
+          data: { status: 'cancelada' },
+        });
+        continue;
+      }
+      const texto = montarMensagemSolicitacao(aval.clienteNome, cfg?.reviewLink, cfg?.reviewTemplate);
+      await enviarMensagem(aval.clienteTelefone, texto);
       await prisma.avaliacao.update({
         where: { id: aval.id },
         data: { status: 'enviada', enviadoEm: new Date() },
@@ -78,13 +88,21 @@ export async function dispararAvaliacoesPendentes(agora = new Date()) {
 
 /**
  * Tenta capturar uma resposta de avaliação vinda de um cliente.
+ *
+ * Modelo de número único: a busca é GLOBAL por telefone (variantes tolerantes ao 9º
+ * dígito) — a empresa vem da própria avaliação encontrada, não de um escopo prévio.
+ *
+ * @param {string} telefone  Telefone do cliente (JID/formatado/dígitos).
+ * @param {string} texto     Texto recebido (a possível nota 1–5).
  * @returns {Promise<{capturado:boolean, resposta?:string}>}
  *   capturado=true se o número tinha avaliação aguardando resposta (a msg foi
  *   consumida como nota); resposta = texto a enviar de volta ao cliente.
  */
-export async function tentarCapturarResposta(empresaId, clienteTelefone, texto) {
+export async function tentarCapturarResposta(telefone, texto) {
+  const variantes = variantesTelefone(telefone);
+  if (!variantes.length) return { capturado: false };
   const aval = await prisma.avaliacao.findFirst({
-    where: { empresaId, clienteTelefone, status: 'enviada' },
+    where: { clienteTelefone: { in: variantes }, status: 'enviada' },
     orderBy: { enviadoEm: 'desc' },
   });
   if (!aval) return { capturado: false };
@@ -112,7 +130,14 @@ export async function tentarCapturarResposta(empresaId, clienteTelefone, texto) 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function montarMensagemSolicitacao(clienteNome, reviewLink) {
+function montarMensagemSolicitacao(clienteNome, reviewLink, template = null) {
+  // Template customizado por empresa: aceita os placeholders {nome} e {link}.
+  if (template && template.trim()) {
+    return template
+      .replaceAll('{nome}', clienteNome ?? '')
+      .replaceAll('{link}', reviewLink ?? '')
+      .trim();
+  }
   const saudacao = clienteNome ? `Olá, ${clienteNome}!` : 'Olá!';
   const linhas = [
     `${saudacao} 👋`,

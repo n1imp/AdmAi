@@ -7,7 +7,7 @@
 # então esses três NÃO rodam na VPS — o comando de prod (com docker-compose.prod.yml)
 # sobe apenas backend + painel + Caddy.
 networks:
-  chaveiro-net:
+  admai-net:
     driver: bridge
 
 volumes:
@@ -28,18 +28,18 @@ services:
   # ── BANCO DE DADOS (somente dev local — em prod use Supabase) ───────────────
   postgres:
     image: postgres:16-alpine
-    container_name: chaveiro-postgres
+    container_name: admai-postgres
     profiles: ['local']
     restart: unless-stopped
     environment:
-      POSTGRES_DB: chaveirobot
-      POSTGRES_USER: ${POSTGRES_USER:-chaveiro}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chaveiro123}
+      POSTGRES_DB: ${POSTGRES_DB:-admai}
+      POSTGRES_USER: ${POSTGRES_USER:-admai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admai123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # H8a: porta NÃO exposta ao host — o banco só é acessado internamente via chaveiro-net.
     networks:
-      - chaveiro-net
+      - admai-net
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
@@ -49,13 +49,13 @@ services:
   # ── REDIS (somente dev local — exigido pela Evolution API) ─────────────────
   redis:
     image: redis:7-alpine
-    container_name: chaveiro-redis
+    container_name: admai-redis
     profiles: ['local']
     restart: unless-stopped
     volumes:
       - redis_data:/data
     networks:
-      - chaveiro-net
+      - admai-net
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -63,10 +63,10 @@ services:
       retries: 5
 
   # ── EVOLUTION API (somente dev local — em prod use WhatsApp Cloud API) ──────
-  # Após subir: acesse http://localhost:8080 e crie uma instância chamada "chaveiro".
+  # Após subir: acesse http://localhost:8080 e crie uma instância chamada "admai".
   evolution-api:
     image: atendai/evolution-api:latest
-    container_name: chaveiro-evolution
+    container_name: admai-evolution
     profiles: ['local']
     restart: unless-stopped
     ports:
@@ -74,11 +74,10 @@ services:
     environment:
       SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8080}
       AUTHENTICATION_TYPE: apikey
-      # Default vazio para não quebrar o parse do compose quando o serviço não sobe.
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-}
       DATABASE_ENABLED: 'true'
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-chaveiro}:${POSTGRES_PASSWORD:-chaveiro123}@postgres:5432/chaveirobot
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-admai}:${POSTGRES_PASSWORD:-admai123}@postgres:5432/${POSTGRES_DB:-admai}
       DATABASE_CONNECTION_CLIENT_NAME: evolution_api
       CACHE_REDIS_ENABLED: 'true'
       CACHE_REDIS_URI: redis://redis:6379
@@ -92,7 +91,7 @@ services:
     volumes:
       - evolution_data:/evolution/instances
     networks:
-      - chaveiro-net
+      - admai-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,7 +103,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: chaveiro-backend
+    container_name: admai-backend
     restart: unless-stopped
     env_file: .env
     ports:
@@ -114,7 +113,7 @@ services:
       - backend_uploads:/app/uploads
       - backend_auth_info:/app/auth_info
     networks:
-      - chaveiro-net
+      - admai-net
     # Cap de memória (segurança contra runaway). Acomoda --max-old-space-size=512 + overhead.
     mem_limit: 700m
     logging: *default-logging
@@ -130,14 +129,14 @@ services:
   # ── PAINEL (frontend React servido por nginx — sempre) ─────────────────────
   painel:
     build:
-      context: ../chaveiro-painel
+      context: ../admai-painel
       dockerfile: Dockerfile
-    container_name: chaveiro-painel
+    container_name: admai-painel
     restart: unless-stopped
     ports:
       - '8081:80'
     networks:
-      - chaveiro-net
+      - admai-net
     mem_limit: 128m
     logging: *default-logging
     depends_on:

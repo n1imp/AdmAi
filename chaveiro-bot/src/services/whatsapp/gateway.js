@@ -1,28 +1,28 @@
 import { prisma } from '../../db/prisma.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
-import { encrypt, gerarSegredo } from './crypto.js';
+import { gerarSegredo } from './crypto.js';
 import * as evo from './evolution-client.js';
 
 /**
- * Gateway WhatsApp multi-tenant sobre a Evolution API.
- *
- * Cada empresa tem UMA instância Evolution (1 número/QR). A config fica em
- * EmpresaWhatsapp (instanceName, apiKeyEnc, webhookSecret, grupoJid, etc.).
- * Este módulo é a ÚNICA porta de entrada do app para o WhatsApp — substitui o
- * antigo socket Baileys global.
+ * Provider de WhatsApp ativo (env.WHATSAPP_PROVIDER). 'evolution' (padrão) usa a
+ * Evolution API; 'cloud' usa a API oficial da Meta. O switch é aplicado nos pontos
+ * de entrada usados pelo resto do app (envio e status), mantendo a Evolution como
+ * caminho padrão e intocado. O módulo do provider 'cloud' é carregado sob demanda
+ * (import dinâmico) — não pesa o caminho Evolution nem os testes que reimportam o gateway.
  */
-
-// Nome determinístico da instância a partir da empresa.
-function nomeInstancia(empresaId) {
-  return `empresa-${empresaId}`;
+export function provedorAtual() {
+  return env.WHATSAPP_PROVIDER ?? 'evolution';
 }
 
-// URL pública do webhook desta empresa (Evolution chama de volta aqui).
-function webhookUrl(empresaId) {
-  const base = (env.PUBLIC_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, '');
-  return `${base}/webhook/whatsapp/${empresaId}`;
-}
+/**
+ * Gateway WhatsApp do robô de NÚMERO ÚNICO sobre a Evolution API.
+ *
+ * Uma instância Evolution global (singleton ConexaoBot) atende todas as empresas;
+ * o remetente é identificado pelo telefone (roteamento em inbound.js). Este módulo
+ * é a ÚNICA porta de saída/conexão do app para o WhatsApp. O provider 'cloud' (Meta)
+ * é selecionado pela flag WHATSAPP_PROVIDER e carregado sob demanda (import dinâmico).
+ */
 
 const EVENTOS = ['MESSAGES_UPSERT', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'];
 
@@ -47,58 +47,77 @@ export function configWhatsappFaltando() {
   return { configIncompleta, faltando };
 }
 
-/** Carrega (ou cria) a linha EmpresaWhatsapp da empresa, garantindo webhookSecret. */
-export async function obterConfig(empresaId) {
-  let cfg = await prisma.empresaWhatsapp.findUnique({ where: { empresaId } });
-  if (!cfg) {
-    cfg = await prisma.empresaWhatsapp.create({
-      data: { empresaId, webhookSecret: gerarSegredo() },
-    });
-  } else if (!cfg.webhookSecret) {
-    cfg = await prisma.empresaWhatsapp.update({
-      where: { empresaId },
-      data: { webhookSecret: gerarSegredo() },
-    });
-  }
-  return cfg;
+/**
+ * Extrai o QR (data URL/base64) de uma resposta da Evolution v2, tolerando as
+ * várias formas em que ela aparece entre /instance/create e /instance/connect:
+ *   { qrcode: { base64 } } | { qrcode: { code } } | { base64 } | { code } | { qr }
+ * Retorna o data URL/base64 pronto para o <img src>, ou null.
+ */
+export function extrairQr(payload) {
+  if (!payload) return null;
+  const q = payload.qrcode ?? payload.qr ?? payload;
+  const valor = q?.base64 ?? q?.code ?? (typeof q === 'string' ? q : null)
+    ?? payload.base64 ?? payload.code ?? null;
+  return valor || null;
 }
 
 /**
- * Provisiona a instância da empresa (cria no Evolution se preciso), define o
- * webhook e retorna o QR para o painel exibir.
- * @returns {Promise<{ instanceName, qr: string|null, estado: string }>}
+ * Envio GLOBAL (modelo número único): a origem é a instância ÚNICA do robô; o
+ * destino é o telefone/JID. Não depende de empresa.
  */
-export async function provisionarEConectar(empresaId) {
-  const cfg = await obterConfig(empresaId);
-  const instanceName = cfg.instanceName ?? nomeInstancia(empresaId);
+export async function enviarMensagem(numeroOuJid, texto) {
+  if (provedorAtual() === 'cloud') {
+    const cloud = await import('./cloud-gateway.js');
+    if (typeof cloud.enviarMensagemCloudGlobal === 'function') {
+      return cloud.enviarMensagemCloudGlobal(numeroOuJid, texto);
+    }
+    logger.warn('enviarMensagem: envio global Cloud ainda não implementado (use Evolution)');
+    return null;
+  }
+  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { instanceName: true } });
+  if (!c?.instanceName) {
+    logger.warn('enviarMensagem: robô sem instância conectada');
+    return null;
+  }
+  return evo.enviarTexto(c.instanceName, numeroOuJid, texto);
+}
 
-  // Cria a instância (idempotente) já com o webhook apontado para cá.
-  const criacao = await evo.criarInstancia({
-    instanceName,
-    webhookUrl: webhookUrl(empresaId),
-    eventos: EVENTOS,
-  });
+// ── CONEXÃO ÚNICA DO ROBÔ (modelo número único) ───────────────────────────────
+// Uma instância Evolution global (nome = env.BOT_INSTANCE_NAME) atende todas as
+// empresas. Estado/QR/segredo do webhook ficam no singleton ConexaoBot (id=1).
 
-  // Persiste instanceName e a apikey da instância (cifrada), se vier.
-  const hash = criacao?.hash?.apikey ?? criacao?.hash ?? null;
-  await prisma.empresaWhatsapp.update({
-    where: { empresaId },
-    data: {
-      instanceName,
-      ...(hash ? { apiKeyEnc: encrypt(hash) } : {}),
-    },
-  });
+function webhookUrlBot(token = null) {
+  const base = (env.PUBLIC_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, '');
+  const url = `${base}/webhook/whatsapp`;
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+}
 
-  // Garante o webhook mesmo quando a instância já existia.
-  await evo.definirWebhook(instanceName, webhookUrl(empresaId), EVENTOS).catch(() => {});
+/** Carrega (ou cria) o singleton ConexaoBot, garantindo webhookSecret. */
+export async function obterConexaoBot() {
+  let c = await prisma.conexaoBot.findUnique({ where: { id: 1 } });
+  if (!c) {
+    c = await prisma.conexaoBot.create({ data: { id: 1, webhookSecret: gerarSegredo() } });
+  } else if (!c.webhookSecret) {
+    c = await prisma.conexaoBot.update({ where: { id: 1 }, data: { webhookSecret: gerarSegredo() } });
+  }
+  return c;
+}
 
-  // Tenta extrair o QR já da criação; senão, chama connect.
-  let qr = criacao?.qrcode?.base64 ?? null;
+/** Provisiona a instância única do robô e devolve o QR para parear (super-admin). */
+export async function conectarBot() {
+  const c = await obterConexaoBot();
+  const instanceName = c.instanceName ?? (env.BOT_INSTANCE_NAME ?? 'admai-bot');
+  const url = webhookUrlBot(c.webhookSecret);
+
+  const criacao = await evo.criarInstancia({ instanceName, webhookUrl: url, eventos: EVENTOS });
+  await prisma.conexaoBot.update({ where: { id: 1 }, data: { instanceName } });
+  await evo.definirWebhook(instanceName, url, EVENTOS).catch(() => {});
+
+  let qr = extrairQr(criacao);
   if (!qr) {
     const conn = await evo.conectarInstancia(instanceName);
-    qr = conn?.base64 ?? conn?.qrcode?.base64 ?? null;
+    qr = extrairQr(conn);
   }
-  // Com QR → 'aguardando_qr'. Sem QR → mapeia o estado real da conexão.
   let estado;
   if (qr) {
     estado = 'aguardando_qr';
@@ -106,99 +125,74 @@ export async function provisionarEConectar(empresaId) {
     const est = await evo.estadoConexao(instanceName);
     estado = mapearEstado(est?.instance?.state, false);
   }
-
-  await prisma.empresaWhatsapp.update({ where: { empresaId }, data: { estadoConexao: estado } });
+  await prisma.conexaoBot.update({ where: { id: 1 }, data: { estadoConexao: estado, qrCode: qr ?? undefined } });
   return { instanceName, qr, estado };
 }
 
-/**
- * Estado atual + QR (se aguardando) para o painel, já incluindo o diagnóstico de
- * configuração do servidor. Quando a config está incompleta (faltam vars
- * obrigatórias), NÃO tentamos falar com a Evolution — devolvemos 'desconectado'
- * + o diagnóstico para o painel orientar o admin.
- */
-export async function statusConexao(empresaId) {
+/** Estado da conexão única do robô (+ diagnóstico de env) para o super-admin. */
+export async function statusBot() {
   const diag = configWhatsappFaltando();
-  if (diag.configIncompleta) {
-    return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
-  }
+  if (diag.configIncompleta) return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
 
-  const cfg = await prisma.empresaWhatsapp.findUnique({ where: { empresaId } });
-  if (!cfg?.instanceName) {
-    return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
-  }
+  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 } });
+  if (!c?.instanceName) return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
 
-  const est = await evo.estadoConexao(cfg.instanceName);
+  const est = await evo.estadoConexao(c.instanceName);
+  const aberto = est?.instance?.state === 'open';
   let qr = null;
-  if (est?.instance?.state !== 'open') {
-    const conn = await evo.conectarInstancia(cfg.instanceName).catch(() => null);
-    qr = conn?.base64 ?? conn?.qrcode?.base64 ?? null;
+  if (!aberto) {
+    qr = c.qrCode ?? null;
+    if (!qr) {
+      const conn = await evo.conectarInstancia(c.instanceName).catch(() => null);
+      qr = extrairQr(conn);
+    }
   }
   const estado = mapearEstado(est?.instance?.state, !!qr);
-  await prisma.empresaWhatsapp.update({ where: { empresaId }, data: { estadoConexao: estado } }).catch(() => {});
-  return { estado, qr, instanceName: cfg.instanceName, ...diag };
+  await prisma.conexaoBot.update({
+    where: { id: 1 },
+    data: { estadoConexao: estado, ...(aberto ? { qrCode: null } : {}) },
+  }).catch(() => {});
+  return { estado, qr, instanceName: c.instanceName, ...diag };
 }
 
-/** Lista os grupos da instância da empresa (para escolher o grupo de resumo). */
-export async function listarGrupos(empresaId) {
-  const cfg = await prisma.empresaWhatsapp.findUnique({ where: { empresaId } });
-  if (!cfg?.instanceName) throw new Error('WhatsApp não conectado');
-  return evo.listarGrupos(cfg.instanceName);
-}
-
-/**
- * Envia uma mensagem de texto pela instância da empresa.
- * Esta é a substituta de `enviarMensagem(jid, texto)` — agora SEMPRE por-empresa.
- */
-export async function enviarMensagemEmpresa(empresaId, numeroOuJid, texto) {
-  const cfg = await prisma.empresaWhatsapp.findUnique({ where: { empresaId } });
-  if (!cfg?.instanceName) {
-    logger.warn('enviarMensagemEmpresa: empresa sem instância', { empresaId });
-    return null;
-  }
-  return evo.enviarTexto(cfg.instanceName, numeroOuJid, texto);
-}
-
-/**
- * Desconecta a empresa do WhatsApp: deleta a instância na Evolution (tolerante a
- * 404 / instância inexistente) e zera o estado local (estadoConexao='desconectado',
- * instanceName=null). Idempotente — chamar sem instância também devolve desconectado.
- * @returns {Promise<{ estado: 'desconectado' }>}
- */
-export async function desconectar(empresaId) {
-  const cfg = await prisma.empresaWhatsapp.findUnique({ where: { empresaId } });
-
-  if (cfg?.instanceName) {
-    // deletarInstancia já é tolerante a 404; protegemos contra Evolution fora do ar
-    // para não impedir o reset local do estado.
-    await evo.deletarInstancia(cfg.instanceName).catch((e) =>
-      logger.warn('desconectar: falha ao deletar instância Evolution (ignorado)', {
-        empresaId,
-        erro: e.message,
-      })
+/** Desconecta o robô (deleta a instância única) e zera o estado. Idempotente. */
+export async function desconectarBot() {
+  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 } });
+  if (c?.instanceName) {
+    await evo.deletarInstancia(c.instanceName).catch((e) =>
+      logger.warn('desconectarBot: falha ao deletar instância (ignorado)', { erro: e.message })
     );
   }
-
-  await prisma.empresaWhatsapp.update({
-    where: { empresaId },
+  await prisma.conexaoBot.update({
+    where: { id: 1 },
     data: { estadoConexao: 'desconectado', instanceName: null },
   }).catch(() => {});
-
   return { estado: 'desconectado' };
 }
 
-/** Atualiza o grupo escolhido para receber o resumo dos serviços. */
-export async function definirGrupo(empresaId, grupoJid) {
-  return prisma.empresaWhatsapp.update({ where: { empresaId }, data: { grupoJid } });
+/** webhookSecret do robô (claro) — usado na verificação HMAC/token do webhook global. */
+export async function segredoWebhookBot() {
+  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { webhookSecret: true } });
+  return c?.webhookSecret ?? null;
 }
 
-/** Retorna o webhookSecret em claro (decifrado) — usado na verificação HMAC. */
-export async function segredoWebhook(empresaId) {
-  const cfg = await prisma.empresaWhatsapp.findUnique({
-    where: { empresaId },
-    select: { webhookSecret: true },
-  });
-  return cfg?.webhookSecret ?? null;
+/** Persiste o QR recebido via webhook QRCODE_UPDATED (robô). */
+export async function salvarQrBot(qr) {
+  if (!qr) return;
+  await prisma.conexaoBot.update({
+    where: { id: 1 },
+    data: { qrCode: qr, estadoConexao: 'aguardando_qr' },
+  }).catch(() => {});
+}
+
+/** Atualiza o estado do robô a partir do webhook CONNECTION_UPDATE. */
+export async function atualizarEstadoBot(state) {
+  const mapa = { open: 'conectado', connecting: 'conectando', close: 'desconectado' };
+  const estado = mapa[state] ?? 'desconectado';
+  await prisma.conexaoBot.update({
+    where: { id: 1 },
+    data: { estadoConexao: estado, ...(estado === 'conectado' ? { qrCode: null } : {}) },
+  }).catch(() => {});
 }
 
 /**

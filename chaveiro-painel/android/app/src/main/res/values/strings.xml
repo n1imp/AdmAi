@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ChaveiroBot</string>
+    <string name="title_activity_main">ChaveiroBot</string>
+    <string name="package_name">com.chaveirobot.app</string>
+    <string name="custom_url_scheme">com.chaveirobot.app</string>
+</resources>

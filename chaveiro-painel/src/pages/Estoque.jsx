@@ -151,6 +151,7 @@ export default function Estoque() {
             <EstadoVazio
               mensagem="Nenhum material cadastrado"
               sub="Cadastre materiais na aba Materiais e dê entrada no estoque"
+              cta={{ label: 'Ver catálogo de materiais', to: '/materiais' }}
             />
           </div>
         ) : (

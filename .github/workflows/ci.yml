@@ -6,9 +6,35 @@ on:
   pull_request:
     branches: [main, master]
 
+# Cancela runs superados do mesmo branch/PR (economiza minutos e dá feedback mais rápido).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # ── Backend: testes unitários + integração (contra Postgres) + audit ──────
+  # ── Detecta o que mudou: backend e/ou painel (evita rodar tudo em todo PR) ──
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'chaveiro-bot/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'chaveiro-painel/**'
+              - '.github/workflows/ci.yml'
+
+  # ── Backend: lint + testes unitários + integração (Postgres) + audit ───────
   backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,18 +45,17 @@ jobs:
         env:
           POSTGRES_USER: chaveiro
           POSTGRES_PASSWORD: chaveiro123
-          POSTGRES_DB: chaveirobot_test
+          POSTGRES_DB: admai_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U chaveiro -d chaveirobot_test"
+          --health-cmd "pg_isready -U chaveiro -d admai_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
-      # directUrl no schema exige DIRECT_URL; na CI não há pooler, então aponta para o mesmo Postgres direto.
-      DIRECT_URL: postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test
+      DATABASE_URL: postgresql://chaveiro:chaveiro123@localhost:5432/admai_test
+      DIRECT_URL: postgresql://chaveiro:chaveiro123@localhost:5432/admai_test
       NODE_ENV: test
       API_TOKEN: ci-api-token
       JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
@@ -47,6 +72,9 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
 
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: Testes unitários
         run: npm test
 
@@ -56,8 +84,20 @@ jobs:
       - name: Auditoria de dependências (falha em High+)
         run: npm audit --audit-level=high
 
-  # ── Frontend: testes + build de produção ──────────────────────────────────
+  # ── Backend: smoke do Docker build (pega quebra do Dockerfile antes do Railway) ──
+  docker-build:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem de produção
+        run: docker build -t admai-bot:ci ./chaveiro-bot
+
+  # ── Frontend: lint + testes + build de produção + audit ────────────────────
   frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -74,6 +114,9 @@ jobs:
       - run: npm install -g npm@11
       - run: npm ci
 
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: Testes (Vitest + RTL)
         run: npm test
 
@@ -82,3 +125,22 @@ jobs:
 
       - name: Auditoria de dependências (falha em High+)
         run: npm audit --audit-level=high
+
+  # ── Gate estável p/ branch protection: exige `ci-ok` (1 check só). Passa quando
+  #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
+  ci-ok:
+    if: always()
+    needs: [backend, docker-build, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verifica resultado dos jobs
+        run: |
+          results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }}"
+          echo "Resultados: $results"
+          for r in $results; do
+            if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then
+              echo "::error::Um job do CI falhou ($r)."
+              exit 1
+            fi
+          done
+          echo "CI verde ✓"

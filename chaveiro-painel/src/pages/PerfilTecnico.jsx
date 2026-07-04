@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   Wallet, ClipboardList, TrendingUp, DollarSign,
-  CheckCircle, ChevronDown, ChevronUp, UserX, UserCheck, Target,
+  CheckCircle, ChevronDown, ChevronUp, UserX, UserCheck, Target, User, Clock,
 } from 'lucide-react';
 import api, { formatarMoeda, formatarData, formatarDataCurta } from '../lib/api.js';
 import { SkeletonLista, SkeletonKpi } from '../components/Skeleton.jsx';
@@ -13,6 +13,7 @@ import BackHeader from '../components/BackHeader.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
+import BancoHoras from '../components/BancoHoras.jsx';
 
 const PERIODOS = [
   { value: 'semana', label: 'Semana' },
@@ -116,8 +117,11 @@ export default function PerfilTecnico() {
   const [novaComissao, setNovaComissao] = useState('');
   const [editandoMeta, setEditandoMeta] = useState(false);
   const [novaMeta, setNovaMeta] = useState('');
+  const [aba, setAba] = useState('perfil');
 
-  const buscar = useCallback(async () => {
+  // `guard` permite que o efeito cancele os setState após desmontar/refazer.
+  const buscar = useCallback(async (guard) => {
+    const estaAtivo = typeof guard === 'function' ? guard : () => true;
     setErro(null);
     try {
       const params = new URLSearchParams({ periodo });
@@ -126,19 +130,22 @@ export default function PerfilTecnico() {
         params.set('fim', fim);
       }
       const { data } = await api.get(`/tecnicos/${id}/perfil?${params}`);
+      if (!estaAtivo()) return;
       setDados(data);
       setNovaComissao(String(data.tecnico.comissao));
       setNovaMeta(data.tecnico.metaMensal != null ? String(data.tecnico.metaMensal) : '');
     } catch {
-      setErro('Não foi possível carregar o perfil.');
+      if (estaAtivo()) setErro('Não foi possível carregar o perfil.');
     } finally {
-      setCarregando(false);
+      if (estaAtivo()) setCarregando(false);
     }
   }, [id, periodo, inicio, fim]);
 
   useEffect(() => {
+    let active = true;
     setCarregando(true);
-    buscar();
+    buscar(() => active);
+    return () => { active = false; };
   }, [buscar]);
 
   async function salvarComissao() {
@@ -218,6 +225,24 @@ export default function PerfilTecnico() {
             </button>
           </div>
 
+          {/* Sub-abas: Perfil / Banco de Horas */}
+          <div className="flex gap-2 border-b border-dark-700 -mt-1">
+            {[
+              { value: 'perfil', label: 'Perfil', Icon: User },
+              { value: 'banco', label: 'Banco de Horas', Icon: Clock },
+            ].map(({ value, label, Icon }) => (
+              <button key={value} onClick={() => setAba(value)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-display font-semibold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
+                  aba === value ? 'text-accent-300 border-accent-400' : 'text-muted border-transparent hover:text-white'
+                }`}>
+                <Icon size={15} /> {label}
+              </button>
+            ))}
+          </div>
+
+          {aba === 'banco' && <BancoHoras tecnicoId={id} />}
+
+          {aba === 'perfil' && (<>
           {/* Configuração de comissão */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
@@ -450,6 +475,7 @@ export default function PerfilTecnico() {
               </div>
             )}
           </div>
+          </>)}
         </div>
       )}
 

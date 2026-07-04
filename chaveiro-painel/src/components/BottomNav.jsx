@@ -1,15 +1,36 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, Users, Package, MoreHorizontal } from 'lucide-react';
+import {
+  LayoutDashboard, ClipboardList, Users, Package, Clock, MoreHorizontal,
+  Home, Wrench, CheckCircle,
+} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
+// Cada item declara o módulo que o libera via `pode()`. "Mais" é sempre visível
+// (leva à conta própria); os demais somem do menu quando sem permissão.
+// `proprio` usa `podeProprio()`; `proprioOu` aceita uma lista de capacidades.
+// "Meu painel" só aparece para o funcionário (substitui o Dashboard da empresa).
 const LINKS = [
-  { to: '/', label: 'Início', icon: LayoutDashboard },
-  { to: '/servicos', label: 'Serviços', icon: ClipboardList },
-  { to: '/tecnicos', label: 'Técnicos', icon: Users },
-  { to: '/materiais', label: 'Materiais', icon: Package },
-  { to: '/mais', label: 'Mais', icon: MoreHorizontal },
+  { to: '/', label: 'Início', icon: LayoutDashboard, modulo: 'dashboard' },
+  { to: '/', label: 'Meu painel', icon: Home, ehFuncionario: true },
+  { to: '/servicos', label: 'Serviços', icon: ClipboardList, modulo: 'servicos' },
+  { to: '/meus-servicos', label: 'Serviços', icon: Wrench, proprioOu: ['registrar_servico', 'ver_metricas'] },
+  { to: '/tecnicos', label: 'Técnicos', icon: Users, modulo: 'tecnicos' },
+  { to: '/aprovacoes', label: 'Aprovações', icon: CheckCircle, modulo: 'aprovacoes' },
+  { to: '/materiais', label: 'Materiais', icon: Package, modulo: 'estoque' },
+  { to: '/meu-ponto', label: 'Meu ponto', icon: Clock, proprio: 'bater_ponto' },
+  { to: '/mais', label: 'Mais', icon: MoreHorizontal, sempre: true },
 ];
 
 export default function BottomNav() {
+  const { ehFuncionario, pode, podeProprio } = useAuth();
+  const links = LINKS.filter((l) => {
+    if (l.sempre) return true;
+    if (l.ehFuncionario) return ehFuncionario;
+    if (l.proprio) return podeProprio(l.proprio);
+    if (l.proprioOu) return l.proprioOu.some((c) => podeProprio(c));
+    return pode(l.modulo, 'ver');
+  });
+
   return (
     <nav
       role="navigation"
@@ -17,9 +38,9 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 bg-dark-900/95 backdrop-blur border-t border-dark-600 z-40 safe-area-bottom"
     >
       <div className="flex">
-        {LINKS.map(({ to, label, icon: Icon }) => (
+        {links.map(({ to, label, icon: Icon }) => (
           <NavLink
-            key={to}
+            key={`${to}:${label}`}
             to={to}
             end={to === '/'}
             aria-label={label}
