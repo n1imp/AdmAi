@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Phone, CreditCard, Calendar, MapPin, Briefcase, ShieldCheck, Image as ImageIcon, KeyRound, Copy, Check, AlertTriangle } from 'lucide-react';
-import api from '../lib/api.js';
+import api, { formatarMoeda } from '../lib/api.js';
 import { formatarMoedaInput, moedaParaNumero } from '../lib/moeda.js';
 import BackHeader from '../components/BackHeader.jsx';
 import Wizard from '../components/Wizard.jsx';
@@ -210,9 +210,9 @@ export default function NovoTecnico() {
                     placeholder="0" inputMode="decimal" />
                 </Campo>
                 <Campo label="Meta mensal (R$)">
-                  <input className="input w-full" value={f.metaMensal}
-                    onChange={(e) => set('metaMensal', formatarMoedaInput(e.target.value))}
-                    placeholder="0,00" inputMode="numeric" />
+                  <input className="input w-full" type="number" min="0" step="50" value={f.metaMensal}
+                    onChange={(e) => set('metaMensal', e.target.value)}
+                    placeholder="0" inputMode="decimal" />
                 </Campo>
               </>
             )}
@@ -260,7 +260,7 @@ export default function NovoTecnico() {
               </>}
               {f.modalidade === 'autonomo' && <>
                 <Resumo label="Comissão" valor={f.comissao && `${f.comissao}%`} />
-                <Resumo label="Meta mensal" valor={f.metaMensal && `R$ ${f.metaMensal}`} />
+                <Resumo label="Meta mensal" valor={f.metaMensal && formatarMoeda(Number(f.metaMensal))} />
               </>}
               {f.modalidade === 'intermitente' && <Resumo label="Valor/hora" valor={f.valorHora && `R$ ${f.valorHora}`} />}
               <Resumo label="Nível de acesso" valor={NIVEIS.find((n) => n.value === f.nivelAcesso)?.label} />

@@ -15,17 +15,20 @@ export default function MaterialPicker({ value = [], onChange }) {
   const [erro, setErro] = useState(false);
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
   const wrapRef = useRef(null);
 
   useEffect(() => {
     let ativo = true;
+    setCarregando(true);
+    setErro(false);
     api
       .get('/materiais')
       .then(({ data }) => { if (ativo) setMateriais(Array.isArray(data) ? data : []); })
       .catch(() => { if (ativo) setErro(true); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, []);
+  }, [tentativa]);
 
   // Fecha o dropdown ao clicar fora.
   useEffect(() => {
@@ -113,7 +116,13 @@ export default function MaterialPicker({ value = [], onChange }) {
       </div>
 
       {erro && (
-        <p className="text-xs text-danger">Não foi possível carregar o catálogo de materiais.</p>
+        <p className="text-xs text-danger flex items-center gap-2">
+          Não foi possível carregar o catálogo de materiais.
+          <button type="button" onClick={() => setTentativa((n) => n + 1)}
+            className="underline text-accent-300 hover:text-accent-400">
+            Tentar novamente
+          </button>
+        </p>
       )}
 
       {/* Materiais selecionados */}
