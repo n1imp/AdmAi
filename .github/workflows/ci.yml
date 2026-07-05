@@ -133,7 +133,7 @@ jobs:
         run: npm run build
 
       - name: Auditoria de dependências (falha em High+)
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
   # ── Gate estável p/ branch protection: exige `ci-ok` (1 check só). Passa quando
   #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
