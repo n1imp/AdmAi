@@ -6,7 +6,7 @@ import tecnicosRouter from './tecnicos.js';
 import estoqueRouter from './estoque.js';
 import adminRouter from './admin.js';
 import { billingRouter } from './billing.js';
-import googleRouter from './google.js';
+import { googleRouter } from './google.js';
 
 const router = Router();
 router.use('/', authRouter);
