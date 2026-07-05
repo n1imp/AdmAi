@@ -68,6 +68,7 @@ jobs:
       NODE_ENV: test
       API_TOKEN: ci-api-token
       JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
+      ENCRYPTION_KEY: ci-encryption-key-for-testing-only-32ch
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
