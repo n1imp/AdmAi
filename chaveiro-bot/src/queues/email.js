@@ -3,6 +3,7 @@ import Redis from 'ioredis';
 import { env } from '../config/env.js';
 
 const connection = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+connection.on('error', () => {}); // prevent unhandled crash when Redis is unavailable
 
 export const filaEmail = new Queue('emails', {
   connection,

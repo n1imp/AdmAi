@@ -21,6 +21,8 @@ import { whatsappRouter } from './routes/whatsapp.js';
 import { stripeWebhookRouter } from './routes/billing.js';
 
 const redisClient = new Redis(env.REDIS_URL);
+// ioredis emite 'error' em falha de conexão; sem handler, o processo crasha.
+redisClient.on('error', (err) => logger.warn('Redis connection error', { error: err.message }));
 
 /**
  * Monta o app. `estado.isShuttingDown` é lido pelo /health para responder 503

@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 const connection = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+connection.on('error', (err) => logger.warn('Redis connection error (email-worker)', { error: err.message }));
 
 async function processarEmail(job) {
   const { email, nome } = job.data;
