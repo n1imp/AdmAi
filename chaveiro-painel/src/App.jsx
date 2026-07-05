@@ -153,7 +153,7 @@ function Layout({ children }) {
       <Sidebar />
 
       {/* Coluna de conteúdo */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-dvh">
+      <div className="flex-1 flex flex-col min-w-0 min-h-dvh safe-area-top">
         {offline && (
           <div role="alert" className="bg-warning text-dark-950 text-sm font-medium text-center py-2 px-4">
             Sem conexão — alguns dados podem estar desatualizados

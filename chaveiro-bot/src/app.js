@@ -7,7 +7,7 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
@@ -99,7 +99,7 @@ export function criarApp() {
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.body?.username || req.ip,
+    keyGenerator: (req, res) => req.body?.username || ipKeyGenerator(req, res),
     message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
     store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });
@@ -115,7 +115,7 @@ export function criarApp() {
     limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.body?.desafio || req.ip,
+    keyGenerator: (req, res) => req.body?.desafio || ipKeyGenerator(req, res),
     message: { erro: 'Muitas tentativas de verificação. Reinicie o login e tente de novo.' },
     store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });
