@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const api = axios.create({
   // Web: '/api' (mesma origem, proxy do nginx). App Capacitor: VITE_API_URL absoluto
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
 });
 
 // Injeta o Bearer Token em toda requisição

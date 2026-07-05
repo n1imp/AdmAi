@@ -460,6 +460,7 @@ export default function Catalogo() {
 
   const buscar = useCallback(async () => {
     setErro(null);
+    setCarregando(true);
     try {
       const { data } = await api.get('/materiais');
       setMateriais(data);

@@ -281,6 +281,7 @@ export default function Usuarios() {
 
   const buscar = useCallback(async () => {
     setErro(null);
+    setCarregando(true);
     try {
       const [resUsuarios, resCatalogo] = await Promise.all([
         api.get('/usuarios'),
