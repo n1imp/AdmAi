@@ -107,7 +107,7 @@ describe('E2E funcionário: acesso → ponto → serviço pendente → aprovaç�
     // Prova persistida: BatidaPonto com selfieUrl + geo (anti-fraude).
     const batida = await prisma.batidaPonto.findFirst({ where: { tipo: 'entrada' } });
     expect(batida).not.toBeNull();
-    expect(batida.selfieUrl).toMatch(/^\/uploads\/ponto-/);
+    expect(batida.selfieUrl).toMatch(/^\/uploads-ponto\/ponto-/);
     expect(batida.lat).toBeCloseTo(-22.9068);
     expect(batida.lng).toBeCloseTo(-43.1729);
     expect(batida.origem).toBe('painel');

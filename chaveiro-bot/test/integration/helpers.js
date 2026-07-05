@@ -15,7 +15,7 @@ export async function limparBanco() {
       "ServicoMaterial","MovimentacaoEstoque","Pagamento","Avaliacao",
       "SessaoConversa","Notificacao","Servico","Material","Tecnico",
       "Usuario","EmpresaWhatsapp","Empresa"
-    RESTART IDENTITY CASCADE;
+    CASCADE;
   `);
 }
 
