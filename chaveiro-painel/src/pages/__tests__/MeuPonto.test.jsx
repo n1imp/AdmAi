@@ -12,9 +12,10 @@ vi.mock('../../components/Toast.jsx', () => ({
   useToast: () => vi.fn(),
 }));
 
-// BackHeader usa useNavigate — evita precisar de um Router no teste.
+// BackHeader usa useNavigate; EstadoVazio usa Link — evita precisar de Router.
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
+  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
 }));
 
 // CapturaSelfie acessa APIs de mídia; o stub mantém o teste focado na timeline.

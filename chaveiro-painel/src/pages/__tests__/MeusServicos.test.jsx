@@ -10,9 +10,10 @@ vi.mock('../../lib/api.js', () => ({
   formatarData: () => '20/06/2026 10:00',
 }));
 
-// BackHeader/FAB usam useNavigate — evita precisar de um Router no teste.
+// BackHeader/FAB usam useNavigate; EstadoVazio usa Link — evita precisar de Router.
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
+  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
 }));
 
 describe('<MeusServicos>', () => {
