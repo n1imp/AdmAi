@@ -123,3 +123,24 @@ Esperado: `/servicos` pagina (limit 15, "carregar mais" acumula); excluir espera
 4. **CI** — `test:integration` (B4 IDOR/auth) roda no PR.
 
 Resultados vão para uma cópia desta matriz com ✅/❌ + evidência; falhas viram entradas no `BUGLIST.md`.
+
+---
+
+## Resultados — passada DESKTOP (2026-07-07, 🖥️ 1568×778, Chrome)
+
+| Caso | Resultado | Evidência |
+|------|-----------|-----------|
+| A1 login **dono** | ✅ | 200 → `/` PAINEL; sidebar completa |
+| A1 login **funcionário** | ✅ | 200 → `/` **MeuPainel** ("Olá, técnico"); sidebar mínima (Meu painel/serviços/ponto/Config) |
+| B1(menu) RBAC de navegação | ✅ | func **não** vê Serviços/Técnicos/Avaliações/Usuários |
+| F1 Dashboard (dono) | ✅ | KPIs + período + gráficos renderizam (R$0 — DB novo) |
+| F2 MeuPainel (func) | ✅ (com ressalva) | atalhos ok; **`/me/metricas` 400** (func sem técnico vinculado) → banner degrada ok, sem crash |
+| G1 Avaliações → CLIENTE | ✅ | aba renderiza (sem avaliações) |
+| **G2 Avaliações → GOOGLE (valida B1)** | ✅ | `GET /api/google/status` **200** + `/reviews` **200** (era 404); painel Google + 3 reviews mock renderizam |
+| I(desktop) login/layout | ✅ | showcase pane + sidebar fixa + `max-w` centralizado |
+
+**Observação (UX, não-bug):** funcionário **sem técnico vinculado** → `/me/metricas` **400** com mensagem genérica ("Não foi possível carregar suas métricas"). Estado incomum (funcionário normal é técnico via `criarAcesso`); mensagem poderia ser específica.
+
+**Não executados nesta passada** (para próxima): A3 rotação de refresh, A4 2FA, D2/D3 criar→aprovar/rejeitar, E estoque, H billing, B4 IDOR (roda no CI).
+
+**Nota de ferramenta:** o renderer do Chrome congelou em algumas navegações (`/login`) — screenshot repetido recupera. Não é bug do app (limitação da automação nesta sessão).
