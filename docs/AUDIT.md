@@ -10,7 +10,7 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 | **0 — Diagnóstico** | Varredura dos fluxos, backend+frontend, com evidência → [`BUGLIST.md`](./BUGLIST.md) | ✅ concluído | **P1: 3** · P2: 3 · L1/L3 confirmados (decisão) · L6 refutado · 5 leads restantes |
 | 1 — Correção (P0→P1→P2) | Loop 1-bug-por-vez, branch+CI, reteste no browser | 🔄 em andamento | **6 corrigidos** (3 P1 + 3 P2), verificados; unit 180/180 |
 | 2 — Testes funcionais | Plano por fluxo × papel × desktop/mobile → [`TESTPLAN.md`](./TESTPLAN.md) | 🔄 desktop ✅ · mobile parcial | desktop: core + **B1 end-to-end** ✅. Mobile: impl. verificada via DOM (L7 live, BottomNav) — render precisa DevTools device mode/Android. Faltam alguns fluxos + Fase 3 |
-| 3 — Auditoria especializada | Backend/API · Banco (RLS, EXPLAIN, migrate diff) · Segurança (tenant, RBAC, semgrep, gitleaks, LGPD) · CI/CD · UI/UX (Lighthouse, axe) | ⬜ | — |
+| 3 — Auditoria especializada | Backend/API · Banco · Segurança · CI/CD · UI/UX | 🔄 em andamento | **Segurança ✅** (audit 0, IDOR 404, integration 34/34). **Banco: 2 P1** (B7/B8). Semgrep/gitleaks→CI; UI/UX pendente |
 
 ## Findings confirmados (Fase 0)
 
@@ -22,6 +22,8 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 | B4 | P2 | `schema.sqlite.prisma` defasado (falta `papel`) | 🔧 `06cf0a2` (+ gerador anti-drift) |
 | B5 | P2 | `DIRECT_URL`/`RLS_ENABLED` fora do `.env.example` | 🔧 `8ddfc3b` (domínio prod não tocado) |
 | B6 | P2 | Testes locais poluídos pelo `.env` de prod (`RLS_ENABLED`) | 🔧 `e48ed74` |
+| B7 | **P1** | `CodigoRecuperacaoTotp` sem migration → ativar 2FA quebra em prod | ⬜ criar migration |
+| B8 | **P1** | `Material_nome_key` UNIQUE global → colisão de nome entre tenants | ⬜ dropar índice via migration |
 
 ## Reconciliação `progress.md`
 Dos 5 bugs "pendentes" herdados: **1, 3, 4, 5 já aplicados**; **2 tem causa errada** (é o B1). Detalhe em `BUGLIST.md`.

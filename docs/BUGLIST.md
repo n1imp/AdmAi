@@ -24,6 +24,8 @@ Toda afirmação aqui tem evidência (status/payload da API, log ou arquivo). Or
 | B4 | `schema.sqlite.prisma` desatualizado (falta `papel`) → quebra o dev local em SQLite | P2 | prisma/schema | 🔧 corrigido `06cf0a2` |
 | B5 | Vars ausentes no `.env.example` (`DIRECT_URL`/`RLS_ENABLED`); domínio prod stale (não tocado) | P2 | config | 🔧 corrigido `8ddfc3b` (parcial) |
 | B6 | Testes locais poluídos pelo `.env` de prod (`RLS_ENABLED`) → 4 falhas em `tenant.test.js` | P2 | test/config | 🔧 corrigido `e48ed74` |
+| B7 | Migration ausente: `CodigoRecuperacaoTotp` não é criada por nenhuma migration → ativar 2FA quebra em prod | **P1** | banco/migration | ❌ confirmado (Fase 3) |
+| B8 | Índice `Material_nome_key` UNIQUE **global** em `nome` → colisão de nome de material entre tenants | **P1** | banco/multi-tenant | ❌ confirmado (Fase 3) |
 | L1..L8 | Leads estáticos a reproduzir (partial-auth, mobile, anti-fraude, perf, observabilidade, refetch, a11y, higiene) | P1–P2 | vários | ⚠️ a verificar |
 
 ---
@@ -99,6 +101,29 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 | B4 | `06cf0a2` | `prisma db push` do sqlite regenerado **ok**; `papel`/`permissoes` presentes. Novo `npm run prisma:sqlite` (anti-drift) |
 
 **Regressão:** suíte unit backend **180/180 verde** em shell limpo (após B6). RBAC intacto (`permissoes.test.js` passa). Falta rodar `test:integration` (IDOR/auth) — depende de Postgres/Redis oficiais (Docker) / CI.
+
+---
+
+## Fase 3 — Auditoria especializada (evidência)
+
+### Segurança ✅
+- **npm audit** (`--audit-level=high`): **0 vulnerabilidades** (backend + frontend/prod).
+- **Isolamento de tenant (IDOR)**: tenant B → **404** ao ler/alterar recurso do tenant A (`GET/PATCH /api/tecnicos/:id/perfil`); controle do próprio tenant = **200**. Autoritativo: **`npm run test:integration` 34/34 verde** (`idor.test.js` + `auth.test.js` + criação, contra Postgres migrado).
+- **RBAC**: fixes B2/B3 validados (func **403**) + suíte de integração passa.
+- **Secrets (working tree)**: nenhum segredo versionado — só `.env*.example` (placeholders `phc_...`, `sk_live_...`); `.env.production` é untracked. Histórico → `security.yml` (gitleaks, fetch-depth 0) no PR.
+
+### Banco 🔴 (2 findings P1 — detalhe)
+
+**B7 — `CodigoRecuperacaoTotp` sem migration.** `to_regclass` na DB migrada = **null**; nenhum `migration.sql` menciona a tabela; mas `schema.prisma` declara o modelo e o código o **usa** (`services/codigosRecuperacao.js`; ativar 2FA em `account.js:251` faz `createMany`). → Em prod/CI (`migrate deploy`) **ativar 2FA quebra** (P2021). Funciona local só porque a DB foi via `db push`. **Fix:** `prisma migrate dev --name add_codigo_recuperacao_totp`.
+
+**B8 — `Material_nome_key` UNIQUE global em `nome`.** A DB migrada tem **dois** uniques em `Material`: `Material_empresaId_nome_key` (correto) **e** `Material_nome_key` (nome único **global**), que o `schema.prisma` não declara. → Tenant B não cria material com nome já usado por **qualquer** outro tenant (P2002). **Fix:** migration que dropa `Material_nome_key`.
+
+**Drift geral:** `prisma migrate diff` acusa 3 divergências schema↔migrations (as 2 acima + índice `Servico.criadoEm`, cosmético). `migrate status` diz "up to date" — não pega esse drift. **Recomendação:** rodar `migrate diff --exit-code` no CI.
+
+### Pendentes (cobertos por CI ou precisam tooling)
+- **Semgrep** + **gitleaks**: rodam no `security.yml` no PR (não dupliquei local).
+- **CI/CD**: `ci.yml` (lint+unit+integration+audit; `ci-ok` agregador) — branch-protection precisa de gh/API p/ confirmar. Dependabot majors (**Prisma 7 / Vite 8 / Sentry 10**) → passada dedicada.
+- **UI/UX** (Lighthouse/axe): precisa device mode/tooling — pendente.
 
 ---
 
