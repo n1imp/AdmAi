@@ -40,6 +40,10 @@ chaveiro-bot/uploads-ponto/
 *.rvf
 *.rvf.lock
 
+# ── Supabase CLI (cache/temp local; contém project-ref/pooler-url) ─────
+**/supabase/.temp/
+**/supabase/.branches/
+
 # ── Ruflo / claude-flow / swarm / tooling de IA (local, não versionar) ──
 .swarm/
 .claude-flow/
