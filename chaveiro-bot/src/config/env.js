@@ -1,5 +1,10 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
+// Em teste carregamos `.env.test` (hermético). Sem isso, `import 'dotenv/config'`
+// puxava o `.env` de prod local e vazava vars (ex.: RLS_ENABLED) para a suíte,
+// quebrando tenant.test. Prod/dev seguem no `.env` de sempre.
+dotenv.config({ path: process.env.VITEST || process.env.NODE_ENV === 'test' ? '.env.test' : '.env' });
 
 // Exportado para testes unitários (valida o cross-field sem disparar process.exit).
 export const schema = z.object({
