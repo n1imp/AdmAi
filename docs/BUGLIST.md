@@ -134,8 +134,8 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 | L4 perf agregação | `servicos.js:294,245`, `tecnicos.js:140` | P1/P2 | `take:10000` em JS; `/avaliacoes` sem `take` (Fase 3 EXPLAIN) |
 | L5 observabilidade | `monitoring.js` | P1 | Sentry DSN vazio em prod; sem handler global `unhandledrejection` |
 | L6 sem refetch pós-mutação | `Aprovacoes.jsx:111-131`, `Servicos.jsx:202-211` | — | 🟢 **refutado**: as mutações são *pessimistas* (`await api…` ANTES de mutar o estado; em erro o item permanece + toast). Não é otimista e não precisa de refetch — sem bug |
-| L7 pinch-zoom desativado | `index.html` (`user-scalable=no`) | P2 a11y | WCAG 1.4.4 |
-| L8 higiene | dir untracked `chaveiro-bot/supabase/`; dead code `ConfiguracaoBotLegado` | P2 | inspecionar/remover |
+| L7 pinch-zoom desativado | `index.html` | P2 a11y | 🔧 **corrigido** `4ed2553` — removido `user-scalable=no`/`maximum-scale` (WCAG 1.4.4) |
+| L8 higiene | `supabase/.temp`; `ConfiguracaoBotLegado` | P2 | 🔧 `cae19ff` cache do Supabase CLI gitignorado. `ConfiguracaoBotLegado` **não é dead code** — feature "Em breve" parqueada e documentada (`ConfiguracaoBot.jsx:21-24`), mantida de propósito |
 
 ---
 
