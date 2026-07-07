@@ -24,8 +24,8 @@ Toda afirmação aqui tem evidência (status/payload da API, log ou arquivo). Or
 | B4 | `schema.sqlite.prisma` desatualizado (falta `papel`) → quebra o dev local em SQLite | P2 | prisma/schema | 🔧 corrigido `06cf0a2` |
 | B5 | Vars ausentes no `.env.example` (`DIRECT_URL`/`RLS_ENABLED`); domínio prod stale (não tocado) | P2 | config | 🔧 corrigido `8ddfc3b` (parcial) |
 | B6 | Testes locais poluídos pelo `.env` de prod (`RLS_ENABLED`) → 4 falhas em `tenant.test.js` | P2 | test/config | 🔧 corrigido `e48ed74` |
-| B7 | Migration ausente: `CodigoRecuperacaoTotp` não é criada por nenhuma migration → ativar 2FA quebra em prod | **P1** | banco/migration | ❌ confirmado (Fase 3) |
-| B8 | Índice `Material_nome_key` UNIQUE **global** em `nome` → colisão de nome de material entre tenants | **P1** | banco/multi-tenant | ❌ confirmado (Fase 3) |
+| B7 | Migration ausente: `CodigoRecuperacaoTotp` não é criada por nenhuma migration → ativar 2FA quebra em prod | **P1** | banco/migration | 🔧 corrigido `32db308` |
+| B8 | Índice `Material_nome_key` UNIQUE **global** em `nome` → colisão de nome de material entre tenants | **P1** | banco/multi-tenant | 🔧 corrigido `72e8ef6` |
 | L1..L8 | Leads estáticos a reproduzir (partial-auth, mobile, anti-fraude, perf, observabilidade, refetch, a11y, higiene) | P1–P2 | vários | ⚠️ a verificar |
 
 ---
@@ -118,7 +118,7 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 
 **B8 — `Material_nome_key` UNIQUE global em `nome`.** A DB migrada tem **dois** uniques em `Material`: `Material_empresaId_nome_key` (correto) **e** `Material_nome_key` (nome único **global**), que o `schema.prisma` não declara. → Tenant B não cria material com nome já usado por **qualquer** outro tenant (P2002). **Fix:** migration que dropa `Material_nome_key`.
 
-**Drift geral:** `prisma migrate diff` acusa 3 divergências schema↔migrations (as 2 acima + índice `Servico.criadoEm`, cosmético). `migrate status` diz "up to date" — não pega esse drift. **Recomendação:** rodar `migrate diff --exit-code` no CI.
+**Drift geral:** `prisma migrate diff` acusava 3 divergências schema↔migrations (as 2 acima + índice `Servico.criadoEm`). **🔧 Reconciliado:** migrations B7 (`32db308`) + B8 (`72e8ef6`) + declaração do índice `Servico.criadoEm` no schema (`e6b9eb1`). **Verificado:** `migrate deploy` (23 migrations) + `migrate diff` → **"No difference detected." (exit 0)**. **Recomendação:** rodar `migrate diff --exit-code` no CI para travar drift futuro.
 
 ### Pendentes (cobertos por CI ou precisam tooling)
 - **Semgrep** + **gitleaks**: rodam no `security.yml` no PR (não dupliquei local).
