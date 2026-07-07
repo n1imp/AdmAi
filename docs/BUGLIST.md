@@ -128,9 +128,9 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 
 | Lead | Onde | Sev. | Como reproduzir |
 |------|------|------|-----------------|
-| L1 OTP de telefone não enforçado | `auth.js:285-288`, `Login.jsx:144` | P1 decisão | ❌ **confirmado**: `POST /auth/register` retorna token usável (`GET /api/me`→**200**) com `telefoneVerificado=false`; OTP é UX (há `pularOtp`). Decidir se o telefone deve ser verificação obrigatória |
+| L1 OTP de telefone não enforçado | `auth.js:285-288`, `Login.jsx:144` | P1 decisão | ❌ **confirmado**: `POST /auth/register` retorna token usável (`GET /api/me`→**200**) com `telefoneVerificado=false`; OTP é UX (há `pularOtp`). **Decisão aceita: manter soft** (encorajado, não obrigatório) — documentado, sem código |
 | L2 mobile capture / CapacitorHttp | `api.js`, `capacitor.config.json` | P0/P1 mobile | **só em device Android** (getUserMedia/geolocation no WebView; cookie de refresh) |
-| L3 anti-fraude ponto evidencial | `tecnicos.js:368` | P1 decisão | ❌ **confirmado**: `POST /ponto/bater {}` (sem selfie, sem geo) → **201** com entrada registrada. Sem geofence/selfie obrigatória. Decidir se deve enforçar |
+| L3 anti-fraude ponto evidencial | `tecnicos.js:368` | P1 decisão | ❌ **confirmado**: `POST /ponto/bater {}` (sem selfie, sem geo) → **201** com entrada registrada. Sem geofence/selfie obrigatória. **Decisão aceita: manter evidencial** (selfie/geo opcionais) — documentado, sem código |
 | L4 perf agregação | `servicos.js:294,245`, `tecnicos.js:140` | P1/P2 | `take:10000` em JS; `/avaliacoes` sem `take` (Fase 3 EXPLAIN) |
 | L5 observabilidade | `monitoring.js` | P1 | Sentry DSN vazio em prod; sem handler global `unhandledrejection` |
 | L6 sem refetch pós-mutação | `Aprovacoes.jsx:111-131`, `Servicos.jsx:202-211` | — | 🟢 **refutado**: as mutações são *pessimistas* (`await api…` ANTES de mutar o estado; em erro o item permanece + toast). Não é otimista e não precisa de refetch — sem bug |
