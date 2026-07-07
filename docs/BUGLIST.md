@@ -128,12 +128,12 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 
 | Lead | Onde | Sev. | Como reproduzir |
 |------|------|------|-----------------|
-| L1 partial-auth escape | `Login.jsx:144` grava token antes do OTP | P1 | cadastro → recarregar no passo OTP → ver se loga completo |
+| L1 OTP de telefone não enforçado | `auth.js:285-288`, `Login.jsx:144` | P1 decisão | ❌ **confirmado**: `POST /auth/register` retorna token usável (`GET /api/me`→**200**) com `telefoneVerificado=false`; OTP é UX (há `pularOtp`). Decidir se o telefone deve ser verificação obrigatória |
 | L2 mobile capture / CapacitorHttp | `api.js`, `capacitor.config.json` | P0/P1 mobile | **só em device Android** (getUserMedia/geolocation no WebView; cookie de refresh) |
-| L3 anti-fraude ponto evidencial | `tecnicos.js:368` | P1/decisão | como técnico, `POST /ponto/bater` sem selfie/geo → aceita? (confirmar se é by-design) |
+| L3 anti-fraude ponto evidencial | `tecnicos.js:368` | P1 decisão | ❌ **confirmado**: `POST /ponto/bater {}` (sem selfie, sem geo) → **201** com entrada registrada. Sem geofence/selfie obrigatória. Decidir se deve enforçar |
 | L4 perf agregação | `servicos.js:294,245`, `tecnicos.js:140` | P1/P2 | `take:10000` em JS; `/avaliacoes` sem `take` (Fase 3 EXPLAIN) |
 | L5 observabilidade | `monitoring.js` | P1 | Sentry DSN vazio em prod; sem handler global `unhandledrejection` |
-| L6 sem refetch pós-mutação | `Aprovacoes.jsx`, `Servicos.jsx` | P2 | otimista sem reconciliação com servidor |
+| L6 sem refetch pós-mutação | `Aprovacoes.jsx:111-131`, `Servicos.jsx:202-211` | — | 🟢 **refutado**: as mutações são *pessimistas* (`await api…` ANTES de mutar o estado; em erro o item permanece + toast). Não é otimista e não precisa de refetch — sem bug |
 | L7 pinch-zoom desativado | `index.html` (`user-scalable=no`) | P2 a11y | WCAG 1.4.4 |
 | L8 higiene | dir untracked `chaveiro-bot/supabase/`; dead code `ConfiguracaoBotLegado` | P2 | inspecionar/remover |
 

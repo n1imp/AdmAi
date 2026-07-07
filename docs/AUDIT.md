@@ -7,7 +7,7 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 
 | Fase | Escopo | Status | Findings |
 |------|--------|--------|----------|
-| **0 — Diagnóstico** | Varredura dos fluxos, backend+frontend, com evidência → [`BUGLIST.md`](./BUGLIST.md) | ✅ concluído | **P1: 3** · P2: 3 · leads a verificar: 8 |
+| **0 — Diagnóstico** | Varredura dos fluxos, backend+frontend, com evidência → [`BUGLIST.md`](./BUGLIST.md) | ✅ concluído | **P1: 3** · P2: 3 · L1/L3 confirmados (decisão) · L6 refutado · 5 leads restantes |
 | 1 — Correção (P0→P1→P2) | Loop 1-bug-por-vez, branch+CI, reteste no browser | 🔄 em andamento | **6 corrigidos** (3 P1 + 3 P2), verificados; unit 180/180 |
 | 2 — Testes funcionais | Plano por fluxo × papel × desktop/mobile → `TESTPLAN.md` | ⬜ | — |
 | 3 — Auditoria especializada | Backend/API · Banco (RLS, EXPLAIN, migrate diff) · Segurança (tenant, RBAC, semgrep, gitleaks, LGPD) · CI/CD · UI/UX (Lighthouse, axe) | ⬜ | — |
