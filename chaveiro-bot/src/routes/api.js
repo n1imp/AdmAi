@@ -6,7 +6,6 @@ import tecnicosRouter from './tecnicos.js';
 import estoqueRouter from './estoque.js';
 import adminRouter from './admin.js';
 import { billingRouter } from './billing.js';
-import { googleRouter } from './google.js';
 
 const router = Router();
 router.use('/', authRouter);
@@ -16,7 +15,6 @@ router.use('/', tecnicosRouter);
 router.use('/', estoqueRouter);
 router.use('/', adminRouter);
 router.use('/', billingRouter);
-router.use('/', googleRouter);
 
 export { router as apiRouter };
 export default router;
