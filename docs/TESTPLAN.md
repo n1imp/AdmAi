@@ -144,3 +144,19 @@ Resultados vão para uma cópia desta matriz com ✅/❌ + evidência; falhas vi
 **Não executados nesta passada** (para próxima): A3 rotação de refresh, A4 2FA, D2/D3 criar→aprovar/rejeitar, E estoque, H billing, B4 IDOR (roda no CI).
 
 **Nota de ferramenta:** o renderer do Chrome congelou em algumas navegações (`/login`) — screenshot repetido recupera. Não é bug do app (limitação da automação nesta sessão).
+
+## Resultados — passada MOBILE (2026-07-07)
+
+**⚠️ Limitação da automação:** `resize_window` **não** derruba o viewport de layout abaixo do breakpoint `lg` (1024px) nesta sessão — `window.innerWidth` fica travado em **1568** (`outerWidth` 1920) mesmo redimensionando para 390px. O app continua renderizando o layout desktop (Sidebar), então **não é possível uma passada visual mobile faithful aqui**. Validação visual mobile + captura nativa precisa do **device mode do DevTools** ou **device Android real**.
+
+**Verificado via DOM do app em execução (implementação, não render):**
+
+| Item | Resultado | Evidência (DOM) |
+|------|-----------|-----------------|
+| **L7 pinch-zoom (fix) live** | ✅ | `meta viewport` = `width=device-width, initial-scale=1.0` (sem `user-scalable=no`/`maximum-scale`) |
+| BottomNav mobile implementado | ✅ | `fixed bottom-0 left-0 right-0 … z-40 safe-area-bottom`; itens filtrados por permissão |
+| Sidebar oculta no mobile | ✅ | `hidden lg:flex lg:flex-col w-64 …` |
+| safe-area (notch/home) | ✅ | classes `safe-area-top`/`safe-area-bottom` presentes (também confirmado no código, `index.css`) |
+
+**Pendente (precisa DevTools device mode / device):** render a 390px (overflow horizontal, touch targets ≥44px na prática), fluxo de ponto nativo (câmera/GPS), refresh via cookie no WebView (L2), instalação PWA no Android.
+**Como fazer:** abrir `http://localhost:5173` → F12 → `Ctrl+Shift+M` → iPhone 12/Pixel 7 → repetir A/B/C(fallback)/D/F/I.
