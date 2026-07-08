@@ -8,12 +8,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Runtime: conexão via pooler (Supabase pgbouncer, porta 6543, ?pgbouncer=true).
-  url      = env("DATABASE_URL")
-  // Migrations/introspect: conexão DIRETA (porta 5432). O Prisma usa directUrl
-  // automaticamente no `migrate deploy`; o pgbouncer em transaction mode não
-  // suporta os locks/prepared statements das migrations.
-  directUrl = env("DIRECT_URL")
+  // Prisma 7: a conexão NÃO fica mais no schema. O runtime usa o driver adapter
+  // (@prisma/adapter-pg com DATABASE_URL — pooler pgbouncer 6543) em src/db/prisma.js;
+  // as migrations usam DIRECT_URL (5432) via prisma.config.ts.
+  // ⚠️ VALIDAR contra Supabase (pooler transaction mode) antes de merge/deploy.
 }
 
 // ── MULTI-TENANT ──────────────────────────────────────────────────────────────
