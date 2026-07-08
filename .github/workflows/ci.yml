@@ -82,6 +82,18 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
 
+      # Trava drift schema↔migrations: aplica as migrations num Postgres limpo e
+      # compara com o schema.prisma. Pega o caso B7/B8 (tabela/índice que o schema
+      # declara mas nenhuma migration cria, ou vice-versa) — que `migrate status`
+      # NÃO detecta. Falha (exit 2) se houver divergência.
+      - name: Drift schema x migrations (prisma migrate diff)
+        run: |
+          npx prisma migrate deploy
+          npx prisma migrate diff \
+            --from-url "$DATABASE_URL" \
+            --to-schema-datamodel prisma/schema.prisma \
+            --exit-code
+
       - name: Lint (ESLint)
         run: npm run lint
 
