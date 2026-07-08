@@ -23,8 +23,11 @@ Base: branch de estabilização (`fix/rbac-google-whatsapp-mount`). Um major por
   6. **Validar contra um Supabase de staging** (não só Postgres local/CI) + `test:integration` + IDOR.
   7. Tratar breaking changes adicionais da v6/v7 que só aparecem após o passo 3.
 
-## Minors seguros (sugestão, fora desta passada)
-`dotenv`, `node-cron`, `pino`, `lucide-react`, `recharts`, `actions/checkout`, `actions/setup-node` — bumps não-breaking; podem ir juntos.
+## Outros bumps — aplicados e validados
+- **Backend:** `dotenv` 16→**17**, `node-cron` 4.2→**4.6**, `pino` 9→**10** (todos majors) — validados: unit **180/180** + integration **34/34**.
+- **Frontend:** `lucide-react` 0.344→**1.23** (major) — validado via build (todos os ícones importados resolvem).
+- **CI:** `actions/checkout` v4→**v5**, `actions/setup-node` v4→**v6**.
+- ⏸️ **`recharts` 2→3 (major) — DEFERIDO**: lib de gráficos **sem cobertura de teste** no Dashboard; o build passa mas não valida a renderização. Precisa de validação visual com dados (criar serviços → abrir o dashboard → conferir os 3 gráficos). Deferido pra não shipar gráfico quebrado às cegas — mesmo critério do Prisma 7.
 
 ---
-**Resumo:** 2/3 majors aplicados e validados (Vite 8, Sentry 10). Prisma 7 deferido com plano — por risco de prod não validável aqui, não por dificuldade técnica.
+**Resumo:** majors aplicados e validados — **Vite 8, Sentry 10, dotenv 17, pino 10, node-cron 4.6, lucide-react 1** + bumps de CI. **Deferidos por risco não-validável aqui:** **Prisma 7** (driver adapters + pooler Supabase) e **recharts 3** (gráficos sem teste). Cada um com critério explícito, não por dificuldade técnica.
