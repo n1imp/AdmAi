@@ -23,6 +23,8 @@ Base: branch de estabilização (`fix/rbac-google-whatsapp-mount`). Um major por
   6. **Validar contra um Supabase de staging** (não só Postgres local/CI) + `test:integration` + IDOR.
   7. Tratar breaking changes adicionais da v6/v7 que só aparecem após o passo 3.
 
+**✅ STATUS (branch `chore/prisma-7`):** passos 1–7 **feitos e validados localmente** (Postgres session mode) — `generate` ok, `migrate deploy` ok (Prisma 7 exige `datasource.url` no `prisma.config.ts` p/ migrations), **unit 180/180 + integration 34/34** (IDOR + auth). A migração convergiu com só 2 ajustes de API (datasource fora do schema; `datasource.url` na config). **Falta APENAS a validação real do passo 6:** o **pooler pgbouncer transaction mode (6543)** num **Supabase de staging** — o Postgres local é session mode e não o replica; **não mergear/deployar sem isso**. **Caveat:** o dev SQLite (`schema.sqlite.prisma`) fica pendente sob Prisma 7 (`src/db/prisma.js` agora é só pg; SQLite precisaria de `@prisma/adapter-better-sqlite3`, ou usar Docker Postgres no dev).
+
 ## Outros bumps — aplicados e validados
 - **Backend:** `dotenv` 16→**17**, `node-cron` 4.2→**4.6**, `pino` 9→**10** (todos majors) — validados: unit **180/180** + integration **34/34**.
 - **Frontend:** `lucide-react` 0.344→**1.23** (major) — validado via build (todos os ícones importados resolvem).
