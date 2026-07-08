@@ -11,6 +11,13 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Token com o mínimo. `pull-requests: read` é EXIGIDO pelo dorny/paths-filter (job
+# 'changes') p/ ler os arquivos alterados do PR — sem isto dá "Resource not accessible
+# by integration" (403), o job 'changes' falha e o gate reprova.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   # ── Detecta o que mudou: backend e/ou painel (evita rodar tudo em todo PR) ──
   changes:
