@@ -120,10 +120,14 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 
 **Drift geral:** `prisma migrate diff` acusava 3 divergências schema↔migrations (as 2 acima + índice `Servico.criadoEm`). **🔧 Reconciliado:** migrations B7 (`32db308`) + B8 (`72e8ef6`) + declaração do índice `Servico.criadoEm` no schema (`e6b9eb1`). **Verificado:** `migrate deploy` (23 migrations) + `migrate diff` → **"No difference detected." (exit 0)**. **Recomendação:** rodar `migrate diff --exit-code` no CI para travar drift futuro.
 
-### Pendentes (cobertos por CI ou precisam tooling)
-- **Semgrep** + **gitleaks**: rodam no `security.yml` no PR (não dupliquei local).
-- **CI/CD**: `ci.yml` (lint+unit+integration+audit; `ci-ok` agregador) — branch-protection precisa de gh/API p/ confirmar. Dependabot majors (**Prisma 7 / Vite 8 / Sentry 10**) → passada dedicada.
-- **UI/UX** (Lighthouse/axe): precisa device mode/tooling — pendente.
+### CI/CD ✅
+- `ci.yml`: lint + unit + **integration** (Postgres/Redis services) + `npm audit` (high+), com gate agregador `ci-ok` (1 check p/ branch protection). `security.yml`: **Semgrep** (gate em ERROR) + **gitleaks** (histórico) + audit — rodam no PR (não dupliquei local). `deploy.yml` (Cloudflare Pages) + `release.yml` (Android .aab).
+- **🔧 Melhoria aplicada:** adicionado passo **`prisma migrate diff --exit-code`** ao job backend (commit CI) — trava o drift schema↔migrations que deixou B7/B8 passarem (`migrate status` não pega).
+- **Flag:** branch-protection exigindo `ci-ok` precisa de `gh`/API p/ confirmar (não verificável local). **Dependabot majors** (Prisma 7 / Vite 8 / Sentry 10) → **passada dedicada** (Prisma 7 é breaking: revalidar migrations + client).
+
+### UI/UX — a11y (nível de código) ✅ parcial
+- Sem `<img>` sem `alt`; **nenhum** `<div/span/li>` clicável (interação via `<button>` — bom p/ teclado); `aria-label`/`role`/`htmlFor` em **27 arquivos** (44 ocorrências); **L7 pinch-zoom corrigido** (`4ed2553`).
+- **Pendente (precisa app no ar / tooling):** axe-core + Lighthouse de runtime (contraste, ARIA correto, ordem de foco, associação label↔input). O ambiente local foi encerrado; rodar em sessão dedicada com o app up, ou adicionar um job de a11y no CI.
 
 ---
 
