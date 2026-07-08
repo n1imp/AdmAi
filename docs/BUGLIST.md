@@ -127,8 +127,9 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 
 ### UI/UX — a11y ✅ (código + axe runtime)
 - **Código:** sem `<img>` sem `alt`; **nenhum** `<div/span/li>` clicável (interação via `<button>`); `aria-label`/`role`/`htmlFor` em **27 arquivos**; **L7 pinch-zoom** corrigido (`4ed2553`).
-- **axe-core (runtime, `/login`):** 3 violações → **1 crítica corrigida** (`button-name`: toggle de senha era botão só-ícone sem nome → adicionado `aria-label`; **verificado: 0 botões sem nome**). Restam 2 **moderate** (`landmark-one-main`, `region`) **só nas páginas públicas** (login/termos) — as autenticadas já têm `<main>` (`App.jsx:163`). Fix menor: envolver o conteúdo do `Login.jsx` em `<main>`.
-- **Pendente:** Lighthouse (perf/contraste) + axe nas páginas autenticadas (dashboard/serviços) — sessão dedicada ou job de CI.
+- **axe-core (runtime, `/login`):** 3 violações → **1 crítica corrigida** (`button-name`: toggle de senha era botão só-ícone sem nome → `aria-label`, `1e…`; **verificado: 0 botões sem nome**). Restam 2 **moderate** (`landmark-one-main`, `region`) **só nas páginas públicas** — autenticadas já têm `<main>` (`App.jsx:163`). Fix menor: `<main>` no `Login.jsx`.
+- **axe-core (runtime, `/` dashboard autenticado):** **1 séria** (`color-contrast`, 8 nós) → **decisão de design**: `text-dark-500` (**#333a45**) sobre o fundo **#0e1014** dá contraste **1.66** (AA exige 4.5) em labels 10px (headers da sidebar, footer ©). Fix: clarear o token/uso desses labels p/ ≥4.5:1. Não alterei a paleta (decisão de brand). Sem botões sem nome; sem problema de landmark (usa Layout).
+- **Pendente:** Lighthouse (perf) + axe nas demais páginas autenticadas (serviços/ponto) — sessão dedicada ou job de CI.
 
 ---
 
