@@ -15,7 +15,8 @@
     "format:check": "prettier --check \"src/**/*.js\" \"test/**/*.js\"",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "prisma:sqlite": "node prisma/sqlite-schema.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",

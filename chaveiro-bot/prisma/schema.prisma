@@ -136,6 +136,9 @@ model Servico {
   @@index([local])
   @@index([endereco])
   @@index([clienteTelefone])
+  // Índice já existente no banco (migrations) — declarado aqui para o schema não driftar.
+  // Redundante com [empresaId, criadoEm]; pode ser removido numa limpeza futura.
+  @@index([criadoEm])
 }
 
 // Banco central de materiais — catálogo + controle de estoque com saldo real

@@ -19,6 +19,7 @@ import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
 import { whatsappRouter } from './routes/whatsapp.js';
 import { stripeWebhookRouter } from './routes/billing.js';
+import { googleRouter } from './routes/google.js';
 
 const redisClient = new Redis(env.REDIS_URL);
 // ioredis emite 'error' em falha de conexão; sem handler, o processo crasha.
@@ -132,6 +133,11 @@ export function criarApp() {
   // Gateway WhatsApp (Evolution): rotas de painel (/api/whatsapp/*) + webhook inbound.
   // Montado ANTES do apiRouter para que /api/whatsapp/* tenha precedência.
   app.use(whatsappRouter);
+
+  // Google Business: as rotas em google.js declaram o caminho completo (/api/google/*),
+  // então são montadas na RAIZ (como o whatsappRouter). Montar sob apiRouter (/api)
+  // duplicaria o prefixo (/api/api/google/*) e o painel receberia 404.
+  app.use(googleRouter);
 
   app.use('/api', apiRouter);
 

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { requireAuth } from '../middlewares/auth.js';
+import { requireAuth, requirePermissao } from '../middlewares/auth.js';
 import {
   urlAutorizacao, trocarCodigo, desconectar as desconectarGoogle,
 } from '../services/google/oauth.js';
@@ -28,7 +28,7 @@ function urlPainel(rota = '/avaliacoes') {
 }
 
 // ── GET /api/google/status ────────────────────────────────────────────────────
-googleRouter.get('/api/google/status', requireAuth, async (req, res) => {
+googleRouter.get('/api/google/status', requireAuth, requirePermissao('avaliacoes', 'ver'), async (req, res) => {
   try {
     const empresaId = req.user.empresaId;
     const conta = await prisma.googleConta.findUnique({
@@ -68,7 +68,7 @@ googleRouter.get('/api/google/status', requireAuth, async (req, res) => {
 });
 
 // ── POST /api/google/place-id ─────────────────────────────────────────────────
-googleRouter.post('/api/google/place-id', requireAuth, async (req, res) => {
+googleRouter.post('/api/google/place-id', requireAuth, requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     const schema = z.object({ placeId: z.string().min(1).max(200) });
     const parse = schema.safeParse(req.body);
@@ -90,7 +90,7 @@ googleRouter.post('/api/google/place-id', requireAuth, async (req, res) => {
 // Descoberta automática das lojas do Google após o OAuth (o dono escolhe em vez de
 // digitar o Place ID). Carrega verificacaoPendente quando o acesso à API ainda não
 // foi liberado para o app (em verificação/aprovação pelo Google).
-googleRouter.get('/api/google/locations', requireAuth, async (req, res) => {
+googleRouter.get('/api/google/locations', requireAuth, requirePermissao('avaliacoes', 'ver'), async (req, res) => {
   try {
     const r = await listarLocations(req.user.empresaId);
     res.json(r);
@@ -101,7 +101,7 @@ googleRouter.get('/api/google/locations', requireAuth, async (req, res) => {
 });
 
 // ── POST /api/google/location — o dono escolhe a loja descoberta ──────────────
-googleRouter.post('/api/google/location', requireAuth, async (req, res) => {
+googleRouter.post('/api/google/location', requireAuth, requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       accountId: z.string().min(1).max(200),
@@ -125,7 +125,7 @@ googleRouter.post('/api/google/location', requireAuth, async (req, res) => {
 });
 
 // ── GET /api/google/oauth/iniciar → { url } ───────────────────────────────────
-googleRouter.get('/api/google/oauth/iniciar', requireAuth, async (req, res) => {
+googleRouter.get('/api/google/oauth/iniciar', requireAuth, requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     if (!integracaoLigada()) {
       return res.status(503).json({ erro: 'Integração com o Google está desabilitada.' });
@@ -158,7 +158,7 @@ googleRouter.get('/api/google/oauth/callback', async (req, res) => {
 });
 
 // ── POST /api/google/desconectar ──────────────────────────────────────────────
-googleRouter.post('/api/google/desconectar', requireAuth, async (req, res) => {
+googleRouter.post('/api/google/desconectar', requireAuth, requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     await desconectarGoogle(req.user.empresaId);
     res.json({ desconectado: true });
@@ -170,7 +170,7 @@ googleRouter.post('/api/google/desconectar', requireAuth, async (req, res) => {
 
 // ── GET /api/google/reviews ───────────────────────────────────────────────────
 // Filtros: nota (1-5), periodo (dias), respondida (true/false), cursor (paginação local).
-googleRouter.get('/api/google/reviews', requireAuth, async (req, res) => {
+googleRouter.get('/api/google/reviews', requireAuth, requirePermissao('avaliacoes', 'ver'), async (req, res) => {
   try {
     const empresaId = req.user.empresaId;
     const nota = req.query.nota ? parseInt(String(req.query.nota)) : null;
@@ -228,7 +228,7 @@ googleRouter.get('/api/google/reviews', requireAuth, async (req, res) => {
 });
 
 // ── POST /api/google/reviews/:reviewId/responder { texto } ────────────────────
-googleRouter.post('/api/google/reviews/:reviewId/responder', requireAuth, async (req, res) => {
+googleRouter.post('/api/google/reviews/:reviewId/responder', requireAuth, requirePermissao('avaliacoes', 'editar'), async (req, res) => {
   try {
     const schema = z.object({ texto: z.string().min(1).max(4000) });
     const parse = schema.safeParse(req.body);

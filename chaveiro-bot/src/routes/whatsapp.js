@@ -2,7 +2,7 @@ import { Router, raw } from 'express';
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { requireAuth } from '../middlewares/auth.js';
+import { requireAuth, requirePermissao } from '../middlewares/auth.js';
 import { verificarHmac, compararToken } from '../services/whatsapp/crypto.js';
 import { normalizarInboundCloud, salvarCredenciaisCloud } from '../services/whatsapp/cloud-gateway.js';
 import {
@@ -50,7 +50,7 @@ function mensagemErro(erro) {
 
 // POST /api/whatsapp/cloud/credenciais — salva as credenciais da Cloud API (Meta)
 // da empresa (access token cifrado em repouso) e ativa o provider 'cloud' para ela.
-whatsappRouter.post('/api/whatsapp/cloud/credenciais', requireAuth, async (req, res) => {
+whatsappRouter.post('/api/whatsapp/cloud/credenciais', requireAuth, requirePermissao('configuracao', 'editar'), async (req, res) => {
   try {
     const schema = z.object({
       phoneNumberId: z.string().min(1),

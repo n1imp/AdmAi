@@ -11,6 +11,13 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Token com o mínimo. `pull-requests: read` é EXIGIDO pelo dorny/paths-filter (job
+# 'changes') p/ ler os arquivos alterados do PR — sem isto dá "Resource not accessible
+# by integration" (403), o job 'changes' falha e o gate reprova.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   # ── Detecta o que mudou: backend e/ou painel (evita rodar tudo em todo PR) ──
   changes:
@@ -19,7 +26,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -70,8 +77,8 @@ jobs:
       JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
       ENCRYPTION_KEY: ci-encryption-key-for-testing-only-32ch
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -81,6 +88,18 @@ jobs:
       - run: npm install -g npm@11
       - run: npm ci
       - run: npx prisma generate
+
+      # Trava drift schema↔migrations: aplica as migrations num Postgres limpo e
+      # compara com o schema.prisma. Pega o caso B7/B8 (tabela/índice que o schema
+      # declara mas nenhuma migration cria, ou vice-versa) — que `migrate status`
+      # NÃO detecta. Falha (exit 2) se houver divergência.
+      - name: Drift schema x migrations (prisma migrate diff)
+        run: |
+          npx prisma migrate deploy
+          npx prisma migrate diff \
+            --from-url "$DATABASE_URL" \
+            --to-schema-datamodel prisma/schema.prisma \
+            --exit-code
 
       - name: Lint (ESLint)
         run: npm run lint
@@ -100,7 +119,7 @@ jobs:
     if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build da imagem de produção
         run: docker build -t admai-bot:ci ./chaveiro-bot
 
@@ -113,8 +132,8 @@ jobs:
       run:
         working-directory: chaveiro-painel
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -140,11 +159,17 @@ jobs:
   #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
   ci-ok:
     if: always()
-    needs: [backend, docker-build, frontend]
+    needs: [changes, backend, docker-build, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Verifica resultado dos jobs
         run: |
+          # 'changes' PRECISA ter sucesso: se ele falha, backend/frontend/docker são
+          # 'skipped' (não 'failure'), e o gate passaria em FALSO — os testes nem rodam.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "::error::Job 'changes' nao teve sucesso (${{ needs.changes.result }}) — os testes podem ter sido pulados. Gate reprovado."
+            exit 1
+          fi
           results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }}"
           echo "Resultados: $results"
           for r in $results; do
