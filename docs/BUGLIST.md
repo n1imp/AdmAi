@@ -125,9 +125,10 @@ GET /api/api/google/reviews   -> 200   {"data":[{"reviewId":"mock-1",...}]}
 - **🔧 Melhoria aplicada:** adicionado passo **`prisma migrate diff --exit-code`** ao job backend (commit CI) — trava o drift schema↔migrations que deixou B7/B8 passarem (`migrate status` não pega).
 - **Flag:** branch-protection exigindo `ci-ok` precisa de `gh`/API p/ confirmar (não verificável local). **Dependabot majors** (Prisma 7 / Vite 8 / Sentry 10) → **passada dedicada** (Prisma 7 é breaking: revalidar migrations + client).
 
-### UI/UX — a11y (nível de código) ✅ parcial
-- Sem `<img>` sem `alt`; **nenhum** `<div/span/li>` clicável (interação via `<button>` — bom p/ teclado); `aria-label`/`role`/`htmlFor` em **27 arquivos** (44 ocorrências); **L7 pinch-zoom corrigido** (`4ed2553`).
-- **Pendente (precisa app no ar / tooling):** axe-core + Lighthouse de runtime (contraste, ARIA correto, ordem de foco, associação label↔input). O ambiente local foi encerrado; rodar em sessão dedicada com o app up, ou adicionar um job de a11y no CI.
+### UI/UX — a11y ✅ (código + axe runtime)
+- **Código:** sem `<img>` sem `alt`; **nenhum** `<div/span/li>` clicável (interação via `<button>`); `aria-label`/`role`/`htmlFor` em **27 arquivos**; **L7 pinch-zoom** corrigido (`4ed2553`).
+- **axe-core (runtime, `/login`):** 3 violações → **1 crítica corrigida** (`button-name`: toggle de senha era botão só-ícone sem nome → adicionado `aria-label`; **verificado: 0 botões sem nome**). Restam 2 **moderate** (`landmark-one-main`, `region`) **só nas páginas públicas** (login/termos) — as autenticadas já têm `<main>` (`App.jsx:163`). Fix menor: envolver o conteúdo do `Login.jsx` em `<main>`.
+- **Pendente:** Lighthouse (perf/contraste) + axe nas páginas autenticadas (dashboard/serviços) — sessão dedicada ou job de CI.
 
 ---
 
