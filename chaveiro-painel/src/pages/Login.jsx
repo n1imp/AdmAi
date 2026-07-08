@@ -491,6 +491,7 @@ export default function Login() {
                         autoComplete={ehCadastro ? 'new-password' : 'current-password'}
                       />
                       <button type="button" onClick={() => setMostrar(!mostrar)}
+                        aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors">
                         {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
