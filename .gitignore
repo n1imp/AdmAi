@@ -6,6 +6,7 @@ node_modules/
 .env.*
 !.env.example
 !.env.test.example
+!.env.staging.example
 
 # ── Chaves / segredos (NUNCA versionar) ───────────────────────
 # Chaves SSH, certificados e similares — mantenha sempre fora do repo.

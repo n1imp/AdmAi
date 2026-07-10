@@ -16,7 +16,8 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
     "prisma:studio": "npx prisma studio",
-    "prisma:sqlite": "node prisma/sqlite-schema.mjs"
+    "prisma:sqlite": "node prisma/sqlite-schema.mjs",
+    "validate:staging": "node scripts/validate-staging.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
