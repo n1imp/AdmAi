@@ -1,8 +1,17 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+
+// Prisma 7: a conexão vem do driver adapter (pg), não mais do schema. DATABASE_URL pode
+// ser o pooler pgbouncer (6543, transaction mode) em prod — o `pg` usa prepared statements
+// NÃO-nomeados, compatíveis com transaction pooling. ⚠️ VALIDAR em Supabase staging antes
+// de deploy (o Postgres local é session mode e não replica o pooler).
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 
 // Singleton do cliente Prisma para evitar múltiplas conexões
 const prisma = new PrismaClient({
+  adapter,
   log: [
     { emit: 'event', level: 'query' },
     { emit: 'event', level: 'error' },
