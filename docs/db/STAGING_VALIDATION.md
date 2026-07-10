@@ -55,6 +55,22 @@ O script executa, com trava anti-prod antes de tudo:
 **antes** de prod — anote o erro; a correção provável é ajustar o `pg`/adapter (ex.: desabilitar prepared
 statements ou usar a porta 5432 do pooler em session mode). Não mergear até verde.
 
+### Validação sem Redis (smoke direto no pooler 6543)
+
+A suíte de integração completa arrasta **Redis** (rate-limiter/BullMQ) junto — se não houver Redis
+local, a etapa 3 do `validate:staging` falha em `ECONNREFUSED 6379` (ortogonal ao Prisma 7). Para
+validar **só** o risco do pooler transaction sem Redis:
+
+```bash
+node scripts/smoke-pooler.mjs
+```
+Exercita o driver adapter pelo `DATABASE_URL` (6543): SELECT parametrizado, 10× findMany (estressa
+prepared statements) e uma transação interativa create/read/delete.
+
+**Resultado (2026-07-09):** ✅ `migrate deploy` aplicou as 23 migrations (session 5432) + `smoke-pooler`
+**verde** no transaction pooler (6543) — Prisma 7 confirmado seguro. Registro em
+[`../DEPS_MAJORS.md`](../DEPS_MAJORS.md) e ADR-005 em [`03-adrs.md`](./03-adrs.md).
+
 ## Fase 2 — RLS (ADR-004), depois que a Fase 1 passar
 
 O `prisma/rls/enable_rls.sql` é fail-closed e exige um **role dedicado sem BYPASSRLS**. Em staging:
