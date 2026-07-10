@@ -27,6 +27,10 @@ RUN addgroup -S nodejs -g 1001 && adduser -S appuser -u 1001 -G nodejs
 # Copia node_modules (com Prisma Client gerado), schema e código.
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:nodejs /app/prisma ./prisma
+# Prisma 7: a conexão saiu do schema e vive no prisma.config.ts (datasource.url).
+# Sem este arquivo no runtime, o `prisma migrate deploy` do entrypoint falha em loop
+# ("The datasource.url property is required...") e o healthcheck do deploy não sobe.
+COPY --chown=appuser:nodejs prisma.config.ts ./
 COPY --chown=appuser:nodejs package*.json ./
 COPY --chown=appuser:nodejs src ./src
 COPY --chown=appuser:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
