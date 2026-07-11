@@ -18,8 +18,6 @@ const router = Router();
 router.use(requireAuth);
 router.use(senhaProvisoria);
 
-const MAX_AGREGACAO = 10_000;
-
 const SELECT_ME = {
   id: true, nome: true, username: true, email: true, telefone: true,
   admin: true, papel: true, senhaProvisoria: true, ativo: true,
@@ -83,21 +81,22 @@ router.get('/me/metricas', async (req, res) => {
     if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
     const id = req.user.tecnicoId;
     const filtroMes = { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), lte: new Date() };
-    const [tecnico, todos, pagamentos, doMes, pendentes] = await Promise.all([
+    const [tecnico, aggTotal, aggPagamentos, aggMes, pendentes] = await Promise.all([
       req.db.tecnico.findUnique({ where: { id } }),
-      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo' }, select: { valorLiquido: true, comissaoGerada: true }, take: MAX_AGREGACAO }),
-      req.db.pagamento.findMany({ where: { tecnicoId: id }, select: { valor: true }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMes }, select: { valorLiquido: true, comissaoGerada: true }, take: MAX_AGREGACAO }),
+      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo' }, _sum: { comissaoGerada: true }, _count: true }),
+      req.db.pagamento.aggregate({ where: { tecnicoId: id }, _sum: { valor: true } }),
+      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMes }, _sum: { valorLiquido: true, comissaoGerada: true } }),
       req.db.servico.count({ where: { tecnicoId: id, status: 'pendente' } }),
     ]);
     if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
-    const comissaoGanha = todos.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
-    const recebido = pagamentos.reduce((s, x) => s + x.valor, 0);
-    const receitaMes = doMes.reduce((s, x) => s + x.valorLiquido, 0);
-    const comissaoMes = doMes.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
+    // Agregação no banco (SUM/COUNT) — antes carregava até 10k linhas e somava em JS (F3: mata take:10000).
+    const comissaoGanha = aggTotal._sum.comissaoGerada ?? 0;
+    const recebido = aggPagamentos._sum.valor ?? 0;
+    const receitaMes = aggMes._sum.valorLiquido ?? 0;
+    const comissaoMes = aggMes._sum.comissaoGerada ?? 0;
     res.json({
       tecnico: { id: tecnico.id, nome: tecnico.nome, comissao: tecnico.comissao, metaMensal: tecnico.metaMensal, fotoPerfil: tecnico.fotoPerfil },
-      totalServicos: todos.length,
+      totalServicos: aggTotal._count,
       comissaoGanha: parseFloat(comissaoGanha.toFixed(2)),
       totalRecebido: parseFloat(recebido.toFixed(2)),
       saldoPendente: parseFloat((comissaoGanha - recebido).toFixed(2)),
