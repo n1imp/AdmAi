@@ -296,17 +296,24 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     const { periodo = 'mes', inicio, fim } = req.query;
     const filtroDatas = construirFiltroPeriodo(periodo, inicio, fim);
     const filtroAnterior = construirFiltroPeriodoAnterior(filtroDatas);
-    const [servicos, aggAnterior] = await Promise.all([
-      req.db.servico.findMany({ where: { status: 'ativo', criadoEm: filtroDatas }, include: { tecnico: { select: { nome: true } } }, orderBy: { criadoEm: 'asc' }, take: MAX_AGREGACAO }),
+    const whereAtual = { status: 'ativo', criadoEm: filtroDatas };
+    // F3.3: escalares e agrupamentos (técnico/local) somados no banco via aggregate/groupBy
+    // — auto-escopados por empresaId pelo req.db (tenant.js). A série diária precisa de bucket
+    // por dia, que o groupBy do Prisma não trunca; então busca só 2 colunas e agrega em JS.
+    const [agg, aggAnterior, porTecnicoRaw, porLocalRaw, servicosDia] = await Promise.all([
+      req.db.servico.aggregate({ where: whereAtual, _count: true, _sum: { valorCobrado: true, valorMaterial: true, valorLiquido: true, comissaoGerada: true } }),
       // Período anterior: só receita líquida e contagem → SUM/COUNT no banco (F3.2).
       req.db.servico.aggregate({ where: { status: 'ativo', criadoEm: filtroAnterior }, _sum: { valorLiquido: true }, _count: true }),
+      req.db.servico.groupBy({ by: ['tecnicoId'], where: whereAtual, _count: true, _sum: { valorCobrado: true, valorLiquido: true, comissaoGerada: true } }),
+      req.db.servico.groupBy({ by: ['local'], where: whereAtual, _count: true, _sum: { valorLiquido: true } }),
+      req.db.servico.findMany({ where: whereAtual, select: { criadoEm: true, valorLiquido: true }, take: MAX_AGREGACAO }),
     ]);
-    const totalServicos = servicos.length;
-    const receitaBruta = servicos.reduce((s, x) => s + x.valorCobrado, 0);
-    const totalMaterial = servicos.reduce((s, x) => s + x.valorMaterial, 0);
-    const receitaLiquida = servicos.reduce((s, x) => s + x.valorLiquido, 0);
+    const totalServicos = agg._count;
+    const receitaBruta = agg._sum.valorCobrado ?? 0;
+    const totalMaterial = agg._sum.valorMaterial ?? 0;
+    const receitaLiquida = agg._sum.valorLiquido ?? 0;
     const ticketMedio = totalServicos > 0 ? receitaLiquida / totalServicos : 0;
-    const totalComissao = servicos.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
+    const totalComissao = agg._sum.comissaoGerada ?? 0;
     const lucro = receitaLiquida - totalComissao;
     const margemLucro = receitaBruta > 0 ? parseFloat(((lucro / receitaBruta) * 100).toFixed(1)) : 0;
     const receitaLiquidaAnterior = aggAnterior._sum.valorLiquido ?? 0;
@@ -317,27 +324,30 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
       totalServicos: variacao(totalServicos, totalServicosAnterior),
       ticketMedio: variacao(ticketMedio, ticketMedioAnterior),
     };
+    // Resolve os nomes dos técnicos dos grupos e RE-COLAPSA por nome (preserva o comportamento
+    // atual: técnicos homônimos somam numa única linha).
+    const tecnicoIds = porTecnicoRaw.map((g) => g.tecnicoId);
+    const tecnicos = tecnicoIds.length
+      ? await req.db.tecnico.findMany({ where: { id: { in: tecnicoIds } }, select: { id: true, nome: true } })
+      : [];
+    const nomePorId = new Map(tecnicos.map((t) => [t.id, t.nome]));
     const mapasTecnico = {};
-    for (const s of servicos) {
-      const nome = s.tecnico.nome;
+    for (const g of porTecnicoRaw) {
+      const nome = nomePorId.get(g.tecnicoId) ?? '';
       if (!mapasTecnico[nome]) mapasTecnico[nome] = { tecnico: nome, servicos: 0, receitaBruta: 0, receitaLiquida: 0, comissao: 0 };
-      mapasTecnico[nome].servicos++;
-      mapasTecnico[nome].receitaBruta += s.valorCobrado;
-      mapasTecnico[nome].receitaLiquida += s.valorLiquido;
-      mapasTecnico[nome].comissao += s.comissaoGerada ?? 0;
+      mapasTecnico[nome].servicos += g._count;
+      mapasTecnico[nome].receitaBruta += g._sum.valorCobrado ?? 0;
+      mapasTecnico[nome].receitaLiquida += g._sum.valorLiquido ?? 0;
+      mapasTecnico[nome].comissao += g._sum.comissaoGerada ?? 0;
     }
     const porTecnico = Object.values(mapasTecnico)
       .map((t) => ({ ...t, percentualReceita: receitaLiquida > 0 ? parseFloat(((t.receitaLiquida / receitaLiquida) * 100).toFixed(1)) : 0, ticketMedio: t.servicos > 0 ? parseFloat((t.receitaLiquida / t.servicos).toFixed(2)) : 0 }))
       .sort((a, b) => b.receitaLiquida - a.receitaLiquida);
-    const mapasLocal = {};
-    for (const s of servicos) {
-      if (!mapasLocal[s.local]) mapasLocal[s.local] = { local: s.local, quantidade: 0, receita: 0 };
-      mapasLocal[s.local].quantidade++;
-      mapasLocal[s.local].receita += s.valorLiquido;
-    }
-    const porLocal = Object.values(mapasLocal).sort((a, b) => b.receita - a.receita);
+    const porLocal = porLocalRaw
+      .map((g) => ({ local: g.local, quantidade: g._count, receita: g._sum.valorLiquido ?? 0 }))
+      .sort((a, b) => b.receita - a.receita);
     const mapasDia = {};
-    for (const s of servicos) {
+    for (const s of servicosDia) {
       const dia = new Date(s.criadoEm).toISOString().split('T')[0];
       if (!mapasDia[dia]) mapasDia[dia] = { data: dia, receita: 0, servicos: 0 };
       mapasDia[dia].receita += s.valorLiquido;
