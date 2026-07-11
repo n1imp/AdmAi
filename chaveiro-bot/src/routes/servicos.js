@@ -76,9 +76,24 @@ function podeRegistrarServico(req, res, next) {
   return res.status(403).json({ erro: 'Sem permissão para registrar serviço' });
 }
 
+// Cursor keyset opaco codificando (criadoEm, id) — o desempate por id é obrigatório
+// porque criadoEm NÃO é único (dois serviços podem ter o mesmo instante).
+function encodeCursor(s) {
+  return Buffer.from(`${s.criadoEm.toISOString()}|${s.id}`).toString('base64url');
+}
+function decodeCursor(raw) {
+  try {
+    const [iso, idStr] = Buffer.from(String(raw), 'base64url').toString('utf8').split('|');
+    const criadoEm = new Date(iso);
+    const id = parseInt(idStr, 10);
+    if (Number.isNaN(criadoEm.getTime()) || !Number.isInteger(id) || id <= 0) return null;
+    return { criadoEm, id };
+  } catch { return null; }
+}
+
 router.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) => {
   try {
-    const { tecnico, local, endereco, inicio, fim, page = '1', limit = '20' } = req.query;
+    const { tecnico, local, endereco, inicio, fim, page = '1', limit = '20', cursor } = req.query;
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
     const where = { status: req.query.status ? String(req.query.status) : 'ativo' };
@@ -86,11 +101,24 @@ router.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) =>
     if (local) where.local = contemInsensivel(local);
     if (endereco) where.endereco = contemInsensivel(endereco);
     if (inicio || fim) where.criadoEm = construirFiltroPeriodo('custom', inicio, fim);
+
+    // Paginação keyset (cursor): estável sob inserção concorrente e sem o custo de OFFSET.
+    // Backward-compat: sem `cursor`, cai no page/OFFSET legado. Ordenação com desempate por id.
+    let whereFinal = where;
+    let skip;
+    if (cursor !== undefined) {
+      const cur = decodeCursor(cursor);
+      if (!cur) return res.status(400).json({ erro: 'cursor inválido' });
+      whereFinal = { AND: [where, { OR: [{ criadoEm: { lt: cur.criadoEm } }, { criadoEm: cur.criadoEm, id: { lt: cur.id } }] }] };
+    } else {
+      skip = (pageNum - 1) * limitNum;
+    }
     const [servicos, total] = await Promise.all([
-      req.db.servico.findMany({ where, include: { tecnico: { select: { id: true, nome: true } } }, orderBy: { criadoEm: 'desc' }, skip: (pageNum - 1) * limitNum, take: limitNum }),
+      req.db.servico.findMany({ where: whereFinal, include: { tecnico: { select: { id: true, nome: true } } }, orderBy: [{ criadoEm: 'desc' }, { id: 'desc' }], skip, take: limitNum }),
       req.db.servico.count({ where }),
     ]);
-    res.json({ data: servicos, total, page: pageNum, totalPages: Math.ceil(total / limitNum) });
+    const nextCursor = servicos.length === limitNum ? encodeCursor(servicos[servicos.length - 1]) : null;
+    res.json({ data: servicos, total, page: pageNum, totalPages: Math.ceil(total / limitNum), nextCursor });
   } catch (erro) {
     logger.error('Erro GET /servicos', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno ao buscar serviços' });

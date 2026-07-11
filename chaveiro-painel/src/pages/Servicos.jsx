@@ -148,7 +148,7 @@ export default function Servicos() {
 
   const [servicos, setServicos] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erro, setErro] = useState(null);
@@ -159,9 +159,10 @@ export default function Servicos() {
 
   const buscar = useCallback(
     // `guard` permite cancelar os setState após desmontar/refazer o efeito.
-    async (novaPagina = 1, acumular = false, guard) => {
+    async (cursorParam = null, acumular = false, guard) => {
       const estaAtivo = typeof guard === 'function' ? guard : () => true;
-      const params = new URLSearchParams({ page: String(novaPagina), limit: '15' });
+      const params = new URLSearchParams({ limit: '15' });
+      if (cursorParam) params.set('cursor', cursorParam);
       if (filtroLocal !== 'Todos') params.set('local', filtroLocal);
       if (filtroTecnico.trim()) params.set('tecnico', filtroTecnico.trim());
       if (filtroEndereco.trim()) params.set('endereco', filtroEndereco.trim());
@@ -171,6 +172,7 @@ export default function Servicos() {
         if (!estaAtivo()) return;
         setTotal(data.total);
         setServicos((prev) => (acumular ? [...prev, ...data.data] : data.data));
+        setCursor(data.nextCursor ?? null);
         setErro(null);
       } catch {
         if (estaAtivo()) setErro('Não foi possível carregar os serviços.');
@@ -187,16 +189,15 @@ export default function Servicos() {
   useEffect(() => {
     let active = true;
     setCarregando(true);
-    setPage(1);
-    buscar(1, false, () => active);
+    setCursor(null);
+    buscar(null, false, () => active);
     return () => { active = false; };
   }, [buscar]);
 
   async function carregarMais() {
-    const proxPagina = page + 1;
-    setPage(proxPagina);
+    if (!cursor) return;
     setCarregandoMais(true);
-    await buscar(proxPagina, true);
+    await buscar(cursor, true);
   }
 
   async function deletarServico(id) {
