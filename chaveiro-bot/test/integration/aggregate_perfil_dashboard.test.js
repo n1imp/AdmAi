@@ -85,7 +85,7 @@ describe('F3.2 — aggregate no banco (equivalência de valor)', () => {
       ],
     });
 
-    const res = await request(app).get('/api/dashboard?inicio=2024-06-01&fim=2024-06-30').set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get('/api/dashboard?periodo=custom&inicio=2024-06-01&fim=2024-06-30').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.totalServicos).toBe(2); // atual
     expect(res.body.receitaLiquida).toBe(300); // 100 + 200
@@ -101,7 +101,7 @@ describe('F3.2 — aggregate no banco (equivalência de valor)', () => {
       data: { ...sBase, empresaId, tecnicoId: tec.id, valorCobrado: 100, valorLiquido: 100, comissaoGerada: 20, criadoEm: new Date('2024-06-10T12:00:00.000Z') },
     });
 
-    const res = await request(app).get('/api/dashboard?inicio=2024-06-01&fim=2024-06-30').set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get('/api/dashboard?periodo=custom&inicio=2024-06-01&fim=2024-06-30').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.receitaLiquida).toBe(100);
     // Anterior vazio: receitaLiquidaAnterior=0 e totalServicosAnterior=0 → variacao(atual>0, 0) === null.
