@@ -25,6 +25,16 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 | B7 | **P1** | `CodigoRecuperacaoTotp` sem migration → ativar 2FA quebra em prod | 🔧 `32db308` (migrate diff zerado) |
 | B8 | **P1** | `Material_nome_key` UNIQUE global → colisão de nome entre tenants | 🔧 `72e8ef6` (migrate diff zerado) |
 
+## Planejamento de arquitetura de banco
+- [`DB_ARCHITECTURE_PLAN.md`](./DB_ARCHITECTURE_PLAN.md) — roteiro de 12 seções (Principal Data Architect) para evoluir o banco a nível corporativo. **Planejamento** (sem SQL/tabelas), aterrado no `schema.prisma` real.
+- [`db/`](./db/) — **execução** do roteiro (F1–F9), entregáveis com evidência `arquivo:linha`:
+  - [`db/README.md`](./db/README.md) — índice + status por fase + o que depende de você.
+  - F0/F1 [`db/01-discovery.md`](./db/01-discovery.md) · F2 [`db/02-domain-model.md`](./db/02-domain-model.md) · F3 [`db/03-adrs.md`](./db/03-adrs.md) (ADR-001..008) · F4 [`db/04-data-model.md`](./db/04-data-model.md) (ER + dicionário) · F5 [`db/05-performance.md`](./db/05-performance.md) · F6 [`db/06-security-lgpd.md`](./db/06-security-lgpd.md) · F7 [`db/07-scalability.md`](./db/07-scalability.md) · F8 [`db/08-operations.md`](./db/08-operations.md).
+  - **Bloqueios reais** (não autônomos): números de negócio/RNF (F0), aval DPO + prazo retenção LGPD (F6), e **staging fiel ao pooler** (destrava Prisma 7 + RLS + EXPLAIN/carga).
+
+## Roadmap de evolução de arquitetura (escala/resiliência/HA)
+- [`ARCHITECTURE_EVOLUTION_PLAN.md`](./ARCHITECTURE_EVOLUTION_PLAN.md) — avaliação dos 10 requisitos de escala (**✅ 3 · 🟡 5 · ❌ 2**) + roadmap **F0→F6** (fundação/região → statelessness → LB → cache → réplica de leitura+RLS+Decimal → observabilidade → HA multi-AZ). **Planejamento** — nada implementado; F0 (billing Railway + região sa-east-1) é ação do dono. Prisma 7 já em prod (deploy #60). Integra o `DB_ARCHITECTURE_PLAN.md`/`db/`.
+
 ## Reconciliação `progress.md`
 Dos 5 bugs "pendentes" herdados: **1, 3, 4, 5 já aplicados**; **2 tem causa errada** (é o B1). Detalhe em `BUGLIST.md`.
 
