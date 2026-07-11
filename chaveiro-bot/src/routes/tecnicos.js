@@ -294,17 +294,18 @@ router.get('/tecnicos/:id/perfil', requirePermissao('tecnicos', 'ver'), async (r
     const { periodo = 'mes', inicio, fim } = req.query;
     const filtroDatas = construirFiltroPeriodo(periodo, inicio, fim);
     const filtroMesAtual = construirFiltroPeriodo('mes');
-    const [tecnico, servicosPeriodo, todosServicos, pagamentos, servicosMesAtual] = await Promise.all([
+    const [tecnico, servicosPeriodo, aggTodos, pagamentos, aggMesAtual] = await Promise.all([
       req.db.tecnico.findUnique({ where: { id } }),
       req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroDatas }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo' }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true, criadoEm: true }, take: MAX_AGREGACAO }),
+      // Totais (comissão ganha / nº serviços) somados no banco em vez de load-all + reduce (F3.2).
+      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo' }, _sum: { comissaoGerada: true }, _count: true }),
       req.db.pagamento.findMany({ where: { tecnicoId: id }, orderBy: { criadoEm: 'desc' }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMesAtual }, select: { valorLiquido: true }, take: MAX_AGREGACAO }),
+      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMesAtual }, _sum: { valorLiquido: true } }),
     ]);
     if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
-    const totalComissaoGanha = todosServicos.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
+    const totalComissaoGanha = aggTodos._sum.comissaoGerada ?? 0;
     const totalRecebido = pagamentos.reduce((s, x) => s + x.valor, 0);
-    const receitaMesAtual = servicosMesAtual.reduce((s, x) => s + x.valorLiquido, 0);
+    const receitaMesAtual = aggMesAtual._sum.valorLiquido ?? 0;
     const meta = tecnico.metaMensal && tecnico.metaMensal > 0
       ? { metaMensal: tecnico.metaMensal, receitaMes: receitaMesAtual, progresso: parseFloat(((receitaMesAtual / tecnico.metaMensal) * 100).toFixed(1)), atingida: receitaMesAtual >= tecnico.metaMensal }
       : { metaMensal: null, receitaMes: receitaMesAtual, progresso: null, atingida: false };
@@ -317,7 +318,7 @@ router.get('/tecnicos/:id/perfil', requirePermissao('tecnicos', 'ver'), async (r
       mapasDia[dia].comissao += s.comissaoGerada ?? 0;
     }
     res.json({
-      tecnico: { ...tecnico, totalServicos: todosServicos.length, totalComissaoGanha, totalRecebido, saldoPendente: totalComissaoGanha - totalRecebido },
+      tecnico: { ...tecnico, totalServicos: aggTodos._count, totalComissaoGanha, totalRecebido, saldoPendente: totalComissaoGanha - totalRecebido },
       meta,
       periodo: { servicos: servicosPeriodo, totalServicos: servicosPeriodo.length, receitaLiquida: servicosPeriodo.reduce((s, x) => s + x.valorLiquido, 0), comissaoGerada: servicosPeriodo.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0), evolucaoDiaria: Object.values(mapasDia).sort((a, b) => a.data.localeCompare(b.data)) },
       pagamentos,
