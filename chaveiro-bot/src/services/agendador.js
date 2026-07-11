@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import Redis from 'ioredis';
 import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
@@ -262,6 +263,34 @@ export async function sincronizarAvaliacoesGoogle() {
   return { empresas: contas.length, novas: totalNovas };
 }
 
+// ── Lock distribuído de cron ────────────────────────────────────────────────
+// node-cron roda em CADA processo; com N réplicas do web, cada job dispararia N×
+// (resumo semanal N×, purga LGPD N×). O lock garante que só UMA réplica execute por
+// tick: SET NX EX no Redis. Fail-CLOSED — se o Redis não responder, o job é pulado
+// (duplicar é pior que pular; o próximo tick recupera). O lock NÃO é deletado ao
+// terminar: expira por TTL (< intervalo do job), impedindo 2ª execução no mesmo tick.
+let redisLock = null;
+function clienteLock() {
+  if (!redisLock) {
+    redisLock = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+    redisLock.on('error', () => { /* evita crash quando o Redis está indisponível */ });
+  }
+  return redisLock;
+}
+
+export async function comLock(chave, ttlSegundos, fn) {
+  let dono = false;
+  try {
+    const r = await clienteLock().set(`cron:lock:${chave}`, String(process.pid), 'EX', ttlSegundos, 'NX');
+    dono = r === 'OK';
+  } catch (erro) {
+    logger.warn('cron lock indisponível — job pulado neste tick', { chave, erro: erro.message });
+    return;
+  }
+  if (!dono) { logger.debug('cron lock ocupado — outra réplica executa este tick', { chave }); return; }
+  await fn();
+}
+
 /**
  * Registra os jobs agendados. Chamado uma vez no startup do servidor.
  *  - Resumo semanal: todo domingo às 18h (horário de São Paulo).
@@ -271,26 +300,27 @@ export async function sincronizarAvaliacoesGoogle() {
  *    selfie/geo de batidas de ponto antigas (mantém a hora como prova de jornada).
  */
 export function iniciarAgendamentos() {
-  cron.schedule('0 18 * * 0', executarResumoSemanal, { timezone: TIMEZONE });
+  // Cada job roda dentro de comLock (uma réplica por tick). TTL < intervalo do job.
+  cron.schedule('0 18 * * 0', () => comLock('resumo-semanal', 300, executarResumoSemanal), { timezone: TIMEZONE });
 
-  cron.schedule('*/5 * * * *', async () => {
+  cron.schedule('*/5 * * * *', () => comLock('avaliacoes-pendentes', 240, async () => {
     try {
       await dispararAvaliacoesPendentes();
     } catch (erro) {
       logger.error('Erro ao disparar avaliações pendentes', { erro: erro.message });
     }
-  }, { timezone: TIMEZONE });
+  }), { timezone: TIMEZONE });
 
-  cron.schedule('30 3 * * *', limparDadosAntigos, { timezone: TIMEZONE });
+  cron.schedule('30 3 * * *', () => comLock('limpar-dados-antigos', 600, limparDadosAntigos), { timezone: TIMEZONE });
 
   // Sync das avaliações do Google a cada 6h (no-op se a flag estiver desligada).
-  cron.schedule('0 */6 * * *', async () => {
+  cron.schedule('0 */6 * * *', () => comLock('sync-google', 300, async () => {
     try {
       await sincronizarAvaliacoesGoogle();
     } catch (erro) {
       logger.error('Erro na sincronização Google', { erro: erro.message });
     }
-  }, { timezone: TIMEZONE });
+  }), { timezone: TIMEZONE });
 
   logger.info('Agendamentos iniciados', {
     resumoSemanal: 'domingo 18h ' + TIMEZONE,
