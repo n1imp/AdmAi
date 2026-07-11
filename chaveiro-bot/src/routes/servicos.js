@@ -296,9 +296,10 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     const { periodo = 'mes', inicio, fim } = req.query;
     const filtroDatas = construirFiltroPeriodo(periodo, inicio, fim);
     const filtroAnterior = construirFiltroPeriodoAnterior(filtroDatas);
-    const [servicos, servicosAnterior] = await Promise.all([
+    const [servicos, aggAnterior] = await Promise.all([
       req.db.servico.findMany({ where: { status: 'ativo', criadoEm: filtroDatas }, include: { tecnico: { select: { nome: true } } }, orderBy: { criadoEm: 'asc' }, take: MAX_AGREGACAO }),
-      req.db.servico.findMany({ where: { status: 'ativo', criadoEm: filtroAnterior }, select: { valorCobrado: true, valorLiquido: true, comissaoGerada: true }, take: MAX_AGREGACAO }),
+      // Período anterior: só receita líquida e contagem → SUM/COUNT no banco (F3.2).
+      req.db.servico.aggregate({ where: { status: 'ativo', criadoEm: filtroAnterior }, _sum: { valorLiquido: true }, _count: true }),
     ]);
     const totalServicos = servicos.length;
     const receitaBruta = servicos.reduce((s, x) => s + x.valorCobrado, 0);
@@ -308,8 +309,8 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     const totalComissao = servicos.reduce((s, x) => s + (x.comissaoGerada ?? 0), 0);
     const lucro = receitaLiquida - totalComissao;
     const margemLucro = receitaBruta > 0 ? parseFloat(((lucro / receitaBruta) * 100).toFixed(1)) : 0;
-    const receitaLiquidaAnterior = servicosAnterior.reduce((s, x) => s + x.valorLiquido, 0);
-    const totalServicosAnterior = servicosAnterior.length;
+    const receitaLiquidaAnterior = aggAnterior._sum.valorLiquido ?? 0;
+    const totalServicosAnterior = aggAnterior._count;
     const ticketMedioAnterior = totalServicosAnterior > 0 ? receitaLiquidaAnterior / totalServicosAnterior : 0;
     const comparativo = {
       receitaLiquida: variacao(receitaLiquida, receitaLiquidaAnterior),
