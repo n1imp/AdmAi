@@ -1,8 +1,8 @@
 /**
  * Smoke do object storage (F1b) contra o Supabase real.
  * Uso: node --env-file=.env.staging scripts/smoke-storage.mjs
- * Faz upload de um PNG 1x1 no bucket `estoque`, confirma a URL pública (GET 200)
- * e remove o objeto de teste. Nunca imprime credenciais.
+ * Faz upload de um PNG 1x1 no bucket (arg 1, default `estoque`), confirma a URL
+ * pública (GET 200) e remove o objeto de teste. Nunca imprime credenciais.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,7 +17,7 @@ const PNG_1x1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
 );
-const bucket = 'estoque';
+const bucket = process.argv[2] || 'estoque';
 const nome = `smoke-${Date.now()}.png`;
 const cliente = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 
