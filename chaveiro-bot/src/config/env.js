@@ -9,6 +9,10 @@ dotenv.config({ path: process.env.VITEST || process.env.NODE_ENV === 'test' ? '.
 // Exportado para testes unitários (valida o cross-field sem disparar process.exit).
 export const schema = z.object({
   DATABASE_URL: z.string().min(1),
+  // F4-RLS: conexão do RUNTIME de REQUEST via role app_rw (SEM BYPASSRLS) → ativa a RLS
+  // nas queries escopadas (prismaParaEmpresa). Ausente = reusa DATABASE_URL (role atual,
+  // RLS inócua) → comportamento idêntico. Jobs/auth cross-tenant seguem no DATABASE_URL.
+  DATABASE_URL_APP: z.string().optional(),
   // Conexão DIRETA p/ migrations (Supabase pooler). Opcional: só exigida quando o
   // schema Postgres é usado (prod/CI); o dev local em SQLite não precisa.
   DIRECT_URL: z.string().optional(),

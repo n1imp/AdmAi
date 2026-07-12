@@ -1,4 +1,4 @@
-import { prisma } from './prisma.js';
+import { prismaApp } from './prisma.js';
 import { env } from '../config/env.js';
 
 /**
@@ -108,7 +108,7 @@ export function prismaParaEmpresa(empresaId) {
     return existente;
   }
 
-  const client = prisma.$extends({
+  const client = prismaApp.$extends({
     name: `tenant-${empresaId}`,
     query: {
       $allModels: {
@@ -120,7 +120,7 @@ export function prismaParaEmpresa(empresaId) {
           // RLS ligada: roda na transação que crava o GUC e despacha SEMPRE no `tx`
           // (rodar via `query` executaria fora da transação, sem o GUC aplicado).
           if (RLS_ATIVA) {
-            return prisma.$transaction(async (tx) => {
+            return prismaApp.$transaction(async (tx) => {
               await tx.$executeRawUnsafe(SQL_SET_EMPRESA, String(empresaId));
               return tx[modelDelegate(model)][op](finalArgs);
             });

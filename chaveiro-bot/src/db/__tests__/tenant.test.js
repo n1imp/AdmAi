@@ -37,7 +37,7 @@ function fakeBaseClient() {
   return client;
 }
 
-vi.mock('../prisma.js', () => ({ prisma: fakeBaseClient() }));
+vi.mock('../prisma.js', () => ({ prismaApp: fakeBaseClient() }));
 
 const { prismaParaEmpresa } = await import('../tenant.js');
 
@@ -126,7 +126,7 @@ describe('prismaParaEmpresa — RLS ligada (GUC por transação)', () => {
   it('crava o GUC e despacha no tx (não em query)', async () => {
     vi.resetModules();
     setConfigCalls.length = 0; txDispatch.length = 0;
-    vi.doMock('../prisma.js', () => ({ prisma: fakeBaseClientRls() }));
+    vi.doMock('../prisma.js', () => ({ prismaApp: fakeBaseClientRls() }));
     vi.doMock('../../config/env.js', () => ({ env: { RLS_ENABLED: 'true' } }));
     const { prismaParaEmpresa: scoped } = await import('../tenant.js');
 
