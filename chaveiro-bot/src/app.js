@@ -170,7 +170,12 @@ export function criarApp() {
   app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
   app.use((erro, req, res, next) => {
     logger.error('Erro não tratado', { erro: erro.message });
-    capturarErro(erro, { feature: 'http', extra: { path: req.path, method: req.method } });
+    capturarErro(erro, {
+      feature: 'http',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+      extra: { path: req.path, method: req.method },
+    });
     res.status(500).json({ erro: 'Erro interno do servidor' });
   });
 

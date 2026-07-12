@@ -13,6 +13,7 @@ import { logger } from '../utils/logger.js';
 let ativo = false;
 
 export function iniciarSentry() {
+  if (ativo) return true; // idempotente: instrument.js já pode ter inicializado no boot.
   if (!env.SENTRY_DSN) return false;
   Sentry.init({
     dsn: env.SENTRY_DSN,
