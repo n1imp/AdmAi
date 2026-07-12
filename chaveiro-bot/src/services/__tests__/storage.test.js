@@ -101,6 +101,26 @@ describe('storage (F1b)', () => {
     expect(writeFileMock).toHaveBeenCalled();
   });
 
+  it('uploadComFallback STRICT: falha do storage LANÇA (não grava no disco)', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k', STORAGE_STRICT: 'true' };
+    uploadMock.mockResolvedValue({ error: { message: 'storage down' } });
+    await expect(uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up')).rejects.toThrow(/STORAGE_STRICT/);
+    expect(writeFileMock).not.toHaveBeenCalled();
+  });
+
+  it('uploadComFallback STRICT: sem storage configurado LANÇA', async () => {
+    envMock.env = { STORAGE_STRICT: 'true' };
+    await expect(uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up')).rejects.toThrow(/STORAGE_STRICT/);
+    expect(writeFileMock).not.toHaveBeenCalled();
+  });
+
+  it('uploadComFallback STRICT: storage OK devolve a URL pública normalmente', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k', STORAGE_STRICT: 'true' };
+    const url = await uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up');
+    expect(url).toBe(URL_PUBLICA);
+    expect(writeFileMock).not.toHaveBeenCalled();
+  });
+
   it('uploadPrivado envia o objeto e não devolve URL pública', async () => {
     envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
     await expect(uploadPrivado('selfies-ponto', 'ponto-1.jpg', Buffer.from('x'), 'image/jpeg')).resolves.toBeUndefined();

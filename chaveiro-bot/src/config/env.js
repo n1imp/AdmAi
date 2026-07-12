@@ -83,6 +83,11 @@ export const schema = z.object({
   // (Expand/Contract: seguro deployar antes de configurar as credenciais).
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  // "true" torna o storage OBRIGATÓRIO no caminho de upload: em falha (ou ausência) do
+  // storage, NÃO cai para o disco local — lança. Necessário ANTES de escalar para N
+  // réplicas (F2): um arquivo gravado no disco de UMA réplica não é servido pelas outras
+  // (404 intermitente). Default OFF: mantém o fallback resiliente do monolito single-replica.
+  STORAGE_STRICT: z.string().optional(),
   // F1c — papel do processo: 'web' serve só HTTP; ausente/'all'/'worker' roda os jobs
   // (workers BullMQ + agendador). Default (ausente) = monolito atual.
   ROLE: z.enum(['web', 'worker', 'all']).optional(),
