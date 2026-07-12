@@ -79,6 +79,9 @@ export const schema = z.object({
   // (Expand/Contract: seguro deployar antes de configurar as credenciais).
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  // F1c — papel do processo: 'web' serve só HTTP; ausente/'all'/'worker' roda os jobs
+  // (workers BullMQ + agendador). Default (ausente) = monolito atual.
+  ROLE: z.enum(['web', 'worker', 'all']).optional(),
   // ── Observabilidade ───────────────────────────────────────────────────────
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
