@@ -33,6 +33,9 @@ COPY --from=builder --chown=appuser:nodejs /app/prisma ./prisma
 COPY --chown=appuser:nodejs prisma.config.ts ./
 COPY --chown=appuser:nodejs package*.json ./
 COPY --chown=appuser:nodejs src ./src
+# Scripts de ops/migração (ex.: backfill de mídia, smokes) — disponíveis no container
+# para rodar via console/`railway run`. Os testes ficam de fora (ver .dockerignore).
+COPY --chown=appuser:nodejs scripts ./scripts
 COPY --chown=appuser:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 # Garante a pasta de uploads existente (ponto de montagem do volume persistente).

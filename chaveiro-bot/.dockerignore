@@ -9,6 +9,7 @@ uploads
 .gitignore
 test
 src/**/__tests__
+scripts/**/__tests__
 vitest.config.js
 vitest.integration.config.js
 *.log
