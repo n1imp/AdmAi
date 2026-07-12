@@ -23,6 +23,12 @@ export function storageHabilitado() {
   return Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+// Modo estrito (F2): storage é obrigatório no upload; sem ele, `uploadComFallback` lança
+// em vez de gravar no disco local — evita mídia presa numa única réplica (404 nas demais).
+function storageEstrito() {
+  return env.STORAGE_STRICT === 'true';
+}
+
 function clienteStorage() {
   if (!cliente) {
     cliente = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -83,6 +89,10 @@ export async function removerImagem(bucket, nomeArquivo) {
  * Sobe a imagem para o storage (se configurado) e, em QUALQUER falha — ou sem storage —,
  * grava no disco local em `uploadsDir`. Garante que a indisponibilidade do storage nunca
  * derrube o fluxo de upload (uploads não são caminho crítico e degradam com elegância).
+ *
+ * Sob `STORAGE_STRICT=true` (obrigatório antes de escalar para N réplicas — F2), o fallback
+ * pro disco é DESLIGADO: falha/ausência do storage lança, pois um arquivo no disco de uma
+ * réplica não é servido pelas demais. O chamador trata (estoque → 500; inbound → foto nula).
  * @returns {Promise<string>} URL pública (storage) ou `/uploads/<nome>` (disco).
  */
 export async function uploadComFallback(bucket, nomeArquivo, buffer, contentType, uploadsDir) {
@@ -90,8 +100,11 @@ export async function uploadComFallback(bucket, nomeArquivo, buffer, contentType
     try {
       return await uploadImagem(bucket, nomeArquivo, buffer, contentType);
     } catch (erro) {
+      if (storageEstrito()) throw new Error(`Upload para ${bucket}/${nomeArquivo} falhou e STORAGE_STRICT proíbe o fallback pro disco: ${erro.message}`);
       logger.warn('Storage indisponível no upload; caindo para disco', { bucket, nomeArquivo, erro: erro.message });
     }
+  } else if (storageEstrito()) {
+    throw new Error('STORAGE_STRICT=true exige object storage configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY ausentes).');
   }
   await mkdir(uploadsDir, { recursive: true });
   await writeFile(path.join(uploadsDir, nomeArquivo), buffer);
