@@ -34,12 +34,14 @@ function clienteStorage() {
 
 /**
  * Envia um buffer para um bucket e devolve a URL pública (buckets públicos).
+ * `upsert` (default false) permite sobrescrever um objeto já existente — usado pela
+ * migração idempotente de mídia legada (backfill), onde re-executar deve ser inócuo.
  * @returns {Promise<string>} URL pública do objeto.
  */
-export async function uploadImagem(bucket, nomeArquivo, buffer, contentType) {
+export async function uploadImagem(bucket, nomeArquivo, buffer, contentType, { upsert = false } = {}) {
   const { error } = await clienteStorage().storage
     .from(bucket)
-    .upload(nomeArquivo, buffer, { contentType, upsert: false });
+    .upload(nomeArquivo, buffer, { contentType, upsert });
   if (error) throw new Error(`Falha no upload para ${bucket}/${nomeArquivo}: ${error.message}`);
   const { data } = clienteStorage().storage.from(bucket).getPublicUrl(nomeArquivo);
   return data.publicUrl;
@@ -48,11 +50,12 @@ export async function uploadImagem(bucket, nomeArquivo, buffer, contentType) {
 /**
  * Sobe um objeto para um bucket PRIVADO (sem devolver URL pública). Lança em erro —
  * o chamador decide o fallback. Usado para mídia sensível (selfies de ponto, LGPD).
+ * `upsert` (default false) idem `uploadImagem`: sobrescreve no backfill idempotente.
  */
-export async function uploadPrivado(bucket, nomeArquivo, buffer, contentType) {
+export async function uploadPrivado(bucket, nomeArquivo, buffer, contentType, { upsert = false } = {}) {
   const { error } = await clienteStorage().storage
     .from(bucket)
-    .upload(nomeArquivo, buffer, { contentType, upsert: false });
+    .upload(nomeArquivo, buffer, { contentType, upsert });
   if (error) throw new Error(`Falha no upload privado ${bucket}/${nomeArquivo}: ${error.message}`);
 }
 

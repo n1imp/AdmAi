@@ -54,6 +54,19 @@ describe('storage (F1b)', () => {
     expect(uploadMock).toHaveBeenCalledWith('produto-1.png', buffer, { contentType: 'image/png', upsert: false });
   });
 
+  it('uploadImagem com upsert=true sobrescreve (backfill idempotente)', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    const url = await uploadImagem('estoque', 'produto-1.png', Buffer.from('img'), 'image/png', { upsert: true });
+    expect(url).toBe(URL_PUBLICA);
+    expect(uploadMock).toHaveBeenCalledWith('produto-1.png', expect.any(Buffer), { contentType: 'image/png', upsert: true });
+  });
+
+  it('uploadPrivado com upsert=true sobrescreve (backfill idempotente)', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    await uploadPrivado('selfies-ponto', 'ponto-1.jpg', Buffer.from('x'), 'image/jpeg', { upsert: true });
+    expect(uploadMock).toHaveBeenCalledWith('ponto-1.jpg', expect.any(Buffer), { contentType: 'image/jpeg', upsert: true });
+  });
+
   it('uploadImagem propaga erro do storage', async () => {
     envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
     uploadMock.mockResolvedValue({ error: { message: 'bucket not found' } });
