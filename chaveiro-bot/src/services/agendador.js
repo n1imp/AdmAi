@@ -12,6 +12,7 @@ import { renovarToken } from './google/oauth.js';
 import { listarReviews } from './google/businessClient.js';
 import { analisarNovas } from './google/analise.js';
 import { env } from '../config/env.js';
+import { storageHabilitado, removerImagem } from './storage.js';
 
 const TIMEZONE = 'America/Sao_Paulo';
 
@@ -197,6 +198,7 @@ async function expurgarProvasPonto(corte) {
     if (b.selfieUrl) {
       // Usa só o basename para impedir path traversal vindo do valor armazenado.
       const nome = path.basename(b.selfieUrl);
+      if (storageHabilitado()) await removerImagem('selfies-ponto', nome); // storage privado (best-effort)
       await unlink(path.join(PONTO_SELFIES_DIR, nome)).catch(() => {}); // já removido = ok
       await unlink(path.join(UPLOADS_DIR_LEGADO, nome)).catch(() => {}); // selfies legadas
     }

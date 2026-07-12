@@ -45,6 +45,31 @@ export async function uploadImagem(bucket, nomeArquivo, buffer, contentType) {
   return data.publicUrl;
 }
 
+/**
+ * Sobe um objeto para um bucket PRIVADO (sem devolver URL pública). Lança em erro —
+ * o chamador decide o fallback. Usado para mídia sensível (selfies de ponto, LGPD).
+ */
+export async function uploadPrivado(bucket, nomeArquivo, buffer, contentType) {
+  const { error } = await clienteStorage().storage
+    .from(bucket)
+    .upload(nomeArquivo, buffer, { contentType, upsert: false });
+  if (error) throw new Error(`Falha no upload privado ${bucket}/${nomeArquivo}: ${error.message}`);
+}
+
+/**
+ * Gera uma URL assinada (curta) para um objeto privado. Retorna null se o objeto não
+ * existe ou o storage falha — o chamador cai para o disco (transição/legado).
+ */
+export async function urlAssinada(bucket, nomeArquivo, expiraSegundos = 60) {
+  try {
+    const { data, error } = await clienteStorage().storage.from(bucket).createSignedUrl(nomeArquivo, expiraSegundos);
+    if (error) return null;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
 /** Remove um objeto do bucket (best-effort; loga aviso em falha, não lança). */
 export async function removerImagem(bucket, nomeArquivo) {
   const { error } = await clienteStorage().storage.from(bucket).remove([nomeArquivo]);

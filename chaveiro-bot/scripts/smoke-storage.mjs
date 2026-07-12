@@ -24,13 +24,22 @@ const cliente = createClient(url, key, { auth: { persistSession: false, autoRefr
 const { error: upErr } = await cliente.storage.from(bucket).upload(nome, PNG_1x1, { contentType: 'image/png', upsert: false });
 if (upErr) { console.error('UPLOAD FALHOU:', upErr.message); process.exit(1); }
 
-const { data } = cliente.storage.from(bucket).getPublicUrl(nome);
 console.log('Objeto:', `${bucket}/${nome}`);
-console.log('URL pública:', data.publicUrl);
+let link;
+if (process.argv[3] === 'private') {
+  const { data, error } = await cliente.storage.from(bucket).createSignedUrl(nome, 60);
+  if (error) { console.error('SIGN FALHOU:', error.message); process.exit(1); }
+  link = data.signedUrl;
+  console.log('URL assinada (privado):', link);
+} else {
+  const { data } = cliente.storage.from(bucket).getPublicUrl(nome);
+  link = data.publicUrl;
+  console.log('URL pública:', link);
+}
 
-const resp = await fetch(data.publicUrl);
+const resp = await fetch(link);
 const bytes = (await resp.arrayBuffer()).byteLength;
-console.log('GET público:', resp.status, `(${bytes} bytes)`);
+console.log('GET:', resp.status, `(${bytes} bytes)`);
 
 await cliente.storage.from(bucket).remove([nome]); // limpa o objeto de teste
 console.log(resp.ok ? 'SMOKE OK — upload + URL pública acessível, objeto de teste removido.' : 'SMOKE FALHOU.');
