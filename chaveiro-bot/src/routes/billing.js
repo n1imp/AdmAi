@@ -9,6 +9,7 @@ import {
 import { enviarEmailRecibo, enviarEmailFalhaPagamento } from '../services/email.js';
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
+import { marcarSeNovo } from '../services/idempotencia.js';
 
 // ── /api/billing/* ────────────────────────────────────────────────────────────
 
@@ -69,6 +70,11 @@ stripeWebhookRouter.post(
     }
 
     try {
+      // Idempotência: a Stripe reenvia eventos; processa cada event.id só uma vez.
+      if (!(await marcarSeNovo(`stripe:${evento.id}`, 86400))) {
+        logger.info('stripe_webhook_duplicado', { id: evento.id, tipo: evento.type });
+        return res.json({ recebido: true, duplicado: true });
+      }
       await despacharEvento(evento);
       res.json({ recebido: true });
     } catch (e) {
