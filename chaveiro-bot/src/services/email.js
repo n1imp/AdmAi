@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { comTimeout } from '../utils/resiliencia.js';
 
 let _resend = null;
 
@@ -19,7 +20,7 @@ async function enviar({ to, subject, html, text }) {
     return;
   }
   try {
-    await resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text });
+    await comTimeout(resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text }), 15000, 'resend.send');
     logger.info('email_enviado', { to, subject });
   } catch (e) {
     logger.warn('email_falha', { to, subject, erro: e.message });

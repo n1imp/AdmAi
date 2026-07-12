@@ -7,7 +7,7 @@ export async function getStripe() {
   if (!env.STRIPE_SECRET_KEY) return null;
   if (!_stripe) {
     const { default: Stripe } = await import('stripe');
-    _stripe = new Stripe(env.STRIPE_SECRET_KEY);
+    _stripe = new Stripe(env.STRIPE_SECRET_KEY, { timeout: 20000, maxNetworkRetries: 2 });
   }
   return _stripe;
 }
