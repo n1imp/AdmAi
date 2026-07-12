@@ -13,6 +13,7 @@ import { canonizarTelefone } from '../services/parser.js';
 import { conferirMagicBytes } from '../utils/upload.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { logger } from '../utils/logger.js';
+import { storageHabilitado, uploadPrivado, urlAssinada } from '../services/storage.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -102,8 +103,18 @@ async function salvarSelfiePonto(dataUrl) {
   const buffer = Buffer.from(m[2], 'base64');
   if (buffer.length > 5 * 1024 * 1024) { const e = new Error('selfie grande'); e.codigo = 'selfie'; throw e; }
   if (!conferirMagicBytes(buffer, m[1])) { const e = new Error('selfie inválida'); e.codigo = 'selfie'; throw e; }
-  await mkdir(PONTO_SELFIES_DIR, { recursive: true });
   const nome = `ponto-${randomUUID()}.${SELFIE_PONTO_MIME[m[1]] ?? 'jpg'}`;
+  // Bucket PRIVADO (LGPD). Em falha do storage, cai para o disco. O selfieUrl mantém o
+  // formato /uploads-ponto/<nome>; o serve resolve storage vs disco em runtime.
+  if (storageHabilitado()) {
+    try {
+      await uploadPrivado('selfies-ponto', nome, buffer, m[1]);
+      return `/uploads-ponto/${nome}`;
+    } catch (erro) {
+      logger.warn('Selfie: storage indisponível, gravando em disco', { nome, erro: erro.message });
+    }
+  }
+  await mkdir(PONTO_SELFIES_DIR, { recursive: true });
   await writeFile(path.join(PONTO_SELFIES_DIR, nome), buffer);
   return `/uploads-ponto/${nome}`;
 }
@@ -416,6 +427,13 @@ router.get('/ponto/selfie/:arquivo', async (req, res) => {
     const ehProprio = req.user.tecnicoId === batida.registro.tecnicoId;
     if (!ehProprio && !pode(req.user, 'ponto', 'ver')) {
       return res.status(403).json({ erro: 'Sem permissão para ver esta selfie' });
+    }
+    // Storage privado: redireciona (302) para uma URL assinada curta. Se o objeto não
+    // está no storage (selfie legada em disco) ou o storage está off, urlAssinada devolve
+    // null e caímos para o disco. As checagens de auth/tenant/permissão acima já passaram.
+    if (storageHabilitado()) {
+      const assinada = await urlAssinada('selfies-ponto', arquivo, 60);
+      if (assinada) { res.setHeader('Cache-Control', 'private, no-store'); return res.redirect(302, assinada); }
     }
     const caminho = path.join(PONTO_SELFIES_DIR, arquivo);
     if (!existsSync(caminho)) return res.status(404).json({ erro: 'Selfie não encontrada' });

@@ -11,9 +11,10 @@ vi.mock('../../config/env.js', () => envMock);
 const uploadMock = vi.hoisted(() => vi.fn());
 const getPublicUrlMock = vi.hoisted(() => vi.fn());
 const removeMock = vi.hoisted(() => vi.fn());
+const createSignedUrlMock = vi.hoisted(() => vi.fn());
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
-    storage: { from: () => ({ upload: uploadMock, getPublicUrl: getPublicUrlMock, remove: removeMock }) },
+    storage: { from: () => ({ upload: uploadMock, getPublicUrl: getPublicUrlMock, remove: removeMock, createSignedUrl: createSignedUrlMock }) },
   }),
 }));
 
@@ -21,9 +22,10 @@ const mkdirMock = vi.hoisted(() => vi.fn());
 const writeFileMock = vi.hoisted(() => vi.fn());
 vi.mock('node:fs/promises', () => ({ mkdir: mkdirMock, writeFile: writeFileMock }));
 
-import { storageHabilitado, uploadImagem, removerImagem, uploadComFallback } from '../storage.js';
+import { storageHabilitado, uploadImagem, removerImagem, uploadComFallback, uploadPrivado, urlAssinada } from '../storage.js';
 
 const URL_PUBLICA = 'https://x.supabase.co/storage/v1/object/public/estoque/produto-1.png';
+const URL_ASSINADA = 'https://x.supabase.co/storage/v1/object/sign/selfies-ponto/ponto-1.jpg?token=abc';
 
 beforeEach(() => {
   envMock.env = {};
@@ -32,6 +34,7 @@ beforeEach(() => {
   removeMock.mockReset().mockResolvedValue({ error: null });
   mkdirMock.mockReset().mockResolvedValue(undefined);
   writeFileMock.mockReset().mockResolvedValue(undefined);
+  createSignedUrlMock.mockReset().mockResolvedValue({ data: { signedUrl: URL_ASSINADA }, error: null });
 });
 
 describe('storage (F1b)', () => {
@@ -83,5 +86,31 @@ describe('storage (F1b)', () => {
     const url = await uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up');
     expect(url).toBe('/uploads/p.png');
     expect(writeFileMock).toHaveBeenCalled();
+  });
+
+  it('uploadPrivado envia o objeto e não devolve URL pública', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    await expect(uploadPrivado('selfies-ponto', 'ponto-1.jpg', Buffer.from('x'), 'image/jpeg')).resolves.toBeUndefined();
+    expect(uploadMock).toHaveBeenCalledWith('ponto-1.jpg', expect.any(Buffer), { contentType: 'image/jpeg', upsert: false });
+  });
+
+  it('uploadPrivado propaga erro do storage', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    uploadMock.mockResolvedValue({ error: { message: 'boom' } });
+    await expect(uploadPrivado('selfies-ponto', 'p.jpg', Buffer.from('x'), 'image/jpeg')).rejects.toThrow(/boom/);
+  });
+
+  it('urlAssinada devolve a URL assinada', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    const url = await urlAssinada('selfies-ponto', 'ponto-1.jpg', 60);
+    expect(url).toBe(URL_ASSINADA);
+    expect(createSignedUrlMock).toHaveBeenCalledWith('ponto-1.jpg', 60);
+  });
+
+  it('urlAssinada devolve null quando o objeto não existe', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    createSignedUrlMock.mockResolvedValue({ data: null, error: { message: 'not found' } });
+    const url = await urlAssinada('selfies-ponto', 'missing.jpg', 60);
+    expect(url).toBeNull();
   });
 });
