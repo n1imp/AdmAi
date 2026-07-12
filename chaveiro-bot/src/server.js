@@ -22,17 +22,25 @@ iniciarSentry();
 const { app, estado } = criarApp();
 const PORT = parseInt(env.PORT);
 
+// F1c — split web/worker: com ROLE=web este processo só serve HTTP (sem workers/cron);
+// ausente/'all'/'worker' roda os jobs também. Default preserva o monolito atual. Assim,
+// sob N réplicas: web (ROLE=web, atrás do LB) + 1 worker (jobs) → cron dispara uma vez só.
+const rodarJobs = env.ROLE !== 'web';
+
 const server = app.listen(PORT, async () => {
   logger.info(`🔑 AdmAi iniciado na porta ${PORT}`, {
     ambiente: env.NODE_ENV,
+    papel: env.ROLE ?? 'all',
     whatsapp: env.EVOLUTION_HOST ? 'evolution' : 'nenhum',
   });
 
   try {
     await prisma.$connect();
     logger.info('✅ Banco de dados conectado');
-    iniciarWorkerInbound();
-    iniciarWorkerEmail();
+    if (rodarJobs) {
+      iniciarWorkerInbound();
+      iniciarWorkerEmail();
+    }
   } catch (erro) {
     logger.error('❌ Falha ao conectar ao banco', { erro: erro.message });
     process.exit(1);
@@ -50,10 +58,11 @@ const server = app.listen(PORT, async () => {
     logger.warn('Nenhuma camada WhatsApp configurada (defina EVOLUTION_HOST).');
   }
 
-  iniciarAgendamentos();
-
-  // Atualiza métricas de profundidade das filas BullMQ a cada 30s.
-  setInterval(() => atualizarMetricasFila(filaMensagens), 30_000);
+  if (rodarJobs) {
+    iniciarAgendamentos();
+    // Atualiza métricas de profundidade das filas BullMQ a cada 30s.
+    setInterval(() => atualizarMetricasFila(filaMensagens), 30_000);
+  }
 });
 
 // ── Graceful shutdown (guia §5.2) ──────────────────────────────────────────
