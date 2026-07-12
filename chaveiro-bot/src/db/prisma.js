@@ -30,4 +30,12 @@ prisma.$on('query', (e) => {
   }
 });
 
-export { prisma };
+// F4-RLS: cliente do caminho de REQUEST (base do prismaParaEmpresa). Com DATABASE_URL_APP
+// apontando pro role app_rw (sem BYPASSRLS), as queries escopadas passam a sofrer RLS.
+// Ausente → reusa o `prisma` privilegiado (comportamento atual). Os jobs/auth cross-tenant
+// continuam no `prisma` (privilegiado, bypassa RLS) — é essa a separação que a RLS exige.
+const prismaApp = env.DATABASE_URL_APP
+  ? new PrismaClient({ adapter: new PrismaPg({ connectionString: env.DATABASE_URL_APP }) })
+  : prisma;
+
+export { prisma, prismaApp };
