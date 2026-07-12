@@ -17,7 +17,11 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-import { storageHabilitado, uploadImagem, removerImagem } from '../storage.js';
+const mkdirMock = vi.hoisted(() => vi.fn());
+const writeFileMock = vi.hoisted(() => vi.fn());
+vi.mock('node:fs/promises', () => ({ mkdir: mkdirMock, writeFile: writeFileMock }));
+
+import { storageHabilitado, uploadImagem, removerImagem, uploadComFallback } from '../storage.js';
 
 const URL_PUBLICA = 'https://x.supabase.co/storage/v1/object/public/estoque/produto-1.png';
 
@@ -26,6 +30,8 @@ beforeEach(() => {
   uploadMock.mockReset().mockResolvedValue({ error: null });
   getPublicUrlMock.mockReset().mockReturnValue({ data: { publicUrl: URL_PUBLICA } });
   removeMock.mockReset().mockResolvedValue({ error: null });
+  mkdirMock.mockReset().mockResolvedValue(undefined);
+  writeFileMock.mockReset().mockResolvedValue(undefined);
 });
 
 describe('storage (F1b)', () => {
@@ -55,5 +61,27 @@ describe('storage (F1b)', () => {
     envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
     removeMock.mockResolvedValue({ error: { message: 'x' } });
     await expect(removerImagem('estoque', 'p.png')).resolves.toBeUndefined();
+  });
+
+  it('uploadComFallback: sem storage grava no disco', async () => {
+    envMock.env = {};
+    const url = await uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up');
+    expect(url).toBe('/uploads/p.png');
+    expect(writeFileMock).toHaveBeenCalled();
+  });
+
+  it('uploadComFallback: com storage OK devolve a URL pública (sem tocar o disco)', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    const url = await uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up');
+    expect(url).toBe(URL_PUBLICA);
+    expect(writeFileMock).not.toHaveBeenCalled();
+  });
+
+  it('uploadComFallback: falha do storage CAI para o disco', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    uploadMock.mockResolvedValue({ error: { message: 'storage down' } });
+    const url = await uploadComFallback('estoque', 'p.png', Buffer.from('x'), 'image/png', '/tmp/up');
+    expect(url).toBe('/uploads/p.png');
+    expect(writeFileMock).toHaveBeenCalled();
   });
 });

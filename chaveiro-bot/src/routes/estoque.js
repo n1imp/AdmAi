@@ -1,13 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { gerarRelatorioPDF } from '../services/relatorio.js';
 import { movimentarEstoque } from '../services/estoque.js';
 import { conferirMagicBytes } from '../utils/upload.js';
-import { storageHabilitado, uploadImagem } from '../services/storage.js';
+import { uploadComFallback } from '../services/storage.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { logger } from '../utils/logger.js';
 
@@ -46,15 +45,8 @@ router.post('/materiais/upload', requirePermissao('estoque', 'editar'), async (r
     if (buffer.length > 5 * 1024 * 1024) return res.status(413).json({ erro: 'Imagem muito grande (máx. 5MB)' });
     if (!conferirMagicBytes(buffer, mime)) return res.status(400).json({ erro: 'Imagem inválida (conteúdo não confere com o tipo)' });
     const nomeArquivo = `produto-${randomUUID()}.${ext}`;
-    let url;
-    if (storageHabilitado()) {
-      url = await uploadImagem('estoque', nomeArquivo, buffer, mime);
-    } else {
-      await mkdir(UPLOADS_DIR, { recursive: true });
-      await writeFile(path.join(UPLOADS_DIR, nomeArquivo), buffer);
-      url = `/uploads/${nomeArquivo}`;
-    }
-    logger.info('Imagem de produto enviada', { nomeArquivo, bytes: buffer.length, destino: storageHabilitado() ? 'supabase' : 'disco' });
+    const url = await uploadComFallback('estoque', nomeArquivo, buffer, mime, UPLOADS_DIR);
+    logger.info('Imagem de produto enviada', { nomeArquivo, bytes: buffer.length });
     res.status(201).json({ url });
   } catch (erro) {
     logger.error('Erro POST /materiais/upload', { erro: erro.message });

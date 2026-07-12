@@ -10,6 +10,8 @@
  * O service-role key é usado apenas no servidor (nunca exposto ao cliente) e bypassa
  * RLS para escrever/remover; buckets públicos permitem leitura direta por URL.
  */
+import { writeFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
@@ -47,4 +49,23 @@ export async function uploadImagem(bucket, nomeArquivo, buffer, contentType) {
 export async function removerImagem(bucket, nomeArquivo) {
   const { error } = await clienteStorage().storage.from(bucket).remove([nomeArquivo]);
   if (error) logger.warn('Falha ao remover do storage', { bucket, nomeArquivo, erro: error.message });
+}
+
+/**
+ * Sobe a imagem para o storage (se configurado) e, em QUALQUER falha — ou sem storage —,
+ * grava no disco local em `uploadsDir`. Garante que a indisponibilidade do storage nunca
+ * derrube o fluxo de upload (uploads não são caminho crítico e degradam com elegância).
+ * @returns {Promise<string>} URL pública (storage) ou `/uploads/<nome>` (disco).
+ */
+export async function uploadComFallback(bucket, nomeArquivo, buffer, contentType, uploadsDir) {
+  if (storageHabilitado()) {
+    try {
+      return await uploadImagem(bucket, nomeArquivo, buffer, contentType);
+    } catch (erro) {
+      logger.warn('Storage indisponível no upload; caindo para disco', { bucket, nomeArquivo, erro: erro.message });
+    }
+  }
+  await mkdir(uploadsDir, { recursive: true });
+  await writeFile(path.join(uploadsDir, nomeArquivo), buffer);
+  return `/uploads/${nomeArquivo}`;
 }
