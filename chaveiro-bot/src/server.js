@@ -4,8 +4,10 @@
  *
  * A construção do app vive em app.js (importável em testes sem abrir porta).
  */
+// DEVE ser o primeiro import: inicializa o Sentry antes de app.js/prisma.js/filas para
+// que a auto-instrumentação (OpenTelemetry) atache em HTTP/Express/pg/ioredis. Ver instrument.js.
+import './instrument.js';
 import { env } from './config/env.js';
-import { iniciarSentry } from './config/sentry.js';
 import { criarApp } from './app.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
@@ -15,9 +17,6 @@ import { iniciarWorkerInbound } from './workers/inbound-worker.js';
 import { iniciarWorkerEmail } from './workers/email-worker.js';
 import { filaMensagens } from './queues/mensagens.js';
 import { atualizarMetricasFila } from './config/metrics.js';
-
-// Sentry deve inicializar antes de tudo para capturar erros de boot.
-iniciarSentry();
 
 const { app, estado } = criarApp();
 const PORT = parseInt(env.PORT);
