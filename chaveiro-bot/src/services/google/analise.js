@@ -2,6 +2,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { env } from '../../config/env.js';
 import { prisma } from '../../db/prisma.js';
 import { logger } from '../../utils/logger.js';
+import { criarBreaker } from '../../utils/resiliencia.js';
+
+// Breaker por réplica: num lote de avaliações, se a Anthropic cair, abre após 5 falhas e
+// os itens restantes falham rápido (em vez de cada um esperar 20s×retries do SDK).
+const breakerIA = criarBreaker({ rotulo: 'anthropic', limiar: 5, resetMs: 30000 });
 
 /**
  * Análise de avaliações por IA (Claude / Anthropic SDK).
@@ -69,13 +74,13 @@ function extrairJson(msg) {
 async function analisarUma(client, aval) {
   const userMsg =
     `Avaliação (nota ${aval.nota ?? 's/ nota'}): "${aval.comentario ?? '(sem comentário)'}"`;
-  const msg = await client.messages.create({
+  const msg = await breakerIA(() => client.messages.create({
     model: env.AI_REVIEWS_MODEL,
     max_tokens: 1024,
     system: SYSTEM,
     messages: [{ role: 'user', content: userMsg }],
     output_config: { format: { type: 'json_schema', schema: SCHEMA_REVIEW } },
-  });
+  }));
   const json = extrairJson(msg);
   if (!json) return null;
   return {

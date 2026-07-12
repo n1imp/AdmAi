@@ -1,8 +1,11 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { comTimeout } from '../utils/resiliencia.js';
+import { comTimeout, criarBreaker } from '../utils/resiliencia.js';
 
 let _resend = null;
+// Breaker por réplica: se o Resend cair, abre e falha rápido (sem esperar o timeout de 15s
+// a cada e-mail) por 30s, então testa de novo. E-mail é best-effort, degrada com elegância.
+const breakerEmail = criarBreaker({ rotulo: 'resend', limiar: 5, resetMs: 30000 });
 
 async function getResend() {
   if (!env.RESEND_API_KEY) return null;
@@ -20,7 +23,7 @@ async function enviar({ to, subject, html, text }) {
     return;
   }
   try {
-    await comTimeout(resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text }), 15000, 'resend.send');
+    await breakerEmail(() => comTimeout(resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text }), 15000, 'resend.send'));
     logger.info('email_enviado', { to, subject });
   } catch (e) {
     logger.warn('email_falha', { to, subject, erro: e.message });
