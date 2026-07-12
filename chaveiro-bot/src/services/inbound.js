@@ -1,10 +1,9 @@
-import { writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { storageHabilitado, uploadImagem } from './storage.js';
+import { uploadComFallback } from './storage.js';
 import { normalizarTelefone } from './parser.js';
 import {
   processarMensagemPrivada, carregarSessao, ehGatilho, ehGatilhoPonto,
@@ -262,12 +261,7 @@ async function salvarFotoBase64(base64, mimetype) {
     const buffer = Buffer.from(base64, 'base64');
     const ext = (mimetype?.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
     const nomeArquivo = `${randomUUID()}.${ext}`;
-    if (storageHabilitado()) {
-      return await uploadImagem('inbound', nomeArquivo, buffer, mimetype || 'image/jpeg');
-    }
-    await mkdir(UPLOADS_DIR, { recursive: true });
-    await writeFile(path.join(UPLOADS_DIR, nomeArquivo), buffer);
-    return `/uploads/${nomeArquivo}`;
+    return await uploadComFallback('inbound', nomeArquivo, buffer, mimetype || 'image/jpeg', UPLOADS_DIR);
   } catch (erro) {
     logger.warn('Falha ao salvar foto inbound', { erro: erro.message });
     return null;
