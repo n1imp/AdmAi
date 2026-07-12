@@ -42,7 +42,7 @@ const SYSTEM = [
 let _cliente = null;
 function cliente() {
   if (!env.ANTHROPIC_API_KEY) return null;
-  if (!_cliente) _cliente = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  if (!_cliente) _cliente = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: 20000, maxRetries: 2 });
   return _cliente;
 }
 
