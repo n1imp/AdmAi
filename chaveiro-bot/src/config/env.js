@@ -74,6 +74,11 @@ export const schema = z.object({
   // em staging — RLS é fail-closed (sem o GUC, a policy retorna zero linhas).
   RLS_ENABLED: z.string().optional(),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
+  // ── Object storage (Supabase Storage) — F1b ───────────────────────────────
+  // Ambos presentes = uploads vão pro bucket; ausentes = fallback pro disco local
+  // (Expand/Contract: seguro deployar antes de configurar as credenciais).
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   // ── Observabilidade ───────────────────────────────────────────────────────
   SENTRY_DSN: z.string().url().optional(),     // ausente = Sentry desligado (dev/test)
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

@@ -7,6 +7,7 @@ import { prisma } from '../db/prisma.js';
 import { gerarRelatorioPDF } from '../services/relatorio.js';
 import { movimentarEstoque } from '../services/estoque.js';
 import { conferirMagicBytes } from '../utils/upload.js';
+import { storageHabilitado, uploadImagem } from '../services/storage.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { logger } from '../utils/logger.js';
 
@@ -44,11 +45,16 @@ router.post('/materiais/upload', requirePermissao('estoque', 'editar'), async (r
     const buffer = Buffer.from(dados, 'base64');
     if (buffer.length > 5 * 1024 * 1024) return res.status(413).json({ erro: 'Imagem muito grande (máx. 5MB)' });
     if (!conferirMagicBytes(buffer, mime)) return res.status(400).json({ erro: 'Imagem inválida (conteúdo não confere com o tipo)' });
-    await mkdir(UPLOADS_DIR, { recursive: true });
     const nomeArquivo = `produto-${randomUUID()}.${ext}`;
-    await writeFile(path.join(UPLOADS_DIR, nomeArquivo), buffer);
-    const url = `/uploads/${nomeArquivo}`;
-    logger.info('Imagem de produto enviada', { nomeArquivo, bytes: buffer.length });
+    let url;
+    if (storageHabilitado()) {
+      url = await uploadImagem('estoque', nomeArquivo, buffer, mime);
+    } else {
+      await mkdir(UPLOADS_DIR, { recursive: true });
+      await writeFile(path.join(UPLOADS_DIR, nomeArquivo), buffer);
+      url = `/uploads/${nomeArquivo}`;
+    }
+    logger.info('Imagem de produto enviada', { nomeArquivo, bytes: buffer.length, destino: storageHabilitado() ? 'supabase' : 'disco' });
     res.status(201).json({ url });
   } catch (erro) {
     logger.error('Erro POST /materiais/upload', { erro: erro.message });

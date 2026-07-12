@@ -24,6 +24,7 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/node": "^10.64.0",
+    "@supabase/supabase-js": "^2.110.2",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.79.2",
