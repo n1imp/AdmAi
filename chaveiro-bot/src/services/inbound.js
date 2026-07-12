@@ -15,6 +15,7 @@ import { resolverMateriaisDoServico } from './catalogo.js';
 import { registrarServico, formatarData, formatarMoeda } from './servico.js';
 import { enviarMensagem } from './whatsapp/gateway.js';
 import { agendarAvaliacao, tentarCapturarResposta } from './avaliacao.js';
+import { marcarSeNovo } from './idempotencia.js';
 
 const UPLOADS_DIR = path.resolve('./uploads');
 
@@ -48,6 +49,12 @@ export async function rotearMensagemInbound(evento) {
   if (msg.fromMe) return { tratado: false };
   if (msg.remoteJid.endsWith('@g.us')) return { tratado: false };
   if (!msg.remoteJid.endsWith('@s.whatsapp.net')) return { tratado: false };
+
+  // Idempotência: a mesma mensagem pode ser reentregue (retry da Meta/Evolution) —
+  // processa cada id só uma vez (evita duplicar serviço ou avançar a conversa 2x).
+  if (msg.id && !(await marcarSeNovo(`wa:${msg.id}`, 86400))) {
+    return { tratado: false, duplicado: true };
+  }
 
   const jid = msg.remoteJid;
   const telefone = normalizarTelefone(jid);
@@ -248,6 +255,7 @@ function extrairMensagem(evento) {
   const imagemBase64 = img ? (item.message?.base64 || item.base64 || null) : null;
 
   return {
+    id: item.key.id ?? null,
     remoteJid: item.key.remoteJid ?? '',
     fromMe: !!item.key.fromMe,
     texto,
