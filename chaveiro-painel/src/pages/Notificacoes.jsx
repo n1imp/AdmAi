@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Bell, Package, CalendarDays, ClipboardList, Target, Info,
-  Check, Trash2, CheckCheck,
+  Bell,
+  Package,
+  CalendarDays,
+  ClipboardList,
+  Target,
+  Info,
+  Check,
+  Trash2,
+  CheckCheck,
 } from 'lucide-react';
 import api, { formatarData } from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -13,18 +20,46 @@ import { useToast } from '../components/Toast.jsx';
 // Ícone + cor por tipo de aviso
 const TIPOS = {
   estoque_baixo: { icon: Package, cor: 'text-warning', bg: 'bg-warning/10' },
-  resumo:        { icon: CalendarDays, cor: 'text-sky-300', bg: 'bg-sky-400/10' },
-  novo_servico:  { icon: ClipboardList, cor: 'text-success', bg: 'bg-success/10' },
-  meta:          { icon: Target, cor: 'text-indigo-300', bg: 'bg-indigo-400/10' },
-  sistema:       { icon: Info, cor: 'text-muted', bg: 'bg-dark-700' },
+  resumo: { icon: CalendarDays, cor: 'text-sky-300', bg: 'bg-sky-400/10' },
+  novo_servico: { icon: ClipboardList, cor: 'text-success', bg: 'bg-success/10' },
+  meta: { icon: Target, cor: 'text-indigo-300', bg: 'bg-indigo-400/10' },
+  sistema: { icon: Info, cor: 'text-muted', bg: 'bg-dark-700' },
 };
 
 // Definição dos toggles de preferência
 const PREFERENCIAS = [
-  { chave: 'estoque_baixo', titulo: 'Estoque baixo', sub: 'Quando um material atinge o mínimo', icon: Package, cor: 'text-warning', bg: 'bg-warning/10' },
-  { chave: 'resumo', titulo: 'Resumo semanal', sub: 'Balanço do desempenho da semana', icon: CalendarDays, cor: 'text-sky-300', bg: 'bg-sky-400/10' },
-  { chave: 'novo_servico', titulo: 'Novo serviço', sub: 'A cada serviço registrado', icon: ClipboardList, cor: 'text-success', bg: 'bg-success/10' },
-  { chave: 'meta', titulo: 'Metas', sub: 'Quando um técnico bate a meta do mês', icon: Target, cor: 'text-indigo-300', bg: 'bg-indigo-400/10' },
+  {
+    chave: 'estoque_baixo',
+    titulo: 'Estoque baixo',
+    sub: 'Quando um material atinge o mínimo',
+    icon: Package,
+    cor: 'text-warning',
+    bg: 'bg-warning/10',
+  },
+  {
+    chave: 'resumo',
+    titulo: 'Resumo semanal',
+    sub: 'Balanço do desempenho da semana',
+    icon: CalendarDays,
+    cor: 'text-sky-300',
+    bg: 'bg-sky-400/10',
+  },
+  {
+    chave: 'novo_servico',
+    titulo: 'Novo serviço',
+    sub: 'A cada serviço registrado',
+    icon: ClipboardList,
+    cor: 'text-success',
+    bg: 'bg-success/10',
+  },
+  {
+    chave: 'meta',
+    titulo: 'Metas',
+    sub: 'Quando um técnico bate a meta do mês',
+    icon: Target,
+    cor: 'text-indigo-300',
+    bg: 'bg-indigo-400/10',
+  },
 ];
 
 function Toggle({ ativo, onChange, disabled }) {
@@ -35,7 +70,9 @@ function Toggle({ ativo, onChange, disabled }) {
       className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${ativo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
       aria-label="Alternar"
     >
-      <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`} />
+      <span
+        className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`}
+      />
     </button>
   );
 }
@@ -57,7 +94,9 @@ function AbaAvisos() {
     }
   }, [toast]);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   async function abrir(aviso) {
     if (!aviso.lida) {
@@ -94,7 +133,12 @@ function AbaAvisos() {
 
   const temNaoLidas = avisos.some((a) => !a.lida);
 
-  if (carregando) return <div className="px-4"><SkeletonLista qtd={4} /></div>;
+  if (carregando)
+    return (
+      <div className="px-4">
+        <SkeletonLista qtd={4} />
+      </div>
+    );
   if (avisos.length === 0) {
     return (
       <EstadoVazio mensagem="Nenhum aviso" sub="Alertas de estoque e resumos aparecerão aqui" />
@@ -120,13 +164,17 @@ function AbaAvisos() {
             onClick={() => abrir(a)}
             className={`card flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform ${a.lida ? 'opacity-60' : ''}`}
           >
-            <div className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${cfg.bg}`}>
+            <div
+              className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${cfg.bg}`}
+            >
               <Icon size={19} className={cfg.cor} strokeWidth={1.8} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-white text-sm truncate">{a.titulo}</p>
-                {!a.lida && <span className="w-2 h-2 rounded-full bg-accent-400 shrink-0 animate-pulse-glow" />}
+                {!a.lida && (
+                  <span className="w-2 h-2 rounded-full bg-accent-400 shrink-0 animate-pulse-glow" />
+                )}
               </div>
               <p className="text-muted text-xs mt-0.5 leading-snug">{a.mensagem}</p>
               <p className="text-muted text-[10px] mt-1">{formatarData(a.criadoEm)}</p>
@@ -150,7 +198,8 @@ function AbaPreferencias() {
   const [salvando, setSalvando] = useState(null);
 
   useEffect(() => {
-    api.get('/me/notificacoes')
+    api
+      .get('/me/notificacoes')
       .then(({ data }) => setPrefs(data))
       .catch(() => toast('Erro ao carregar preferências', 'error'));
   }, [toast]);
@@ -169,21 +218,32 @@ function AbaPreferencias() {
     }
   }
 
-  if (!prefs) return <div className="px-4"><SkeletonLista qtd={4} /></div>;
+  if (!prefs)
+    return (
+      <div className="px-4">
+        <SkeletonLista qtd={4} />
+      </div>
+    );
 
   return (
     <div className="px-4 flex flex-col gap-3">
       <p className="text-muted text-xs px-1">Escolha quais avisos você quer receber.</p>
       {PREFERENCIAS.map(({ chave, titulo, sub, icon: Icon, cor, bg }) => (
         <div key={chave} className="card flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${bg}`}>
+          <div
+            className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${bg}`}
+          >
             <Icon size={19} className={cor} strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-white text-sm">{titulo}</p>
             <p className="text-muted text-xs mt-0.5">{sub}</p>
           </div>
-          <Toggle ativo={!!prefs[chave]} onChange={() => alternar(chave)} disabled={salvando === chave} />
+          <Toggle
+            ativo={!!prefs[chave]}
+            onChange={() => alternar(chave)}
+            disabled={salvando === chave}
+          />
         </div>
       ))}
     </div>
@@ -207,7 +267,9 @@ export default function Notificacoes() {
             key={id}
             onClick={() => setAba(id)}
             className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
-              aba === id ? 'bg-accent-400 text-dark-950' : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
+              aba === id
+                ? 'bg-accent-400 text-dark-950'
+                : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
             }`}
           >
             <Icon size={14} /> {label}

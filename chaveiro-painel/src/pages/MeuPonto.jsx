@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Clock, Fingerprint, LogIn, Coffee, Utensils, LogOut,
-  MapPin, Camera, Check, Loader2,
+  Clock,
+  Fingerprint,
+  LogIn,
+  Coffee,
+  Utensils,
+  LogOut,
+  MapPin,
+  Camera,
+  Check,
+  Loader2,
 } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -47,9 +55,10 @@ function obterLocalizacao() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(null);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude, precisao: coords.accuracy }),
+      ({ coords }) =>
+        resolve({ lat: coords.latitude, lng: coords.longitude, precisao: coords.accuracy }),
       () => resolve(null),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   });
 }
@@ -75,7 +84,9 @@ export default function MeuPonto() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   // Abre o capturador de selfie (a batida só ocorre depois de confirmar a foto).
   // Transparência LGPD: na 1ª batida no aparelho, mostra o aviso de coleta de
@@ -84,14 +95,25 @@ export default function MeuPonto() {
   function iniciarBatida() {
     if (dia?.completo || enviando) return;
     let aceito = false;
-    try { aceito = localStorage.getItem('ponto_aviso_lgpd') === '1'; } catch { /* storage off */ }
-    if (!aceito) { setMostrarAviso(true); return; }
+    try {
+      aceito = localStorage.getItem('ponto_aviso_lgpd') === '1';
+    } catch {
+      /* storage off */
+    }
+    if (!aceito) {
+      setMostrarAviso(true);
+      return;
+    }
     setCapturando(true);
   }
 
   // Aceite do aviso de coleta: registra no aparelho e segue para a captura.
   function aceitarAviso() {
-    try { localStorage.setItem('ponto_aviso_lgpd', '1'); } catch { /* storage off */ }
+    try {
+      localStorage.setItem('ponto_aviso_lgpd', '1');
+    } catch {
+      /* storage off */
+    }
     setMostrarAviso(false);
     setCapturando(true);
   }
@@ -145,7 +167,11 @@ export default function MeuPonto() {
                 <div className="min-w-0">
                   <p className="kpi-label">Ponto de hoje</p>
                   <p className="font-display text-lg font-bold text-white leading-tight">
-                    {completo ? 'Dia concluído' : proxima ? `Próximo: ${dia.proximaBatidaRotulo}` : 'Sem batidas'}
+                    {completo
+                      ? 'Dia concluído'
+                      : proxima
+                        ? `Próximo: ${dia.proximaBatidaRotulo}`
+                        : 'Sem batidas'}
                   </p>
                 </div>
               </div>
@@ -161,7 +187,9 @@ export default function MeuPonto() {
                     <li
                       key={etapa.tipo}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
-                        ehProxima ? 'bg-accent-400/10 border border-accent-400/30' : 'border border-transparent'
+                        ehProxima
+                          ? 'bg-accent-400/10 border border-accent-400/30'
+                          : 'border border-transparent'
                       }`}
                     >
                       <div
@@ -176,7 +204,9 @@ export default function MeuPonto() {
                         {batida ? <Check size={15} /> : <Icone size={15} />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${batida || ehProxima ? 'text-white' : 'text-muted'}`}>
+                        <p
+                          className={`text-sm font-medium truncate ${batida || ehProxima ? 'text-white' : 'text-muted'}`}
+                        >
                           {etapa.rotulo}
                         </p>
                         {ehProxima && <p className="text-[11px] text-accent-300">Próxima batida</p>}
@@ -218,7 +248,10 @@ export default function MeuPonto() {
             </button>
             <p className="text-muted text-xs -mt-2 text-center">
               Ao bater, capturamos uma selfie e sua localização para comprovar a jornada.{' '}
-              <a href="/privacidade" className="underline hover:text-white">Política de Privacidade</a>.
+              <a href="/privacidade" className="underline hover:text-white">
+                Política de Privacidade
+              </a>
+              .
             </p>
 
             {/* ── Histórico do dia ──────────────────────────────────────────── */}
@@ -234,15 +267,29 @@ export default function MeuPonto() {
                       <div className="w-8 h-8 rounded-full bg-success/15 border border-success/30 flex items-center justify-center shrink-0 text-success">
                         <Check size={15} />
                       </div>
-                      <span className="flex-1 text-sm text-white font-medium truncate">{b.rotulo}</span>
+                      <span className="flex-1 text-sm text-white font-medium truncate">
+                        {b.rotulo}
+                      </span>
                       <div className="flex items-center gap-2 text-muted shrink-0">
-                        {(b.lat != null && b.lng != null) && (
-                          <MapPin size={14} className="text-accent-300" aria-label="Com localização" title="Com localização" />
+                        {b.lat != null && b.lng != null && (
+                          <MapPin
+                            size={14}
+                            className="text-accent-300"
+                            aria-label="Com localização"
+                            title="Com localização"
+                          />
                         )}
                         {b.temSelfie && (
-                          <Camera size={14} className="text-accent-300" aria-label="Com selfie" title="Com selfie" />
+                          <Camera
+                            size={14}
+                            className="text-accent-300"
+                            aria-label="Com selfie"
+                            title="Com selfie"
+                          />
                         )}
-                        <span className="font-display font-bold tnum text-sm text-white">{formatarHora(b.em)}</span>
+                        <span className="font-display font-bold tnum text-sm text-white">
+                          {formatarHora(b.em)}
+                        </span>
                       </div>
                     </li>
                   ))}
@@ -285,10 +332,7 @@ export default function MeuPonto() {
               .
             </p>
             <div className="flex gap-2">
-              <button
-                onClick={() => setMostrarAviso(false)}
-                className="btn-ghost flex-1 py-2.5"
-              >
+              <button onClick={() => setMostrarAviso(false)} className="btn-ghost flex-1 py-2.5">
                 Agora não
               </button>
               <button onClick={aceitarAviso} className="btn-primary flex-1 py-2.5">

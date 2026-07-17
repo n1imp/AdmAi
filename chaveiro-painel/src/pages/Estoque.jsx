@@ -90,7 +90,9 @@ export default function Estoque() {
     }
   }, [periodo]);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   const comAlerta = materiais.filter((m) => m.alerta);
 
@@ -129,7 +131,9 @@ export default function Estoque() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-6 grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start">
         {carregando ? (
-          <div className="lg:col-span-2 xl:col-span-3"><SkeletonLista qtd={5} /></div>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <SkeletonLista qtd={5} />
+          </div>
         ) : materiais.length === 0 ? (
           <div className="lg:col-span-2 xl:col-span-3">
             <EstadoVazio
@@ -149,9 +153,14 @@ export default function Estoque() {
                 <p className="font-semibold text-white truncate">{m.nome}</p>
                 <div className="flex items-center gap-3 mt-0.5 text-xs text-muted">
                   <span>
-                    Saldo: <span className={`font-medium ${m.alerta ? 'text-danger' : 'text-white'}`}>{m.quantidadeAtual ?? 0} {m.unidade}</span>
+                    Saldo:{' '}
+                    <span className={`font-medium ${m.alerta ? 'text-danger' : 'text-white'}`}>
+                      {m.quantidadeAtual ?? 0} {m.unidade}
+                    </span>
                   </span>
-                  <span>consumo {m.consumoPeriodo ?? 0} {m.unidade}</span>
+                  <span>
+                    consumo {m.consumoPeriodo ?? 0} {m.unidade}
+                  </span>
                 </div>
               </div>
               <div className="shrink-0">

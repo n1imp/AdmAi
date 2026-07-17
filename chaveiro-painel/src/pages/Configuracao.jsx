@@ -13,28 +13,67 @@ const SECOES = [
   {
     titulo: 'Conta',
     cards: [
-      { to: '/configuracao/perfil', icon: User, titulo: 'Perfil', sub: 'Nome, e-mail e telefone', cor: 'text-sky-300', bg: 'bg-sky-400/10' },
-      { to: '/configuracao/seguranca', icon: Lock, titulo: 'Segurança', sub: 'Senha e verificação em duas etapas', cor: 'text-accent-300', bg: 'bg-accent-400/10' },
-      { to: '/configuracao/notificacoes', icon: Bell, titulo: 'Notificações', sub: 'Alertas de estoque e resumos', cor: 'text-indigo-300', bg: 'bg-indigo-400/10' },
+      {
+        to: '/configuracao/perfil',
+        icon: User,
+        titulo: 'Perfil',
+        sub: 'Nome, e-mail e telefone',
+        cor: 'text-sky-300',
+        bg: 'bg-sky-400/10',
+      },
+      {
+        to: '/configuracao/seguranca',
+        icon: Lock,
+        titulo: 'Segurança',
+        sub: 'Senha e verificação em duas etapas',
+        cor: 'text-accent-300',
+        bg: 'bg-accent-400/10',
+      },
+      {
+        to: '/configuracao/notificacoes',
+        icon: Bell,
+        titulo: 'Notificações',
+        sub: 'Alertas de estoque e resumos',
+        cor: 'text-indigo-300',
+        bg: 'bg-indigo-400/10',
+      },
     ],
   },
   {
     titulo: 'Integrações',
     cards: [
-      { icon: MessageCircle, titulo: 'WhatsApp', sub: 'Registro e ponto pelo robô', cor: 'text-muted', bg: 'bg-dark-700', breve: true },
+      {
+        icon: MessageCircle,
+        titulo: 'WhatsApp',
+        sub: 'Registro e ponto pelo robô',
+        cor: 'text-muted',
+        bg: 'bg-dark-700',
+        breve: true,
+      },
     ],
   },
   {
     titulo: 'Plano',
     cards: [
-      { icon: CreditCard, titulo: 'Plano e cobrança', sub: 'Assinatura e faturas', cor: 'text-muted', bg: 'bg-dark-700', breve: true },
+      {
+        icon: CreditCard,
+        titulo: 'Plano e cobrança',
+        sub: 'Assinatura e faturas',
+        cor: 'text-muted',
+        bg: 'bg-dark-700',
+        breve: true,
+      },
     ],
   },
 ];
 
 const CARD_USUARIOS = {
-  to: '/configuracao/usuarios', icon: Users, titulo: 'Usuários',
-  sub: 'Gerenciar acessos da equipe', cor: 'text-indigo-300', bg: 'bg-indigo-400/10',
+  to: '/configuracao/usuarios',
+  icon: Users,
+  titulo: 'Usuários',
+  sub: 'Gerenciar acessos da equipe',
+  cor: 'text-indigo-300',
+  bg: 'bg-indigo-400/10',
 };
 
 function CardLink({ card, onClick }) {
@@ -44,7 +83,9 @@ function CardLink({ card, onClick }) {
       onClick={onClick}
       className="card flex items-center gap-4 text-left active:scale-[0.98] transition-transform w-full"
     >
-      <div className={`w-11 h-11 rounded-md flex items-center justify-center shrink-0 border border-dark-600 ${bg}`}>
+      <div
+        className={`w-11 h-11 rounded-md flex items-center justify-center shrink-0 border border-dark-600 ${bg}`}
+      >
         <Icon size={21} className={cor} strokeWidth={1.8} />
       </div>
       <div className="flex-1 min-w-0">
@@ -54,7 +95,15 @@ function CardLink({ card, onClick }) {
         </p>
         <p className="text-muted text-xs mt-0.5">{sub}</p>
       </div>
-      <svg className="text-muted shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="text-muted shrink-0"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <polyline points="9 18 15 12 9 6" />
       </svg>
     </button>
@@ -72,7 +121,9 @@ function Toggle({ ativo, onChange, disabled }) {
       className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${ativo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
       aria-label="Alternar"
     >
-      <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`} />
+      <span
+        className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`}
+      />
     </button>
   );
 }
@@ -84,7 +135,8 @@ function AprovacaoServico() {
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    api.get('/config/empresa')
+    api
+      .get('/config/empresa')
       .then(({ data }) => setAtivo(Boolean(data.aprovacaoServico)))
       .catch(() => toast('Erro ao carregar configuração', 'error'));
   }, [toast]);

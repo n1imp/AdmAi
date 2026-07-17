@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Star, Clock, Send, CheckCircle2, Phone, RefreshCw, MessageSquareQuote } from 'lucide-react';
+import {
+  Star,
+  Clock,
+  Send,
+  CheckCircle2,
+  Phone,
+  RefreshCw,
+  MessageSquareQuote,
+} from 'lucide-react';
 import api, { formatarData } from '../../lib/api.js';
 import { SkeletonLista } from '../Skeleton.jsx';
 import EstadoVazio from '../EstadoVazio.jsx';
@@ -14,10 +22,30 @@ const FILTROS = [
 ];
 
 const STATUS_META = {
-  pendente: { label: 'Agendada', Icon: Clock, cor: 'text-muted', bg: 'bg-dark-700 border-dark-600' },
-  enviada: { label: 'Enviada', Icon: Send, cor: 'text-sky-300', bg: 'bg-sky-400/10 border-sky-400/20' },
-  respondida: { label: 'Respondida', Icon: CheckCircle2, cor: 'text-success', bg: 'bg-success/10 border-success/20' },
-  expirada: { label: 'Expirada', Icon: Clock, cor: 'text-muted', bg: 'bg-dark-700 border-dark-600' },
+  pendente: {
+    label: 'Agendada',
+    Icon: Clock,
+    cor: 'text-muted',
+    bg: 'bg-dark-700 border-dark-600',
+  },
+  enviada: {
+    label: 'Enviada',
+    Icon: Send,
+    cor: 'text-sky-300',
+    bg: 'bg-sky-400/10 border-sky-400/20',
+  },
+  respondida: {
+    label: 'Respondida',
+    Icon: CheckCircle2,
+    cor: 'text-success',
+    bg: 'bg-success/10 border-success/20',
+  },
+  expirada: {
+    label: 'Expirada',
+    Icon: Clock,
+    cor: 'text-muted',
+    bg: 'bg-dark-700 border-dark-600',
+  },
 };
 
 // Aba "Cliente": avaliações solicitadas via WhatsApp após serviços.
@@ -41,7 +69,9 @@ export default function Cliente() {
     }
   }, [filtro]);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   const resumo = dados?.resumo;
   const lista = dados?.avaliacoes ?? [];
@@ -50,8 +80,11 @@ export default function Cliente() {
   return (
     <div>
       <div className="px-4 flex items-center justify-end mb-2">
-        <button onClick={buscar} aria-label="Atualizar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors">
+        <button
+          onClick={buscar}
+          aria-label="Atualizar"
+          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
+        >
           <RefreshCw size={17} className={carregando ? 'animate-spin' : ''} />
         </button>
       </div>
@@ -67,13 +100,20 @@ export default function Cliente() {
               {resumo.total > 0 ? (
                 <>
                   <p className="font-display text-5xl font-bold text-white tracking-tight mt-1 tnum">
-                    {resumo.media?.toFixed(1)}<span className="text-xl text-muted">/5</span>
+                    {resumo.media?.toFixed(1)}
+                    <span className="text-xl text-muted">/5</span>
                   </p>
-                  <div className="mt-2"><Estrelas nota={Math.round(resumo.media)} size={18} /></div>
-                  <p className="text-muted text-xs mt-2">{resumo.total} resposta{resumo.total !== 1 ? 's' : ''}</p>
+                  <div className="mt-2">
+                    <Estrelas nota={Math.round(resumo.media)} size={18} />
+                  </div>
+                  <p className="text-muted text-xs mt-2">
+                    {resumo.total} resposta{resumo.total !== 1 ? 's' : ''}
+                  </p>
                 </>
               ) : (
-                <p className="font-display text-2xl font-bold text-muted mt-3">Sem respostas ainda</p>
+                <p className="font-display text-2xl font-bold text-muted mt-3">
+                  Sem respostas ainda
+                </p>
               )}
             </div>
           </div>
@@ -87,10 +127,14 @@ export default function Cliente() {
                 return (
                   <div key={n} className="flex items-center gap-2">
                     <span className="flex items-center gap-1 w-8 text-xs text-muted tnum">
-                      {n}<Star size={10} className="text-warning fill-warning" />
+                      {n}
+                      <Star size={10} className="text-warning fill-warning" />
                     </span>
                     <div className="flex-1 h-2.5 rounded-full bg-dark-700 overflow-hidden">
-                      <div className="h-full rounded-full bg-accent-400/70" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full rounded-full bg-accent-400/70"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                     <span className="w-6 text-right text-xs text-muted tnum">{d.quantidade}</span>
                   </div>
@@ -104,10 +148,15 @@ export default function Cliente() {
       {/* Filtros */}
       <div className="px-4 flex gap-2 mb-2 flex-wrap">
         {FILTROS.map((f) => (
-          <button key={f.value} onClick={() => setFiltro(f.value)}
+          <button
+            key={f.value}
+            onClick={() => setFiltro(f.value)}
             className={`px-3 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
-              filtro === f.value ? 'bg-accent-400 text-dark-950' : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
-            }`}>
+              filtro === f.value
+                ? 'bg-accent-400 text-dark-950'
+                : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
+            }`}
+          >
             {f.label}
           </button>
         ))}
@@ -118,7 +167,10 @@ export default function Cliente() {
         {carregando ? (
           <SkeletonLista qtd={5} />
         ) : lista.length === 0 ? (
-          <EstadoVazio mensagem="Nenhuma avaliação" sub="As avaliações aparecem aqui após os serviços com cliente." />
+          <EstadoVazio
+            mensagem="Nenhuma avaliação"
+            sub="As avaliações aparecem aqui após os serviços com cliente."
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {lista.map((a) => {
@@ -127,7 +179,9 @@ export default function Cliente() {
                 <div key={a.id} className="card animate-fade-in">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-white truncate">{a.clienteNome ?? 'Cliente'}</p>
+                      <p className="font-semibold text-white truncate">
+                        {a.clienteNome ?? 'Cliente'}
+                      </p>
                       <p className="text-xs text-muted flex items-center gap-1 mt-0.5 tnum">
                         <Phone size={11} /> {a.clienteTelefone}
                       </p>
@@ -144,7 +198,9 @@ export default function Cliente() {
                     </div>
                   ) : (
                     <p className="mt-3 text-xs text-muted">
-                      {a.status === 'enviada' ? 'Aguardando resposta do cliente…' : `Envio agendado para ${formatarData(a.agendadoPara)}`}
+                      {a.status === 'enviada'
+                        ? 'Aguardando resposta do cliente…'
+                        : `Envio agendado para ${formatarData(a.agendadoPara)}`}
                     </p>
                   )}
 
@@ -156,7 +212,9 @@ export default function Cliente() {
                   )}
 
                   <p className="text-[11px] text-dark-500 mt-3">
-                    {a.respondidoEm ? `Respondida em ${formatarData(a.respondidoEm)}` : `Serviço #${a.servicoId}`}
+                    {a.respondidoEm
+                      ? `Respondida em ${formatarData(a.respondidoEm)}`
+                      : `Serviço #${a.servicoId}`}
                   </p>
                 </div>
               );

@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  Wallet, HandCoins, ClipboardList, Target, Fingerprint,
-  Plus, Wrench, AlertTriangle, RefreshCw, ChevronRight,
+  Wallet,
+  HandCoins,
+  ClipboardList,
+  Target,
+  Fingerprint,
+  Plus,
+  Wrench,
+  AlertTriangle,
+  RefreshCw,
+  ChevronRight,
 } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
@@ -19,7 +27,9 @@ const CORES_KPI = {
 function KpiCard({ label, valor, icon: Icon, cor = 'accent' }) {
   return (
     <div className="card flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${CORES_KPI[cor]}`}>
+      <div
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${CORES_KPI[cor]}`}
+      >
         <Icon size={20} strokeWidth={1.8} />
       </div>
       <div className="min-w-0">
@@ -52,7 +62,15 @@ function Atalho({ icon: Icon, titulo, sub, onClick, destaque }) {
         <p className="font-semibold text-white">{titulo}</p>
         <p className="text-muted text-xs mt-0.5">{sub}</p>
       </div>
-      <svg className="text-muted shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="text-muted shrink-0"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <polyline points="9 18 15 12 9 6" />
       </svg>
     </button>
@@ -78,7 +96,9 @@ export default function MeuPainel() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   async function atualizarManual() {
     if (atualizando) return;
@@ -113,7 +133,9 @@ export default function MeuPainel() {
             </div>
           )}
           <div className="min-w-0">
-            <p className="section-label mb-0.5"><span className="w-5 h-px bg-accent-400" /> MEU PAINEL</p>
+            <p className="section-label mb-0.5">
+              <span className="w-5 h-px bg-accent-400" /> MEU PAINEL
+            </p>
             <h1 className="font-display text-2xl font-bold text-white tracking-wide truncate">
               Olá, {tecnico?.nome?.split(' ')[0] ?? 'técnico'}
             </h1>
@@ -165,8 +187,18 @@ export default function MeuPainel() {
                 <Wallet size={24} strokeWidth={1.8} />
               </div>
             </div>
-            <KpiCard label="Comissão ganha" valor={formatarMoeda(dados.comissaoGanha)} icon={HandCoins} cor="indigo" />
-            <KpiCard label="Serviços realizados" valor={dados.totalServicos} icon={ClipboardList} cor="blue" />
+            <KpiCard
+              label="Comissão ganha"
+              valor={formatarMoeda(dados.comissaoGanha)}
+              icon={HandCoins}
+              cor="indigo"
+            />
+            <KpiCard
+              label="Serviços realizados"
+              valor={dados.totalServicos}
+              icon={ClipboardList}
+              cor="blue"
+            />
           </>
         ) : null}
       </div>
@@ -184,7 +216,9 @@ export default function MeuPainel() {
                   <p className="kpi-label">Meta do mês</p>
                   <p className="font-display text-lg font-bold text-white leading-tight tnum">
                     {formatarMoeda(mes.receitaLiquida)}
-                    {temMeta && <span className="text-sm text-muted"> / {formatarMoeda(mes.meta)}</span>}
+                    {temMeta && (
+                      <span className="text-sm text-muted"> / {formatarMoeda(mes.meta)}</span>
+                    )}
                   </p>
                 </div>
               </div>

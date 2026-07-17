@@ -1,7 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  MapPin, Link2, Loader2, RefreshCw, Send, Sparkles, ThumbsUp, ThumbsDown,
-  CheckCircle2, Wand2, Unplug, FlaskConical, Store, ShieldAlert,
+  MapPin,
+  Link2,
+  Loader2,
+  RefreshCw,
+  Send,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+  CheckCircle2,
+  Wand2,
+  Unplug,
+  FlaskConical,
+  Store,
+  ShieldAlert,
 } from 'lucide-react';
 import api, { formatarData } from '../../lib/api.js';
 import { SkeletonLista } from '../Skeleton.jsx';
@@ -73,7 +85,9 @@ export default function Google() {
     }
   }, []);
 
-  useEffect(() => { buscarStatus(); }, [buscarStatus]);
+  useEffect(() => {
+    buscarStatus();
+  }, [buscarStatus]);
 
   const conectado = status?.conectado;
   const ehMock = status?.modo === 'mock';
@@ -98,7 +112,9 @@ export default function Google() {
     }
   }, [filtros, podeListar]);
 
-  useEffect(() => { if (podeListar) buscarReviews(); }, [buscarReviews, podeListar]);
+  useEffect(() => {
+    if (podeListar) buscarReviews();
+  }, [buscarReviews, podeListar]);
 
   const precisaLoja = status?.precisaSelecionarLoja;
 
@@ -117,13 +133,17 @@ export default function Google() {
     }
   }, []);
 
-  useEffect(() => { if (precisaLoja) buscarLocations(); }, [precisaLoja, buscarLocations]);
+  useEffect(() => {
+    if (precisaLoja) buscarLocations();
+  }, [precisaLoja, buscarLocations]);
 
   async function selecionarLoja(loc) {
     setSalvandoLoja(loc.locationId);
     try {
       await api.post('/google/location', {
-        accountId: loc.accountId, locationId: loc.locationId, placeId: loc.placeId ?? null,
+        accountId: loc.accountId,
+        locationId: loc.locationId,
+        placeId: loc.placeId ?? null,
       });
       toast('Loja conectada!', 'success');
       buscarStatus();
@@ -135,7 +155,10 @@ export default function Google() {
   }
 
   async function salvarPlaceId() {
-    if (!placeId.trim()) { toast('Informe o Place ID', 'warning'); return; }
+    if (!placeId.trim()) {
+      toast('Informe o Place ID', 'warning');
+      return;
+    }
     setSalvandoPlace(true);
     try {
       await api.post('/google/place-id', { placeId: placeId.trim() });
@@ -179,12 +202,19 @@ export default function Google() {
   }
 
   function aoResponder(reviewId, respostaTexto, respondidoEm) {
-    setReviews((prev) => prev.map((r) =>
-      r.reviewId === reviewId ? { ...r, respondida: true, respostaTexto, respondidoEm } : r));
+    setReviews((prev) =>
+      prev.map((r) =>
+        r.reviewId === reviewId ? { ...r, respondida: true, respostaTexto, respondidoEm } : r
+      )
+    );
   }
 
   if (carregandoStatus) {
-    return <div className="px-4 pt-2"><SkeletonLista qtd={3} /></div>;
+    return (
+      <div className="px-4 pt-2">
+        <SkeletonLista qtd={3} />
+      </div>
+    );
   }
 
   if (status?.desabilitado) {
@@ -228,11 +258,21 @@ export default function Google() {
         {conectado ? (
           <div className="flex items-center justify-between">
             <p className="text-muted text-xs">
-              {status.conectadoEm ? `Conectado em ${formatarData(status.conectadoEm)}` : 'Loja do Google vinculada'}
+              {status.conectadoEm
+                ? `Conectado em ${formatarData(status.conectadoEm)}`
+                : 'Loja do Google vinculada'}
             </p>
-            <button onClick={desconectarGoogle} disabled={desconectando}
-              className="text-danger text-xs font-medium flex items-center gap-1 hover:underline disabled:opacity-50">
-              {desconectando ? <Loader2 size={12} className="animate-spin" /> : <Unplug size={12} />} Desconectar
+            <button
+              onClick={desconectarGoogle}
+              disabled={desconectando}
+              className="text-danger text-xs font-medium flex items-center gap-1 hover:underline disabled:opacity-50"
+            >
+              {desconectando ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Unplug size={12} />
+              )}{' '}
+              Desconectar
             </button>
           </div>
         ) : status?.precisaSelecionarLoja ? (
@@ -242,12 +282,17 @@ export default function Google() {
                 <ShieldAlert size={14} /> Integração em verificação pelo Google
               </p>
               <p className="text-muted text-xs leading-relaxed">
-                Sua conta foi conectada, mas o acesso à API do Google ainda está sendo liberado/aprovado.
-                Assim que aprovado, suas lojas aparecerão aqui automaticamente para você escolher.
+                Sua conta foi conectada, mas o acesso à API do Google ainda está sendo
+                liberado/aprovado. Assim que aprovado, suas lojas aparecerão aqui automaticamente
+                para você escolher.
               </p>
-              <button onClick={buscarLocations} disabled={carregandoLocations}
-                className="text-accent-300 text-xs font-medium flex items-center gap-1 hover:text-accent-400">
-                <RefreshCw size={12} className={carregandoLocations ? 'animate-spin' : ''} /> Verificar novamente
+              <button
+                onClick={buscarLocations}
+                disabled={carregandoLocations}
+                className="text-accent-300 text-xs font-medium flex items-center gap-1 hover:text-accent-400"
+              >
+                <RefreshCw size={12} className={carregandoLocations ? 'animate-spin' : ''} />{' '}
+                Verificar novamente
               </button>
             </div>
           ) : (
@@ -260,20 +305,35 @@ export default function Google() {
               ) : locations.length === 0 ? (
                 <p className="text-muted text-xs">
                   Nenhuma loja encontrada nesta conta do Google.{' '}
-                  <button onClick={buscarLocations} className="text-accent-300 hover:underline">Atualizar</button>
+                  <button onClick={buscarLocations} className="text-accent-300 hover:underline">
+                    Atualizar
+                  </button>
                 </p>
               ) : (
                 <div className="space-y-2">
                   {locations.map((loc) => (
-                    <div key={loc.locationId}
-                      className="flex items-center justify-between gap-2 bg-dark-700 border border-dark-600 rounded-lg p-2.5">
+                    <div
+                      key={loc.locationId}
+                      className="flex items-center justify-between gap-2 bg-dark-700 border border-dark-600 rounded-lg p-2.5"
+                    >
                       <div className="min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{loc.title || 'Loja'}</p>
-                        {loc.endereco && <p className="text-muted text-xs truncate">{loc.endereco}</p>}
+                        <p className="text-white text-sm font-medium truncate">
+                          {loc.title || 'Loja'}
+                        </p>
+                        {loc.endereco && (
+                          <p className="text-muted text-xs truncate">{loc.endereco}</p>
+                        )}
                       </div>
-                      <button onClick={() => selecionarLoja(loc)} disabled={salvandoLoja === loc.locationId}
-                        className="btn-primary w-auto px-3 py-1.5 text-xs shrink-0 flex items-center gap-1">
-                        {salvandoLoja === loc.locationId ? <Loader2 size={13} className="animate-spin" /> : 'Usar esta'}
+                      <button
+                        onClick={() => selecionarLoja(loc)}
+                        disabled={salvandoLoja === loc.locationId}
+                        className="btn-primary w-auto px-3 py-1.5 text-xs shrink-0 flex items-center gap-1"
+                      >
+                        {salvandoLoja === loc.locationId ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          'Usar esta'
+                        )}
                       </button>
                     </div>
                   ))}
@@ -282,8 +342,11 @@ export default function Google() {
             </div>
           )
         ) : (
-          <button onClick={conectarGoogle} disabled={conectando}
-            className="btn-primary w-full flex items-center justify-center gap-2">
+          <button
+            onClick={conectarGoogle}
+            disabled={conectando}
+            className="btn-primary w-full flex items-center justify-center gap-2"
+          >
             {conectando ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
             {conectando ? 'Abrindo Google…' : 'Conectar com Google'}
           </button>
@@ -291,24 +354,34 @@ export default function Google() {
 
         {status?.validateOnly && (
           <p className="text-warning text-xs flex items-center gap-1">
-            <FlaskConical size={11} /> Validação apenas: as respostas não são publicadas de fato neste ambiente.
+            <FlaskConical size={11} /> Validação apenas: as respostas não são publicadas de fato
+            neste ambiente.
           </p>
         )}
 
         {/* Avançado: informar o Place ID manualmente (fallback ao seletor automático) */}
         {!conectado && (
           <div className="pt-1 border-t border-dark-700">
-            <button onClick={() => setMostrarPlaceManual((v) => !v)}
-              className="text-muted text-xs hover:text-white transition-colors">
+            <button
+              onClick={() => setMostrarPlaceManual((v) => !v)}
+              className="text-muted text-xs hover:text-white transition-colors"
+            >
               {mostrarPlaceManual ? '− ' : '+ '}Informar o Place ID manualmente (avançado)
             </button>
             {mostrarPlaceManual && (
               <div className="mt-2">
                 <div className="flex gap-2">
-                  <input className="input flex-1" value={placeId}
-                    onChange={(e) => setPlaceId(e.target.value)} placeholder="ChIJ..." />
-                  <button onClick={salvarPlaceId} disabled={salvandoPlace}
-                    className="btn-primary w-auto px-4 flex items-center gap-1.5">
+                  <input
+                    className="input flex-1"
+                    value={placeId}
+                    onChange={(e) => setPlaceId(e.target.value)}
+                    placeholder="ChIJ..."
+                  />
+                  <button
+                    onClick={salvarPlaceId}
+                    disabled={salvandoPlace}
+                    className="btn-primary w-auto px-4 flex items-center gap-1.5"
+                  >
                     {salvandoPlace ? <Loader2 size={14} className="animate-spin" /> : 'Salvar'}
                   </button>
                 </div>
@@ -332,17 +405,23 @@ export default function Google() {
               <p className="text-success text-xs font-semibold flex items-center gap-1.5 mb-1">
                 <ThumbsUp size={13} /> O que elogiam mais
               </p>
-              <p className="text-muted text-xs leading-relaxed">{status.analise.resumoElogios || 'Sem dados ainda.'}</p>
+              <p className="text-muted text-xs leading-relaxed">
+                {status.analise.resumoElogios || 'Sem dados ainda.'}
+              </p>
             </div>
             <div className="bg-danger/5 border border-danger/20 rounded-lg p-3">
               <p className="text-danger text-xs font-semibold flex items-center gap-1.5 mb-1">
                 <ThumbsDown size={13} /> O que aparece negativamente
               </p>
-              <p className="text-muted text-xs leading-relaxed">{status.analise.resumoCriticas || 'Sem dados ainda.'}</p>
+              <p className="text-muted text-xs leading-relaxed">
+                {status.analise.resumoCriticas || 'Sem dados ainda.'}
+              </p>
             </div>
           </div>
           {status.analise.atualizadoEm && (
-            <p className="text-dark-500 text-[11px]">Atualizado em {formatarData(status.analise.atualizadoEm)}</p>
+            <p className="text-dark-500 text-[11px]">
+              Atualizado em {formatarData(status.analise.atualizadoEm)}
+            </p>
           )}
         </div>
       )}
@@ -357,15 +436,30 @@ export default function Google() {
         <div className="space-y-3">
           {/* Filtros */}
           <div className="space-y-2">
-            <FiltroLinha label="Nota" opcoes={NOTAS} value={filtros.nota}
-              onChange={(v) => setFiltros((f) => ({ ...f, nota: v }))} />
-            <FiltroLinha label="Período" opcoes={PERIODOS} value={filtros.periodo}
-              onChange={(v) => setFiltros((f) => ({ ...f, periodo: v }))} />
+            <FiltroLinha
+              label="Nota"
+              opcoes={NOTAS}
+              value={filtros.nota}
+              onChange={(v) => setFiltros((f) => ({ ...f, nota: v }))}
+            />
+            <FiltroLinha
+              label="Período"
+              opcoes={PERIODOS}
+              value={filtros.periodo}
+              onChange={(v) => setFiltros((f) => ({ ...f, periodo: v }))}
+            />
             <div className="flex items-center justify-between gap-2">
-              <FiltroLinha label="Status" opcoes={RESPONDIDA} value={filtros.respondida}
-                onChange={(v) => setFiltros((f) => ({ ...f, respondida: v }))} />
-              <button onClick={buscarReviews} aria-label="Atualizar"
-                className="w-9 h-9 shrink-0 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 transition-colors">
+              <FiltroLinha
+                label="Status"
+                opcoes={RESPONDIDA}
+                value={filtros.respondida}
+                onChange={(v) => setFiltros((f) => ({ ...f, respondida: v }))}
+              />
+              <button
+                onClick={buscarReviews}
+                aria-label="Atualizar"
+                className="w-9 h-9 shrink-0 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 transition-colors"
+              >
                 <RefreshCw size={16} className={carregandoReviews ? 'animate-spin' : ''} />
               </button>
             </div>
@@ -376,11 +470,19 @@ export default function Google() {
           {carregandoReviews ? (
             <SkeletonLista qtd={4} />
           ) : reviews.length === 0 ? (
-            <EstadoVazio mensagem="Nenhuma avaliação encontrada" sub="Ajuste os filtros ou aguarde a próxima sincronização." />
+            <EstadoVazio
+              mensagem="Nenhuma avaliação encontrada"
+              sub="Ajuste os filtros ou aguarde a próxima sincronização."
+            />
           ) : (
             <div className="grid gap-3 lg:grid-cols-2">
               {reviews.map((r) => (
-                <ReviewCard key={r.reviewId} review={r} onResponder={aoResponder} validateOnly={status?.validateOnly} />
+                <ReviewCard
+                  key={r.reviewId}
+                  review={r}
+                  onResponder={aoResponder}
+                  validateOnly={status?.validateOnly}
+                />
               ))}
             </div>
           )}
@@ -393,13 +495,20 @@ export default function Google() {
 function FiltroLinha({ label, opcoes, value, onChange }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-muted text-[10px] font-display font-semibold uppercase tracking-wide w-14 shrink-0">{label}</span>
+      <span className="text-muted text-[10px] font-display font-semibold uppercase tracking-wide w-14 shrink-0">
+        {label}
+      </span>
       <div className="flex gap-1.5 flex-wrap">
         {opcoes.map((o) => (
-          <button key={o.value} onClick={() => onChange(o.value)}
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
             className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-              value === o.value ? 'bg-accent-400 text-dark-950' : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
-            }`}>
+              value === o.value
+                ? 'bg-accent-400 text-dark-950'
+                : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
+            }`}
+          >
             {o.label}
           </button>
         ))}
@@ -417,12 +526,20 @@ function ReviewCard({ review, onResponder, validateOnly }) {
   const sugestao = review.analiseJson?.sugestaoResposta;
 
   async function responder() {
-    if (!texto.trim()) { toast('Escreva uma resposta', 'warning'); return; }
+    if (!texto.trim()) {
+      toast('Escreva uma resposta', 'warning');
+      return;
+    }
     setEnviando(true);
     try {
-      const { data } = await api.post(`/google/reviews/${review.reviewId}/responder`, { texto: texto.trim() });
+      const { data } = await api.post(`/google/reviews/${review.reviewId}/responder`, {
+        texto: texto.trim(),
+      });
       onResponder(review.reviewId, texto.trim(), new Date().toISOString());
-      toast(data?.mensagem ?? (data?.validado ? 'Resposta validada' : 'Resposta publicada'), 'success');
+      toast(
+        data?.mensagem ?? (data?.validado ? 'Resposta validada' : 'Resposta publicada'),
+        'success'
+      );
       setAberto(false);
     } catch (e) {
       toast(e.response?.data?.erro ?? 'Erro ao responder', 'error');
@@ -435,7 +552,9 @@ function ReviewCard({ review, onResponder, validateOnly }) {
     <div className="card animate-fade-in">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold text-white truncate">{review.autorNome || 'Cliente do Google'}</p>
+          <p className="font-semibold text-white truncate">
+            {review.autorNome || 'Cliente do Google'}
+          </p>
           <div className="flex items-center gap-2 mt-1">
             <Estrelas nota={review.nota} size={14} />
             <span className="text-muted text-xs tnum">{review.nota}.0</span>
@@ -448,9 +567,7 @@ function ReviewCard({ review, onResponder, validateOnly }) {
         )}
       </div>
 
-      {review.comentario && (
-        <p className="mt-2 text-sm text-muted italic">"{review.comentario}"</p>
-      )}
+      {review.comentario && <p className="mt-2 text-sm text-muted italic">"{review.comentario}"</p>}
       <p className="text-[11px] text-dark-500 mt-2">{formatarData(review.criadoEmGoogle)}</p>
 
       {review.respondida ? (
@@ -461,15 +578,22 @@ function ReviewCard({ review, onResponder, validateOnly }) {
           </div>
         )
       ) : !aberto ? (
-        <button onClick={() => { setAberto(true); if (sugestao && !texto) setTexto(''); }}
-          className="mt-3 text-accent-300 text-xs font-medium flex items-center gap-1 hover:text-accent-400">
+        <button
+          onClick={() => {
+            setAberto(true);
+            if (sugestao && !texto) setTexto('');
+          }}
+          className="mt-3 text-accent-300 text-xs font-medium flex items-center gap-1 hover:text-accent-400"
+        >
           <Send size={13} /> Responder
         </button>
       ) : (
         <div className="mt-3 space-y-2">
           {sugestao && (
-            <button onClick={() => setTexto(sugestao)}
-              className="text-xs font-medium text-accent-300 flex items-center gap-1.5 hover:text-accent-400">
+            <button
+              onClick={() => setTexto(sugestao)}
+              className="text-xs font-medium text-accent-300 flex items-center gap-1.5 hover:text-accent-400"
+            >
               <Wand2 size={13} /> Usar sugestão da IA
             </button>
           )}
@@ -486,9 +610,14 @@ function ReviewCard({ review, onResponder, validateOnly }) {
             </p>
           )}
           <div className="flex gap-2">
-            <button onClick={() => setAberto(false)} className="btn-ghost flex-1 py-2">Cancelar</button>
-            <button onClick={responder} disabled={enviando || !texto.trim()}
-              className="btn-primary flex-1 py-2 flex items-center justify-center gap-1.5">
+            <button onClick={() => setAberto(false)} className="btn-ghost flex-1 py-2">
+              Cancelar
+            </button>
+            <button
+              onClick={responder}
+              disabled={enviando || !texto.trim()}
+              className="btn-primary flex-1 py-2 flex items-center justify-center gap-1.5"
+            >
               {enviando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               {enviando ? 'Enviando…' : 'Enviar'}
             </button>

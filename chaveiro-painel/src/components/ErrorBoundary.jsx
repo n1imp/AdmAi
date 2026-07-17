@@ -32,8 +32,8 @@ export default class ErrorBoundary extends Component {
           Algo deu errado
         </h1>
         <p className="text-muted mt-3 max-w-sm leading-relaxed">
-          Ocorreu um erro inesperado no painel. Tente recarregar a página. Se o problema
-          continuar, fale com o suporte.
+          Ocorreu um erro inesperado no painel. Tente recarregar a página. Se o problema continuar,
+          fale com o suporte.
         </p>
         <button onClick={() => window.location.reload()} className="btn-primary mt-6">
           <RefreshCw size={16} /> Recarregar

@@ -113,63 +113,63 @@ export default function CapturaSelfie({ aberto, onConfirmar, onCancelar }) {
       {/* Área da imagem (câmera ao vivo, prévia ou estado sem câmera). `max-h`
           limita a altura em telas curtas para não empurrar as ações para fora. */}
       <div className="relative rounded-lg overflow-hidden bg-dark-900 border border-dark-600 aspect-[3/4] max-h-[50vh] shrink-0 flex items-center justify-center">
-          {estado === 'preview' && previewUrl ? (
-            <img src={previewUrl} alt="Prévia da selfie" className="w-full h-full object-cover" />
-          ) : estado === 'camera' ? (
-            // `-scale-x-100` espelha a prévia (efeito espelho natural de selfie).
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              className="w-full h-full object-cover -scale-x-100"
-            />
-          ) : iniciando ? (
-            <div className="flex flex-col items-center gap-2 text-muted">
-              <Loader2 size={28} className="animate-spin text-accent-300" />
-              <p className="text-sm">Abrindo a câmera…</p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-muted px-6 text-center">
-              <Camera size={28} className="text-dark-500" />
-              <p className="text-sm">Câmera indisponível. Envie uma foto do seu dispositivo.</p>
-            </div>
-          )}
-        </div>
+        {estado === 'preview' && previewUrl ? (
+          <img src={previewUrl} alt="Prévia da selfie" className="w-full h-full object-cover" />
+        ) : estado === 'camera' ? (
+          // `-scale-x-100` espelha a prévia (efeito espelho natural de selfie).
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className="w-full h-full object-cover -scale-x-100"
+          />
+        ) : iniciando ? (
+          <div className="flex flex-col items-center gap-2 text-muted">
+            <Loader2 size={28} className="animate-spin text-accent-300" />
+            <p className="text-sm">Abrindo a câmera…</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-muted px-6 text-center">
+            <Camera size={28} className="text-dark-500" />
+            <p className="text-sm">Câmera indisponível. Envie uma foto do seu dispositivo.</p>
+          </div>
+        )}
+      </div>
 
-        <canvas ref={canvasRef} className="hidden" />
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="user"
-          onChange={aoSelecionarArquivo}
-          className="hidden"
-        />
+      <canvas ref={canvasRef} className="hidden" />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        onChange={aoSelecionarArquivo}
+        className="hidden"
+      />
 
-        {/* Ações */}
-        <div className="mt-4 flex flex-col gap-2 shrink-0">
-          {estado === 'preview' ? (
-            <>
-              <button onClick={confirmar} className="btn-primary">
-                <Check size={16} /> Usar esta foto
-              </button>
-              <button
-                onClick={refazer}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-dark-600 bg-dark-700 px-4 py-2.5 text-sm font-medium text-muted hover:text-white transition-colors"
-              >
-                <RotateCcw size={16} /> Refazer
-              </button>
-            </>
-          ) : estado === 'camera' ? (
-            <button onClick={tirarFoto} className="btn-primary">
-              <Camera size={16} /> Tirar foto
+      {/* Ações */}
+      <div className="mt-4 flex flex-col gap-2 shrink-0">
+        {estado === 'preview' ? (
+          <>
+            <button onClick={confirmar} className="btn-primary">
+              <Check size={16} /> Usar esta foto
             </button>
-          ) : (
-            <button onClick={() => inputRef.current?.click()} className="btn-primary">
-              <Upload size={16} /> Enviar foto
+            <button
+              onClick={refazer}
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-dark-600 bg-dark-700 px-4 py-2.5 text-sm font-medium text-muted hover:text-white transition-colors"
+            >
+              <RotateCcw size={16} /> Refazer
             </button>
-          )}
-        </div>
+          </>
+        ) : estado === 'camera' ? (
+          <button onClick={tirarFoto} className="btn-primary">
+            <Camera size={16} /> Tirar foto
+          </button>
+        ) : (
+          <button onClick={() => inputRef.current?.click()} className="btn-primary">
+            <Upload size={16} /> Enviar foto
+          </button>
+        )}
+      </div>
     </Overlay>
   );
 }

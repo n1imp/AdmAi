@@ -92,7 +92,11 @@ export default function Reparticao() {
               />
             </div>
           </div>
-          <button onClick={calcular} disabled={carregando} className="btn-primary flex items-center justify-center gap-2">
+          <button
+            onClick={calcular}
+            disabled={carregando}
+            className="btn-primary flex items-center justify-center gap-2"
+          >
             <Calculator size={18} />
             {carregando ? 'Calculando...' : 'Calcular'}
           </button>
@@ -111,23 +115,33 @@ export default function Reparticao() {
         <div className="px-4 pb-6 flex flex-col gap-4 lg:max-w-3xl">
           {/* Resumo consolidado */}
           <div className="card">
-            <h2 className="section-label mb-3"><span className="w-5 h-px bg-accent-400" /> CONSOLIDADO</h2>
+            <h2 className="section-label mb-3">
+              <span className="w-5 h-px bg-accent-400" /> CONSOLIDADO
+            </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="bg-dark-700 border border-dark-600 rounded-md p-3 text-center">
                 <p className="kpi-label text-[10px]">Total Serviços</p>
-                <p className="font-display font-bold text-white text-2xl tnum">{dados.totalServicos}</p>
+                <p className="font-display font-bold text-white text-2xl tnum">
+                  {dados.totalServicos}
+                </p>
               </div>
               <div className="bg-dark-700 border border-dark-600 rounded-md p-3 text-center">
                 <p className="kpi-label text-[10px]">Ticket Médio</p>
-                <p className="font-display font-bold text-white text-2xl tnum">{formatarMoeda(dados.ticketMedio)}</p>
+                <p className="font-display font-bold text-white text-2xl tnum">
+                  {formatarMoeda(dados.ticketMedio)}
+                </p>
               </div>
               <div className="bg-dark-700 border border-dark-600 rounded-md p-3 text-center">
                 <p className="kpi-label text-[10px]">Receita Bruta</p>
-                <p className="font-display font-bold text-white text-2xl tnum">{formatarMoeda(dados.receitaBruta)}</p>
+                <p className="font-display font-bold text-white text-2xl tnum">
+                  {formatarMoeda(dados.receitaBruta)}
+                </p>
               </div>
               <div className="bg-accent-400/10 rounded-md p-3 text-center border border-accent-400/20">
                 <p className="kpi-label text-[10px] text-accent-300">Rec. Líquida</p>
-                <p className="font-display font-bold text-accent-300 text-2xl tnum">{formatarMoeda(dados.receitaLiquida)}</p>
+                <p className="font-display font-bold text-accent-300 text-2xl tnum">
+                  {formatarMoeda(dados.receitaLiquida)}
+                </p>
               </div>
             </div>
           </div>
@@ -137,7 +151,9 @@ export default function Reparticao() {
             <EstadoVazio mensagem="Nenhum serviço no período" />
           ) : (
             <div className="card">
-              <h2 className="section-label mb-3"><span className="w-5 h-px bg-accent-400" /> POR TÉCNICO</h2>
+              <h2 className="section-label mb-3">
+                <span className="w-5 h-px bg-accent-400" /> POR TÉCNICO
+              </h2>
 
               {/* Cabeçalho da tabela */}
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 pb-2 border-b border-dark-600 mb-2">
@@ -158,7 +174,9 @@ export default function Reparticao() {
                     <p className="text-white text-sm font-medium">{t.tecnico}</p>
                     <p className="text-muted text-xs">Bruto: {formatarMoeda(t.receitaBruta)}</p>
                   </div>
-                  <span className="text-white text-sm text-right font-semibold tnum">{t.servicos}</span>
+                  <span className="text-white text-sm text-right font-semibold tnum">
+                    {t.servicos}
+                  </span>
                   <span className="font-display font-bold text-accent-300 text-right tnum">
                     {formatarMoeda(t.receitaLiquida)}
                   </span>
@@ -169,7 +187,9 @@ export default function Reparticao() {
               {/* Total */}
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 pt-3 mt-1 border-t-2 border-accent-400/40">
                 <span className="text-white font-bold text-sm">Total</span>
-                <span className="text-white font-bold text-sm text-right tnum">{dados.totalServicos}</span>
+                <span className="text-white font-bold text-sm text-right tnum">
+                  {dados.totalServicos}
+                </span>
                 <span className="font-display font-bold text-accent-300 text-right tnum">
                   {formatarMoeda(dados.receitaLiquida)}
                 </span>

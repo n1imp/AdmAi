@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Search, Pencil, Trash2, ImageOff,
-  History, ArrowDownCircle, ArrowUpCircle, SlidersHorizontal,
+  Search,
+  Pencil,
+  Trash2,
+  ImageOff,
+  History,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  SlidersHorizontal,
 } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -57,7 +63,9 @@ export default function Catalogo() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   async function confirmarDelete(material) {
     try {
@@ -71,9 +79,7 @@ export default function Catalogo() {
     }
   }
 
-  const filtrados = materiais.filter((m) =>
-    m.nome.toLowerCase().includes(busca.toLowerCase())
-  );
+  const filtrados = materiais.filter((m) => m.nome.toLowerCase().includes(busca.toLowerCase()));
 
   return (
     <div className="flex flex-col h-full">
@@ -95,12 +101,18 @@ export default function Catalogo() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-24 grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start">
         {carregando ? (
-          <div className="lg:col-span-2 xl:col-span-3"><SkeletonLista qtd={5} /></div>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <SkeletonLista qtd={5} />
+          </div>
         ) : filtrados.length === 0 ? (
           <div className="lg:col-span-2 xl:col-span-3">
             <EstadoVazio
               mensagem={busca ? 'Nenhum material encontrado' : 'Nenhum material cadastrado'}
-              sub={busca ? 'Tente outro termo de busca' : 'Toque em + para adicionar o primeiro material'}
+              sub={
+                busca
+                  ? 'Tente outro termo de busca'
+                  : 'Toque em + para adicionar o primeiro material'
+              }
             />
           </div>
         ) : (
@@ -111,11 +123,17 @@ export default function Catalogo() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">{m.nome}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="badge bg-dark-700 text-muted border border-dark-600 text-[10px]">{m.unidade}</span>
+                    <span className="badge bg-dark-700 text-muted border border-dark-600 text-[10px]">
+                      {m.unidade}
+                    </span>
                     {m.precoVenda != null && (
-                      <span className="text-xs text-accent-300 tnum">{formatarMoeda(m.precoVenda)}</span>
+                      <span className="text-xs text-accent-300 tnum">
+                        {formatarMoeda(m.precoVenda)}
+                      </span>
                     )}
-                    <span className={`text-xs ${m.estoqueMinimo != null && m.quantidadeAtual <= m.estoqueMinimo ? 'text-danger' : 'text-muted'}`}>
+                    <span
+                      className={`text-xs ${m.estoqueMinimo != null && m.quantidadeAtual <= m.estoqueMinimo ? 'text-danger' : 'text-muted'}`}
+                    >
                       saldo {m.quantidadeAtual ?? 0}
                     </span>
                   </div>

@@ -34,13 +34,19 @@ export default function Wizard({
   const habilitado = podeAvancar(indice);
 
   function voltar() {
-    if (indice === 0) { onCancelar?.(); return; }
+    if (indice === 0) {
+      onCancelar?.();
+      return;
+    }
     setIndice((i) => Math.max(0, i - 1));
   }
 
   function proximo() {
     if (!habilitado) return;
-    if (ehUltima) { onConcluir?.(); return; }
+    if (ehUltima) {
+      onConcluir?.();
+      return;
+    }
     setIndice((i) => Math.min(total - 1, i + 1));
   }
 
@@ -64,7 +70,9 @@ export default function Wizard({
           <p className="text-accent-300 text-xs font-display font-semibold uppercase tracking-wide">
             {rotulos[indice]}
           </p>
-          <p className="text-muted text-xs tnum">Etapa {indice + 1} de {total}</p>
+          <p className="text-muted text-xs tnum">
+            Etapa {indice + 1} de {total}
+          </p>
         </div>
       </div>
 
@@ -75,7 +83,12 @@ export default function Wizard({
 
       {/* Navegação */}
       <div className="flex gap-3">
-        <button type="button" onClick={voltar} disabled={concluindo} className="btn-ghost flex-1 flex items-center justify-center gap-1.5">
+        <button
+          type="button"
+          onClick={voltar}
+          disabled={concluindo}
+          className="btn-ghost flex-1 flex items-center justify-center gap-1.5"
+        >
           <ChevronLeft size={16} />
           {indice === 0 ? 'Cancelar' : 'Voltar'}
         </button>
@@ -91,7 +104,9 @@ export default function Wizard({
               {!concluindo && <Check size={16} />}
             </>
           ) : (
-            <>Próximo <ChevronRight size={16} /></>
+            <>
+              Próximo <ChevronRight size={16} />
+            </>
           )}
         </button>
       </div>

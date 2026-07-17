@@ -18,14 +18,20 @@ function TelaSolicitar() {
 
   async function solicitar(e) {
     e.preventDefault();
-    if (!email.trim()) { setErro('Informe seu e-mail.'); return; }
-    setCarregando(true); setErro('');
+    if (!email.trim()) {
+      setErro('Informe seu e-mail.');
+      return;
+    }
+    setCarregando(true);
+    setErro('');
     try {
       await api.post('/auth/magic-link', { email: email.trim() });
       setEnviado(true);
     } catch {
       setErro('Não foi possível enviar o link. Tente novamente.');
-    } finally { setCarregando(false); }
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -35,8 +41,14 @@ function TelaSolicitar() {
           <div className="card p-8 flex flex-col items-center gap-4 text-center">
             <CheckCircle size={40} className="text-success" />
             <p className="font-display font-bold text-lg text-white">Verifique seu e-mail</p>
-            <p className="text-muted text-sm">Enviamos um link de acesso para <strong className="text-white">{email}</strong>. Válido por 15 minutos.</p>
-            <a href="/login" className="text-xs text-accent-300 hover:text-accent-200 transition-colors flex items-center gap-1">
+            <p className="text-muted text-sm">
+              Enviamos um link de acesso para <strong className="text-white">{email}</strong>.
+              Válido por 15 minutos.
+            </p>
+            <a
+              href="/login"
+              className="text-xs text-accent-300 hover:text-accent-200 transition-colors flex items-center gap-1"
+            >
               <ArrowLeft size={12} /> Voltar ao login
             </a>
           </div>
@@ -54,7 +66,9 @@ function TelaSolicitar() {
 
             <form onSubmit={solicitar} className="flex flex-col gap-4">
               <div>
-                <label htmlFor="magic-email" className="kpi-label block mb-1.5">E-mail</label>
+                <label htmlFor="magic-email" className="kpi-label block mb-1.5">
+                  E-mail
+                </label>
                 <input
                   id="magic-email"
                   type="email"
@@ -73,7 +87,10 @@ function TelaSolicitar() {
               </button>
             </form>
 
-            <a href="/login" className="text-xs text-center text-muted hover:text-white transition-colors flex items-center justify-center gap-1">
+            <a
+              href="/login"
+              className="text-xs text-center text-muted hover:text-white transition-colors flex items-center justify-center gap-1"
+            >
               <ArrowLeft size={12} /> Voltar ao login com senha
             </a>
           </div>
@@ -89,8 +106,12 @@ function TelaVerificar({ token }) {
   const [estado, setEstado] = useState('verificando');
 
   useEffect(() => {
-    api.get(`/auth/magic-link/verificar?token=${encodeURIComponent(token)}`)
-      .then(({ data }) => { login(data.token); navigate('/', { replace: true }); })
+    api
+      .get(`/auth/magic-link/verificar?token=${encodeURIComponent(token)}`)
+      .then(({ data }) => {
+        login(data.token);
+        navigate('/', { replace: true });
+      })
       .catch(() => setEstado('erro'));
   }, [token, login, navigate]);
 
@@ -107,7 +128,9 @@ function TelaVerificar({ token }) {
             <XCircle size={40} className="text-danger" />
             <p className="font-display font-bold text-white">Link inválido ou expirado</p>
             <p className="text-muted text-sm">Solicite um novo link de acesso.</p>
-            <a href="/magic-link" className="btn-primary mt-1 text-sm">Solicitar novo link</a>
+            <a href="/magic-link" className="btn-primary mt-1 text-sm">
+              Solicitar novo link
+            </a>
           </>
         )}
       </div>

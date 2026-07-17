@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Plus, Calendar, MapPin, User, CheckCircle, Clock, XCircle,
-} from 'lucide-react';
+import { Plus, Calendar, MapPin, User, CheckCircle, Clock, XCircle } from 'lucide-react';
 import api, { formatarMoeda, formatarData } from '../lib/api.js';
 import { SkeletonLista } from '../components/Skeleton.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
@@ -10,9 +8,21 @@ import ErroBanner from '../components/ErroBanner.jsx';
 
 // Badge por status do serviço próprio.
 const STATUS = {
-  ativo: { rotulo: 'Aprovado', icon: CheckCircle, classe: 'bg-success/10 text-success border-success/20' },
-  pendente: { rotulo: 'Aguardando aprovação', icon: Clock, classe: 'bg-warning/10 text-warning border-warning/20' },
-  rejeitado: { rotulo: 'Rejeitado', icon: XCircle, classe: 'bg-danger/10 text-danger border-danger/20' },
+  ativo: {
+    rotulo: 'Aprovado',
+    icon: CheckCircle,
+    classe: 'bg-success/10 text-success border-success/20',
+  },
+  pendente: {
+    rotulo: 'Aguardando aprovação',
+    icon: Clock,
+    classe: 'bg-warning/10 text-warning border-warning/20',
+  },
+  rejeitado: {
+    rotulo: 'Rejeitado',
+    icon: XCircle,
+    classe: 'bg-danger/10 text-danger border-danger/20',
+  },
 };
 
 // F7: filtro por status (view de pendências) — os valores casam com `STATUS` acima.
@@ -40,7 +50,9 @@ function CardMeuServico({ servico }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <BadgeStatus status={servico.status} />
-            <span className="badge bg-dark-700 text-muted border border-dark-600">{servico.local}</span>
+            <span className="badge bg-dark-700 text-muted border border-dark-600">
+              {servico.local}
+            </span>
           </div>
           <p className="text-white text-sm font-medium truncate mt-1">{servico.descricao}</p>
           {servico.endereco && (
@@ -105,17 +117,25 @@ export default function MeusServicos() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 flex items-center justify-between">
         <div>
-          <p className="section-label mb-1"><span className="w-5 h-px bg-accent-400" /> REGISTROS</p>
-          <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">Meus serviços</h1>
+          <p className="section-label mb-1">
+            <span className="w-5 h-px bg-accent-400" /> REGISTROS
+          </p>
+          <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">
+            Meus serviços
+          </h1>
           <p className="text-muted text-xs mt-0.5 tnum">
-            {servicos.length > 0 ? `${servicos.length} registro${servicos.length !== 1 ? 's' : ''}` : 'Nenhum registro'}
+            {servicos.length > 0
+              ? `${servicos.length} registro${servicos.length !== 1 ? 's' : ''}`
+              : 'Nenhum registro'}
           </p>
         </div>
         <button

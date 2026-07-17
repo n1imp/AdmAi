@@ -33,8 +33,13 @@ async function tentarRefresh() {
   if (_refreshPromise) return _refreshPromise;
   _refreshPromise = axios
     .post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true })
-    .then((r) => { localStorage.setItem('admai_token', r.data.token); return r.data.token; })
-    .finally(() => { _refreshPromise = null; });
+    .then((r) => {
+      localStorage.setItem('admai_token', r.data.token);
+      return r.data.token;
+    })
+    .finally(() => {
+      _refreshPromise = null;
+    });
   return _refreshPromise;
 }
 

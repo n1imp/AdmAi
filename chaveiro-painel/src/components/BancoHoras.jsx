@@ -26,14 +26,22 @@ function fmtMin(min) {
 // Hora HH:MM de um ISO; "—" se ausente.
 function fmtHora(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  return new Date(iso).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
 }
 
 // Dia/mês de uma data ISO/YYYY-MM-DD.
 function fmtDia(d) {
   if (!d) return '—';
   const data = new Date(d.length === 10 ? `${d}T12:00:00` : d);
-  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' });
+  return data.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
 }
 
 export default function BancoHoras({ tecnicoId }) {
@@ -57,7 +65,9 @@ export default function BancoHoras({ tecnicoId }) {
     }
   }, [tecnicoId, mes]);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   async function baixar(formato) {
     setBaixando(formato);
@@ -87,16 +97,37 @@ export default function BancoHoras({ tecnicoId }) {
       <div className="card flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <label className="kpi-label block mb-1.5">Mês de referência</label>
-          <input type="month" className="input" value={mes} onChange={(e) => setMes(e.target.value)} />
+          <input
+            type="month"
+            className="input"
+            value={mes}
+            onChange={(e) => setMes(e.target.value)}
+          />
         </div>
         <div className="flex gap-2">
-          <button onClick={() => baixar('pdf')} disabled={baixando !== null || !dados}
-            className="btn-ghost flex items-center gap-1.5 px-3 disabled:opacity-50">
-            {baixando === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} PDF
+          <button
+            onClick={() => baixar('pdf')}
+            disabled={baixando !== null || !dados}
+            className="btn-ghost flex items-center gap-1.5 px-3 disabled:opacity-50"
+          >
+            {baixando === 'pdf' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <FileText size={14} />
+            )}{' '}
+            PDF
           </button>
-          <button onClick={() => baixar('csv')} disabled={baixando !== null || !dados}
-            className="btn-ghost flex items-center gap-1.5 px-3 disabled:opacity-50">
-            {baixando === 'csv' ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} CSV
+          <button
+            onClick={() => baixar('csv')}
+            disabled={baixando !== null || !dados}
+            className="btn-ghost flex items-center gap-1.5 px-3 disabled:opacity-50"
+          >
+            {baixando === 'csv' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <FileSpreadsheet size={14} />
+            )}{' '}
+            CSV
           </button>
         </div>
       </div>
@@ -111,15 +142,23 @@ export default function BancoHoras({ tecnicoId }) {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-dark-700 border border-dark-600 rounded-md p-3 text-center">
               <p className="kpi-label text-[10px]">Trabalhado</p>
-              <p className="font-display font-bold text-white text-base tnum">{fmtMin(dados.totalTrabalhadoMin)}</p>
+              <p className="font-display font-bold text-white text-base tnum">
+                {fmtMin(dados.totalTrabalhadoMin)}
+              </p>
             </div>
             <div className="bg-dark-700 border border-dark-600 rounded-md p-3 text-center">
               <p className="kpi-label text-[10px]">Hora extra</p>
-              <p className="font-display font-bold text-accent-300 text-base tnum">{fmtMin(dados.horaExtraMin)}</p>
+              <p className="font-display font-bold text-accent-300 text-base tnum">
+                {fmtMin(dados.horaExtraMin)}
+              </p>
             </div>
-            <div className={`rounded-md p-3 text-center border ${(dados.saldoBancoMin ?? 0) < 0 ? 'bg-danger/10 border-danger/20' : 'bg-success/10 border-success/20'}`}>
+            <div
+              className={`rounded-md p-3 text-center border ${(dados.saldoBancoMin ?? 0) < 0 ? 'bg-danger/10 border-danger/20' : 'bg-success/10 border-success/20'}`}
+            >
               <p className="kpi-label text-[10px]">Saldo banco</p>
-              <p className={`font-display font-bold text-base tnum ${(dados.saldoBancoMin ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
+              <p
+                className={`font-display font-bold text-base tnum ${(dados.saldoBancoMin ?? 0) < 0 ? 'text-danger' : 'text-success'}`}
+              >
                 {fmtMin(dados.saldoBancoMin)}
               </p>
             </div>
@@ -127,10 +166,15 @@ export default function BancoHoras({ tecnicoId }) {
 
           {/* Tabela de dias */}
           {dias.length === 0 ? (
-            <EstadoVazio mensagem="Sem registros neste mês" sub="Os registros aparecem quando o técnico bate ponto pelo WhatsApp." />
+            <EstadoVazio
+              mensagem="Sem registros neste mês"
+              sub="Os registros aparecem quando o técnico bate ponto pelo WhatsApp."
+            />
           ) : (
             <div className="card overflow-x-auto">
-              <h2 className="section-label mb-3"><span className="w-5 h-px bg-accent-400" /> REGISTROS DO MÊS</h2>
+              <h2 className="section-label mb-3">
+                <span className="w-5 h-px bg-accent-400" /> REGISTROS DO MÊS
+              </h2>
               <table className="w-full text-xs min-w-[520px]">
                 <thead>
                   <tr className="text-left">
@@ -152,7 +196,9 @@ export default function BancoHoras({ tecnicoId }) {
                       <td className="py-2 text-muted tnum">{fmtHora(d.almocoVoltaEm)}</td>
                       <td className="py-2 text-muted tnum">{fmtHora(d.saidaEm)}</td>
                       <td className="py-2 text-white text-right tnum">{fmtMin(d.totalMinutos)}</td>
-                      <td className={`py-2 text-right tnum font-semibold ${(d.saldoMinutos ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
+                      <td
+                        className={`py-2 text-right tnum font-semibold ${(d.saldoMinutos ?? 0) < 0 ? 'text-danger' : 'text-success'}`}
+                      >
                         {fmtMin(d.saldoMinutos)}
                       </td>
                     </tr>
@@ -166,9 +212,12 @@ export default function BancoHoras({ tecnicoId }) {
           <div className="bg-warning/5 border border-warning/20 rounded-xl px-4 py-3 flex items-start gap-2.5">
             <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" strokeWidth={1.8} />
             <p className="text-muted text-xs leading-relaxed">
-              <span className="text-warning font-semibold flex items-center gap-1 mb-0.5"><Clock size={12} /> Cálculo gerencial</span>
-              Este banco de horas é uma ferramenta de gestão e <strong className="text-white">não substitui</strong> o
-              controle oficial de jornada da folha de pagamento nem orientação jurídica/contábil.
+              <span className="text-warning font-semibold flex items-center gap-1 mb-0.5">
+                <Clock size={12} /> Cálculo gerencial
+              </span>
+              Este banco de horas é uma ferramenta de gestão e{' '}
+              <strong className="text-white">não substitui</strong> o controle oficial de jornada da
+              folha de pagamento nem orientação jurídica/contábil.
             </p>
           </div>
         </>

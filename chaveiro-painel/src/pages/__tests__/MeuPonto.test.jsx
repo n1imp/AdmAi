@@ -15,7 +15,11 @@ vi.mock('../../components/Toast.jsx', () => ({
 // BackHeader usa useNavigate; EstadoVazio usa Link — evita precisar de Router.
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
+  Link: ({ to, children, className }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
 }));
 
 // CapturaSelfie acessa APIs de mídia; o stub mantém o teste focado na timeline.
@@ -26,7 +30,11 @@ vi.mock('../../components/CapturaSelfie.jsx', () => ({
 describe('<MeuPonto>', () => {
   beforeEach(() => {
     mockGet.mockReset();
-    try { localStorage.removeItem('ponto_aviso_lgpd'); } catch { /* sem storage */ }
+    try {
+      localStorage.removeItem('ponto_aviso_lgpd');
+    } catch {
+      /* sem storage */
+    }
   });
 
   it('mostra a timeline com horas batidas e destaca a próxima etapa', async () => {
@@ -41,7 +49,14 @@ describe('<MeuPonto>', () => {
         proximaBatida: 'almoco_saida',
         proximaBatidaRotulo: 'Saída para o almoço',
         batidas: [
-          { tipo: 'entrada', rotulo: 'Entrada', em: '2026-06-20T11:00:00Z', lat: -23.5, lng: -46.6, temSelfie: true },
+          {
+            tipo: 'entrada',
+            rotulo: 'Entrada',
+            em: '2026-06-20T11:00:00Z',
+            lat: -23.5,
+            lng: -46.6,
+            temSelfie: true,
+          },
         ],
       },
     });
@@ -52,7 +67,9 @@ describe('<MeuPonto>', () => {
     await waitFor(() => expect(screen.getAllByText('08:00').length).toBeGreaterThan(0));
 
     // Botão grande mostra o rótulo da próxima batida.
-    expect(screen.getByRole('button', { name: /Bater ponto — Saída para o almoço/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Bater ponto — Saída para o almoço/i })
+    ).toBeInTheDocument();
     // Destaque da próxima etapa.
     expect(screen.getByText('Próxima batida')).toBeInTheDocument();
     // Histórico do dia listado.
@@ -84,7 +101,10 @@ describe('<MeuPonto>', () => {
     mockGet.mockResolvedValue({
       data: {
         data: '2026-06-20',
-        entradaEm: null, almocoSaidaEm: null, almocoVoltaEm: null, saidaEm: null,
+        entradaEm: null,
+        almocoSaidaEm: null,
+        almocoVoltaEm: null,
+        saidaEm: null,
         completo: false,
         proximaBatida: 'entrada',
         proximaBatidaRotulo: 'Entrada',

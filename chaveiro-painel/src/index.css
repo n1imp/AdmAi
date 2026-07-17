@@ -10,8 +10,8 @@
   }
 
   body {
-    background-color: #0E1014;
-    color: #E6E9EF;
+    background-color: #0e1014;
+    color: #e6e9ef;
     min-height: 100dvh;
     /* Atmosfera técnica: leve grade + vinheta radial de acento no topo */
     background-image:
@@ -35,7 +35,7 @@
     height: 8px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #262B34;
+    background: #262b34;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-track {

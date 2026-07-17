@@ -19,23 +19,35 @@ export default function Avaliacoes() {
     <div className="flex flex-col h-full animate-fade-in">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} aria-label="Voltar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors shrink-0">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Voltar"
+          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors shrink-0"
+        >
           <ChevronLeft size={20} />
         </button>
         <div>
-          <p className="section-label mb-1"><span className="w-5 h-px bg-accent-400" /> FEEDBACK DOS CLIENTES</p>
-          <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">Avaliações</h1>
+          <p className="section-label mb-1">
+            <span className="w-5 h-px bg-accent-400" /> FEEDBACK DOS CLIENTES
+          </p>
+          <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">
+            Avaliações
+          </h1>
         </div>
       </div>
 
       {/* Sub-abas */}
       <div className="px-4 flex gap-2 mb-3 border-b border-dark-700">
         {ABAS.map(({ value, label, Icon }) => (
-          <button key={value} onClick={() => setAba(value)}
+          <button
+            key={value}
+            onClick={() => setAba(value)}
             className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-display font-semibold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
-              aba === value ? 'text-accent-300 border-accent-400' : 'text-muted border-transparent hover:text-white'
-            }`}>
+              aba === value
+                ? 'text-accent-300 border-accent-400'
+                : 'text-muted border-transparent hover:text-white'
+            }`}
+          >
             <Icon size={15} /> {label}
           </button>
         ))}

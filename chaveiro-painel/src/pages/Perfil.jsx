@@ -45,10 +45,15 @@ export default function Perfil() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   const alterado =
-    dados && (nome !== (dados.nome ?? '') || email !== (dados.email ?? '') || telefone !== (dados.telefone ?? ''));
+    dados &&
+    (nome !== (dados.nome ?? '') ||
+      email !== (dados.email ?? '') ||
+      telefone !== (dados.telefone ?? ''));
 
   async function salvar(e) {
     e.preventDefault();
@@ -93,7 +98,9 @@ export default function Perfil() {
                 <p className="text-muted text-sm flex items-center gap-1">
                   <AtSign size={13} /> {dados.username}
                   {dados.admin && (
-                    <span className="badge bg-indigo-400/15 text-indigo-300 border-indigo-400/20 text-[9px] ml-1">admin</span>
+                    <span className="badge bg-indigo-400/15 text-indigo-300 border-indigo-400/20 text-[9px] ml-1">
+                      admin
+                    </span>
                   )}
                 </p>
               </div>
@@ -101,28 +108,50 @@ export default function Perfil() {
 
             <div>
               <label className="kpi-label block mb-2">Nome</label>
-              <input className="input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="kpi-label flex items-center gap-1.5"><Mail size={13} /> E-mail</label>
-                <SeloVerificacao verificado={dados.emailVerificado} preenchido={!!dados.email} />
-              </div>
               <input
-                className="input" type="email" inputMode="email" autoComplete="email"
-                value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com"
+                className="input"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Seu nome"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="kpi-label flex items-center gap-1.5"><Phone size={13} /> Telefone</label>
-                <SeloVerificacao verificado={dados.telefoneVerificado} preenchido={!!dados.telefone} />
+                <label className="kpi-label flex items-center gap-1.5">
+                  <Mail size={13} /> E-mail
+                </label>
+                <SeloVerificacao verificado={dados.emailVerificado} preenchido={!!dados.email} />
               </div>
               <input
-                className="input" type="tel" inputMode="tel" autoComplete="tel"
-                value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="+55 (11) 99999-9999"
+                className="input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@exemplo.com"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="kpi-label flex items-center gap-1.5">
+                  <Phone size={13} /> Telefone
+                </label>
+                <SeloVerificacao
+                  verificado={dados.telefoneVerificado}
+                  preenchido={!!dados.telefone}
+                />
+              </div>
+              <input
+                className="input"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                placeholder="+55 (11) 99999-9999"
               />
             </div>
 

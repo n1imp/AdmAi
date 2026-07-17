@@ -50,7 +50,9 @@ export const politicaPrivacidade = {
     },
     {
       titulo: '6. Compartilhamento',
-      paragrafos: ['Compartilhamos dados apenas com prestadores necessários à operação, sob contrato:'],
+      paragrafos: [
+        'Compartilhamos dados apenas com prestadores necessários à operação, sob contrato:',
+      ],
       itens: [
         'Provedor de hospedagem — infraestrutura (servidores e banco).',
         'Meta (WhatsApp) — envio/recebimento de mensagens.',

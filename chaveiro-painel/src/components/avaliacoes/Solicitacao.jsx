@@ -34,7 +34,9 @@ export default function Solicitacao() {
     }
   }
 
-  useEffect(() => { buscar(); }, []);
+  useEffect(() => {
+    buscar();
+  }, []);
 
   async function salvar() {
     setSalvando(true);
@@ -60,8 +62,18 @@ export default function Solicitacao() {
     }
   }
 
-  if (carregando) return <div className="px-4 pt-2"><SkeletonLista qtd={3} /></div>;
-  if (erro) return <div className="px-4 pt-2"><ErroBanner mensagem={erro} onRetry={buscar} /></div>;
+  if (carregando)
+    return (
+      <div className="px-4 pt-2">
+        <SkeletonLista qtd={3} />
+      </div>
+    );
+  if (erro)
+    return (
+      <div className="px-4 pt-2">
+        <ErroBanner mensagem={erro} onRetry={buscar} />
+      </div>
+    );
   if (!config) return null;
 
   function set(campo, valor) {
@@ -76,7 +88,9 @@ export default function Solicitacao() {
           <p className="text-white text-sm font-semibold flex items-center gap-2">
             <Power size={15} className="text-accent-300" /> Solicitação automática
           </p>
-          <p className="text-muted text-xs mt-1">Pedir avaliação ao cliente via WhatsApp após o serviço.</p>
+          <p className="text-muted text-xs mt-1">
+            Pedir avaliação ao cliente via WhatsApp após o serviço.
+          </p>
         </div>
         <button
           role="switch"
@@ -84,11 +98,15 @@ export default function Solicitacao() {
           onClick={() => set('reviewAtivo', !config.reviewAtivo)}
           className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ml-3 ${config.reviewAtivo ? 'bg-accent-400' : 'bg-dark-600'}`}
         >
-          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${config.reviewAtivo ? 'translate-x-6' : ''}`} />
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${config.reviewAtivo ? 'translate-x-6' : ''}`}
+          />
         </button>
       </div>
 
-      <div className={`card space-y-4 transition-opacity ${config.reviewAtivo ? '' : 'opacity-60'}`}>
+      <div
+        className={`card space-y-4 transition-opacity ${config.reviewAtivo ? '' : 'opacity-60'}`}
+      >
         <div>
           <label className="kpi-label block mb-1.5 flex items-center gap-1">
             <MessageSquareText size={11} /> Mensagem enviada
@@ -105,8 +123,10 @@ export default function Solicitacao() {
             <code className="text-accent-300">{'{link}'}</code> para o link de avaliação.
           </p>
           {!config.reviewTemplate && (
-            <button onClick={() => set('reviewTemplate', TEMPLATE_PADRAO)}
-              className="text-accent-300 text-xs font-medium mt-1.5 hover:underline">
+            <button
+              onClick={() => set('reviewTemplate', TEMPLATE_PADRAO)}
+              className="text-accent-300 text-xs font-medium mt-1.5 hover:underline"
+            >
               Usar mensagem padrão
             </button>
           )}
@@ -117,7 +137,9 @@ export default function Solicitacao() {
             <Clock size={11} /> Atraso para enviar (horas)
           </label>
           <input
-            type="number" min="0" max="168"
+            type="number"
+            min="0"
+            max="168"
             className="input w-full"
             value={config.reviewDelayHoras}
             onChange={(e) => set('reviewDelayHoras', e.target.value)}
@@ -137,11 +159,17 @@ export default function Solicitacao() {
             onChange={(e) => set('reviewLink', e.target.value)}
             disabled={!config.reviewAtivo}
           />
-          <p className="text-muted text-xs mt-1.5">Substitui o <code className="text-accent-300">{'{link}'}</code> na mensagem.</p>
+          <p className="text-muted text-xs mt-1.5">
+            Substitui o <code className="text-accent-300">{'{link}'}</code> na mensagem.
+          </p>
         </div>
       </div>
 
-      <button onClick={salvar} disabled={salvando} className="btn-primary w-full flex items-center justify-center gap-2">
+      <button
+        onClick={salvar}
+        disabled={salvando}
+        className="btn-primary w-full flex items-center justify-center gap-2"
+      >
         {salvando ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
         {salvando ? 'Salvando…' : 'Salvar configuração'}
       </button>
