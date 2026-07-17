@@ -6,6 +6,7 @@ import { formatarMoedaInput, moedaParaNumero } from '../lib/moeda.js';
 import BackHeader from '../components/BackHeader.jsx';
 import Wizard from '../components/Wizard.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 const MODALIDADES = [
   { value: 'clt', label: 'CLT', desc: 'Carteira assinada, jornada padrão' },
@@ -271,8 +272,18 @@ export default function NovoTecnico() {
 
       {/* Modal de credenciais — só quando o funcionário recebe acesso ao painel */}
       {acesso && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise">
-          <div className="w-full max-w-sm card flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+        <Overlay
+          open
+          onClose={() => {
+            setAcesso(null);
+            navigate('/tecnicos');
+          }}
+          ariaLabel="Acesso do funcionário"
+          showCloseButton={false}
+          closeOnBackdrop={false}
+          size="sm"
+        >
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
                 <KeyRound size={24} className="text-accent-300" />
@@ -320,7 +331,7 @@ export default function NovoTecnico() {
               <Check size={16} /> Anotei, concluir
             </button>
           </div>
-        </div>
+        </Overlay>
       )}
     </div>
   );

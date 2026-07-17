@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Camera, RotateCcw, Check, X, Upload, Loader2 } from 'lucide-react';
+import { Camera, RotateCcw, Check, Upload, Loader2 } from 'lucide-react';
+import { Overlay } from './ui/index.js';
 
 // Captura de selfie para o registro de ponto. Tenta a câmera frontal via
 // getUserMedia (desenha num <canvas> e exporta JPEG); cai para <input file>
@@ -107,29 +108,21 @@ export default function CapturaSelfie({ aberto, onConfirmar, onCancelar }) {
     onCancelar();
   }
 
-  if (!aberto) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-dark-950/80 backdrop-blur-sm p-0 sm:p-4">
-      <div className="card w-full sm:max-w-md rounded-t-2xl sm:rounded-xl border-dark-600 p-5 animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-bold text-white uppercase tracking-wide">Selfie do ponto</h2>
-          <button
-            onClick={cancelar}
-            aria-label="Fechar"
-            className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-white transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Área da imagem (câmera ao vivo, prévia ou estado sem câmera) */}
-        <div className="relative rounded-lg overflow-hidden bg-dark-900 border border-dark-600 aspect-[3/4] flex items-center justify-center">
+    <Overlay open={aberto} onClose={cancelar} title="Selfie do ponto" size="sm">
+      {/* Área da imagem (câmera ao vivo, prévia ou estado sem câmera). `max-h`
+          limita a altura em telas curtas para não empurrar as ações para fora. */}
+      <div className="relative rounded-lg overflow-hidden bg-dark-900 border border-dark-600 aspect-[3/4] max-h-[50vh] shrink-0 flex items-center justify-center">
           {estado === 'preview' && previewUrl ? (
             <img src={previewUrl} alt="Prévia da selfie" className="w-full h-full object-cover" />
           ) : estado === 'camera' ? (
             // `-scale-x-100` espelha a prévia (efeito espelho natural de selfie).
-            <video ref={videoRef} playsInline muted className="w-full h-full object-cover -scale-x-100" />
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              className="w-full h-full object-cover -scale-x-100"
+            />
           ) : iniciando ? (
             <div className="flex flex-col items-center gap-2 text-muted">
               <Loader2 size={28} className="animate-spin text-accent-300" />
@@ -154,7 +147,7 @@ export default function CapturaSelfie({ aberto, onConfirmar, onCancelar }) {
         />
 
         {/* Ações */}
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex flex-col gap-2 shrink-0">
           {estado === 'preview' ? (
             <>
               <button onClick={confirmar} className="btn-primary">
@@ -177,7 +170,6 @@ export default function CapturaSelfie({ aberto, onConfirmar, onCancelar }) {
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </Overlay>
   );
 }

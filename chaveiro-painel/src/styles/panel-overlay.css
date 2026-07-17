@@ -1,0 +1,154 @@
+.panel-ui.panel-overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: end center;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  background: rgb(5 6 10 / 76%);
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+}
+
+.panel-ui .panel-overlay {
+  width: min(100%, 42rem);
+  max-height: min(90dvh, 52rem);
+  overflow: auto;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: var(--panel-radius-elevated) var(--panel-radius-elevated)
+    var(--panel-radius-control) var(--panel-radius-control);
+  background: var(--panel-surface-raised);
+  color: var(--panel-text);
+  box-shadow: var(--panel-shadow-raised);
+  animation: panel-overlay-in var(--panel-motion-base) var(--panel-ease-decelerate) both;
+}
+
+/* Tamanhos (default md = min(100%, 42rem) da regra base) */
+.panel-ui .panel-overlay[data-size='sm'] {
+  width: min(100%, 30rem);
+}
+
+.panel-ui .panel-overlay[data-size='lg'] {
+  width: min(100%, 56rem);
+}
+
+/* Variante tela-cheia (imersivo / detalhe): ocupa a viewport, sem borda/raio. */
+.panel-ui.panel-overlay-root[data-variant='fullscreen'] {
+  place-items: stretch;
+  padding: 0;
+}
+
+.panel-ui .panel-overlay[data-variant='fullscreen'] {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Saída coreografada (F6/M3): acelera para fora, espelhando o enter. Aplicada só quando o
+ * primitive mantém o nó montado durante a saída (progressive enhancement). */
+.panel-ui.panel-overlay-root[data-closing='true'] {
+  animation: panel-overlay-root-out var(--panel-motion-fast) var(--panel-ease-accelerate) both;
+}
+
+.panel-ui .panel-overlay[data-closing='true'] {
+  animation: panel-overlay-out var(--panel-motion-fast) var(--panel-ease-accelerate) both;
+}
+
+@keyframes panel-overlay-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--panel-motion-distance)) scale(0.985);
+  }
+}
+
+@keyframes panel-overlay-root-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.panel-ui .panel-overlay__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0;
+}
+
+.panel-ui .panel-overlay__title,
+.panel-ui .panel-overlay__description {
+  margin: 0;
+}
+
+.panel-ui .panel-overlay__title {
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+
+.panel-ui .panel-overlay__description {
+  margin-top: 0.375rem;
+  color: var(--panel-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.panel-ui .panel-overlay__body {
+  padding: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .panel-ui.panel-overlay-root {
+    place-items: center;
+    padding: 1.5rem;
+  }
+
+  .panel-ui .panel-overlay {
+    border-radius: var(--panel-radius-elevated);
+  }
+}
+
+@keyframes panel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes panel-overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--panel-motion-distance)) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-ui {
+    --panel-motion-fast: 0.01ms;
+    --panel-motion-base: 0.01ms;
+    --panel-motion-slow: 0.01ms;
+    --panel-motion-distance: 0px;
+  }
+
+  .panel-ui,
+  .panel-ui * {
+    scroll-behavior: auto !important;
+  }
+
+  .panel-ui *,
+  .panel-ui *::before,
+  .panel-ui *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .panel-ui :where(.animate-pulse, .animate-bounce) {
+    animation: none !important;
+  }
+
+  .panel-ui .panel-button:hover:not(:disabled) {
+    transform: none;
+  }
+}

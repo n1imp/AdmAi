@@ -5,6 +5,10 @@ import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { iniciarMonitoramento } from './lib/monitoring.js';
 import './index.css';
+import './styles/panel.css';
+import './styles/panel-primitives.css';
+import './styles/panel-overlay.css';
+import './styles/panel-rollout.css';
 
 // Observabilidade (Sentry) — no-op se VITE_SENTRY_DSN não estiver definido.
 iniciarMonitoramento();

@@ -6,6 +6,7 @@ import { avaliarForcaSenha } from '../lib/senha.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 const CORES_FORCA = {
   fraca: { barra: 'bg-danger', texto: 'text-danger', label: 'Fraca', n: 1 },
@@ -91,31 +92,12 @@ function CampoCodigo({ valor, onChange, onEnter, autoFocus, ariaLabel }) {
   );
 }
 
-// Overlay modal simples, consistente com o tema escuro do app.
+// Modal do app apoiado no primitive acessível Overlay (foco preso, inert, Escape, restauração).
 function Modal({ titulo, onClose, children }) {
-  const titleId = useId();
-  useEffect(() => {
-    function handleKey(e) { if (e.key === 'Escape') onClose(); }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise"
-    >
-      <div className="w-full max-w-sm card flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-center justify-between">
-          <p id={titleId} className="font-display font-bold text-lg text-white">{titulo}</p>
-          <button onClick={onClose} className="text-muted hover:text-white transition-colors" aria-label="Fechar">
-            <X size={18} />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Overlay open onClose={onClose} title={titulo} size="sm">
+      <div className="flex flex-col gap-4">{children}</div>
+    </Overlay>
   );
 }
 

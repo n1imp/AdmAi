@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserCheck, UserX, X, ShieldCheck, Crown, UserCog, KeyRound, Trash2 } from 'lucide-react';
+import { UserCheck, UserX, ShieldCheck, Crown, UserCog, KeyRound, Trash2 } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { SkeletonLista } from '../components/Skeleton.jsx';
@@ -8,6 +8,7 @@ import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import MatrizPermissoes from '../components/MatrizPermissoes.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 // ── Metadados de papel (rótulo + cor do badge) ────────────────────────────────
 const PAPEIS = {
@@ -147,21 +148,8 @@ function ModalUsuario({ modo, usuario, catalogo, euId, onClose, onSalvo }) {
     : nome.trim().length > 0 && username.trim().length > 0 && senha.length >= 6;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-lg bg-dark-800 border border-dark-600 rounded-lg shadow-panel animate-slide-up flex flex-col max-h-[90dvh]">
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-dark-600 shrink-0">
-          <h2 className="font-display text-lg font-bold text-white uppercase tracking-wide">
-            {ehEdicao ? 'Editar conta' : 'Nova conta'}
-          </h2>
-          <button onClick={onClose} className="text-muted hover:text-white transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={salvar} className="flex flex-col gap-4 p-6 overflow-y-auto">
+    <Overlay open onClose={onClose} title={ehEdicao ? 'Editar conta' : 'Nova conta'} size="md">
+      <form onSubmit={salvar} className="flex flex-col gap-4">
           <div>
             <label className="kpi-label block mb-2">Nome *</label>
             <input className="input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo" autoFocus />
@@ -264,9 +252,8 @@ function ModalUsuario({ modo, usuario, catalogo, euId, onClose, onSalvo }) {
               {salvando ? 'Salvando…' : ehEdicao ? 'Salvar' : 'Criar conta'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Overlay>
   );
 }
 
@@ -409,7 +396,7 @@ export default function Usuarios() {
         onClick={() => setModal({ modo: 'criar' })}
         aria-label="Nova conta"
         disabled={!catalogo}
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(34,211,238,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light disabled:opacity-40"
+        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light disabled:opacity-40"
       >
         +
       </button>

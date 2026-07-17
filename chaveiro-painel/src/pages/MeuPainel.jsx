@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Wallet, HandCoins, ClipboardList, Target, Fingerprint,
-  Plus, Wrench, AlertTriangle, RefreshCw,
+  Plus, Wrench, AlertTriangle, RefreshCw, ChevronRight,
 } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
@@ -131,22 +131,26 @@ export default function MeuPainel() {
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
 
-      {/* Aviso de serviços aguardando aprovação */}
+      {/* Aviso de serviços aguardando aprovação — leva à view de pendências (F7) */}
       {!carregando && pendentes > 0 && (
         <div className="px-4 mb-4">
-          <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+          <Link
+            to="/meus-servicos?status=pendente"
+            className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 hover:bg-warning/15 transition-colors"
+          >
             <AlertTriangle size={20} className="text-warning shrink-0" />
-            <p className="text-sm text-white font-medium">
+            <p className="text-sm text-white font-medium flex-1">
               {pendentes} serviço{pendentes !== 1 ? 's' : ''} aguardando aprovação do gestor
             </p>
-          </div>
+            <ChevronRight size={16} className="text-warning shrink-0" aria-hidden="true" />
+          </Link>
         </div>
       )}
 
       {/* KPIs */}
       <div className="px-4 grid grid-cols-2 gap-3 mb-4">
         {carregando ? (
-          Array.from({ length: 3 }).map((_, i) => <SkeletonKpi key={i} />)
+          Array.from({ length: 3 }).map((_, i) => <SkeletonKpi key={i} announce={i === 0} />)
         ) : dados ? (
           <>
             <div className="col-span-2 card-accent bg-gradient-to-br from-accent-400/10 to-dark-800 flex items-center justify-between">

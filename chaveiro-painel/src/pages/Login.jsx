@@ -419,7 +419,7 @@ export default function Login() {
                       key={v}
                       onClick={() => trocarModo(v)}
                       className={`flex-1 py-2 rounded-md text-sm font-display font-semibold uppercase tracking-wider transition-all ${
-                        modo === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)]' : 'text-muted hover:text-white'
+                        modo === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]' : 'text-muted hover:text-white'
                       }`}
                     >
                       {lbl}
@@ -459,7 +459,7 @@ export default function Login() {
                             type="button"
                             onClick={() => { setTipoLogin(v); setErro(''); }}
                             className={`flex-1 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
-                              tipoLogin === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)]' : 'text-muted hover:text-white'
+                              tipoLogin === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]' : 'text-muted hover:text-white'
                             }`}
                           >
                             {lbl}

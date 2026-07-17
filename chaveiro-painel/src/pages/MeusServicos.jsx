@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus, Calendar, MapPin, User, CheckCircle, Clock, XCircle,
 } from 'lucide-react';
@@ -14,6 +14,14 @@ const STATUS = {
   pendente: { rotulo: 'Aguardando aprovação', icon: Clock, classe: 'bg-warning/10 text-warning border-warning/20' },
   rejeitado: { rotulo: 'Rejeitado', icon: XCircle, classe: 'bg-danger/10 text-danger border-danger/20' },
 };
+
+// F7: filtro por status (view de pendências) — os valores casam com `STATUS` acima.
+const FILTROS = [
+  { valor: 'todos', label: 'Todos' },
+  { valor: 'pendente', label: 'Aguardando' },
+  { valor: 'ativo', label: 'Aprovados' },
+  { valor: 'rejeitado', label: 'Rejeitados' },
+];
 
 function BadgeStatus({ status }) {
   const cfg = STATUS[status] ?? STATUS.ativo;
@@ -68,6 +76,22 @@ export default function MeusServicos() {
   const [servicos, setServicos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Filtro inicial vindo do deep-link (ex.: MeuPainel → ?status=pendente).
+  const statusUrl = searchParams.get('status');
+  const [filtro, setFiltro] = useState(
+    ['pendente', 'ativo', 'rejeitado'].includes(statusUrl) ? statusUrl : 'todos'
+  );
+
+  function selecionar(valor) {
+    setFiltro(valor);
+    setSearchParams(valor === 'todos' ? {} : { status: valor }, { replace: true });
+  }
+
+  const contar = (valor) =>
+    valor === 'todos' ? servicos.length : servicos.filter((s) => s.status === valor).length;
+  const visiveis = filtro === 'todos' ? servicos : servicos.filter((s) => s.status === filtro);
 
   const buscar = useCallback(async () => {
     setErro(null);
@@ -97,13 +121,37 @@ export default function MeusServicos() {
         <button
           onClick={() => navigate('/meus-servicos/novo')}
           aria-label="Registrar serviço"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-accent-400 text-dark-950 font-display font-semibold uppercase tracking-wider text-sm shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)] hover:bg-accent-300 transition-colors"
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-accent-400 text-dark-950 font-display font-semibold uppercase tracking-wider text-sm shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)] hover:bg-accent-300 transition-colors"
         >
           <Plus size={18} /> <span className="hidden sm:inline">Novo</span>
         </button>
       </div>
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
+
+      {/* Filtro por status (só quando há registros) */}
+      {!carregando && servicos.length > 0 && (
+        <div
+          className="px-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+          role="group"
+          aria-label="Filtrar por status"
+        >
+          {FILTROS.map((f) => (
+            <button
+              key={f.valor}
+              onClick={() => selecionar(f.valor)}
+              aria-pressed={filtro === f.valor}
+              className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
+                filtro === f.valor
+                  ? 'bg-accent-400 text-dark-950 border-accent-400'
+                  : 'bg-dark-700 text-muted border-dark-600 hover:text-white'
+              }`}
+            >
+              {f.label} <span className="tnum opacity-70">({contar(f.valor)})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Lista */}
       <div className="flex-1 overflow-y-auto px-4 pt-2 pb-4 flex flex-col gap-3">
@@ -115,9 +163,14 @@ export default function MeusServicos() {
             sub="Registre seu primeiro atendimento no botão acima"
             cta={{ label: 'Registrar serviço', to: '/meus-servicos/novo' }}
           />
+        ) : visiveis.length === 0 ? (
+          <EstadoVazio
+            mensagem="Nenhum serviço neste status"
+            sub="Ajuste o filtro acima para ver outros serviços."
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            {servicos.map((s) => (
+            {visiveis.map((s) => (
               <CardMeuServico key={s.id} servico={s} />
             ))}
           </div>

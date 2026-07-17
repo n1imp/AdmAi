@@ -9,6 +9,7 @@ import { SkeletonLista } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import CapturaSelfie from '../components/CapturaSelfie.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 // Ordem fixa das 4 etapas do dia + metadados de exibição (rótulo curto e ícone).
 const ETAPAS = [
@@ -254,8 +255,14 @@ export default function MeuPonto() {
 
       {/* Aviso de coleta (consentimento LGPD) — exibido antes da 1ª captura */}
       {mostrarAviso && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
-          <div className="card p-5 w-full max-w-sm flex flex-col gap-4">
+        <Overlay
+          open
+          onClose={() => setMostrarAviso(false)}
+          ariaLabel="Coleta de selfie e localização"
+          showCloseButton={false}
+          size="sm"
+        >
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center shrink-0">
                 <Camera size={20} className="text-accent-300" strokeWidth={1.8} />
@@ -289,7 +296,7 @@ export default function MeuPonto() {
               </button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
 
       {/* Modal de captura de selfie */}

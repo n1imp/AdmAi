@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { SkeletonLista } from '../components/Skeleton.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 const PERIODOS = [
   { label: '7d', valor: 7 },
@@ -19,12 +20,6 @@ function ModalEstoqueMinimo({ material, onClose, onSalvo }) {
     material.estoqueMinimo != null ? String(material.estoqueMinimo) : ''
   );
   const [salvando, setSalvando] = useState(false);
-
-  useEffect(() => {
-    const fn = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', fn);
-    return () => window.removeEventListener('keydown', fn);
-  }, [onClose]);
 
   async function salvar(e) {
     e.preventDefault();
@@ -44,45 +39,34 @@ function ModalEstoqueMinimo({ material, onClose, onSalvo }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-sm bg-dark-800 border border-dark-600 rounded-lg p-6 shadow-panel animate-slide-up">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="font-display text-lg font-bold text-white uppercase tracking-wide">Estoque mínimo</h2>
-          <button onClick={onClose} className="text-muted hover:text-white transition-colors">
-            <X size={20} />
+    <Overlay open onClose={onClose} title="Estoque mínimo" description={material.nome} size="sm">
+      <form onSubmit={salvar} className="flex flex-col gap-4">
+        <div>
+          <label className="kpi-label block mb-2">
+            Quantidade em {material.unidade} (deixe vazio para desativar o alerta)
+          </label>
+          <input
+            className="input"
+            type="number"
+            min="0"
+            step="0.01"
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            placeholder="Sem alerta"
+            inputMode="decimal"
+            autoFocus
+          />
+        </div>
+        <div className="flex gap-3">
+          <button type="button" onClick={onClose} className="btn-ghost flex-1">
+            Cancelar
+          </button>
+          <button type="submit" disabled={salvando} className="btn-primary flex-1">
+            {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         </div>
-        <p className="text-muted text-sm mb-5">{material.nome}</p>
-
-        <form onSubmit={salvar} className="flex flex-col gap-4">
-          <div>
-            <label className="kpi-label block mb-2">
-              Quantidade em {material.unidade} (deixe vazio para desativar o alerta)
-            </label>
-            <input
-              className="input"
-              type="number"
-              min="0"
-              step="0.01"
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              placeholder="Sem alerta"
-              inputMode="decimal"
-              autoFocus
-            />
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancelar</button>
-            <button type="submit" disabled={salvando} className="btn-primary flex-1">
-              {salvando ? 'Salvando…' : 'Salvar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Overlay>
   );
 }
 

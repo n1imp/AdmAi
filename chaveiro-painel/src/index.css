@@ -43,6 +43,16 @@
   }
 }
 
+/* View Transitions (F6/C.2): respeita prefers-reduced-motion desligando as animações de
+ * transição de rota do navegador. Pseudos globais — só disparam no painel autenticado. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 @layer components {
   /* ── Card / superfície de painel ──────────────────────────────────────── */
   .card {

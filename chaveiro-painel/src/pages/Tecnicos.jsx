@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, UserX, ChevronRight, Pencil, X, Phone, User } from 'lucide-react';
+import { UserCheck, UserX, ChevronRight, Pencil, Phone, User } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
 import { SkeletonLista } from '../components/Skeleton.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 function fmtTel(tel) {
   if (!tel) return null;
@@ -20,12 +21,6 @@ function ModalEdicao({ tecnico, onClose, onSalvo }) {
   const [nome, setNome] = useState(tecnico.nome);
   const [tel, setTel] = useState(tecnico.telefoneDisplay || '');
   const [salvando, setSalvando] = useState(false);
-
-  useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
 
   async function salvar(e) {
     e.preventDefault();
@@ -48,61 +43,45 @@ function ModalEdicao({ tecnico, onClose, onSalvo }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-md bg-dark-800 border border-dark-600 rounded-lg p-6 shadow-panel animate-slide-up">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display text-lg font-bold text-white uppercase tracking-wide">Editar técnico</h2>
-          <button onClick={onClose} className="text-muted hover:text-white transition-colors">
-            <X size={20} />
-          </button>
+    <Overlay open onClose={onClose} title="Editar técnico" size="sm">
+      <form onSubmit={salvar} className="flex flex-col gap-4">
+        <div>
+          <label className="kpi-label block mb-2">
+            <User size={12} className="inline mr-1" />Nome
+          </label>
+          <input
+            className="input"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Nome completo"
+            autoFocus
+          />
         </div>
 
-        <form onSubmit={salvar} className="flex flex-col gap-4">
-          <div>
-            <label className="kpi-label block mb-2">
-              <User size={12} className="inline mr-1" />Nome
-            </label>
-            <input
-              className="input"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Nome completo"
-              autoFocus
-            />
-          </div>
+        <div>
+          <label className="kpi-label block mb-2">
+            <Phone size={12} className="inline mr-1" />Telefone (com DDI e DDD)
+          </label>
+          <input
+            className="input"
+            value={tel}
+            onChange={(e) => setTel(e.target.value)}
+            placeholder="5511912345678"
+            inputMode="numeric"
+          />
+          <p className="text-muted text-xs mt-1">Ex: 5511912345678 — sem espaços ou traços</p>
+        </div>
 
-          <div>
-            <label className="kpi-label block mb-2">
-              <Phone size={12} className="inline mr-1" />Telefone (com DDI e DDD)
-            </label>
-            <input
-              className="input"
-              value={tel}
-              onChange={(e) => setTel(e.target.value)}
-              placeholder="5511912345678"
-              inputMode="numeric"
-            />
-            <p className="text-muted text-xs mt-1">Ex: 5511912345678 — sem espaços ou traços</p>
-          </div>
-
-          <div className="flex gap-3 mt-2">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={salvando || !nome.trim()}
-              className="btn-primary flex-1"
-            >
-              {salvando ? 'Salvando…' : 'Salvar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex gap-3 mt-2">
+          <button type="button" onClick={onClose} className="btn-ghost flex-1">
+            Cancelar
+          </button>
+          <button type="submit" disabled={salvando || !nome.trim()} className="btn-primary flex-1">
+            {salvando ? 'Salvando…' : 'Salvar'}
+          </button>
+        </div>
+      </form>
+    </Overlay>
   );
 }
 
@@ -195,7 +174,7 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
       </div>
 
       <button
-        onClick={() => navigate(`/tecnicos/${tecnico.id}`)}
+        onClick={() => navigate(`/tecnicos/${tecnico.id}`, { viewTransition: true })}
         className="flex items-center gap-1.5 text-accent-300 text-xs mt-3 hover:text-accent-400 transition-colors"
       >
         Ver perfil completo
@@ -271,7 +250,7 @@ export default function Tecnicos() {
       <button
         onClick={() => navigate('/tecnicos/novo')}
         aria-label="Adicionar técnico"
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(34,211,238,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light"
+        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light"
       >
         +
       </button>
