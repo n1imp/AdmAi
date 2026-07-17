@@ -1,0 +1,7 @@
+# Revisões que SÓ reformatam (Prettier/estilo) — o `git blame` deve ignorá-las para
+# preservar a autoria real de cada linha. Ative localmente uma vez com:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# O GitHub aplica este arquivo automaticamente na visão de blame.
+
+# style(painel): normalizacao Prettier (formatacao apenas)
+9ef5d7c9e084bfd5a04bcb405d777f82f9264c09
