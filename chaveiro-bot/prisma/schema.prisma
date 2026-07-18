@@ -236,6 +236,9 @@ model Usuario {
   // Overrides granulares sobre o preset do papel: { modulo: { acao: bool }, proprio: {...} }.
   // null = usa o preset puro do papel (ver services/permissoes.js).
   permissoes          Json?
+  // F9/M5 — preferências de UI por usuário (cross-device). Namespaced por área, ex.:
+  // { dashboard: { ordem: string[], ocultos: string[] } }. null = usa os defaults do painel.
+  preferencias        Json?
   // PIN inicial entregue pelo dono: enquanto true, força troca de senha no 1º acesso.
   senhaProvisoria     Boolean   @default(false)
   ativo               Boolean   @default(true)
