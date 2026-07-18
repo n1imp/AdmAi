@@ -91,6 +91,11 @@ export function criarApp() {
     limit: 120,
     standardHeaders: true,
     legacyHeaders: false,
+    // Nos testes de integração, centenas de chamadas /api partem do MESMO IP (supertest,
+    // 127.0.0.1) num único minuto e estouram o balde de 120 → 429 espúrios em cascata
+    // (o limiter global é infra, não é exercido por nenhum teste). Desliga só em teste;
+    // dev/produção seguem protegidos. Os limiters de auth/2FA (testados) continuam ativos.
+    skip: () => env.NODE_ENV === 'test',
     store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });
   app.use('/api', limiter);
