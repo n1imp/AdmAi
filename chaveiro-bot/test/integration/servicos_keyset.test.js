@@ -36,7 +36,17 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const sBase = { local: 'L', descricao: 'S', msgOriginal: 'm', remetenteWpp: 'w', status: 'ativo', valorCobrado: 100, valorMaterial: 0, valorLiquido: 100, comissaoGerada: 0 };
+const sBase = {
+  local: 'L',
+  descricao: 'S',
+  msgOriginal: 'm',
+  remetenteWpp: 'w',
+  status: 'ativo',
+  valorCobrado: 100,
+  valorMaterial: 0,
+  valorLiquido: 100,
+  comissaoGerada: 0,
+};
 
 describe('GET /api/servicos — paginação keyset (F3.5)', () => {
   it('percorre tudo por cursor sem dup/pulo, com desempate por id', async () => {
@@ -53,17 +63,23 @@ describe('GET /api/servicos — paginação keyset (F3.5)', () => {
     };
     const criados = [];
     for (const k of ['a', 'b', 'c', 'd', 'e']) {
-      const row = await prisma.servico.create({ data: { ...sBase, empresaId, tecnicoId: tec.id, criadoEm: datas[k] } });
+      const row = await prisma.servico.create({
+        data: { ...sBase, empresaId, tecnicoId: tec.id, criadoEm: datas[k] },
+      });
       criados.push({ id: row.id, criadoEm: datas[k].getTime() });
     }
     // Verdade-base: ordem (criadoEm desc, id desc).
-    const esperado = [...criados].sort((x, y) => y.criadoEm - x.criadoEm || y.id - x.id).map((r) => r.id);
+    const esperado = [...criados]
+      .sort((x, y) => y.criadoEm - x.criadoEm || y.id - x.id)
+      .map((r) => r.id);
 
     // Percorre por cursor, limit=2.
     let cursor;
     const coletados = [];
     for (let i = 0; i < 10; i++) {
-      const url = cursor ? `/api/servicos?limit=2&cursor=${encodeURIComponent(cursor)}` : '/api/servicos?limit=2';
+      const url = cursor
+        ? `/api/servicos?limit=2&cursor=${encodeURIComponent(cursor)}`
+        : '/api/servicos?limit=2';
       const res = await request(app).get(url).set('Authorization', `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body.total).toBe(5); // contagem cheia, sempre
@@ -78,7 +94,9 @@ describe('GET /api/servicos — paginação keyset (F3.5)', () => {
 
   it('cursor malformado → 400', async () => {
     const { token } = await criarEmpresaComAdmin(request, app, 'KeysetBad');
-    const res = await request(app).get('/api/servicos?cursor=not_a_valid_cursor').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/servicos?cursor=not_a_valid_cursor')
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(400);
   });
 
@@ -92,11 +110,17 @@ describe('GET /api/servicos — paginação keyset (F3.5)', () => {
     ];
     const criados = [];
     for (const d of datas) {
-      const row = await prisma.servico.create({ data: { ...sBase, empresaId, tecnicoId: tec.id, criadoEm: d } });
+      const row = await prisma.servico.create({
+        data: { ...sBase, empresaId, tecnicoId: tec.id, criadoEm: d },
+      });
       criados.push({ id: row.id, criadoEm: d.getTime() });
     }
-    const esperado = [...criados].sort((x, y) => y.criadoEm - x.criadoEm || y.id - x.id).map((r) => r.id);
-    const res = await request(app).get('/api/servicos?page=1&limit=100').set('Authorization', `Bearer ${token}`);
+    const esperado = [...criados]
+      .sort((x, y) => y.criadoEm - x.criadoEm || y.id - x.id)
+      .map((r) => r.id);
+    const res = await request(app)
+      .get('/api/servicos?page=1&limit=100')
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.data.map((s) => s.id)).toEqual(esperado);
   });

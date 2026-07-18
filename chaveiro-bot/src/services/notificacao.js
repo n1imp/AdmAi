@@ -30,7 +30,10 @@ export function resolverPreferencias(salvas) {
  * @param {object} [tx] Cliente Prisma transacional.
  */
 export async function notificar({ usuarioId, tipo, titulo, mensagem, link = null }, tx = prisma) {
-  const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { notificacoes: true } });
+  const usuario = await tx.usuario.findUnique({
+    where: { id: usuarioId },
+    select: { notificacoes: true },
+  });
   if (!usuario) return null;
   const prefs = resolverPreferencias(usuario.notificacoes);
   if (prefs[tipo] === false) return null; // tipo desativado pelo usuário
@@ -43,7 +46,10 @@ export async function notificar({ usuarioId, tipo, titulo, mensagem, link = null
  * Multi-tenant: passe `empresaId` para notificar apenas os admins daquela empresa.
  * Sem `empresaId`, notifica todos os admins (compatível com o fluxo interino).
  */
-export async function notificarAdmins({ tipo, titulo, mensagem, link = null, empresaId = null }, tx = prisma) {
+export async function notificarAdmins(
+  { tipo, titulo, mensagem, link = null, empresaId = null },
+  tx = prisma
+) {
   const admins = await tx.usuario.findMany({
     where: { admin: true, ativo: true, ...(empresaId ? { empresaId } : {}) },
     select: { id: true },
@@ -71,7 +77,8 @@ export async function alertarEstoqueBaixo(material, tx = prisma) {
 
   const empresaId = material.empresaId;
   const titulo = `Estoque baixo: ${material.nome}`;
-  const mensagem = `Saldo atual de ${material.quantidadeAtual} ${material.unidade} ` +
+  const mensagem =
+    `Saldo atual de ${material.quantidadeAtual} ${material.unidade} ` +
     `(mínimo ${material.estoqueMinimo} ${material.unidade}). Considere repor.`;
 
   // Evita spam: só cria se não houver alerta não lido recente para este material.
@@ -87,6 +94,9 @@ export async function alertarEstoqueBaixo(material, tx = prisma) {
   });
   if (jaExiste) return;
 
-  await notificarAdmins({ tipo: 'estoque_baixo', titulo, mensagem, link: '/estoque', empresaId }, tx);
+  await notificarAdmins(
+    { tipo: 'estoque_baixo', titulo, mensagem, link: '/estoque', empresaId },
+    tx
+  );
   logger.info('alerta_estoque_baixo', { materialId: material.id, empresaId });
 }

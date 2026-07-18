@@ -32,7 +32,9 @@ export function ehErroVerificacao(erro) {
   if (status === 401 || status === 403) return true;
   const data = erro?.response?.data?.error;
   const txt = `${data?.status ?? ''} ${data?.message ?? ''}`;
-  return /PERMISSION_DENIED|accessNotConfigured|SERVICE_DISABLED|has not been used|verification|insufficient/i.test(txt);
+  return /PERMISSION_DENIED|accessNotConfigured|SERVICE_DISABLED|has not been used|verification|insufficient/i.test(
+    txt
+  );
 }
 
 /** Responder de review publica de verdade? (default: só valida). */
@@ -94,11 +96,13 @@ function normalizarLocation(accName, loc) {
   const locId = nome.startsWith('locations/') ? nome : `locations/${nome.split('/').pop()}`;
   const a = loc.storefrontAddress;
   const endereco = a
-    ? [(a.addressLines ?? []).join(', '), a.locality, a.administrativeArea].filter(Boolean).join(' - ')
+    ? [(a.addressLines ?? []).join(', '), a.locality, a.administrativeArea]
+        .filter(Boolean)
+        .join(' - ')
     : null;
   return {
-    accountId: accName,          // "accounts/123"
-    locationId: locId,           // "locations/456"
+    accountId: accName, // "accounts/123"
+    locationId: locId, // "locations/456"
     title: loc.title ?? null,
     endereco: endereco || null,
     placeId: loc.metadata?.placeId ?? null,
@@ -181,7 +185,10 @@ export async function listarReviews(empresaId, { desde = null } = {}) {
       for (const r of resp.data?.reviews ?? []) {
         const criado = r.createTime ? new Date(r.createTime) : null;
         // Para sync incremental: para na primeira mais antiga que `desde`.
-        if (desde && criado && criado <= desde) { pageToken = null; break; }
+        if (desde && criado && criado <= desde) {
+          pageToken = null;
+          break;
+        }
         reviews.push(normalizarReview(r));
       }
       pageToken = resp.data?.nextPageToken ?? null;
@@ -230,10 +237,14 @@ export async function responderReview(empresaId, reviewId, texto) {
   }
 
   const url = `${API_BASE}/${conta.accountId}/${conta.locationId}/reviews/${reviewId}/reply`;
-  await axios.put(url, { comment: texto }, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: 20000,
-  });
+  await axios.put(
+    url,
+    { comment: texto },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 20000,
+    }
+  );
   logger.info('Resposta a review publicada', { empresaId, reviewId });
   return { publicado: true, mock: false, validado: false };
 }

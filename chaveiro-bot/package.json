@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "test": "vitest run --dir src",
     "test:watch": "vitest --dir src",
+    "test:coverage": "vitest run --dir src --coverage",
     "test:integration": "vitest run --config vitest.integration.config.js",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
@@ -53,6 +54,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.39.4",
     "globals": "^17.6.0",
     "prettier": "^3.8.4",

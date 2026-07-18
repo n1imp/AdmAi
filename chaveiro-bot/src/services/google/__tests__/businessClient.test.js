@@ -10,8 +10,16 @@ describe('ehErroVerificacao', () => {
     expect(ehErroVerificacao({ response: { status: 401 } })).toBe(true);
   });
   it('detecta PERMISSION_DENIED / API não habilitada mesmo sem 401/403', () => {
-    expect(ehErroVerificacao({ response: { status: 500, data: { error: { status: 'PERMISSION_DENIED' } } } })).toBe(true);
-    expect(ehErroVerificacao({ response: { status: 400, data: { error: { message: 'API has not been used' } } } })).toBe(true);
+    expect(
+      ehErroVerificacao({
+        response: { status: 500, data: { error: { status: 'PERMISSION_DENIED' } } },
+      })
+    ).toBe(true);
+    expect(
+      ehErroVerificacao({
+        response: { status: 400, data: { error: { message: 'API has not been used' } } },
+      })
+    ).toBe(true);
   });
   it('erros comuns não são verificação', () => {
     expect(ehErroVerificacao({ response: { status: 500 } })).toBe(false);

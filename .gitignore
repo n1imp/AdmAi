@@ -34,6 +34,9 @@ chaveiro-bot/uploads/
 # Selfies de ponto (biometria/PII LGPD): diretório PRIVADO, servido só via API autenticada
 uploads-ponto/
 chaveiro-bot/uploads-ponto/
+# Documentos do funcionário (PII/LGPD): diretório PRIVADO, servido só via API autenticada
+uploads-docs/
+chaveiro-bot/uploads-docs/
 
 # ── Bancos / vetores locais ───────────────────────────────────
 *.db

@@ -33,7 +33,9 @@ export function configCloudFaltando() {
 
 /** Normaliza um destino ('5511...@s.whatsapp.net' | '+55 11 9...' ) para só dígitos. */
 export function soDigitos(to) {
-  return String(to ?? '').replace(/@.*/, '').replace(/\D/g, '');
+  return String(to ?? '')
+    .replace(/@.*/, '')
+    .replace(/\D/g, '');
 }
 
 /**
@@ -87,7 +89,9 @@ export async function statusConexaoCloud(empresaId) {
  */
 export async function enviarMensagemEmpresaCloud(empresaId, to, texto) {
   if (String(to).endsWith('@g.us')) {
-    logger.warn('enviarMensagemEmpresaCloud: envio a grupo não suportado na Cloud API (ignorado)', { empresaId });
+    logger.warn('enviarMensagemEmpresaCloud: envio a grupo não suportado na Cloud API (ignorado)', {
+      empresaId,
+    });
     return null;
   }
   const cfg = await prisma.empresaWhatsapp.findUnique({
@@ -100,10 +104,17 @@ export async function enviarMensagemEmpresaCloud(empresaId, to, texto) {
   }
   const accessToken = decrypt(cfg.accessTokenEnc);
   if (!accessToken) {
-    logger.warn('enviarMensagemEmpresaCloud: access token ilegível (ENCRYPTION_KEY rotacionada?)', { empresaId });
+    logger.warn('enviarMensagemEmpresaCloud: access token ilegível (ENCRYPTION_KEY rotacionada?)', {
+      empresaId,
+    });
     return null;
   }
-  return cloud.enviarTexto({ phoneNumberId: cfg.phoneNumberId, accessToken, to: soDigitos(to), texto });
+  return cloud.enviarTexto({
+    phoneNumberId: cfg.phoneNumberId,
+    accessToken,
+    to: soDigitos(to),
+    texto,
+  });
 }
 
 /**

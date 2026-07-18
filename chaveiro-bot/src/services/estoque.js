@@ -81,7 +81,11 @@ export async function darBaixaPorServico(servicoId, itens, tx = prisma) {
       // Se a baixa levou o saldo ao/abaixo do mínimo, avisa os admins
       await alertarEstoqueBaixo(material, tx);
     } catch (erro) {
-      logger.error('Falha ao dar baixa de estoque', { servicoId, materialId: item.materialId, erro: erro.message });
+      logger.error('Falha ao dar baixa de estoque', {
+        servicoId,
+        materialId: item.materialId,
+        erro: erro.message,
+      });
     }
   }
 }

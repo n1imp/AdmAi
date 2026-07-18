@@ -7,6 +7,10 @@ import { agendarAvaliacao } from '../services/avaliacao.js';
 import { pode, podeProprio } from '../services/permissoes.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { contemInsensivel } from '../utils/busca.js';
+import { construirFiltroPeriodo, construirFiltroPeriodoAnterior } from '../services/periodo.js';
+import { diaLocal } from '../services/ponto.js';
+import { env } from '../config/env.js';
+import { capturarErro } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -14,44 +18,6 @@ router.use(requireAuth);
 router.use(senhaProvisoria);
 
 const MAX_AGREGACAO = 10_000;
-
-function dataValida(d) { return d instanceof Date && !Number.isNaN(d.getTime()); }
-
-function construirFiltroPeriodo(periodo, inicio, fim) {
-  const agora = new Date();
-  const hoje = new Date(agora);
-  hoje.setHours(0, 0, 0, 0);
-  if (periodo === 'hoje') {
-    const fimHoje = new Date(hoje);
-    fimHoje.setHours(23, 59, 59, 999);
-    return { gte: hoje, lte: fimHoje };
-  }
-  if (periodo === 'semana') {
-    const ini = new Date(hoje);
-    ini.setDate(hoje.getDate() - hoje.getDay());
-    return { gte: ini, lte: agora };
-  }
-  if (periodo === 'mes') {
-    return { gte: new Date(hoje.getFullYear(), hoje.getMonth(), 1), lte: agora };
-  }
-  const dInicio = inicio ? new Date(inicio) : null;
-  const dFim = fim ? new Date(fim + 'T23:59:59.999Z') : null;
-  const inicioOk = dataValida(dInicio);
-  const fimOk = dataValida(dFim);
-  if (inicioOk && fimOk) return { gte: dInicio, lte: dFim };
-  if (inicioOk) return { gte: dInicio, lte: agora };
-  if (fimOk) return { gte: new Date('2000-01-01'), lte: dFim };
-  const umMesAtras = new Date(hoje);
-  umMesAtras.setMonth(hoje.getMonth() - 1);
-  return { gte: umMesAtras, lte: agora };
-}
-
-function construirFiltroPeriodoAnterior(filtroAtual) {
-  const inicio = filtroAtual.gte instanceof Date ? filtroAtual.gte : new Date(filtroAtual.gte);
-  const fim = filtroAtual.lte instanceof Date ? filtroAtual.lte : new Date(filtroAtual.lte);
-  const duracaoMs = fim.getTime() - inicio.getTime();
-  return { gte: new Date(inicio.getTime() - duracaoMs), lte: new Date(inicio.getTime() - 1) };
-}
 
 function variacao(atual, anterior) {
   if (!anterior || anterior === 0) return atual > 0 ? null : 0;
@@ -68,11 +34,15 @@ const schemaServico = z.object({
   clienteTelefone: z.string().optional().nullable(),
   valorCobrado: z.number().nonnegative(),
   valorMaterial: z.number().nonnegative().default(0),
-  materiais: z.array(z.object({ materialId: z.number().int().positive(), quantidade: z.number().positive() })).optional().default([]),
+  materiais: z
+    .array(z.object({ materialId: z.number().int().positive(), quantidade: z.number().positive() }))
+    .optional()
+    .default([]),
 });
 
 function podeRegistrarServico(req, res, next) {
-  if (pode(req.user, 'servicos', 'criar') || podeProprio(req.user, 'registrar_servico')) return next();
+  if (pode(req.user, 'servicos', 'criar') || podeProprio(req.user, 'registrar_servico'))
+    return next();
   return res.status(403).json({ erro: 'Sem permissão para registrar serviço' });
 }
 
@@ -88,7 +58,9 @@ function decodeCursor(raw) {
     const id = parseInt(idStr, 10);
     if (Number.isNaN(criadoEm.getTime()) || !Number.isInteger(id) || id <= 0) return null;
     return { criadoEm, id };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 router.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) => {
@@ -109,16 +81,39 @@ router.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) =>
     if (cursor !== undefined) {
       const cur = decodeCursor(cursor);
       if (!cur) return res.status(400).json({ erro: 'cursor inválido' });
-      whereFinal = { AND: [where, { OR: [{ criadoEm: { lt: cur.criadoEm } }, { criadoEm: cur.criadoEm, id: { lt: cur.id } }] }] };
+      whereFinal = {
+        AND: [
+          where,
+          {
+            OR: [
+              { criadoEm: { lt: cur.criadoEm } },
+              { criadoEm: cur.criadoEm, id: { lt: cur.id } },
+            ],
+          },
+        ],
+      };
     } else {
       skip = (pageNum - 1) * limitNum;
     }
     const [servicos, total] = await Promise.all([
-      req.db.servico.findMany({ where: whereFinal, include: { tecnico: { select: { id: true, nome: true } } }, orderBy: [{ criadoEm: 'desc' }, { id: 'desc' }], skip, take: limitNum }),
+      req.db.servico.findMany({
+        where: whereFinal,
+        include: { tecnico: { select: { id: true, nome: true } } },
+        orderBy: [{ criadoEm: 'desc' }, { id: 'desc' }],
+        skip,
+        take: limitNum,
+      }),
       req.db.servico.count({ where }),
     ]);
-    const nextCursor = servicos.length === limitNum ? encodeCursor(servicos[servicos.length - 1]) : null;
-    res.json({ data: servicos, total, page: pageNum, totalPages: Math.ceil(total / limitNum), nextCursor });
+    const nextCursor =
+      servicos.length === limitNum ? encodeCursor(servicos[servicos.length - 1]) : null;
+    res.json({
+      data: servicos,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      nextCursor,
+    });
   } catch (erro) {
     logger.error('Erro GET /servicos', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno ao buscar serviços' });
@@ -156,14 +151,16 @@ router.get('/servicos/:id', requirePermissao('servicos', 'ver'), async (req, res
 router.post('/servicos', podeRegistrarServico, async (req, res) => {
   try {
     const parse = schemaServico.safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    if (!parse.success)
+      return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const dados = parse.data;
     const empresaId = req.user.empresaId;
     const ehFuncionario = req.user.papel === 'funcionario';
     let tecnico;
     let materiais = dados.materiais;
     if (ehFuncionario) {
-      if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+      if (!req.user.tecnicoId)
+        return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
       tecnico = await prisma.tecnico.findUnique({ where: { id: req.user.tecnicoId } });
       if (!tecnico) return res.status(400).json({ erro: 'Técnico não encontrado' });
       materiais = [];
@@ -175,7 +172,10 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
     const comissaoGerada = parseFloat((valorLiquido * (tecnico.comissao / 100)).toFixed(2));
     let status = 'ativo';
     if (ehFuncionario) {
-      const emp = await prisma.empresa.findUnique({ where: { id: empresaId }, select: { aprovacaoServico: true } });
+      const emp = await prisma.empresa.findUnique({
+        where: { id: empresaId },
+        select: { aprovacaoServico: true },
+      });
       if (emp?.aprovacaoServico) status = 'pendente';
     }
     const servico = await prisma.$transaction(async (tx) => {
@@ -186,22 +186,44 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
       }
       const criado = await tx.servico.create({
         data: {
-          empresaId, tecnicoId: tecnico.id, local: dados.local, endereco: dados.endereco ?? null,
-          descricao: dados.descricao, material: dados.material ?? null, valorCobrado: dados.valorCobrado,
-          valorMaterial: dados.valorMaterial, valorLiquido, comissaoGerada, status,
-          clienteNome: dados.clienteNome ?? null, clienteTelefone: dados.clienteTelefone ?? null,
+          empresaId,
+          tecnicoId: tecnico.id,
+          local: dados.local,
+          endereco: dados.endereco ?? null,
+          descricao: dados.descricao,
+          material: dados.material ?? null,
+          valorCobrado: dados.valorCobrado,
+          valorMaterial: dados.valorMaterial,
+          valorLiquido,
+          comissaoGerada,
+          status,
+          clienteNome: dados.clienteNome ?? null,
+          clienteTelefone: dados.clienteTelefone ?? null,
           msgOriginal: ehFuncionario ? 'CADASTRO_FUNCIONARIO' : 'CADASTRO_MANUAL',
           remetenteWpp: ehFuncionario ? `painel-func:${req.user.id}` : 'painel-admin',
-          materiais: materiais.length > 0 ? { create: materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })) } : undefined,
+          materiais:
+            materiais.length > 0
+              ? {
+                  create: materiais.map((m) => ({
+                    materialId: m.materialId,
+                    quantidade: m.quantidade,
+                  })),
+                }
+              : undefined,
         },
         include: { tecnico: true },
       });
-      if (status === 'ativo' && materiais.length > 0) await darBaixaPorServico(criado.id, materiais, tx);
+      if (status === 'ativo' && materiais.length > 0)
+        await darBaixaPorServico(criado.id, materiais, tx);
       return criado;
     });
     if (status === 'ativo' && dados.clienteTelefone) {
-      agendarAvaliacao({ empresaId, servicoId: servico.id, clienteTelefone: dados.clienteTelefone, clienteNome: dados.clienteNome ?? null })
-        .catch((e) => logger.warn('Falha ao agendar avaliação (manual)', { erro: e.message }));
+      agendarAvaliacao({
+        empresaId,
+        servicoId: servico.id,
+        clienteTelefone: dados.clienteTelefone,
+        clienteNome: dados.clienteNome ?? null,
+      }).catch((e) => logger.warn('Falha ao agendar avaliação (manual)', { erro: e.message }));
     }
     res.status(201).json(servico);
   } catch (erro) {
@@ -210,44 +232,70 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
   }
 });
 
-router.post('/servicos/:id/aprovar', requirePermissao('aprovacoes', 'aprovar'), async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
-    const servico = await req.db.servico.findUnique({ where: { id }, include: { materiais: { select: { materialId: true, quantidade: true } } } });
-    if (!servico) return res.status(404).json({ erro: 'Serviço não encontrado' });
-    if (servico.status !== 'pendente') return res.status(409).json({ erro: 'Serviço não está pendente' });
-    await prisma.$transaction(async (tx) => {
-      await tx.servico.update({ where: { id }, data: { status: 'ativo', aprovadoPor: req.user.id, aprovadoEm: new Date() } });
-      if (servico.materiais.length > 0) {
-        await darBaixaPorServico(id, servico.materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })), tx);
+router.post(
+  '/servicos/:id/aprovar',
+  requirePermissao('aprovacoes', 'aprovar'),
+  async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+      const servico = await req.db.servico.findUnique({
+        where: { id },
+        include: { materiais: { select: { materialId: true, quantidade: true } } },
+      });
+      if (!servico) return res.status(404).json({ erro: 'Serviço não encontrado' });
+      if (servico.status !== 'pendente')
+        return res.status(409).json({ erro: 'Serviço não está pendente' });
+      await prisma.$transaction(async (tx) => {
+        await tx.servico.update({
+          where: { id },
+          data: { status: 'ativo', aprovadoPor: req.user.id, aprovadoEm: new Date() },
+        });
+        if (servico.materiais.length > 0) {
+          await darBaixaPorServico(
+            id,
+            servico.materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })),
+            tx
+          );
+        }
+      });
+      if (servico.clienteTelefone) {
+        agendarAvaliacao({
+          empresaId: req.user.empresaId,
+          servicoId: id,
+          clienteTelefone: servico.clienteTelefone,
+          clienteNome: servico.clienteNome ?? null,
+        }).catch((e) => logger.warn('Falha ao agendar avaliação (aprovação)', { erro: e.message }));
       }
-    });
-    if (servico.clienteTelefone) {
-      agendarAvaliacao({ empresaId: req.user.empresaId, servicoId: id, clienteTelefone: servico.clienteTelefone, clienteNome: servico.clienteNome ?? null })
-        .catch((e) => logger.warn('Falha ao agendar avaliação (aprovação)', { erro: e.message }));
+      logger.info('servico_aprovado', { id, aprovadoPor: req.user.id });
+      res.json({ mensagem: 'Serviço aprovado', id, status: 'ativo' });
+    } catch (erro) {
+      logger.error('Erro POST /servicos/:id/aprovar', { erro: erro.message });
+      res.status(500).json({ erro: 'Erro interno' });
     }
-    logger.info('servico_aprovado', { id, aprovadoPor: req.user.id });
-    res.json({ mensagem: 'Serviço aprovado', id, status: 'ativo' });
-  } catch (erro) {
-    logger.error('Erro POST /servicos/:id/aprovar', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro interno' });
   }
-});
+);
 
-router.post('/servicos/:id/rejeitar', requirePermissao('aprovacoes', 'aprovar'), async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
-    const r = await req.db.servico.updateMany({ where: { id, status: 'pendente' }, data: { status: 'rejeitado', aprovadoPor: req.user.id, aprovadoEm: new Date() } });
-    if (r.count === 0) return res.status(404).json({ erro: 'Serviço pendente não encontrado' });
-    logger.info('servico_rejeitado', { id, por: req.user.id });
-    res.json({ mensagem: 'Serviço rejeitado', id, status: 'rejeitado' });
-  } catch (erro) {
-    logger.error('Erro POST /servicos/:id/rejeitar', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro interno' });
+router.post(
+  '/servicos/:id/rejeitar',
+  requirePermissao('aprovacoes', 'aprovar'),
+  async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ erro: 'ID inválido' });
+      const r = await req.db.servico.updateMany({
+        where: { id, status: 'pendente' },
+        data: { status: 'rejeitado', aprovadoPor: req.user.id, aprovadoEm: new Date() },
+      });
+      if (r.count === 0) return res.status(404).json({ erro: 'Serviço pendente não encontrado' });
+      logger.info('servico_rejeitado', { id, por: req.user.id });
+      res.json({ mensagem: 'Serviço rejeitado', id, status: 'rejeitado' });
+    } catch (erro) {
+      logger.error('Erro POST /servicos/:id/rejeitar', { erro: erro.message });
+      res.status(500).json({ erro: 'Erro interno' });
+    }
   }
-});
+);
 
 router.delete('/servicos/:id', requirePermissao('servicos', 'deletar'), async (req, res) => {
   try {
@@ -270,11 +318,20 @@ router.get('/avaliacoes', requirePermissao('avaliacoes', 'ver'), async (req, res
     if (req.query.status) where.status = String(req.query.status);
     const [avaliacoes, respondidas] = await Promise.all([
       prisma.avaliacao.findMany({ where, orderBy: { criadoEm: 'desc' }, take: 100 }),
-      prisma.avaliacao.findMany({ where: { empresaId, status: 'respondida', nota: { not: null } }, select: { nota: true } }),
+      prisma.avaliacao.findMany({
+        where: { empresaId, status: 'respondida', nota: { not: null } },
+        select: { nota: true },
+      }),
     ]);
     const total = respondidas.length;
-    const media = total > 0 ? parseFloat((respondidas.reduce((s, a) => s + (a.nota ?? 0), 0) / total).toFixed(2)) : null;
-    const distribuicao = [1, 2, 3, 4, 5].map((n) => ({ nota: n, quantidade: respondidas.filter((a) => a.nota === n).length }));
+    const media =
+      total > 0
+        ? parseFloat((respondidas.reduce((s, a) => s + (a.nota ?? 0), 0) / total).toFixed(2))
+        : null;
+    const distribuicao = [1, 2, 3, 4, 5].map((n) => ({
+      nota: n,
+      quantidade: respondidas.filter((a) => a.nota === n).length,
+    }));
     res.json({ avaliacoes, resumo: { total, media, distribuicao } });
   } catch (erro) {
     logger.error('Erro GET /avaliacoes', { erro: erro.message });
@@ -288,7 +345,12 @@ router.get('/avaliacoes/config', requirePermissao('avaliacoes', 'ver'), async (r
       where: { empresaId: req.user.empresaId },
       select: { reviewAtivo: true, reviewTemplate: true, reviewDelayHoras: true, reviewLink: true },
     });
-    res.json({ reviewAtivo: cfg?.reviewAtivo ?? true, reviewTemplate: cfg?.reviewTemplate ?? null, reviewDelayHoras: cfg?.reviewDelayHoras ?? 2, reviewLink: cfg?.reviewLink ?? null });
+    res.json({
+      reviewAtivo: cfg?.reviewAtivo ?? true,
+      reviewTemplate: cfg?.reviewTemplate ?? null,
+      reviewDelayHoras: cfg?.reviewDelayHoras ?? 2,
+      reviewLink: cfg?.reviewLink ?? null,
+    });
   } catch (erro) {
     logger.error('Erro GET /avaliacoes/config', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -304,14 +366,21 @@ router.patch('/avaliacoes/config', requirePermissao('avaliacoes', 'editar'), asy
       reviewLink: z.string().max(500).nullable().optional().or(z.literal('')),
     });
     const parse = schema.safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    if (!parse.success)
+      return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const data = {};
     if (parse.data.reviewAtivo !== undefined) data.reviewAtivo = parse.data.reviewAtivo;
-    if (parse.data.reviewTemplate !== undefined) data.reviewTemplate = parse.data.reviewTemplate === '' ? null : parse.data.reviewTemplate;
-    if (parse.data.reviewDelayHoras !== undefined) data.reviewDelayHoras = parse.data.reviewDelayHoras;
-    if (parse.data.reviewLink !== undefined) data.reviewLink = parse.data.reviewLink === '' ? null : parse.data.reviewLink;
+    if (parse.data.reviewTemplate !== undefined)
+      data.reviewTemplate = parse.data.reviewTemplate === '' ? null : parse.data.reviewTemplate;
+    if (parse.data.reviewDelayHoras !== undefined)
+      data.reviewDelayHoras = parse.data.reviewDelayHoras;
+    if (parse.data.reviewLink !== undefined)
+      data.reviewLink = parse.data.reviewLink === '' ? null : parse.data.reviewLink;
     await req.db.empresaWhatsapp.updateMany({ where: { empresaId: req.user.empresaId }, data });
-    const cfg = await req.db.empresaWhatsapp.findUnique({ where: { empresaId: req.user.empresaId }, select: { reviewAtivo: true, reviewTemplate: true, reviewDelayHoras: true, reviewLink: true } });
+    const cfg = await req.db.empresaWhatsapp.findUnique({
+      where: { empresaId: req.user.empresaId },
+      select: { reviewAtivo: true, reviewTemplate: true, reviewDelayHoras: true, reviewLink: true },
+    });
     res.json(cfg);
   } catch (erro) {
     logger.error('Erro PATCH /avaliacoes/config', { erro: erro.message });
@@ -329,12 +398,34 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     // — auto-escopados por empresaId pelo req.db (tenant.js). A série diária precisa de bucket
     // por dia, que o groupBy do Prisma não trunca; então busca só 2 colunas e agrega em JS.
     const [agg, aggAnterior, porTecnicoRaw, porLocalRaw, servicosDia] = await Promise.all([
-      req.db.servico.aggregate({ where: whereAtual, _count: true, _sum: { valorCobrado: true, valorMaterial: true, valorLiquido: true, comissaoGerada: true } }),
+      req.db.servico.aggregate({
+        where: whereAtual,
+        _count: true,
+        _sum: { valorCobrado: true, valorMaterial: true, valorLiquido: true, comissaoGerada: true },
+      }),
       // Período anterior: só receita líquida e contagem → SUM/COUNT no banco (F3.2).
-      req.db.servico.aggregate({ where: { status: 'ativo', criadoEm: filtroAnterior }, _sum: { valorLiquido: true }, _count: true }),
-      req.db.servico.groupBy({ by: ['tecnicoId'], where: whereAtual, _count: true, _sum: { valorCobrado: true, valorLiquido: true, comissaoGerada: true } }),
-      req.db.servico.groupBy({ by: ['local'], where: whereAtual, _count: true, _sum: { valorLiquido: true } }),
-      req.db.servico.findMany({ where: whereAtual, select: { criadoEm: true, valorLiquido: true }, take: MAX_AGREGACAO }),
+      req.db.servico.aggregate({
+        where: { status: 'ativo', criadoEm: filtroAnterior },
+        _sum: { valorLiquido: true },
+        _count: true,
+      }),
+      req.db.servico.groupBy({
+        by: ['tecnicoId'],
+        where: whereAtual,
+        _count: true,
+        _sum: { valorCobrado: true, valorLiquido: true, comissaoGerada: true },
+      }),
+      req.db.servico.groupBy({
+        by: ['local'],
+        where: whereAtual,
+        _count: true,
+        _sum: { valorLiquido: true },
+      }),
+      req.db.servico.findMany({
+        where: whereAtual,
+        select: { criadoEm: true, valorLiquido: true },
+        take: MAX_AGREGACAO,
+      }),
     ]);
     const totalServicos = agg._count;
     const receitaBruta = agg._sum.valorCobrado ?? 0;
@@ -343,10 +434,12 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     const ticketMedio = totalServicos > 0 ? receitaLiquida / totalServicos : 0;
     const totalComissao = agg._sum.comissaoGerada ?? 0;
     const lucro = receitaLiquida - totalComissao;
-    const margemLucro = receitaBruta > 0 ? parseFloat(((lucro / receitaBruta) * 100).toFixed(1)) : 0;
+    const margemLucro =
+      receitaBruta > 0 ? parseFloat(((lucro / receitaBruta) * 100).toFixed(1)) : 0;
     const receitaLiquidaAnterior = aggAnterior._sum.valorLiquido ?? 0;
     const totalServicosAnterior = aggAnterior._count;
-    const ticketMedioAnterior = totalServicosAnterior > 0 ? receitaLiquidaAnterior / totalServicosAnterior : 0;
+    const ticketMedioAnterior =
+      totalServicosAnterior > 0 ? receitaLiquidaAnterior / totalServicosAnterior : 0;
     const comparativo = {
       receitaLiquida: variacao(receitaLiquida, receitaLiquidaAnterior),
       totalServicos: variacao(totalServicos, totalServicosAnterior),
@@ -356,20 +449,37 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
     // atual: técnicos homônimos somam numa única linha).
     const tecnicoIds = porTecnicoRaw.map((g) => g.tecnicoId);
     const tecnicos = tecnicoIds.length
-      ? await req.db.tecnico.findMany({ where: { id: { in: tecnicoIds } }, select: { id: true, nome: true } })
+      ? await req.db.tecnico.findMany({
+          where: { id: { in: tecnicoIds } },
+          select: { id: true, nome: true },
+        })
       : [];
     const nomePorId = new Map(tecnicos.map((t) => [t.id, t.nome]));
     const mapasTecnico = {};
     for (const g of porTecnicoRaw) {
       const nome = nomePorId.get(g.tecnicoId) ?? '';
-      if (!mapasTecnico[nome]) mapasTecnico[nome] = { tecnico: nome, servicos: 0, receitaBruta: 0, receitaLiquida: 0, comissao: 0 };
+      if (!mapasTecnico[nome])
+        mapasTecnico[nome] = {
+          tecnico: nome,
+          servicos: 0,
+          receitaBruta: 0,
+          receitaLiquida: 0,
+          comissao: 0,
+        };
       mapasTecnico[nome].servicos += g._count;
       mapasTecnico[nome].receitaBruta += g._sum.valorCobrado ?? 0;
       mapasTecnico[nome].receitaLiquida += g._sum.valorLiquido ?? 0;
       mapasTecnico[nome].comissao += g._sum.comissaoGerada ?? 0;
     }
     const porTecnico = Object.values(mapasTecnico)
-      .map((t) => ({ ...t, percentualReceita: receitaLiquida > 0 ? parseFloat(((t.receitaLiquida / receitaLiquida) * 100).toFixed(1)) : 0, ticketMedio: t.servicos > 0 ? parseFloat((t.receitaLiquida / t.servicos).toFixed(2)) : 0 }))
+      .map((t) => ({
+        ...t,
+        percentualReceita:
+          receitaLiquida > 0
+            ? parseFloat(((t.receitaLiquida / receitaLiquida) * 100).toFixed(1))
+            : 0,
+        ticketMedio: t.servicos > 0 ? parseFloat((t.receitaLiquida / t.servicos).toFixed(2)) : 0,
+      }))
       .sort((a, b) => b.receitaLiquida - a.receitaLiquida);
     const porLocal = porLocalRaw
       .map((g) => ({ local: g.local, quantidade: g._count, receita: g._sum.valorLiquido ?? 0 }))
@@ -382,10 +492,184 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
       mapasDia[dia].servicos++;
     }
     const evolucaoDiaria = Object.values(mapasDia).sort((a, b) => a.data.localeCompare(b.data));
-    res.json({ totalServicos, receitaBruta, totalMaterial, receitaLiquida, ticketMedio, totalComissao, lucro, margemLucro, comparativo, porTecnico, porLocal, evolucaoDiaria });
+    res.json({
+      totalServicos,
+      receitaBruta,
+      totalMaterial,
+      receitaLiquida,
+      ticketMedio,
+      totalComissao,
+      lucro,
+      margemLucro,
+      comparativo,
+      porTecnico,
+      porLocal,
+      evolucaoDiaria,
+    });
   } catch (erro) {
     logger.error('Erro GET /dashboard', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno ao calcular dashboard' });
+  }
+});
+
+// F9/M2: indicadores operacionais do Gestor num único round-trip (o GestorHome antes fazia 3
+// fetches). Presença do time HOJE = agregado sobre RegistroPonto (índice [empresaId, data]).
+router.get('/gestor/indicadores', requirePermissao('dashboard', 'ver'), async (req, res) => {
+  try {
+    const hoje = diaLocal();
+    const [pendentes, tecnicos, registrosHoje, aval] = await Promise.all([
+      req.db.servico.count({ where: { status: 'pendente' } }),
+      req.db.tecnico.findMany({
+        where: { ativo: true },
+        select: { id: true, nome: true },
+        orderBy: { nome: 'asc' },
+      }),
+      req.db.registroPonto.findMany({
+        where: { data: hoje },
+        select: {
+          tecnicoId: true,
+          entradaEm: true,
+          almocoSaidaEm: true,
+          almocoVoltaEm: true,
+          saidaEm: true,
+        },
+      }),
+      req.db.avaliacao.aggregate({
+        where: { status: 'respondida', nota: { not: null } },
+        _avg: { nota: true },
+        _count: true,
+      }),
+    ]);
+    const regPorTecnico = new Map(registrosHoje.map((r) => [r.tecnicoId, r]));
+    const presencaHoje = tecnicos.map((t) => {
+      const r = regPorTecnico.get(t.id);
+      let status = 'ausente';
+      if (r) {
+        if (r.saidaEm) status = 'encerrado';
+        else if (r.almocoSaidaEm && !r.almocoVoltaEm) status = 'almoco';
+        else if (r.entradaEm) status = 'trabalhando';
+      }
+      return { tecnicoId: t.id, nome: t.nome, status };
+    });
+    const presentes = presencaHoje.filter(
+      (p) => p.status === 'trabalhando' || p.status === 'almoco'
+    ).length;
+    const media = aval._avg.nota != null ? parseFloat(aval._avg.nota.toFixed(2)) : null;
+    res.json({
+      pendentes,
+      presentes,
+      totalTecnicos: tecnicos.length,
+      presencaHoje,
+      avaliacoes: { media, total: aval._count },
+    });
+  } catch (erro) {
+    logger.error('Erro GET /gestor/indicadores', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'gestor-indicadores',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+    });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── F9/M3: serviço em andamento ("serviço atual" do funcionário) ─────────────────
+// Atrás da flag SERVICO_ANDAMENTO_ENABLED (off por padrão → 404). Transições de estado
+// ADITIVAS sobre um serviço já existente do PRÓPRIO técnico: ativo → em_andamento
+// (iniciar) → ativo (concluir), com iniciadoEm/finalizadoEm. Um único "atual" por técnico.
+// Tudo via req.db (tenant) + filtro por tecnicoId → sem IDOR e sem vazamento cross-tenant.
+function recursoServicoAtual(req, res, next) {
+  if (env.SERVICO_ANDAMENTO_ENABLED !== 'true') {
+    return res.status(404).json({ erro: 'Recurso não disponível' });
+  }
+  if (!req.user.tecnicoId || !podeProprio(req.user, 'registrar_servico')) {
+    return res.status(403).json({ erro: 'Sem permissão para o serviço atual' });
+  }
+  return next();
+}
+
+const incluiTecnico = { tecnico: { select: { id: true, nome: true } } };
+
+router.get('/me/servico-atual', recursoServicoAtual, async (req, res) => {
+  try {
+    const servico = await req.db.servico.findFirst({
+      where: { tecnicoId: req.user.tecnicoId, status: 'em_andamento' },
+      orderBy: { iniciadoEm: 'desc' },
+      include: incluiTecnico,
+    });
+    res.json({ servico: servico ?? null });
+  } catch (erro) {
+    logger.error('Erro GET /me/servico-atual', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'servico-atual',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+    });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/servicos/:id/iniciar', recursoServicoAtual, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ erro: 'id inválido' });
+  try {
+    // Um único "atual" por técnico. Se já há um em andamento: reiniciar o MESMO é
+    // idempotente (200, sem reescrever iniciadoEm); qualquer OUTRO é recusado (409).
+    const atual = await req.db.servico.findFirst({
+      where: { tecnicoId: req.user.tecnicoId, status: 'em_andamento' },
+      select: { id: true },
+    });
+    if (atual) {
+      if (atual.id !== id) {
+        return res
+          .status(409)
+          .json({ erro: 'Já existe um serviço em andamento', servicoId: atual.id });
+      }
+      const servico = await req.db.servico.findFirst({ where: { id }, include: incluiTecnico });
+      return res.json({ servico });
+    }
+    // updateMany escopado (tenant + tecnicoId próprio + status ativo): só transiciona o
+    // serviço do técnico que ainda está "ativo". count=0 → não existe/não elegível.
+    const r = await req.db.servico.updateMany({
+      where: { id, tecnicoId: req.user.tecnicoId, status: 'ativo' },
+      data: { status: 'em_andamento', iniciadoEm: new Date() },
+    });
+    if (r.count === 0)
+      return res.status(404).json({ erro: 'Serviço não encontrado ou não elegível' });
+    const servico = await req.db.servico.findFirst({ where: { id }, include: incluiTecnico });
+    res.json({ servico });
+  } catch (erro) {
+    logger.error('Erro POST /servicos/:id/iniciar', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'servico-atual',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+      extra: { servicoId: id },
+    });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.post('/servicos/:id/concluir', recursoServicoAtual, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ erro: 'id inválido' });
+  try {
+    const r = await req.db.servico.updateMany({
+      where: { id, tecnicoId: req.user.tecnicoId, status: 'em_andamento' },
+      data: { status: 'ativo', finalizadoEm: new Date() },
+    });
+    if (r.count === 0) return res.status(404).json({ erro: 'Serviço em andamento não encontrado' });
+    const servico = await req.db.servico.findFirst({ where: { id }, include: incluiTecnico });
+    res.json({ servico });
+  } catch (erro) {
+    logger.error('Erro POST /servicos/:id/concluir', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'servico-atual',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+      extra: { servicoId: id },
+    });
+    res.status(500).json({ erro: 'Erro interno' });
   }
 });
 

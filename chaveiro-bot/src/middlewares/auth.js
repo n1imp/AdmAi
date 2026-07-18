@@ -22,7 +22,8 @@ export async function requireAuth(req, res, next) {
       where: { id: payload.id },
       include: { tecnico: { select: { id: true } } },
     });
-    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario || !usuario.ativo)
+      return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
     if (!tokenAindaValido(payload, usuario.tokenValidoApos)) {
       return res.status(401).json({ erro: 'Sessão expirada. Faça login novamente.' });
     }
@@ -30,7 +31,9 @@ export async function requireAuth(req, res, next) {
     if (env.REQUIRE_EMAIL_VERIFICATION === 'true' && !usuario.emailVerificado && usuario.email) {
       const chave = `${req.method} ${req.path}`;
       if (!VERIFICACAO_BYPASS.has(chave)) {
-        return res.status(403).json({ erro: 'Verifique seu e-mail para continuar', codigo: 'email_nao_verificado' });
+        return res
+          .status(403)
+          .json({ erro: 'Verifique seu e-mail para continuar', codigo: 'email_nao_verificado' });
       }
     }
     req.user = {
@@ -49,16 +52,18 @@ export async function requireAuth(req, res, next) {
 
     // Registra/atualiza esta sessão (fire-and-forget; erros não bloqueiam a requisição).
     if (payload.iat) {
-      prisma.sessaoUsuario.upsert({
-        where: { usuarioId_jwtIat: { usuarioId: usuario.id, jwtIat: payload.iat } },
-        create: {
-          usuarioId: usuario.id,
-          jwtIat: payload.iat,
-          ip: req.ip,
-          userAgent: req.headers['user-agent']?.slice(0, 300),
-        },
-        update: { ip: req.ip },
-      }).catch(() => {});
+      prisma.sessaoUsuario
+        .upsert({
+          where: { usuarioId_jwtIat: { usuarioId: usuario.id, jwtIat: payload.iat } },
+          create: {
+            usuarioId: usuario.id,
+            jwtIat: payload.iat,
+            ip: req.ip,
+            userAgent: req.headers['user-agent']?.slice(0, 300),
+          },
+          update: { ip: req.ip },
+        })
+        .catch(() => {});
     }
 
     next();
@@ -85,5 +90,7 @@ export function senhaProvisoria(req, res, next) {
     (req.method === 'GET' && req.path === '/me') ||
     (req.method === 'PATCH' && req.path === '/me/senha');
   if (liberado) return next();
-  return res.status(403).json({ erro: 'Defina uma nova senha para continuar', codigo: 'senha_provisoria' });
+  return res
+    .status(403)
+    .json({ erro: 'Defina uma nova senha para continuar', codigo: 'senha_provisoria' });
 }

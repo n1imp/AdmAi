@@ -5,12 +5,13 @@ import { logger } from '../utils/logger.js';
 import { rotearMensagemInbound } from '../services/inbound.js';
 
 const connection = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
-connection.on('error', (err) => logger.warn('Redis connection error (inbound-worker)', { error: err.message }));
+connection.on('error', (err) =>
+  logger.warn('Redis connection error (inbound-worker)', { error: err.message })
+);
 
 export function iniciarWorkerInbound() {
-  return new Worker(
-    'mensagens-inbound',
-    (job) => rotearMensagemInbound(job.data),
-    { connection, concurrency: 5 },
-  );
+  return new Worker('mensagens-inbound', (job) => rotearMensagemInbound(job.data), {
+    connection,
+    concurrency: 5,
+  });
 }

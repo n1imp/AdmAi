@@ -116,7 +116,12 @@ describe('E2E funcionário: acesso → ponto → serviço pendente → aprovaç�
     const resServico = await request(app)
       .post('/api/servicos')
       .set('Authorization', `Bearer ${tokenFunc}`)
-      .send({ local: 'Casa do cliente', descricao: 'Troca de fechadura', valorCobrado: 200, clienteTelefone: '5521990000099' });
+      .send({
+        local: 'Casa do cliente',
+        descricao: 'Troca de fechadura',
+        valorCobrado: 200,
+        clienteTelefone: '5521990000099',
+      });
     expect(resServico.status).toBe(201);
     expect(resServico.body.status).toBe('pendente');
     const servicoId = resServico.body.id;

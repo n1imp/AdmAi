@@ -42,10 +42,16 @@ describe('iaDisponivel', () => {
 describe('analisarNovas', () => {
   it('analisa só avaliações novas e grava a sugestão; usa Haiku SEM effort + JSON schema', async () => {
     prisma.avaliacaoGoogle.findMany
-      .mockResolvedValueOnce([{ id: 1, reviewId: 'r1', nota: 5, comentario: 'Atendimento rápido e educado' }])
+      .mockResolvedValueOnce([
+        { id: 1, reviewId: 'r1', nota: 5, comentario: 'Atendimento rápido e educado' },
+      ])
       .mockResolvedValueOnce([{ analiseJson: { elogios: ['rápido'], criticas: [] } }]);
     createMock.mockResolvedValue(
-      respostaIA({ elogios: ['rápido', 'educado'], criticas: [], sugestaoResposta: 'Muito obrigado!' }),
+      respostaIA({
+        elogios: ['rápido', 'educado'],
+        criticas: [],
+        sugestaoResposta: 'Muito obrigado!',
+      })
     );
 
     const r = await analisarNovas(1);
@@ -61,14 +67,21 @@ describe('analisarNovas', () => {
     expect(prisma.avaliacaoGoogle.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 1 },
-        data: { analiseJson: { elogios: ['rápido', 'educado'], criticas: [], sugestaoResposta: 'Muito obrigado!' } },
-      }),
+        data: {
+          analiseJson: {
+            elogios: ['rápido', 'educado'],
+            criticas: [],
+            sugestaoResposta: 'Muito obrigado!',
+          },
+        },
+      })
     );
     // consolida o resumo agregado
     expect(prisma.analiseAvaliacoes.upsert).toHaveBeenCalled();
     // só processa o que veio do filtro analiseJson=null
     expect(prisma.avaliacaoGoogle.findMany.mock.calls[0][0].where).toMatchObject({
-      empresaId: 1, analiseJson: { equals: null },
+      empresaId: 1,
+      analiseJson: { equals: null },
     });
   });
 

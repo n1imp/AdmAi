@@ -99,13 +99,20 @@ describe('prismaParaEmpresa — RLS ligada (GUC por transação)', () => {
   function fakeBaseClientRls() {
     let handler;
     const txClient = {
-      $executeRawUnsafe: (sql, ...vals) => { setConfigCalls.push({ sql, vals }); return Promise.resolve(1); },
+      $executeRawUnsafe: (sql, ...vals) => {
+        setConfigCalls.push({ sql, vals });
+        return Promise.resolve(1);
+      },
     };
     const makeTxDelegate = (model) => {
-      const run = (operation) => (args) => { txDispatch.push({ model, operation, args }); return Promise.resolve({ ok: true }); };
+      const run = (operation) => (args) => {
+        txDispatch.push({ model, operation, args });
+        return Promise.resolve({ ok: true });
+      };
       return { findFirst: run('findFirst'), findMany: run('findMany'), create: run('create') };
     };
-    for (const m of ['tecnico', 'material']) txClient[m] = makeTxDelegate(m.charAt(0).toUpperCase() + m.slice(1));
+    for (const m of ['tecnico', 'material'])
+      txClient[m] = makeTxDelegate(m.charAt(0).toUpperCase() + m.slice(1));
 
     return {
       $transaction: async (fn) => fn(txClient),
@@ -114,8 +121,20 @@ describe('prismaParaEmpresa — RLS ligada (GUC por transação)', () => {
         const ext = {};
         for (const m of ['tecnico', 'material']) {
           ext[m] = {
-            findMany: (args) => handler({ model: m.charAt(0).toUpperCase() + m.slice(1), operation: 'findMany', args, query: async () => ({}) }),
-            findUnique: (args) => handler({ model: m.charAt(0).toUpperCase() + m.slice(1), operation: 'findUnique', args, query: async () => ({}) }),
+            findMany: (args) =>
+              handler({
+                model: m.charAt(0).toUpperCase() + m.slice(1),
+                operation: 'findMany',
+                args,
+                query: async () => ({}),
+              }),
+            findUnique: (args) =>
+              handler({
+                model: m.charAt(0).toUpperCase() + m.slice(1),
+                operation: 'findUnique',
+                args,
+                query: async () => ({}),
+              }),
           };
         }
         return ext;
@@ -125,7 +144,8 @@ describe('prismaParaEmpresa — RLS ligada (GUC por transação)', () => {
 
   it('crava o GUC e despacha no tx (não em query)', async () => {
     vi.resetModules();
-    setConfigCalls.length = 0; txDispatch.length = 0;
+    setConfigCalls.length = 0;
+    txDispatch.length = 0;
     vi.doMock('../prisma.js', () => ({ prismaApp: fakeBaseClientRls() }));
     vi.doMock('../../config/env.js', () => ({ env: { RLS_ENABLED: 'true' } }));
     const { prismaParaEmpresa: scoped } = await import('../tenant.js');

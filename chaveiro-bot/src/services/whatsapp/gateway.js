@@ -56,8 +56,13 @@ export function configWhatsappFaltando() {
 export function extrairQr(payload) {
   if (!payload) return null;
   const q = payload.qrcode ?? payload.qr ?? payload;
-  const valor = q?.base64 ?? q?.code ?? (typeof q === 'string' ? q : null)
-    ?? payload.base64 ?? payload.code ?? null;
+  const valor =
+    q?.base64 ??
+    q?.code ??
+    (typeof q === 'string' ? q : null) ??
+    payload.base64 ??
+    payload.code ??
+    null;
   return valor || null;
 }
 
@@ -74,7 +79,10 @@ export async function enviarMensagem(numeroOuJid, texto) {
     logger.warn('enviarMensagem: envio global Cloud ainda não implementado (use Evolution)');
     return null;
   }
-  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { instanceName: true } });
+  const c = await prisma.conexaoBot.findUnique({
+    where: { id: 1 },
+    select: { instanceName: true },
+  });
   if (!c?.instanceName) {
     logger.warn('enviarMensagem: robô sem instância conectada');
     return null;
@@ -98,7 +106,10 @@ export async function obterConexaoBot() {
   if (!c) {
     c = await prisma.conexaoBot.create({ data: { id: 1, webhookSecret: gerarSegredo() } });
   } else if (!c.webhookSecret) {
-    c = await prisma.conexaoBot.update({ where: { id: 1 }, data: { webhookSecret: gerarSegredo() } });
+    c = await prisma.conexaoBot.update({
+      where: { id: 1 },
+      data: { webhookSecret: gerarSegredo() },
+    });
   }
   return c;
 }
@@ -106,7 +117,7 @@ export async function obterConexaoBot() {
 /** Provisiona a instância única do robô e devolve o QR para parear (super-admin). */
 export async function conectarBot() {
   const c = await obterConexaoBot();
-  const instanceName = c.instanceName ?? (env.BOT_INSTANCE_NAME ?? 'admai-bot');
+  const instanceName = c.instanceName ?? env.BOT_INSTANCE_NAME ?? 'admai-bot';
   const url = webhookUrlBot(c.webhookSecret);
 
   const criacao = await evo.criarInstancia({ instanceName, webhookUrl: url, eventos: EVENTOS });
@@ -125,14 +136,18 @@ export async function conectarBot() {
     const est = await evo.estadoConexao(instanceName);
     estado = mapearEstado(est?.instance?.state, false);
   }
-  await prisma.conexaoBot.update({ where: { id: 1 }, data: { estadoConexao: estado, qrCode: qr ?? undefined } });
+  await prisma.conexaoBot.update({
+    where: { id: 1 },
+    data: { estadoConexao: estado, qrCode: qr ?? undefined },
+  });
   return { instanceName, qr, estado };
 }
 
 /** Estado da conexão única do robô (+ diagnóstico de env) para o super-admin. */
 export async function statusBot() {
   const diag = configWhatsappFaltando();
-  if (diag.configIncompleta) return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
+  if (diag.configIncompleta)
+    return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
 
   const c = await prisma.conexaoBot.findUnique({ where: { id: 1 } });
   if (!c?.instanceName) return { estado: 'desconectado', qr: null, instanceName: null, ...diag };
@@ -148,10 +163,12 @@ export async function statusBot() {
     }
   }
   const estado = mapearEstado(est?.instance?.state, !!qr);
-  await prisma.conexaoBot.update({
-    where: { id: 1 },
-    data: { estadoConexao: estado, ...(aberto ? { qrCode: null } : {}) },
-  }).catch(() => {});
+  await prisma.conexaoBot
+    .update({
+      where: { id: 1 },
+      data: { estadoConexao: estado, ...(aberto ? { qrCode: null } : {}) },
+    })
+    .catch(() => {});
   return { estado, qr, instanceName: c.instanceName, ...diag };
 }
 
@@ -159,40 +176,51 @@ export async function statusBot() {
 export async function desconectarBot() {
   const c = await prisma.conexaoBot.findUnique({ where: { id: 1 } });
   if (c?.instanceName) {
-    await evo.deletarInstancia(c.instanceName).catch((e) =>
-      logger.warn('desconectarBot: falha ao deletar instância (ignorado)', { erro: e.message })
-    );
+    await evo
+      .deletarInstancia(c.instanceName)
+      .catch((e) =>
+        logger.warn('desconectarBot: falha ao deletar instância (ignorado)', { erro: e.message })
+      );
   }
-  await prisma.conexaoBot.update({
-    where: { id: 1 },
-    data: { estadoConexao: 'desconectado', instanceName: null },
-  }).catch(() => {});
+  await prisma.conexaoBot
+    .update({
+      where: { id: 1 },
+      data: { estadoConexao: 'desconectado', instanceName: null },
+    })
+    .catch(() => {});
   return { estado: 'desconectado' };
 }
 
 /** webhookSecret do robô (claro) — usado na verificação HMAC/token do webhook global. */
 export async function segredoWebhookBot() {
-  const c = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { webhookSecret: true } });
+  const c = await prisma.conexaoBot.findUnique({
+    where: { id: 1 },
+    select: { webhookSecret: true },
+  });
   return c?.webhookSecret ?? null;
 }
 
 /** Persiste o QR recebido via webhook QRCODE_UPDATED (robô). */
 export async function salvarQrBot(qr) {
   if (!qr) return;
-  await prisma.conexaoBot.update({
-    where: { id: 1 },
-    data: { qrCode: qr, estadoConexao: 'aguardando_qr' },
-  }).catch(() => {});
+  await prisma.conexaoBot
+    .update({
+      where: { id: 1 },
+      data: { qrCode: qr, estadoConexao: 'aguardando_qr' },
+    })
+    .catch(() => {});
 }
 
 /** Atualiza o estado do robô a partir do webhook CONNECTION_UPDATE. */
 export async function atualizarEstadoBot(state) {
   const mapa = { open: 'conectado', connecting: 'conectando', close: 'desconectado' };
   const estado = mapa[state] ?? 'desconectado';
-  await prisma.conexaoBot.update({
-    where: { id: 1 },
-    data: { estadoConexao: estado, ...(estado === 'conectado' ? { qrCode: null } : {}) },
-  }).catch(() => {});
+  await prisma.conexaoBot
+    .update({
+      where: { id: 1 },
+      data: { estadoConexao: estado, ...(estado === 'conectado' ? { qrCode: null } : {}) },
+    })
+    .catch(() => {});
 }
 
 /**

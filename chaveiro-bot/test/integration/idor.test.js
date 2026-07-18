@@ -94,7 +94,12 @@ describe('GET /api/servicos — paginação', () => {
       await request(app)
         .post('/api/servicos')
         .set('Authorization', `Bearer ${A.token}`)
-        .send({ tecnico: 'Técnico Pag', local: 'Casa', descricao: `Serviço ${i}`, valorCobrado: 100 });
+        .send({
+          tecnico: 'Técnico Pag',
+          local: 'Casa',
+          descricao: `Serviço ${i}`,
+          valorCobrado: 100,
+        });
     }
     const res = await request(app)
       .get('/api/servicos?limit=2&page=1')

@@ -10,7 +10,12 @@ vi.mock('../../db/prisma.js', () => ({
 
 const { prisma } = await import('../../db/prisma.js');
 const {
-  registrarPonto, calcularDia, resumoMes, jornadaDiariaMin, temBancoDeHoras, formatarDuracao,
+  registrarPonto,
+  calcularDia,
+  resumoMes,
+  jornadaDiariaMin,
+  temBancoDeHoras,
+  formatarDuracao,
 } = await import('../ponto.js');
 
 beforeEach(() => {
@@ -46,18 +51,36 @@ describe('jornadaDiariaMin / temBancoDeHoras', () => {
 
 describe('calcularDia (hora extra + saldo por modalidade)', () => {
   it('CLT padrão: HE acima de 8h, saldo positivo/negativo', () => {
-    expect(calcularDia({ modalidade: 'clt' }, 540)).toEqual({ horaExtraMinutos: 60, saldoMinutos: 60 });
-    expect(calcularDia({ modalidade: 'clt' }, 420)).toEqual({ horaExtraMinutos: 0, saldoMinutos: -60 });
+    expect(calcularDia({ modalidade: 'clt' }, 540)).toEqual({
+      horaExtraMinutos: 60,
+      saldoMinutos: 60,
+    });
+    expect(calcularDia({ modalidade: 'clt' }, 420)).toEqual({
+      horaExtraMinutos: 0,
+      saldoMinutos: -60,
+    });
   });
   it('meio período: HE acima de 6h', () => {
-    expect(calcularDia({ modalidade: 'clt_meio' }, 420)).toEqual({ horaExtraMinutos: 60, saldoMinutos: 60 });
+    expect(calcularDia({ modalidade: 'clt_meio' }, 420)).toEqual({
+      horaExtraMinutos: 60,
+      saldoMinutos: 60,
+    });
   });
   it('12x36: HE acima de 12h', () => {
-    expect(calcularDia({ modalidade: 'clt_12x36' }, 780)).toEqual({ horaExtraMinutos: 60, saldoMinutos: 60 });
+    expect(calcularDia({ modalidade: 'clt_12x36' }, 780)).toEqual({
+      horaExtraMinutos: 60,
+      saldoMinutos: 60,
+    });
   });
   it('autônomo/intermitente: sem banco → HE e saldo zerados', () => {
-    expect(calcularDia({ modalidade: 'autonomo' }, 600)).toEqual({ horaExtraMinutos: 0, saldoMinutos: 0 });
-    expect(calcularDia({ modalidade: 'intermitente' }, 600)).toEqual({ horaExtraMinutos: 0, saldoMinutos: 0 });
+    expect(calcularDia({ modalidade: 'autonomo' }, 600)).toEqual({
+      horaExtraMinutos: 0,
+      saldoMinutos: 0,
+    });
+    expect(calcularDia({ modalidade: 'intermitente' }, 600)).toEqual({
+      horaExtraMinutos: 0,
+      saldoMinutos: 0,
+    });
   });
 });
 
@@ -86,12 +109,16 @@ describe('registrarPonto (máquina do dia, timestamp do servidor)', () => {
     expect(resposta).toMatch(/^✅ Entrada registrada:/);
     // prova que usa o `agora` do servidor (não a hora do cliente)
     expect(prisma.registroPonto.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 9 }, data: { entradaEm: agora } }),
+      expect.objectContaining({ where: { id: 9 }, data: { entradaEm: agora } })
     );
   });
 
   it('estado 1 (entrada feita) → SAÍDA ALMOÇO', async () => {
-    prisma.registroPonto.findUnique.mockResolvedValue({ id: 9, entradaEm: new Date(), almocoSaidaEm: null });
+    prisma.registroPonto.findUnique.mockResolvedValue({
+      id: 9,
+      entradaEm: new Date(),
+      almocoSaidaEm: null,
+    });
     const { resposta } = await registrarPonto({ ...base, agora: new Date() });
     expect(resposta).toMatch(/Saída para almoço/);
     expect(prisma.registroPonto.update.mock.calls[0][0].data).toHaveProperty('almocoSaidaEm');
@@ -99,7 +126,10 @@ describe('registrarPonto (máquina do dia, timestamp do servidor)', () => {
 
   it('estado 2 (almoço saída) → VOLTA ALMOÇO', async () => {
     prisma.registroPonto.findUnique.mockResolvedValue({
-      id: 9, entradaEm: new Date(), almocoSaidaEm: new Date(), almocoVoltaEm: null,
+      id: 9,
+      entradaEm: new Date(),
+      almocoSaidaEm: new Date(),
+      almocoVoltaEm: null,
     });
     const { resposta } = await registrarPonto({ ...base, agora: new Date() });
     expect(resposta).toMatch(/Volta do almoço/);
@@ -109,18 +139,18 @@ describe('registrarPonto (máquina do dia, timestamp do servidor)', () => {
   it('estado 3 (volta feita) → SAÍDA: total descontando almoço, sem HE em 8h', async () => {
     prisma.registroPonto.findUnique.mockResolvedValue({
       id: 9,
-      entradaEm: new Date('2026-06-15T12:00:00Z'),     // 09:00 SP
+      entradaEm: new Date('2026-06-15T12:00:00Z'), // 09:00 SP
       almocoSaidaEm: new Date('2026-06-15T15:00:00Z'), // 12:00 SP
       almocoVoltaEm: new Date('2026-06-15T16:00:00Z'), // 13:00 SP
       saidaEm: null,
     });
-    const agora = new Date('2026-06-15T21:00:00Z');    // 18:00 SP → 9h - 1h almoço = 8h
+    const agora = new Date('2026-06-15T21:00:00Z'); // 18:00 SP → 9h - 1h almoço = 8h
     const { resposta } = await registrarPonto({ ...base, agora });
     expect(resposta).toMatch(/Saída registrada/);
     expect(resposta).toMatch(/Horas hoje: 8h 0min/);
     expect(resposta).not.toMatch(/Hora extra/);
     expect(prisma.registroPonto.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { saidaEm: agora, totalMinutos: 480, horaExtraMinutos: 0 } }),
+      expect.objectContaining({ data: { saidaEm: agora, totalMinutos: 480, horaExtraMinutos: 0 } })
     );
   });
 
@@ -132,7 +162,7 @@ describe('registrarPonto (máquina do dia, timestamp do servidor)', () => {
       almocoVoltaEm: new Date('2026-06-15T16:00:00Z'),
       saidaEm: null,
     });
-    const agora = new Date('2026-06-15T22:00:00Z');    // 19:00 SP → 10h - 1h = 9h
+    const agora = new Date('2026-06-15T22:00:00Z'); // 19:00 SP → 10h - 1h = 9h
     const { resposta } = await registrarPonto({ ...base, agora });
     expect(resposta).toMatch(/Horas hoje: 9h 0min/);
     expect(resposta).toMatch(/Hora extra: 1h 0min/);
@@ -141,8 +171,13 @@ describe('registrarPonto (máquina do dia, timestamp do servidor)', () => {
 
   it('dia já completo → informa estado atual sem nova gravação', async () => {
     prisma.registroPonto.findUnique.mockResolvedValue({
-      id: 9, entradaEm: new Date(), almocoSaidaEm: new Date(), almocoVoltaEm: new Date(),
-      saidaEm: new Date(), totalMinutos: 480, horaExtraMinutos: 0,
+      id: 9,
+      entradaEm: new Date(),
+      almocoSaidaEm: new Date(),
+      almocoVoltaEm: new Date(),
+      saidaEm: new Date(),
+      totalMinutos: 480,
+      horaExtraMinutos: 0,
     });
     const { resposta } = await registrarPonto({ ...base, agora: new Date() });
     expect(resposta).toMatch(/já está completo/);

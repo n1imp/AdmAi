@@ -26,18 +26,25 @@ vi.mock('ioredis', () => {
 import { comLock } from '../agendador.js';
 
 describe('comLock — lock distribuído de cron (F1a)', () => {
-  beforeEach(() => { ctl.throwOnSet = false; ctl.store.clear(); });
+  beforeEach(() => {
+    ctl.throwOnSet = false;
+    ctl.store.clear();
+  });
 
   it('duas chamadas concorrentes na mesma chave → apenas UMA executa', async () => {
     let execs = 0;
-    const fn = async () => { execs++; };
+    const fn = async () => {
+      execs++;
+    };
     await Promise.all([comLock('resumo', 60, fn), comLock('resumo', 60, fn)]);
     expect(execs).toBe(1);
   });
 
   it('após o lock liberar (TTL), o próximo tick volta a executar', async () => {
     let execs = 0;
-    const fn = async () => { execs++; };
+    const fn = async () => {
+      execs++;
+    };
     await comLock('resumo', 60, fn); // adquire e executa
     ctl.store.clear(); // simula expiração do TTL
     await comLock('resumo', 60, fn); // adquire de novo
@@ -47,7 +54,9 @@ describe('comLock — lock distribuído de cron (F1a)', () => {
   it('fail-closed: erro no Redis NÃO executa o job (duplicar é pior que pular)', async () => {
     ctl.throwOnSet = true;
     let execs = 0;
-    await comLock('resumo', 60, async () => { execs++; });
+    await comLock('resumo', 60, async () => {
+      execs++;
+    });
     expect(execs).toBe(0);
   });
 });

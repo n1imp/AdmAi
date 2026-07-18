@@ -47,9 +47,7 @@ describe('Cadastro com OTP de telefone', () => {
   };
 
   it('POST /api/auth/register retorna 201 com telefoneVerificado:false e envia OTP', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send(dadosCadastro);
+    const res = await request(app).post('/api/auth/register').send(dadosCadastro);
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('token');
@@ -66,7 +64,11 @@ describe('Cadastro com OTP de telefone', () => {
   it('POST /api/me/telefone/otp/verificar com código correto → 200 { telefoneVerificado:true }', async () => {
     const resRegister = await request(app)
       .post('/api/auth/register')
-      .send({ ...dadosCadastro, username: `donoOtp2${Date.now()}`, email: `otp2.${Date.now()}@ex.com` });
+      .send({
+        ...dadosCadastro,
+        username: `donoOtp2${Date.now()}`,
+        email: `otp2.${Date.now()}@ex.com`,
+      });
 
     expect(resRegister.status).toBe(201);
     const { token } = resRegister.body;
@@ -100,7 +102,11 @@ describe('Cadastro com OTP de telefone', () => {
   it('POST /api/me/telefone/otp/verificar com código errado → 400', async () => {
     const resRegister = await request(app)
       .post('/api/auth/register')
-      .send({ ...dadosCadastro, username: `donoOtp3${Date.now()}`, email: `otp3.${Date.now()}@ex.com` });
+      .send({
+        ...dadosCadastro,
+        username: `donoOtp3${Date.now()}`,
+        email: `otp3.${Date.now()}@ex.com`,
+      });
 
     expect(resRegister.status).toBe(201);
     const { token } = resRegister.body;

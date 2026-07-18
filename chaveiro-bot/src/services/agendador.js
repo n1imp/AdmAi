@@ -39,7 +39,9 @@ export async function gerarResumoSemanal(agora = new Date(), empresaId = null) {
   // Sem empresa explícita, usa a primeira (fallback de compatibilidade). O envio
   // por grupo (executarResumoSemanal) sempre passa o empresaId de cada tenant.
   if (!empresaId) {
-    empresaId = (await prisma.empresa.findFirst({ orderBy: { id: 'asc' }, select: { id: true } }))?.id ?? null;
+    empresaId =
+      (await prisma.empresa.findFirst({ orderBy: { id: 'asc' }, select: { id: true } }))?.id ??
+      null;
   }
 
   const servicos = await prisma.servico.findMany({
@@ -59,7 +61,11 @@ export async function gerarResumoSemanal(agora = new Date(), empresaId = null) {
   const receitaTotal = servicos.reduce((acc, s) => acc + s.valorLiquido, 0);
 
   const dataBR = (d) =>
-    new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: TIMEZONE }).format(d);
+    new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      timeZone: TIMEZONE,
+    }).format(d);
 
   const linhas = [
     `📊 *RESUMO DA SEMANA*`,
@@ -73,7 +79,9 @@ export async function gerarResumoSemanal(agora = new Date(), empresaId = null) {
     linhas.push(``, `🏆 *Ranking por técnico:*`);
     ranking.forEach((r, i) => {
       const medalha = ['🥇', '🥈', '🥉'][i] ?? `${i + 1}.`;
-      linhas.push(`${medalha} ${r.tecnico} — ${formatarMoeda(r.receitaLiquida)} (${r.servicos} serv.)`);
+      linhas.push(
+        `${medalha} ${r.tecnico} — ${formatarMoeda(r.receitaLiquida)} (${r.servicos} serv.)`
+      );
     });
     linhas.push(``, `⭐ Destaque: *${ranking[0].tecnico}*`);
   } else {
@@ -105,7 +113,10 @@ export async function executarResumoSemanal() {
 
     for (const { empresaId, grupoJid } of empresas) {
       try {
-        const { texto, totalServicos, receitaTotal, ranking } = await gerarResumoSemanal(new Date(), empresaId);
+        const { texto, totalServicos, receitaTotal, ranking } = await gerarResumoSemanal(
+          new Date(),
+          empresaId
+        );
 
         if (grupoJid && !grupoJid.includes('xxxxxx')) {
           await enviarMensagem(grupoJid, texto).catch((e) =>
@@ -118,14 +129,20 @@ export async function executarResumoSemanal() {
           empresaId,
           tipo: 'resumo',
           titulo: 'Resumo semanal disponível',
-          mensagem: `${totalServicos} serviços, ${formatarMoeda(receitaTotal)} líquidos.` +
+          mensagem:
+            `${totalServicos} serviços, ${formatarMoeda(receitaTotal)} líquidos.` +
             (destaque ? ` Destaque: ${destaque}.` : ''),
           link: '/',
-        }).catch((e) => logger.warn('Falha ao notificar admins do resumo', { empresaId, erro: e.message }));
+        }).catch((e) =>
+          logger.warn('Falha ao notificar admins do resumo', { empresaId, erro: e.message })
+        );
 
         logger.info('resumo_semanal_enviado', { empresaId, totalServicos, receitaTotal });
       } catch (erro) {
-        logger.error('Erro ao executar resumo semanal de uma empresa', { empresaId, erro: erro.message });
+        logger.error('Erro ao executar resumo semanal de uma empresa', {
+          empresaId,
+          erro: erro.message,
+        });
       }
     }
   } catch (erro) {
@@ -137,7 +154,7 @@ export async function executarResumoSemanal() {
 // Anonimiza dados pessoais antigos e limpa sessões de conversa obsoletas. Roda
 // sobre TODAS as empresas (manutenção do sistema) — usa o prisma global de propósito.
 const RETENCAO_AVALIACAO_DIAS = 180; // após isso, anonimiza a PII do cliente na avaliação
-const RETENCAO_SESSAO_DIAS = 7;      // sessões de conversa mais antigas são removidas
+const RETENCAO_SESSAO_DIAS = 7; // sessões de conversa mais antigas são removidas
 // Provas de ponto (selfie + geo) são dado pessoal de FUNCIONÁRIO (titular). Mantemos a
 // batida/hora (prova de jornada), mas descartamos a PII sensível após o prazo de
 // contestação trabalhista. Dado anti-fraude — minimização exigida pela LGPD (art. 15/16).
@@ -161,7 +178,9 @@ export async function limparDadosAntigos(agora = new Date()) {
   const corteAval = new Date(agora.getTime() - RETENCAO_AVALIACAO_DIAS * UM_DIA_MS);
   const cortePonto = new Date(agora.getTime() - RETENCAO_PONTO_DIAS * UM_DIA_MS);
   try {
-    const sessoes = await prisma.sessaoConversa.deleteMany({ where: { atualizadoEm: { lt: corteSessao } } });
+    const sessoes = await prisma.sessaoConversa.deleteMany({
+      where: { atualizadoEm: { lt: corteSessao } },
+    });
     const avaliacoes = await prisma.avaliacao.updateMany({
       where: { criadoEm: { lt: corteAval }, clienteTelefone: { not: '' } },
       data: { clienteTelefone: '', clienteNome: null, comentario: null },
@@ -172,7 +191,11 @@ export async function limparDadosAntigos(agora = new Date()) {
       avaliacoesAnonimizadas: avaliacoes.count,
       pontoExpurgados,
     });
-    return { sessoesRemovidas: sessoes.count, avaliacoesAnonimizadas: avaliacoes.count, pontoExpurgados };
+    return {
+      sessoesRemovidas: sessoes.count,
+      avaliacoesAnonimizadas: avaliacoes.count,
+      pontoExpurgados,
+    };
   } catch (erro) {
     logger.error('Erro na limpeza LGPD', { erro: erro.message });
     return { sessoesRemovidas: 0, avaliacoesAnonimizadas: 0, pontoExpurgados: 0 };
@@ -232,7 +255,9 @@ export async function sincronizarAvaliacoesGoogle() {
         orderBy: { criadoEmGoogle: 'desc' },
         select: { criadoEmGoogle: true },
       });
-      const { reviews, mock } = await listarReviews(empresaId, { desde: ultima?.criadoEmGoogle ?? null });
+      const { reviews, mock } = await listarReviews(empresaId, {
+        desde: ultima?.criadoEmGoogle ?? null,
+      });
       if (mock) continue; // sem credenciais reais — não persiste fixtures
       for (const r of reviews) {
         if (!r.reviewId) continue;
@@ -258,10 +283,14 @@ export async function sincronizarAvaliacoesGoogle() {
       // Análise por IA das novas (no-op se ANTHROPIC_API_KEY ausente).
       await analisarNovas(empresaId);
     } catch (erro) {
-      logger.warn('Falha na sincronização Google de uma empresa', { empresaId, erro: erro.message });
+      logger.warn('Falha na sincronização Google de uma empresa', {
+        empresaId,
+        erro: erro.message,
+      });
     }
   }
-  if (totalNovas > 0) logger.info('Sync Google concluída', { empresas: contas.length, novas: totalNovas });
+  if (totalNovas > 0)
+    logger.info('Sync Google concluída', { empresas: contas.length, novas: totalNovas });
   return { empresas: contas.length, novas: totalNovas };
 }
 
@@ -275,7 +304,9 @@ let redisLock = null;
 function clienteLock() {
   if (!redisLock) {
     redisLock = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
-    redisLock.on('error', () => { /* evita crash quando o Redis está indisponível */ });
+    redisLock.on('error', () => {
+      /* evita crash quando o Redis está indisponível */
+    });
   }
   return redisLock;
 }
@@ -283,13 +314,22 @@ function clienteLock() {
 export async function comLock(chave, ttlSegundos, fn) {
   let dono = false;
   try {
-    const r = await clienteLock().set(`cron:lock:${chave}`, String(process.pid), 'EX', ttlSegundos, 'NX');
+    const r = await clienteLock().set(
+      `cron:lock:${chave}`,
+      String(process.pid),
+      'EX',
+      ttlSegundos,
+      'NX'
+    );
     dono = r === 'OK';
   } catch (erro) {
     logger.warn('cron lock indisponível — job pulado neste tick', { chave, erro: erro.message });
     return;
   }
-  if (!dono) { logger.debug('cron lock ocupado — outra réplica executa este tick', { chave }); return; }
+  if (!dono) {
+    logger.debug('cron lock ocupado — outra réplica executa este tick', { chave });
+    return;
+  }
   await fn();
 }
 
@@ -303,26 +343,40 @@ export async function comLock(chave, ttlSegundos, fn) {
  */
 export function iniciarAgendamentos() {
   // Cada job roda dentro de comLock (uma réplica por tick). TTL < intervalo do job.
-  cron.schedule('0 18 * * 0', () => comLock('resumo-semanal', 300, executarResumoSemanal), { timezone: TIMEZONE });
+  cron.schedule('0 18 * * 0', () => comLock('resumo-semanal', 300, executarResumoSemanal), {
+    timezone: TIMEZONE,
+  });
 
-  cron.schedule('*/5 * * * *', () => comLock('avaliacoes-pendentes', 240, async () => {
-    try {
-      await dispararAvaliacoesPendentes();
-    } catch (erro) {
-      logger.error('Erro ao disparar avaliações pendentes', { erro: erro.message });
-    }
-  }), { timezone: TIMEZONE });
+  cron.schedule(
+    '*/5 * * * *',
+    () =>
+      comLock('avaliacoes-pendentes', 240, async () => {
+        try {
+          await dispararAvaliacoesPendentes();
+        } catch (erro) {
+          logger.error('Erro ao disparar avaliações pendentes', { erro: erro.message });
+        }
+      }),
+    { timezone: TIMEZONE }
+  );
 
-  cron.schedule('30 3 * * *', () => comLock('limpar-dados-antigos', 600, limparDadosAntigos), { timezone: TIMEZONE });
+  cron.schedule('30 3 * * *', () => comLock('limpar-dados-antigos', 600, limparDadosAntigos), {
+    timezone: TIMEZONE,
+  });
 
   // Sync das avaliações do Google a cada 6h (no-op se a flag estiver desligada).
-  cron.schedule('0 */6 * * *', () => comLock('sync-google', 300, async () => {
-    try {
-      await sincronizarAvaliacoesGoogle();
-    } catch (erro) {
-      logger.error('Erro na sincronização Google', { erro: erro.message });
-    }
-  }), { timezone: TIMEZONE });
+  cron.schedule(
+    '0 */6 * * *',
+    () =>
+      comLock('sync-google', 300, async () => {
+        try {
+          await sincronizarAvaliacoesGoogle();
+        } catch (erro) {
+          logger.error('Erro na sincronização Google', { erro: erro.message });
+        }
+      }),
+    { timezone: TIMEZONE }
+  );
 
   logger.info('Agendamentos iniciados', {
     resumoSemanal: 'domingo 18h ' + TIMEZONE,

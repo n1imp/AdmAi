@@ -30,6 +30,7 @@ const MODELOS_ESCOPADOS = new Set([
   'Avaliacao',
   'SessaoConversa',
   'RegistroPonto',
+  'DocumentoTecnico',
 ]);
 
 // Operações de LEITURA que aceitam `where` e devem receber o filtro empresaId.
@@ -48,10 +49,7 @@ const OPS_LEITURA_FILTRAVEIS = new Set([
 // `update`/`delete`/`upsert` (de registro único) NÃO entram aqui: exigem seletor
 // único e empresaId quebraria o where. Nas rotas, use updateMany/deleteMany
 // escopados (checando count) para mutações por id — evita IDOR sem query inválida.
-const OPS_WHERE = new Set([
-  'updateMany',
-  'deleteMany',
-]);
+const OPS_WHERE = new Set(['updateMany', 'deleteMany']);
 
 function mesclarWhere(where, empresaId) {
   // Sempre força empresaId, mesmo que o chamador já tenha passado um (segurança).

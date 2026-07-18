@@ -4,10 +4,27 @@ import { env } from '../config/env.js';
 // Chaves cujo VALOR nunca deve aparecer em log (defesa contra vazamento de PII/segredos
 // se alguém logar um objeto inteiro por engano). Comparação por nome, case-insensitive.
 const CHAVES_SENSIVEIS = new Set([
-  'senha', 'senhahash', 'password', 'novasenha', 'senhaatual',
-  'totpsecret', 'totppendente', 'secret', 'jwtsecret', 'encryptionkey',
-  'token', 'accesstoken', 'refreshtoken', 'accesstokenenc', 'refreshtokenenc',
-  'otp', 'telefoneotphash', 'authorization', 'apikey', 'apitoken', 'webhooksecret',
+  'senha',
+  'senhahash',
+  'password',
+  'novasenha',
+  'senhaatual',
+  'totpsecret',
+  'totppendente',
+  'secret',
+  'jwtsecret',
+  'encryptionkey',
+  'token',
+  'accesstoken',
+  'refreshtoken',
+  'accesstokenenc',
+  'refreshtokenenc',
+  'otp',
+  'telefoneotphash',
+  'authorization',
+  'apikey',
+  'apitoken',
+  'webhooksecret',
 ]);
 const MARCADOR = '[REDACTED]';
 
@@ -32,21 +49,18 @@ const redator = winston.format((info) => redigirSensiveis(info));
 
 // Logs estruturados em JSON para facilitar debug em produção
 // Em desenvolvimento, usa formato colorido e legível
-const formato = env.NODE_ENV === 'production'
-  ? winston.format.combine(
-      redator(),
-      winston.format.timestamp(),
-      winston.format.json()
-    )
-  : winston.format.combine(
-      redator(),
-      winston.format.colorize(),
-      winston.format.timestamp({ format: 'HH:mm:ss' }),
-      winston.format.printf(({ level, message, timestamp, ...meta }) => {
-        const extra = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
-        return `${timestamp} ${level}: ${message} ${extra}`;
-      })
-    );
+const formato =
+  env.NODE_ENV === 'production'
+    ? winston.format.combine(redator(), winston.format.timestamp(), winston.format.json())
+    : winston.format.combine(
+        redator(),
+        winston.format.colorize(),
+        winston.format.timestamp({ format: 'HH:mm:ss' }),
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          const extra = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+          return `${timestamp} ${level}: ${message} ${extra}`;
+        })
+      );
 
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',

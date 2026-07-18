@@ -3,7 +3,7 @@
 
 /**
  * Confere que os BYTES iniciais do buffer batem com o MIME declarado.
- * Suporta JPEG, PNG, WEBP e GIF. Retorna false para qualquer divergência.
+ * Suporta JPEG, PNG, WEBP, GIF e PDF. Retorna false para qualquer divergência.
  * @param {Buffer} buffer
  * @param {string} mime ex.: 'image/png'
  */
@@ -15,9 +15,14 @@ export function conferirMagicBytes(buffer, mime) {
     case 'image/png':
       return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
     case 'image/webp':
-      return buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+      return (
+        buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP'
+      );
     case 'image/gif':
       return buffer.toString('ascii', 0, 4) === 'GIF8';
+    case 'application/pdf':
+      // Assinatura "%PDF-" (documentos do técnico — F9/M4).
+      return buffer.toString('ascii', 0, 5) === '%PDF-';
     default:
       return false;
   }

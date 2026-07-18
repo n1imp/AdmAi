@@ -90,4 +90,4 @@ async function desligar(sinal) {
 }
 
 process.on('SIGTERM', () => desligar('SIGTERM')); // docker stop / orquestrador
-process.on('SIGINT', () => desligar('SIGINT'));   // Ctrl+C
+process.on('SIGINT', () => desligar('SIGINT')); // Ctrl+C

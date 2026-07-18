@@ -18,10 +18,14 @@ import { logger } from '../utils/logger.js';
 
 // Slug de empresa único a partir do nome (espelha o de routes/api.js).
 async function gerarSlugEmpresa(nome) {
-  const base = nome
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    .slice(0, 40) || 'empresa';
+  const base =
+    nome
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'empresa';
   let slug = base;
   let n = 1;
   while (await prisma.empresa.findUnique({ where: { slug } })) {

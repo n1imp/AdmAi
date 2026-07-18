@@ -28,7 +28,9 @@ billingRouter.post('/billing/checkout', requireAuth, adminOnly, async (req, res)
 
 billingRouter.post('/billing/portal', requireAuth, adminOnly, async (req, res) => {
   try {
-    const assinatura = await prisma.assinatura.findUnique({ where: { empresaId: req.user.empresaId } });
+    const assinatura = await prisma.assinatura.findUnique({
+      where: { empresaId: req.user.empresaId },
+    });
     if (!assinatura?.stripeCustomerId) {
       return res.status(400).json({ erro: 'Sem assinatura ativa' });
     }
@@ -42,7 +44,9 @@ billingRouter.post('/billing/portal', requireAuth, adminOnly, async (req, res) =
 });
 
 billingRouter.get('/billing/status', requireAuth, async (req, res) => {
-  const assinatura = await prisma.assinatura.findUnique({ where: { empresaId: req.user.empresaId } });
+  const assinatura = await prisma.assinatura.findUnique({
+    where: { empresaId: req.user.empresaId },
+  });
   res.json({
     status: assinatura?.status ?? 'sem_plano',
     trialFimEm: assinatura?.trialFimEm ?? null,
@@ -125,7 +129,9 @@ async function despacharEvento(evento) {
     case 'invoice.payment_succeeded': {
       // checkout.session.completed já trata a criação inicial — evitar email duplo
       if (obj.billing_reason === 'subscription_create') break;
-      const assinatura = await prisma.assinatura.findFirst({ where: { stripeCustomerId: obj.customer } });
+      const assinatura = await prisma.assinatura.findFirst({
+        where: { stripeCustomerId: obj.customer },
+      });
       if (!assinatura) break;
       const usuario = await prisma.usuario.findFirst({
         where: { empresaId: assinatura.empresaId, papel: 'dono' },
@@ -142,7 +148,9 @@ async function despacharEvento(evento) {
     }
 
     case 'invoice.payment_failed': {
-      const assinatura = await prisma.assinatura.findFirst({ where: { stripeCustomerId: obj.customer } });
+      const assinatura = await prisma.assinatura.findFirst({
+        where: { stripeCustomerId: obj.customer },
+      });
       if (!assinatura) break;
       await sincronizarAssinatura(assinatura.empresaId, { status: 'past_due' });
       const usuario = await prisma.usuario.findFirst({

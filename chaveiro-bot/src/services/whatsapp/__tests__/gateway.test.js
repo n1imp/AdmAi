@@ -69,7 +69,9 @@ describe('extrairQr', () => {
   });
 
   it('extrai de { qrcode: { base64 } } (forma usual do create v2)', () => {
-    expect(extrairQr({ qrcode: { base64: 'data:image/png;base64,AAA' } })).toBe('data:image/png;base64,AAA');
+    expect(extrairQr({ qrcode: { base64: 'data:image/png;base64,AAA' } })).toBe(
+      'data:image/png;base64,AAA'
+    );
   });
 
   it('extrai de { qrcode: { code } }', () => {
@@ -109,7 +111,12 @@ describe('configWhatsappFaltando', () => {
     const r = await comEnv({});
     expect(r.configIncompleta).toBe(true);
     expect(r.faltando).toEqual(
-      expect.arrayContaining(['EVOLUTION_HOST', 'EVOLUTION_API_KEY', 'ENCRYPTION_KEY', 'PUBLIC_URL'])
+      expect.arrayContaining([
+        'EVOLUTION_HOST',
+        'EVOLUTION_API_KEY',
+        'ENCRYPTION_KEY',
+        'PUBLIC_URL',
+      ])
     );
   });
 

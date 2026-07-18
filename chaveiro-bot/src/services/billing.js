@@ -23,7 +23,11 @@ export async function obterOuCriarCliente(empresa, email) {
     return assinatura.stripeCustomerId;
   }
 
-  const cliente = await stripe.customers.create({ email, name: empresa.nome, metadata: { empresaId: String(empresa.id) } });
+  const cliente = await stripe.customers.create({
+    email,
+    name: empresa.nome,
+    metadata: { empresaId: String(empresa.id) },
+  });
   await prisma.assinatura.upsert({
     where: { empresaId: empresa.id },
     create: { empresaId: empresa.id, stripeCustomerId: cliente.id },
@@ -53,7 +57,10 @@ export async function criarCheckoutSession(empresaId, email, returnUrl) {
 export async function criarPortalSession(stripeCustomerId, returnUrl) {
   const stripe = await getStripe();
   if (!stripe) throw new Error('Stripe não configurado');
-  return stripe.billingPortal.sessions.create({ customer: stripeCustomerId, return_url: returnUrl });
+  return stripe.billingPortal.sessions.create({
+    customer: stripeCustomerId,
+    return_url: returnUrl,
+  });
 }
 
 export async function processarEvento(rawBody, signature) {
