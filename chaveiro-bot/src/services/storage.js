@@ -93,6 +93,22 @@ export async function urlAssinada(bucket, nomeArquivo, expiraSegundos = 60) {
   }
 }
 
+/**
+ * Diagnóstico best-effort de um bucket (para o log de boot — evita dependência silenciosa
+ * de um bucket provisionado à mão). NUNCA lança. @returns {Promise<{existe:boolean,
+ * privado:boolean}|null>} null se o storage não está configurado ou a consulta falhou.
+ */
+export async function inspecionarBucket(bucket) {
+  if (!storageHabilitado()) return null;
+  try {
+    const { data, error } = await clienteStorage().storage.getBucket(bucket);
+    if (error || !data) return { existe: false, privado: false };
+    return { existe: true, privado: !data.public };
+  } catch {
+    return null;
+  }
+}
+
 /** Remove um objeto do bucket (best-effort; loga aviso em falha, não lança). */
 export async function removerImagem(bucket, nomeArquivo) {
   const { error } = await clienteStorage().storage.from(bucket).remove([nomeArquivo]);

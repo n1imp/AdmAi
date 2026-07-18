@@ -12,6 +12,7 @@ import { criarApp } from './app.js';
 import { logger } from './utils/logger.js';
 import { prisma } from './db/prisma.js';
 import { iniciarAgendamentos } from './services/agendador.js';
+import { storageHabilitado, inspecionarBucket } from './services/storage.js';
 import { bootstrapAdmin } from './services/bootstrap.js';
 import { iniciarWorkerInbound } from './workers/inbound-worker.js';
 import { iniciarWorkerEmail } from './workers/email-worker.js';
@@ -47,6 +48,29 @@ const server = app.listen(PORT, async () => {
 
   // Cria o admin de dev a partir do .env se o banco estiver vazio (idempotente).
   await bootstrapAdmin();
+
+  // F9/M4: diagnóstico do bucket privado de documentos. Com a flag ligada e storage
+  // configurado, um bucket ausente faz o upload responder 500 (uploadPrivado lança, sem
+  // fallback pro disco). Loga alto no boot — não bloqueia. Provisão: `npm run bucket:provision`.
+  if (env.DOCUMENTOS_ENABLED === 'true' && storageHabilitado()) {
+    inspecionarBucket('documentos-tecnico')
+      .then((info) => {
+        if (!info) return;
+        if (!info.existe) {
+          logger.warn(
+            'DOCUMENTOS_ENABLED=true mas o bucket "documentos-tecnico" NÃO existe no storage — ' +
+              'uploads de documentos responderão 500. Provisione com: npm run bucket:provision.'
+          );
+        } else if (!info.privado) {
+          logger.error(
+            'Bucket "documentos-tecnico" está PÚBLICO — documentos privados ficam expostos. Torne-o privado.'
+          );
+        } else {
+          logger.info('✅ Bucket de documentos "documentos-tecnico" presente e privado.');
+        }
+      })
+      .catch(() => {});
+  }
 
   // Camada WhatsApp: o robô de número único usa a Evolution API global (EVOLUTION_HOST)
   // ou a Cloud API (Meta) atrás da flag WHATSAPP_PROVIDER. O webhook global roteia o
