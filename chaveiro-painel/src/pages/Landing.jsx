@@ -1,7 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  KeyRound, MessageSquare, Zap, ShieldCheck, BarChart3, Package,
-  ArrowRight, CheckCircle2,
+  KeyRound,
+  MessageSquare,
+  Zap,
+  ShieldCheck,
+  BarChart3,
+  Package,
+  ArrowRight,
+  CheckCircle2,
 } from 'lucide-react';
 import RodapeLegal from '../components/RodapeLegal.jsx';
 
@@ -10,12 +16,36 @@ import RodapeLegal from '../components/RodapeLegal.jsx';
  * autenticados (ver App.jsx → Home). CTA principal leva ao cadastro do beta.
  */
 const RECURSOS = [
-  { Icon: MessageSquare, t: 'WhatsApp integrado', s: 'Técnicos registram serviços conversando no chat — sem app extra.' },
-  { Icon: BarChart3, t: 'Painel em tempo real', s: 'Receita, comissões e ranking de técnicos, atualizados na hora.' },
-  { Icon: Package, t: 'Estoque com saldo real', s: 'Baixa automática de materiais a cada serviço, com alertas.' },
-  { Icon: Zap, t: 'Avaliações automáticas', s: 'O cliente recebe a pesquisa de satisfação sozinho, após o serviço.' },
-  { Icon: ShieldCheck, t: 'Multi-empresa seguro', s: 'Dados isolados por conta, com 2FA e criptografia.' },
-  { Icon: CheckCircle2, t: 'Fechamento em PDF', s: 'Relatório de período pronto para enviar ao contador.' },
+  {
+    Icon: MessageSquare,
+    t: 'WhatsApp integrado',
+    s: 'Técnicos registram serviços conversando no chat — sem app extra.',
+  },
+  {
+    Icon: BarChart3,
+    t: 'Painel em tempo real',
+    s: 'Receita, comissões e ranking de técnicos, atualizados na hora.',
+  },
+  {
+    Icon: Package,
+    t: 'Estoque com saldo real',
+    s: 'Baixa automática de materiais a cada serviço, com alertas.',
+  },
+  {
+    Icon: Zap,
+    t: 'Avaliações automáticas',
+    s: 'O cliente recebe a pesquisa de satisfação sozinho, após o serviço.',
+  },
+  {
+    Icon: ShieldCheck,
+    t: 'Multi-empresa seguro',
+    s: 'Dados isolados por conta, com 2FA e criptografia.',
+  },
+  {
+    Icon: CheckCircle2,
+    t: 'Fechamento em PDF',
+    s: 'Relatório de período pronto para enviar ao contador.',
+  },
 ];
 
 const PASSOS = [
@@ -59,14 +89,17 @@ export default function Landing() {
             Sua operação de chaveiro <span className="text-accent-400">sob controle</span>
           </h1>
           <p className="text-muted mt-5 leading-relaxed max-w-xl text-lg">
-            Registre serviços pelo WhatsApp e acompanhe receita, comissões, estoque e
-            avaliações num painel só. Feito para quem trabalha em campo.
+            Registre serviços pelo WhatsApp e acompanhe receita, comissões, estoque e avaliações num
+            painel só. Feito para quem trabalha em campo.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <button onClick={irParaBeta} className="btn-primary">
               Participar do beta <ArrowRight size={16} />
             </button>
-            <Link to="/login" className="text-sm text-muted hover:text-white transition-colors px-2">
+            <Link
+              to="/login"
+              className="text-sm text-muted hover:text-white transition-colors px-2"
+            >
               Já tenho conta
             </Link>
           </div>
@@ -94,7 +127,9 @@ export default function Landing() {
       {/* ── Como funciona ─────────────────────────────────────────────────── */}
       <section className="border-y border-dark-600 bg-dark-950/40">
         <div className="max-w-5xl mx-auto px-6 py-16">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-tight">Como funciona</h2>
+          <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
+            Como funciona
+          </h2>
           <ol className="mt-8 grid md:grid-cols-3 gap-6">
             {PASSOS.map((p, i) => (
               <li key={i} className="relative pl-12">
@@ -114,8 +149,8 @@ export default function Landing() {
           Participe do <span className="text-accent-400">beta fechado</span>
         </h2>
         <p className="text-muted mt-3 max-w-md mx-auto leading-relaxed">
-          Estamos abrindo vagas para um grupo pequeno de chaveiros. Crie sua conta e
-          comece a registrar serviços hoje.
+          Estamos abrindo vagas para um grupo pequeno de chaveiros. Crie sua conta e comece a
+          registrar serviços hoje.
         </p>
         <button onClick={irParaBeta} className="btn-primary mt-6 inline-flex">
           Criar minha conta <ArrowRight size={16} />

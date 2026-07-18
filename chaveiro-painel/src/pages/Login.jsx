@@ -1,6 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { KeyRound, Eye, EyeOff, Building2, User, AtSign, Phone, Loader2, ArrowRight, ShieldCheck, Zap, MessageSquare, ArrowLeft } from 'lucide-react';
+import {
+  KeyRound,
+  Eye,
+  EyeOff,
+  Building2,
+  User,
+  AtSign,
+  Phone,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  MessageSquare,
+  ArrowLeft,
+} from 'lucide-react';
 import api, { register } from '../lib/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import BotoesSociais from '../components/BotoesSociais.jsx';
@@ -10,8 +24,8 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   // Abre direto na aba de cadastro quando vier da landing (/login?modo=cadastrar).
-  const [modo, setModo] = useState(
-    () => (new URLSearchParams(window.location.search).get('modo') === 'cadastrar' ? 'cadastrar' : 'entrar')
+  const [modo, setModo] = useState(() =>
+    new URLSearchParams(window.location.search).get('modo') === 'cadastrar' ? 'cadastrar' : 'entrar'
   ); // 'entrar' | 'cadastrar'
   const [mostrar, setMostrar] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -35,7 +49,12 @@ export default function Login() {
 
   // campos
   const [form, setForm] = useState({
-    username: '', password: '', nome: '', nomeEmpresa: '', email: '', telefone: '',
+    username: '',
+    password: '',
+    nome: '',
+    nomeEmpresa: '',
+    email: '',
+    telefone: '',
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -47,7 +66,8 @@ export default function Login() {
       setErro(ehTelefone ? 'Preencha telefone e senha.' : 'Preencha usuário e senha.');
       return;
     }
-    setCarregando(true); setErro('');
+    setCarregando(true);
+    setErro('');
     try {
       const corpo = ehTelefone
         ? { telefone: identificador, password: form.password }
@@ -57,24 +77,34 @@ export default function Login() {
       // desambiguar a empresa (mesmo telefone em mais de uma conta).
       tratarSessao(data);
     } catch (err) {
-      setErro(err.response?.status === 401
-        ? err.response.data?.erro ?? (ehTelefone ? 'Telefone ou senha incorretos.' : 'Usuário ou senha incorretos.')
-        : 'Não foi possível conectar à API. Verifique se o servidor está rodando.');
-    } finally { setCarregando(false); }
+      setErro(
+        err.response?.status === 401
+          ? (err.response.data?.erro ??
+              (ehTelefone ? 'Telefone ou senha incorretos.' : 'Usuário ou senha incorretos.'))
+          : 'Não foi possível conectar à API. Verifique se o servidor está rodando.'
+      );
+    } finally {
+      setCarregando(false);
+    }
   }
 
   // Desambiguação: usuário escolheu a empresa — refaz o login com o usuarioId.
   async function escolherEmpresa(usuarioId) {
-    setCarregando(true); setErro('');
+    setCarregando(true);
+    setErro('');
     try {
       const { data } = await api.post('/auth/login', { usuarioId, password: form.password });
       setDesambiguacao(null);
       tratarSessao(data);
     } catch (err) {
-      setErro(err.response?.status === 401
-        ? err.response.data?.erro ?? 'Não foi possível entrar nesta empresa.'
-        : 'Não foi possível conectar à API. Verifique se o servidor está rodando.');
-    } finally { setCarregando(false); }
+      setErro(
+        err.response?.status === 401
+          ? (err.response.data?.erro ?? 'Não foi possível entrar nesta empresa.')
+          : 'Não foi possível conectar à API. Verifique se o servidor está rodando.'
+      );
+    } finally {
+      setCarregando(false);
+    }
   }
 
   async function verificar2fa(e) {
@@ -83,7 +113,8 @@ export default function Login() {
       setErro('Digite o código de 6 dígitos.');
       return;
     }
-    setCarregando(true); setErro('');
+    setCarregando(true);
+    setErro('');
     try {
       const rota = metodo2fa === 'telefone' ? '/auth/login/2fa-telefone' : '/auth/login/2fa';
       const { data } = await api.post(rota, { desafio: desafio2fa, codigo: codigo2fa });
@@ -91,7 +122,9 @@ export default function Login() {
       navigate('/', { replace: true });
     } catch (err) {
       setErro(err.response?.data?.erro ?? 'Código inválido. Tente novamente.');
-    } finally { setCarregando(false); }
+    } finally {
+      setCarregando(false);
+    }
   }
 
   function voltarLogin() {
@@ -128,16 +161,27 @@ export default function Login() {
   async function cadastrar(e) {
     e.preventDefault();
     const { nome, nomeEmpresa, username, email, telefone, password } = form;
-    if (!nome.trim() || !nomeEmpresa.trim() || !username.trim() || !email.trim() || !telefone.trim() || !password) {
+    if (
+      !nome.trim() ||
+      !nomeEmpresa.trim() ||
+      !username.trim() ||
+      !email.trim() ||
+      !telefone.trim() ||
+      !password
+    ) {
       setErro('Preencha todos os campos para criar a conta.');
       return;
     }
-    setCarregando(true); setErro('');
+    setCarregando(true);
+    setErro('');
     try {
       const data = await register({
-        nome: nome.trim(), nomeEmpresa: nomeEmpresa.trim(),
-        username: username.trim(), email: email.trim(),
-        telefone: telefone.trim().replace(/\D/g, ''), senha: password,
+        nome: nome.trim(),
+        nomeEmpresa: nomeEmpresa.trim(),
+        username: username.trim(),
+        email: email.trim(),
+        telefone: telefone.trim().replace(/\D/g, ''),
+        senha: password,
       });
       // Guarda o token para autenticar a verificação por OTP, sem ativar a sessão
       // no contexto ainda (senão o painel já navegaria para fora da tela de OTP).
@@ -148,10 +192,14 @@ export default function Login() {
       setInfo('Enviamos um código pelo WhatsApp para confirmar seu número.');
     } catch (err) {
       const r = err.response;
-      setErro(r?.data?.erro
-        ? `${r.data.erro}${r.data.requisitos ? ' — ' + Object.values(r.data.requisitos).filter(Boolean).join(', ') : ''}`
-        : 'Não foi possível criar a conta. Verifique os dados e tente novamente.');
-    } finally { setCarregando(false); }
+      setErro(
+        r?.data?.erro
+          ? `${r.data.erro}${r.data.requisitos ? ' — ' + Object.values(r.data.requisitos).filter(Boolean).join(', ') : ''}`
+          : 'Não foi possível criar a conta. Verifique os dados e tente novamente.'
+      );
+    } finally {
+      setCarregando(false);
+    }
   }
 
   async function verificarOtp(e) {
@@ -160,18 +208,22 @@ export default function Login() {
       setErro('Digite o código de 6 dígitos.');
       return;
     }
-    setCarregando(true); setErro('');
+    setCarregando(true);
+    setErro('');
     try {
       await api.post('/me/telefone/otp/verificar', { codigo: codigoOtp });
       login(tokenSessao);
       navigate('/', { replace: true });
     } catch (err) {
       setErro(err.response?.data?.erro ?? 'Código inválido ou expirado.');
-    } finally { setCarregando(false); }
+    } finally {
+      setCarregando(false);
+    }
   }
 
   async function reenviarOtp() {
-    setErro(''); setInfo('');
+    setErro('');
+    setInfo('');
     try {
       await api.post('/me/telefone/otp/enviar');
       setInfo('Código reenviado pelo WhatsApp.');
@@ -219,19 +271,34 @@ export default function Login() {
 
         {/* Manifesto */}
         <div className="relative max-w-md animate-rise">
-          <p className="section-label mb-5"><span className="w-7 h-px bg-accent-400" /> SISTEMA OPERACIONAL DE CAMPO</p>
+          <p className="section-label mb-5">
+            <span className="w-7 h-px bg-accent-400" /> SISTEMA OPERACIONAL DE CAMPO
+          </p>
           <h2 className="font-display text-6xl font-bold leading-[0.98] text-white uppercase tracking-tight">
-            Sua operação<br /><span className="text-accent-400">sob controle</span>
+            Sua operação
+            <br />
+            <span className="text-accent-400">sob controle</span>
           </h2>
           <p className="text-muted mt-6 leading-relaxed max-w-sm">
-            Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só.
+            Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes
+            — tudo num painel só.
           </p>
 
           <div className="mt-10 flex flex-col divide-y divide-dark-600/70 border-y border-dark-600/70">
             {[
-              { n: '01', Icon: MessageSquare, t: 'WhatsApp integrado', s: 'Técnicos registram serviços no chat' },
+              {
+                n: '01',
+                Icon: MessageSquare,
+                t: 'WhatsApp integrado',
+                s: 'Técnicos registram serviços no chat',
+              },
               { n: '02', Icon: Zap, t: 'Tempo real', s: 'Dashboards e comissões automáticos' },
-              { n: '03', Icon: ShieldCheck, t: 'Multi-empresa seguro', s: 'Dados isolados por conta' },
+              {
+                n: '03',
+                Icon: ShieldCheck,
+                t: 'Multi-empresa seguro',
+                s: 'Dados isolados por conta',
+              },
             ].map(({ n, Icon, t, s }, i) => (
               <div
                 key={t}
@@ -251,7 +318,9 @@ export default function Login() {
           </div>
         </div>
 
-        <p className="relative text-xs text-dark-500 font-mono tracking-wide">v1.0 · painel de controle</p>
+        <p className="relative text-xs text-dark-500 font-mono tracking-wide">
+          v1.0 · painel de controle
+        </p>
       </aside>
 
       {/* ── Painel direito (formulário) ──────────────────────────────────── */}
@@ -278,8 +347,12 @@ export default function Login() {
                   <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
                     <MessageSquare size={24} className="text-accent-300" />
                   </div>
-                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">Confirme seu WhatsApp</p>
-                  <p className="text-muted text-sm mt-1">Enviamos um código de 6 dígitos pelo WhatsApp do robô.</p>
+                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">
+                    Confirme seu WhatsApp
+                  </p>
+                  <p className="text-muted text-sm mt-1">
+                    Enviamos um código de 6 dígitos pelo WhatsApp do robô.
+                  </p>
                 </div>
 
                 <form onSubmit={verificarOtp} className="flex flex-col gap-4">
@@ -300,16 +373,32 @@ export default function Login() {
                   {info && !erro && <BannerInfo>{info}</BannerInfo>}
                   {erro && <BannerErro>{erro}</BannerErro>}
 
-                  <button type="submit" disabled={carregando || codigoOtp.length !== 6} className="btn-primary mt-1">
-                    {carregando ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+                  <button
+                    type="submit"
+                    disabled={carregando || codigoOtp.length !== 6}
+                    className="btn-primary mt-1"
+                  >
+                    {carregando ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <ArrowRight size={16} />
+                    )}
                     {carregando ? 'Verificando…' : 'Confirmar número'}
                   </button>
 
                   <div className="flex items-center justify-between text-sm">
-                    <button type="button" onClick={reenviarOtp} className="text-accent-300 hover:text-accent-200 transition-colors">
+                    <button
+                      type="button"
+                      onClick={reenviarOtp}
+                      className="text-accent-300 hover:text-accent-200 transition-colors"
+                    >
                       Reenviar código
                     </button>
-                    <button type="button" onClick={pularOtp} className="text-muted hover:text-white transition-colors">
+                    <button
+                      type="button"
+                      onClick={pularOtp}
+                      className="text-muted hover:text-white transition-colors"
+                    >
                       Verificar depois
                     </button>
                   </div>
@@ -322,8 +411,12 @@ export default function Login() {
                   <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
                     <Building2 size={24} className="text-accent-300" />
                   </div>
-                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">Escolha a empresa</p>
-                  <p className="text-muted text-sm mt-1">Seu telefone está em mais de uma empresa. Selecione em qual deseja entrar.</p>
+                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">
+                    Escolha a empresa
+                  </p>
+                  <p className="text-muted text-sm mt-1">
+                    Seu telefone está em mais de uma empresa. Selecione em qual deseja entrar.
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -344,7 +437,11 @@ export default function Login() {
                   ))}
                 </div>
 
-                {erro && <div className="mt-4"><BannerErro>{erro}</BannerErro></div>}
+                {erro && (
+                  <div className="mt-4">
+                    <BannerErro>{erro}</BannerErro>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -361,7 +458,9 @@ export default function Login() {
                   <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
                     <ShieldCheck size={24} className="text-accent-300" />
                   </div>
-                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">Verificação em duas etapas</p>
+                  <p className="font-display font-bold text-lg text-white uppercase tracking-wide">
+                    Verificação em duas etapas
+                  </p>
                   <p className="text-muted text-sm mt-1">
                     {metodo2fa === 'telefone'
                       ? 'Digite o código de 6 dígitos que enviamos pelo WhatsApp.'
@@ -386,8 +485,16 @@ export default function Login() {
 
                   {erro && <BannerErro>{erro}</BannerErro>}
 
-                  <button type="submit" disabled={carregando || codigo2fa.length !== 6} className="btn-primary mt-1">
-                    {carregando ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+                  <button
+                    type="submit"
+                    disabled={carregando || codigo2fa.length !== 6}
+                    className="btn-primary mt-1"
+                  >
+                    {carregando ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <ArrowRight size={16} />
+                    )}
                     {carregando ? 'Verificando…' : 'Verificar'}
                   </button>
 
@@ -408,18 +515,25 @@ export default function Login() {
                     {ehCadastro ? 'Criar conta' : 'Bem-vindo de volta'}
                   </h1>
                   <p className="text-sm text-muted mt-0.5">
-                    {ehCadastro ? 'Configure sua empresa em segundos.' : 'Acesse o painel da sua operação.'}
+                    {ehCadastro
+                      ? 'Configure sua empresa em segundos.'
+                      : 'Acesse o painel da sua operação.'}
                   </p>
                 </div>
 
                 {/* Alternador entrar/cadastrar */}
                 <div className="flex p-1 bg-dark-900/70 border border-dark-700 rounded-lg mb-5">
-                  {[['entrar', 'Entrar'], ['cadastrar', 'Criar conta']].map(([v, lbl]) => (
+                  {[
+                    ['entrar', 'Entrar'],
+                    ['cadastrar', 'Criar conta'],
+                  ].map(([v, lbl]) => (
                     <button
                       key={v}
                       onClick={() => trocarModo(v)}
                       className={`flex-1 py-2 rounded-md text-sm font-display font-semibold uppercase tracking-wider transition-all ${
-                        modo === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)]' : 'text-muted hover:text-white'
+                        modo === v
+                          ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]'
+                          : 'text-muted hover:text-white'
                       }`}
                     >
                       {lbl}
@@ -431,35 +545,76 @@ export default function Login() {
                   {ehCadastro && (
                     <>
                       <Campo label="Seu nome" Icon={User}>
-                        <input className="input pl-10" placeholder="João da Silva" value={form.nome} onChange={set('nome')} autoComplete="name" />
+                        <input
+                          className="input pl-10"
+                          placeholder="João da Silva"
+                          value={form.nome}
+                          onChange={set('nome')}
+                          autoComplete="name"
+                        />
                       </Campo>
                       <Campo label="Nome da empresa" Icon={Building2}>
-                        <input className="input pl-10" placeholder="Chaveiro Express" value={form.nomeEmpresa} onChange={set('nomeEmpresa')} autoComplete="organization" />
+                        <input
+                          className="input pl-10"
+                          placeholder="Chaveiro Express"
+                          value={form.nomeEmpresa}
+                          onChange={set('nomeEmpresa')}
+                          autoComplete="organization"
+                        />
                       </Campo>
                       <Campo label="E-mail" Icon={AtSign}>
-                        <input type="email" className="input pl-10" placeholder="voce@empresa.com" value={form.email} onChange={set('email')} autoComplete="email" />
+                        <input
+                          type="email"
+                          className="input pl-10"
+                          placeholder="voce@empresa.com"
+                          value={form.email}
+                          onChange={set('email')}
+                          autoComplete="email"
+                        />
                       </Campo>
                       <Campo label="WhatsApp (com DDD)" Icon={Phone}>
-                        <input type="tel" inputMode="numeric" className="input pl-10" placeholder="11999990000" value={form.telefone} onChange={set('telefone')} autoComplete="tel" />
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          className="input pl-10"
+                          placeholder="11999990000"
+                          value={form.telefone}
+                          onChange={set('telefone')}
+                          autoComplete="tel"
+                        />
                       </Campo>
                     </>
                   )}
 
                   {ehCadastro ? (
                     <Campo label="Usuário" Icon={User}>
-                      <input className="input pl-10" placeholder="seu_usuario" value={form.username} onChange={set('username')} autoComplete="username" />
+                      <input
+                        className="input pl-10"
+                        placeholder="seu_usuario"
+                        value={form.username}
+                        onChange={set('username')}
+                        autoComplete="username"
+                      />
                     </Campo>
                   ) : (
                     <div>
                       {/* Seletor: entrar por usuário (dono) ou por telefone (funcionário) */}
                       <div className="flex p-1 bg-dark-900/70 border border-dark-700 rounded-lg mb-3">
-                        {[['usuario', 'Usuário'], ['telefone', 'Telefone']].map(([v, lbl]) => (
+                        {[
+                          ['usuario', 'Usuário'],
+                          ['telefone', 'Telefone'],
+                        ].map(([v, lbl]) => (
                           <button
                             key={v}
                             type="button"
-                            onClick={() => { setTipoLogin(v); setErro(''); }}
+                            onClick={() => {
+                              setTipoLogin(v);
+                              setErro('');
+                            }}
                             className={`flex-1 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
-                              tipoLogin === v ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.6)]' : 'text-muted hover:text-white'
+                              tipoLogin === v
+                                ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]'
+                                : 'text-muted hover:text-white'
                             }`}
                           >
                             {lbl}
@@ -468,11 +623,27 @@ export default function Login() {
                       </div>
                       {tipoLogin === 'telefone' ? (
                         <Campo label="Telefone" Icon={Phone}>
-                          <input type="tel" inputMode="numeric" className="input pl-10" placeholder="11999990000" value={form.telefone} onChange={set('telefone')} autoComplete="tel" autoFocus />
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            className="input pl-10"
+                            placeholder="11999990000"
+                            value={form.telefone}
+                            onChange={set('telefone')}
+                            autoComplete="tel"
+                            autoFocus
+                          />
                         </Campo>
                       ) : (
                         <Campo label="Usuário" Icon={User}>
-                          <input className="input pl-10" placeholder="seu_usuario" value={form.username} onChange={set('username')} autoComplete="username" autoFocus />
+                          <input
+                            className="input pl-10"
+                            placeholder="seu_usuario"
+                            value={form.username}
+                            onChange={set('username')}
+                            autoComplete="username"
+                            autoFocus
+                          />
                         </Campo>
                       )}
                     </div>
@@ -481,7 +652,10 @@ export default function Login() {
                   <div>
                     <label className="kpi-label block mb-1.5">Senha</label>
                     <div className="relative">
-                      <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                      <KeyRound
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                      />
                       <input
                         type={mostrar ? 'text' : 'password'}
                         className="input pl-10 pr-11"
@@ -490,29 +664,46 @@ export default function Login() {
                         onChange={set('password')}
                         autoComplete={ehCadastro ? 'new-password' : 'current-password'}
                       />
-                      <button type="button" onClick={() => setMostrar(!mostrar)}
+                      <button
+                        type="button"
+                        onClick={() => setMostrar(!mostrar)}
                         aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors">
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                      >
                         {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
-                    {ehCadastro && <p className="text-[11px] text-muted mt-1.5">Mínimo 8 caracteres, com maiúscula, número e símbolo.</p>}
+                    {ehCadastro && (
+                      <p className="text-[11px] text-muted mt-1.5">
+                        Mínimo 8 caracteres, com maiúscula, número e símbolo.
+                      </p>
+                    )}
                   </div>
 
                   {info && !erro && <BannerInfo>{info}</BannerInfo>}
                   {erro && <BannerErro>{erro}</BannerErro>}
 
                   <button type="submit" disabled={carregando} className="btn-primary mt-1">
-                    {carregando ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+                    {carregando ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <ArrowRight size={16} />
+                    )}
                     {carregando ? 'Aguarde…' : ehCadastro ? 'Criar conta' : 'Entrar'}
                   </button>
 
                   {!ehCadastro && (
                     <div className="flex justify-between text-xs">
-                      <a href="/recuperar-senha" className="text-muted hover:text-accent-300 transition-colors">
+                      <a
+                        href="/recuperar-senha"
+                        className="text-muted hover:text-accent-300 transition-colors"
+                      >
                         Esqueci minha senha
                       </a>
-                      <a href="/magic-link" className="text-muted hover:text-accent-300 transition-colors">
+                      <a
+                        href="/magic-link"
+                        className="text-muted hover:text-accent-300 transition-colors"
+                      >
                         Entrar sem senha
                       </a>
                     </div>
@@ -520,7 +711,12 @@ export default function Login() {
                 </form>
 
                 {/* Login social (Google / Microsoft / Apple) */}
-                <BotoesSociais onResultado={tratarSessao} onErro={setErro} onInfo={setInfo} desabilitado={carregando} />
+                <BotoesSociais
+                  onResultado={tratarSessao}
+                  onErro={setErro}
+                  onInfo={setInfo}
+                  desabilitado={carregando}
+                />
 
                 <p className="text-center text-xs text-muted mt-6">
                   {ehCadastro
@@ -551,9 +747,17 @@ function Campo({ label, Icon, children }) {
 }
 
 function BannerErro({ children }) {
-  return <p className="text-danger text-sm bg-danger/10 border border-danger/30 rounded-md px-4 py-3">{children}</p>;
+  return (
+    <p className="text-danger text-sm bg-danger/10 border border-danger/30 rounded-md px-4 py-3">
+      {children}
+    </p>
+  );
 }
 
 function BannerInfo({ children }) {
-  return <p className="text-accent-300 text-sm bg-accent-400/10 border border-accent-400/30 rounded-md px-4 py-3">{children}</p>;
+  return (
+    <p className="text-accent-300 text-sm bg-accent-400/10 border border-accent-400/30 rounded-md px-4 py-3">
+      {children}
+    </p>
+  );
 }

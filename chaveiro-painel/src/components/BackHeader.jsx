@@ -12,7 +12,9 @@ export default function BackHeader({ titulo, para = '/configuracao' }) {
       >
         <ChevronLeft size={20} />
       </button>
-      <h1 className="font-display text-2xl font-bold text-white uppercase tracking-wide">{titulo}</h1>
+      <h1 className="font-display text-2xl font-bold text-white uppercase tracking-wide">
+        {titulo}
+      </h1>
     </div>
   );
 }

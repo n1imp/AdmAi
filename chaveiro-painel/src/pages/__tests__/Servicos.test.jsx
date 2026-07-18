@@ -12,7 +12,13 @@ vi.mock('../../lib/api.js', () => ({
 }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
+  // DT4 usa search params; sem serviço na URL a lista renderiza sem o drawer.
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
+  Link: ({ to, children, className }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock('../../components/Toast.jsx', () => ({ useToast: () => vi.fn() }));
 

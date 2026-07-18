@@ -9,8 +9,12 @@ export default function VerificarEmail() {
   const [estado, setEstado] = useState('verificando'); // 'verificando' | 'ok' | 'erro'
 
   useEffect(() => {
-    if (!token) { setEstado('erro'); return; }
-    api.get(`/auth/email/verificar?token=${encodeURIComponent(token)}`)
+    if (!token) {
+      setEstado('erro');
+      return;
+    }
+    api
+      .get(`/auth/email/verificar?token=${encodeURIComponent(token)}`)
       .then(() => setEstado('ok'))
       .catch(() => setEstado('erro'));
   }, [token]);
@@ -40,10 +44,14 @@ export default function VerificarEmail() {
             <>
               <CheckCircle size={44} className="text-success" />
               <div>
-                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">E-mail verificado!</p>
+                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+                  E-mail verificado!
+                </p>
                 <p className="text-muted text-sm mt-1">Sua conta está ativa. Aproveite o AdmAi.</p>
               </div>
-              <Link to="/" className="btn-primary w-full">Ir para o painel</Link>
+              <Link to="/" className="btn-primary w-full">
+                Ir para o painel
+              </Link>
             </>
           )}
 
@@ -51,12 +59,17 @@ export default function VerificarEmail() {
             <>
               <XCircle size={44} className="text-danger" />
               <div>
-                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">Link inválido</p>
+                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+                  Link inválido
+                </p>
                 <p className="text-muted text-sm mt-1">
-                  O link expirou ou já foi usado. Solicite um novo link de verificação no painel em Configurações → Segurança.
+                  O link expirou ou já foi usado. Solicite um novo link de verificação no painel em
+                  Configurações → Segurança.
                 </p>
               </div>
-              <Link to="/" className="btn-secondary w-full">Ir para o painel</Link>
+              <Link to="/" className="btn-secondary w-full">
+                Ir para o painel
+              </Link>
             </>
           )}
         </div>

@@ -19,13 +19,22 @@ vi.mock('../../components/Toast.jsx', () => ({
 // BackHeader usa useNavigate; EstadoVazio usa Link — evita precisar de Router.
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
+  Link: ({ to, children, className }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
 }));
 
 const PENDENTE = {
-  id: 7, local: 'Casa do cliente', descricao: 'Abertura de porta',
-  valorCobrado: 200, valorLiquido: 200, comissaoGerada: 40,
-  clienteNome: 'João', criadoEm: '2026-06-20T10:00:00Z',
+  id: 7,
+  local: 'Casa do cliente',
+  descricao: 'Abertura de porta',
+  valorCobrado: 200,
+  valorLiquido: 200,
+  comissaoGerada: 40,
+  clienteNome: 'João',
+  criadoEm: '2026-06-20T10:00:00Z',
   tecnico: { id: 3, nome: 'Carlos' },
 };
 
@@ -63,6 +72,8 @@ describe('<Aprovacoes>', () => {
 
     render(<Aprovacoes />);
 
-    await waitFor(() => expect(screen.getByText('Nenhum serviço aguardando aprovação')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText('Nenhum serviço aguardando aprovação')).toBeInTheDocument()
+    );
   });
 });

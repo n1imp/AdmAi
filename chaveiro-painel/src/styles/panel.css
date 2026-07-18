@@ -1,0 +1,138 @@
+.panel-ui {
+  --panel-canvas: #0f1018;
+  --panel-canvas-soft: #141522;
+  --panel-surface: #191b28;
+  --panel-surface-raised: #222538;
+  --panel-surface-hover: #292d42;
+  --panel-border: #34384d;
+  --panel-border-strong: #68718a;
+  --panel-text: #f8f9ff;
+  --panel-text-soft: #c4c8d8;
+  --panel-text-secondary: #aeb4c8;
+  --panel-brand: #8b5cf6;
+  --panel-brand-strong: #c4b5fd;
+  --panel-brand-ink: #170b2e;
+  --panel-data-blue: #38bdf8;
+  --panel-data-teal: #2dd4bf;
+  --panel-data-violet: #a78bfa;
+  --panel-data-pink: #f472b6;
+  --panel-data-orange: #fb923c;
+  --panel-success: #6ee7b7;
+  --panel-warning: #fcd34d;
+  --panel-critical: #fda4af;
+  --panel-focus: #fde68a;
+  --panel-radius-control: 10px;
+  --panel-radius-surface: 16px;
+  --panel-radius-elevated: 24px;
+  --panel-target: 44px;
+  --panel-control-height: 48px;
+  --panel-nav-target: 54px;
+  --panel-motion-fast: 150ms;
+  --panel-motion-base: 280ms;
+  --panel-motion-slow: 340ms;
+  --panel-motion-distance: 12px;
+  --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* M3 (Consolidação F6): easing por papel de movimento.
+   * standard/emphasized = mudanças na tela; decelerate = elementos entrando;
+   * accelerate = elementos saindo. `--panel-ease` legado mantido para compat. */
+  --panel-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --panel-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --panel-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --panel-ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --panel-shadow-raised: 0 18px 48px rgb(0 0 0 / 32%);
+  --panel-shadow-focus: 0 0 0 3px rgb(253 230 138 / 24%);
+  color-scheme: dark;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+}
+
+.panel-ui[data-panel-scope='contents'] {
+  display: contents;
+}
+
+.panel-ui .panel-display,
+.panel-ui .panel-page-header__title {
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+}
+
+.panel-ui .panel-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.panel-ui :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--panel-focus);
+  outline-offset: 3px;
+  box-shadow: var(--panel-shadow-focus);
+}
+
+.panel-ui :where(.btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .btn-social) {
+  min-height: var(--panel-target);
+}
+
+.panel-ui .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--panel-control-height);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: var(--panel-radius-control);
+  background: var(--panel-surface-raised);
+  color: var(--panel-text);
+  font-weight: 700;
+  transition:
+    border-color var(--panel-motion-fast) var(--panel-ease),
+    background-color var(--panel-motion-fast) var(--panel-ease);
+}
+
+.panel-ui .btn-secondary:hover {
+  border-color: var(--panel-brand-strong);
+  background: var(--panel-surface-hover);
+}
+
+.panel-ui .pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.panel-ui .scrollbar-hide {
+  scrollbar-width: none;
+}
+
+.panel-ui .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.panel-ui .hover\:text-accent-200:hover {
+  color: var(--panel-brand-strong);
+}
+
+.panel-ui :where(.text-dark-500, .text-dark-600) {
+  color: var(--panel-text-secondary);
+}
+
+.panel-ui :where(.placeholder-dark-500, .placeholder-dark-600)::placeholder {
+  color: var(--panel-text-secondary);
+  opacity: 1;
+}
+
+/* Transição de rota (F6/M3): fade-through do conteúdo ao trocar de rota. O container
+ * remonta por `key={pathname}` no Layout, então a animação toca uma vez por navegação.
+ * Só OPACIDADE de propósito: `transform`/`filter` num ancestral criariam bloco de contenção
+ * e quebrariam os FABs `position: fixed` das páginas; opacidade não cria esse bloco.
+ * O bloco reduced-motion (panel-overlay.css) zera a duração automaticamente. */
+.panel-ui .panel-route {
+  animation: panel-route-enter var(--panel-motion-base) var(--panel-ease-standard) both;
+}
+
+@keyframes panel-route-enter {
+  from {
+    opacity: 0;
+  }
+}

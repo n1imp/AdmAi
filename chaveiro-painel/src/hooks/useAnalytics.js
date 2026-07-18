@@ -16,7 +16,9 @@ async function getPostHog() {
     persistence: consent === 'all' ? 'localStorage+cookie' : 'memory',
     autocapture: false,
     capture_pageview: false,
-    loaded: (ph) => { _ph = ph; },
+    loaded: (ph) => {
+      _ph = ph;
+    },
   });
   _ph = posthog;
   return _ph;
@@ -24,8 +26,12 @@ async function getPostHog() {
 
 export function useAnalytics() {
   function track(event, props = {}) {
-    if (isDev) { console.info('[analytics]', event, props); }
-    getPostHog().then((ph) => ph?.capture(event, props)).catch(() => {});
+    if (isDev) {
+      console.info('[analytics]', event, props);
+    }
+    getPostHog()
+      .then((ph) => ph?.capture(event, props))
+      .catch(() => {});
   }
 
   return { track };
@@ -34,13 +40,17 @@ export function useAnalytics() {
 export function useAnalyticsIdentify(user) {
   useEffect(() => {
     if (!user) return;
-    getPostHog().then((ph) => {
-      if (!ph) return;
-      ph.identify(String(user.id), { papel: user.papel, empresaId: user.empresaId });
-    }).catch(() => {});
+    getPostHog()
+      .then((ph) => {
+        if (!ph) return;
+        ph.identify(String(user.id), { papel: user.papel, empresaId: user.empresaId });
+      })
+      .catch(() => {});
   }, [user?.id]);
 }
 
 export function analyticsReset() {
-  getPostHog().then((ph) => ph?.reset()).catch(() => {});
+  getPostHog()
+    .then((ph) => ph?.reset())
+    .catch(() => {});
 }

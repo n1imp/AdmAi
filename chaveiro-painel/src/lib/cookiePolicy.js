@@ -39,9 +39,7 @@ export const politicaCookies = {
     },
     {
       titulo: '6. Contato',
-      paragrafos: [
-        'Dúvidas sobre o uso de cookies: privacidade@barbers-flow.com.',
-      ],
+      paragrafos: ['Dúvidas sobre o uso de cookies: privacidade@barbers-flow.com.'],
     },
   ],
 };

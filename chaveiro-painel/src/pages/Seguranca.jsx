@@ -1,11 +1,24 @@
 import { useState, useEffect, useCallback, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, LogOut, Check, X, Loader2, Copy, UserX, Trash2, Monitor } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  LogOut,
+  Check,
+  X,
+  Loader2,
+  Copy,
+  UserX,
+  Trash2,
+  Monitor,
+} from 'lucide-react';
 import api from '../lib/api.js';
 import { avaliarForcaSenha } from '../lib/senha.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { Overlay } from '../components/ui/index.js';
 
 const CORES_FORCA = {
   fraca: { barra: 'bg-danger', texto: 'text-danger', label: 'Fraca', n: 1 },
@@ -29,13 +42,19 @@ function MedidorForca({ senha }) {
     <div className="mt-2">
       <div className="flex gap-1.5 mb-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= cfg.n ? cfg.barra : 'bg-dark-600'}`} />
+          <div
+            key={i}
+            className={`h-1.5 flex-1 rounded-full ${i <= cfg.n ? cfg.barra : 'bg-dark-600'}`}
+          />
         ))}
       </div>
       <p className={`text-xs font-medium ${cfg.texto} mb-2`}>Senha {cfg.label.toLowerCase()}</p>
       <ul className="flex flex-col gap-1">
         {REQUISITOS.map((r) => (
-          <li key={r.chave} className={`flex items-center gap-1.5 text-xs ${requisitos[r.chave] ? 'text-success' : 'text-muted'}`}>
+          <li
+            key={r.chave}
+            className={`flex items-center gap-1.5 text-xs ${requisitos[r.chave] ? 'text-success' : 'text-muted'}`}
+          >
             {requisitos[r.chave] ? <Check size={12} /> : <X size={12} />}
             {r.label}
           </li>
@@ -50,7 +69,9 @@ function CampoSenha({ label, valor, onChange, autoComplete }) {
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="kpi-label block mb-2">{label}</label>
+      <label htmlFor={id} className="kpi-label block mb-2">
+        {label}
+      </label>
       <div className="relative">
         <input
           id={id}
@@ -83,7 +104,9 @@ function CampoCodigo({ valor, onChange, onEnter, autoFocus, ariaLabel }) {
       autoFocus={autoFocus}
       value={valor}
       onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-      onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && onEnter) onEnter();
+      }}
       placeholder="000000"
       aria-label={ariaLabel}
       className="input text-center text-2xl font-display tracking-[0.4em] font-bold"
@@ -91,31 +114,12 @@ function CampoCodigo({ valor, onChange, onEnter, autoFocus, ariaLabel }) {
   );
 }
 
-// Overlay modal simples, consistente com o tema escuro do app.
+// Modal do app apoiado no primitive acessível Overlay (foco preso, inert, Escape, restauração).
 function Modal({ titulo, onClose, children }) {
-  const titleId = useId();
-  useEffect(() => {
-    function handleKey(e) { if (e.key === 'Escape') onClose(); }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-sm animate-rise"
-    >
-      <div className="w-full max-w-sm card flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-center justify-between">
-          <p id={titleId} className="font-display font-bold text-lg text-white">{titulo}</p>
-          <button onClick={onClose} className="text-muted hover:text-white transition-colors" aria-label="Fechar">
-            <X size={18} />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Overlay open onClose={onClose} title={titulo} size="sm">
+      <div className="flex flex-col gap-4">{children}</div>
+    </Overlay>
   );
 }
 
@@ -169,7 +173,9 @@ export default function Seguranca() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   const forca = avaliarForcaSenha(nova);
   const podeTrocar = atual && forca.valida && nova === confirma;
@@ -189,7 +195,9 @@ export default function Seguranca() {
       const { data } = await api.patch('/me/senha', { senhaAtual: atual, novaSenha: nova });
       if (data.token) login(data.token); // renova o token (os antigos foram invalidados)
       toast('Senha alterada com sucesso', 'success');
-      setAtual(''); setNova(''); setConfirma('');
+      setAtual('');
+      setNova('');
+      setConfirma('');
     } catch (err) {
       toast(err.response?.data?.erro ?? 'Erro ao trocar senha', 'error');
     } finally {
@@ -262,7 +270,8 @@ export default function Seguranca() {
 
   function copiarSecret() {
     if (!setup2fa?.secret) return;
-    navigator.clipboard?.writeText(setup2fa.secret)
+    navigator.clipboard
+      ?.writeText(setup2fa.secret)
       .then(() => toast('Chave copiada', 'success'))
       .catch(() => {});
   }
@@ -284,7 +293,10 @@ export default function Seguranca() {
   // LGPD — anonimiza a PII de um cliente (direito ao esquecimento). Irreversível.
   async function anonimizarCliente() {
     const telefone = telefoneLgpd.trim();
-    if (telefone.length < 8) { toast('Informe um telefone válido', 'error'); return; }
+    if (telefone.length < 8) {
+      toast('Informe um telefone válido', 'error');
+      return;
+    }
     setAnonimizando(true);
     try {
       const { data } = await api.post('/lgpd/anonimizar-cliente', { telefone });
@@ -329,12 +341,27 @@ export default function Seguranca() {
         <section>
           <p className="section-label mb-2 px-1">Senha</p>
           <form onSubmit={trocarSenha} className="card flex flex-col gap-4">
-            <CampoSenha label="Senha atual" valor={atual} onChange={setAtual} autoComplete="current-password" />
+            <CampoSenha
+              label="Senha atual"
+              valor={atual}
+              onChange={setAtual}
+              autoComplete="current-password"
+            />
             <div>
-              <CampoSenha label="Nova senha" valor={nova} onChange={setNova} autoComplete="new-password" />
+              <CampoSenha
+                label="Nova senha"
+                valor={nova}
+                onChange={setNova}
+                autoComplete="new-password"
+              />
               <MedidorForca senha={nova} />
             </div>
-            <CampoSenha label="Confirmar nova senha" valor={confirma} onChange={setConfirma} autoComplete="new-password" />
+            <CampoSenha
+              label="Confirmar nova senha"
+              valor={confirma}
+              onChange={setConfirma}
+              autoComplete="new-password"
+            />
             {confirma && nova !== confirma && (
               <p className="text-danger text-xs">As senhas não coincidem.</p>
             )}
@@ -365,7 +392,9 @@ export default function Seguranca() {
               aria-label={dados?.twoFactorAtivo ? 'Desativar 2FA' : 'Ativar 2FA'}
               className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${dados?.twoFactorAtivo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
             >
-              <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${dados?.twoFactorAtivo ? 'left-6' : 'left-1'}`} />
+              <span
+                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${dados?.twoFactorAtivo ? 'left-6' : 'left-1'}`}
+              />
             </button>
           </div>
         </section>
@@ -388,17 +417,28 @@ export default function Seguranca() {
               <ul className="flex flex-col divide-y divide-dark-700 -my-1">
                 {sessoes.map((s) => (
                   <li key={s.jwtIat} className="flex items-start gap-3 py-2.5">
-                    <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${s.atual ? 'bg-success animate-pulse-glow' : 'bg-dark-500'}`} />
+                    <div
+                      className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${s.atual ? 'bg-success animate-pulse-glow' : 'bg-dark-500'}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-medium">
-                        {s.atual ? 'Este dispositivo' : <Monitor size={13} className="inline mr-1 text-muted" />}
-                        {!s.atual && (s.userAgent?.split(' ').slice(0, 3).join(' ') || 'Dispositivo desconhecido')}
+                        {s.atual ? (
+                          'Este dispositivo'
+                        ) : (
+                          <Monitor size={13} className="inline mr-1 text-muted" />
+                        )}
+                        {!s.atual &&
+                          (s.userAgent?.split(' ').slice(0, 3).join(' ') ||
+                            'Dispositivo desconhecido')}
                       </p>
                       <p className="text-muted text-xs mt-0.5">
-                        {s.ip ?? '—'} · Último acesso: {new Date(s.ultimaAtividadeEm).toLocaleDateString('pt-BR')}
+                        {s.ip ?? '—'} · Último acesso:{' '}
+                        {new Date(s.ultimaAtividadeEm).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    {s.atual && <span className="text-xs text-success font-medium shrink-0">Atual</span>}
+                    {s.atual && (
+                      <span className="text-xs text-success font-medium shrink-0">Atual</span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -420,8 +460,8 @@ export default function Seguranca() {
             <p className="section-label mb-2 px-1">Privacidade do cliente (LGPD)</p>
             <div className="card flex flex-col gap-3">
               <p className="text-muted text-xs leading-relaxed">
-                Remove os dados pessoais de um cliente (nome, telefone, comentário) dos serviços
-                e avaliações da sua empresa — atende ao direito ao esquecimento. Os valores
+                Remove os dados pessoais de um cliente (nome, telefone, comentário) dos serviços e
+                avaliações da sua empresa — atende ao direito ao esquecimento. Os valores
                 financeiros são preservados. Ação irreversível.
               </p>
               <div>
@@ -455,7 +495,12 @@ export default function Seguranca() {
                 : 'Exclui permanentemente a sua conta de acesso. Esta ação é irreversível.'}
             </p>
             <button
-              onClick={() => { setSenhaExclusao(''); setCodigoExclusao(''); setErroExclusao(''); setConfirmarExclusao(true); }}
+              onClick={() => {
+                setSenhaExclusao('');
+                setCodigoExclusao('');
+                setErroExclusao('');
+                setConfirmarExclusao(true);
+              }}
               className="btn-danger"
             >
               <Trash2 size={16} /> Excluir minha conta
@@ -468,8 +513,8 @@ export default function Seguranca() {
       {setup2fa && (
         <Modal titulo="Ativar 2FA" onClose={() => setSetup2fa(null)}>
           <p className="text-muted text-xs leading-relaxed">
-            Escaneie o QR code com seu app autenticador (Google Authenticator, Authy, etc.)
-            e digite o código de 6 dígitos para confirmar.
+            Escaneie o QR code com seu app autenticador (Google Authenticator, Authy, etc.) e digite
+            o código de 6 dígitos para confirmar.
           </p>
 
           {setup2fa.qrDataUrl && (
@@ -498,11 +543,21 @@ export default function Seguranca() {
 
           <div>
             <label className="kpi-label block mb-2">Código de verificação</label>
-            <CampoCodigo valor={codigoAtivar} onChange={setCodigoAtivar} onEnter={ativar2fa} autoFocus ariaLabel="Código de verificação" />
+            <CampoCodigo
+              valor={codigoAtivar}
+              onChange={setCodigoAtivar}
+              onEnter={ativar2fa}
+              autoFocus
+              ariaLabel="Código de verificação"
+            />
             {erro2fa && <p className="text-danger text-xs mt-2">{erro2fa}</p>}
           </div>
 
-          <button onClick={ativar2fa} disabled={ativando || codigoAtivar.length !== 6} className="btn-primary">
+          <button
+            onClick={ativar2fa}
+            disabled={ativando || codigoAtivar.length !== 6}
+            className="btn-primary"
+          >
             {ativando ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
             {ativando ? 'Verificando…' : 'Confirmar e ativar'}
           </button>
@@ -513,14 +568,25 @@ export default function Seguranca() {
       {confirmarDesativar && (
         <Modal titulo="Desativar 2FA" onClose={() => setConfirmarDesativar(false)}>
           <p className="text-muted text-xs leading-relaxed">
-            Digite o código atual do seu app autenticador para desativar a verificação em duas etapas.
+            Digite o código atual do seu app autenticador para desativar a verificação em duas
+            etapas.
           </p>
           <div>
             <label className="kpi-label block mb-2">Código de verificação</label>
-            <CampoCodigo valor={codigoDesativar} onChange={setCodigoDesativar} onEnter={desativar2fa} autoFocus ariaLabel="Código de verificação" />
+            <CampoCodigo
+              valor={codigoDesativar}
+              onChange={setCodigoDesativar}
+              onEnter={desativar2fa}
+              autoFocus
+              ariaLabel="Código de verificação"
+            />
             {erro2fa && <p className="text-danger text-xs mt-2">{erro2fa}</p>}
           </div>
-          <button onClick={desativar2fa} disabled={desativando || codigoDesativar.length !== 6} className="btn-danger">
+          <button
+            onClick={desativar2fa}
+            disabled={desativando || codigoDesativar.length !== 6}
+            className="btn-danger"
+          >
             {desativando ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
             {desativando ? 'Desativando…' : 'Desativar 2FA'}
           </button>
@@ -533,8 +599,8 @@ export default function Seguranca() {
           <p className="text-muted text-xs leading-relaxed">
             Isso remove permanentemente o nome, telefone e comentários do cliente
             <span className="text-white font-mono"> {telefoneLgpd.trim()} </span>
-            de todos os serviços e avaliações da sua empresa. Os valores financeiros são
-            mantidos. Esta ação não pode ser desfeita.
+            de todos os serviços e avaliações da sua empresa. Os valores financeiros são mantidos.
+            Esta ação não pode ser desfeita.
           </p>
           <button onClick={anonimizarCliente} disabled={anonimizando} className="btn-danger">
             {anonimizando ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} />}
@@ -551,17 +617,29 @@ export default function Seguranca() {
               ? 'Atenção: se você for o único dono, isso apaga a EMPRESA INTEIRA e todos os seus dados, permanentemente. Confirme com sua senha para continuar.'
               : 'Isso apaga sua conta permanentemente. Confirme com sua senha para continuar.'}
           </p>
-          <CampoSenha label="Sua senha" valor={senhaExclusao} onChange={setSenhaExclusao} autoComplete="current-password" />
+          <CampoSenha
+            label="Sua senha"
+            valor={senhaExclusao}
+            onChange={setSenhaExclusao}
+            autoComplete="current-password"
+          />
           {dados?.twoFactorAtivo && (
             <div>
               <label className="kpi-label block mb-2">Código 2FA</label>
-              <CampoCodigo valor={codigoExclusao} onChange={setCodigoExclusao} onEnter={excluirConta} ariaLabel="Código 2FA" />
+              <CampoCodigo
+                valor={codigoExclusao}
+                onChange={setCodigoExclusao}
+                onEnter={excluirConta}
+                ariaLabel="Código 2FA"
+              />
             </div>
           )}
           {erroExclusao && <p className="text-danger text-xs">{erroExclusao}</p>}
           <button
             onClick={excluirConta}
-            disabled={excluindo || !senhaExclusao || (dados?.twoFactorAtivo && codigoExclusao.length !== 6)}
+            disabled={
+              excluindo || !senhaExclusao || (dados?.twoFactorAtivo && codigoExclusao.length !== 6)
+            }
             className="btn-danger disabled:opacity-50"
           >
             {excluindo ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}

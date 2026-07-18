@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Check, X, Calendar, MapPin, User, HardHat, Loader2,
-} from 'lucide-react';
+import { Check, X, Calendar, MapPin, User, HardHat, Loader2 } from 'lucide-react';
 import api, { formatarMoeda, formatarData } from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { SkeletonLista } from '../components/Skeleton.jsx';
@@ -19,8 +17,12 @@ function CardPendente({ servico, onAprovar, onRejeitar, processando }) {
         <div className="w-8 h-8 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-accent-300 shrink-0">
           <HardHat size={16} strokeWidth={1.8} />
         </div>
-        <span className="font-semibold text-white text-sm truncate">{servico.tecnico?.nome ?? 'Técnico'}</span>
-        <span className="badge bg-dark-700 text-muted border border-dark-600 ml-auto">{servico.local}</span>
+        <span className="font-semibold text-white text-sm truncate">
+          {servico.tecnico?.nome ?? 'Técnico'}
+        </span>
+        <span className="badge bg-dark-700 text-muted border border-dark-600 ml-auto">
+          {servico.local}
+        </span>
       </div>
 
       <p className="text-white text-sm font-medium">{servico.descricao}</p>
@@ -38,11 +40,15 @@ function CardPendente({ servico, onAprovar, onRejeitar, processando }) {
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="bg-dark-700 border border-dark-600 rounded-md p-2 text-center">
           <p className="kpi-label text-[10px]">Cobrado</p>
-          <p className="font-display font-bold text-white text-base tnum">{formatarMoeda(servico.valorCobrado)}</p>
+          <p className="font-display font-bold text-white text-base tnum">
+            {formatarMoeda(servico.valorCobrado)}
+          </p>
         </div>
         <div className="bg-indigo-400/10 border border-indigo-400/20 rounded-md p-2 text-center">
           <p className="kpi-label text-[10px] text-indigo-300">Comissão</p>
-          <p className="font-display font-bold text-indigo-300 text-base tnum">{formatarMoeda(servico.comissaoGerada)}</p>
+          <p className="font-display font-bold text-indigo-300 text-base tnum">
+            {formatarMoeda(servico.comissaoGerada)}
+          </p>
         </div>
       </div>
 
@@ -54,7 +60,8 @@ function CardPendente({ servico, onAprovar, onRejeitar, processando }) {
             disabled={processando}
             className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-md bg-success/15 border border-success/30 text-success font-semibold text-sm hover:bg-success/25 transition-colors disabled:opacity-50"
           >
-            {processando ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Aprovar
+            {processando ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}{' '}
+            Aprovar
           </button>
           <button
             onClick={() => setConfirmando(true)}
@@ -106,7 +113,9 @@ export default function Aprovacoes() {
     }
   }, []);
 
-  useEffect(() => { buscar(); }, [buscar]);
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
 
   async function aprovar(id) {
     setProcessando(id);

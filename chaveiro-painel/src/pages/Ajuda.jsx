@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import {
-  MessageCircle, QrCode, FileText, Users, Bell, ChevronDown, Headphones, Mail,
+  MessageCircle,
+  QrCode,
+  FileText,
+  Users,
+  Bell,
+  ChevronDown,
+  Headphones,
+  Mail,
 } from 'lucide-react';
 import BackHeader from '../components/BackHeader.jsx';
 
@@ -24,19 +31,27 @@ const SECOES = [
     conteudo: (
       <>
         <p>
-          O técnico envia a mensagem padronizada no grupo do WhatsApp. O bot lê,
-          extrai os dados e registra o serviço automaticamente no painel.
+          O técnico envia a mensagem padronizada no grupo do WhatsApp. O bot lê, extrai os dados e
+          registra o serviço automaticamente no painel.
         </p>
         <p className="mt-3 mb-1.5 font-semibold text-white">Campos do modelo:</p>
         <ul className="flex flex-col gap-1.5">
-          <li className="flex gap-2"><span className="text-accent-300">Local:</span> onde o serviço foi feito</li>
-          <li className="flex gap-2"><span className="text-accent-300">Serviço:</span> o que foi realizado</li>
-          <li className="flex gap-2"><span className="text-accent-300">Material:</span> peça/insumo usado (ou "Nenhum")</li>
-          <li className="flex gap-2"><span className="text-accent-300">Valor cobrado:</span> o valor recebido do cliente</li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Local:</span> onde o serviço foi feito
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Serviço:</span> o que foi realizado
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Material:</span> peça/insumo usado (ou "Nenhum")
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Valor cobrado:</span> o valor recebido do cliente
+          </li>
         </ul>
         <p className="mt-3 text-muted">
-          Quanto mais fiel ao modelo, melhor a leitura automática. Você também pode
-          cadastrar manualmente em <span className="text-accent-300">Serviços → Novo</span>.
+          Quanto mais fiel ao modelo, melhor a leitura automática. Você também pode cadastrar
+          manualmente em <span className="text-accent-300">Serviços → Novo</span>.
         </p>
       </>
     ),
@@ -50,8 +65,12 @@ const SECOES = [
     resumo: 'Escaneie o QR Code uma vez e escolha o grupo de resumos.',
     conteudo: (
       <ol className="flex flex-col gap-2 list-decimal list-inside marker:text-accent-300 marker:font-bold">
-        <li>Vá em <span className="text-accent-300">Mais → Configurações → WhatsApp</span>.</li>
-        <li>Clique em <span className="text-accent-300">Conectar</span>.</li>
+        <li>
+          Vá em <span className="text-accent-300">Mais → Configurações → WhatsApp</span>.
+        </li>
+        <li>
+          Clique em <span className="text-accent-300">Conectar</span>.
+        </li>
         <li>Escaneie o QR Code com o celular que usa o WhatsApp do negócio.</li>
         <li>Escolha o grupo que receberá os resumos.</li>
       </ol>
@@ -66,10 +85,17 @@ const SECOES = [
     resumo: 'Calcule a divisão por técnico e exporte o relatório em PDF.',
     conteudo: (
       <ol className="flex flex-col gap-2 list-decimal list-inside marker:text-accent-300 marker:font-bold">
-        <li>Vá em <span className="text-accent-300">Mais → Repartição</span>.</li>
-        <li>Escolha o período (datas de início e fim) e clique em <span className="text-accent-300">Calcular</span>.</li>
+        <li>
+          Vá em <span className="text-accent-300">Mais → Repartição</span>.
+        </li>
+        <li>
+          Escolha o período (datas de início e fim) e clique em{' '}
+          <span className="text-accent-300">Calcular</span>.
+        </li>
         <li>Confira o consolidado e a divisão por técnico.</li>
-        <li>Clique em <span className="text-accent-300">Exportar PDF</span> para baixar o relatório.</li>
+        <li>
+          Clique em <span className="text-accent-300">Exportar PDF</span> para baixar o relatório.
+        </li>
       </ol>
     ),
   },
@@ -84,14 +110,15 @@ const SECOES = [
       <>
         <p className="mb-1.5 font-semibold text-white">Técnicos</p>
         <p>
-          Cadastre cada técnico e defina o <span className="text-accent-300">percentual de comissão</span> e a
-          <span className="text-accent-300"> meta mensal</span> de receita líquida. O perfil mostra o
-          desempenho, o saldo pendente e o histórico de pagamentos.
+          Cadastre cada técnico e defina o{' '}
+          <span className="text-accent-300">percentual de comissão</span> e a
+          <span className="text-accent-300"> meta mensal</span> de receita líquida. O perfil mostra
+          o desempenho, o saldo pendente e o histórico de pagamentos.
         </p>
         <p className="mt-3 mb-1.5 font-semibold text-white">Materiais</p>
         <p>
-          Cadastre os materiais e acompanhe o <span className="text-accent-300">estoque</span>. Defina o
-          mínimo para receber alertas quando a quantidade ficar baixa.
+          Cadastre os materiais e acompanhe o <span className="text-accent-300">estoque</span>.
+          Defina o mínimo para receber alertas quando a quantidade ficar baixa.
         </p>
       </>
     ),
@@ -105,15 +132,20 @@ const SECOES = [
     resumo: 'Alertas de estoque baixo e o resumo semanal do desempenho.',
     conteudo: (
       <>
-        <p>
-          O painel avisa quando algo precisa da sua atenção. Os principais avisos são:
-        </p>
+        <p>O painel avisa quando algo precisa da sua atenção. Os principais avisos são:</p>
         <ul className="mt-2 flex flex-col gap-1.5">
-          <li className="flex gap-2"><span className="text-accent-300">Estoque baixo:</span> quando um material atinge o mínimo.</li>
-          <li className="flex gap-2"><span className="text-accent-300">Resumo semanal:</span> balanço do desempenho da semana.</li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Estoque baixo:</span> quando um material atinge o
+            mínimo.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-300">Resumo semanal:</span> balanço do desempenho da
+            semana.
+          </li>
         </ul>
         <p className="mt-3 text-muted">
-          Em <span className="text-accent-300">Notificações → Preferências</span> você escolhe quais avisos quer receber.
+          Em <span className="text-accent-300">Notificações → Preferências</span> você escolhe quais
+          avisos quer receber.
         </p>
       </>
     ),
@@ -129,7 +161,9 @@ function Acordeao({ secao, aberto, onToggle }) {
         aria-expanded={aberto}
         className="w-full flex items-center gap-3 text-left p-4"
       >
-        <div className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${bg}`}>
+        <div
+          className={`w-10 h-10 rounded-md border border-dark-600 flex items-center justify-center shrink-0 ${bg}`}
+        >
           <Icon size={19} className={cor} strokeWidth={1.8} />
         </div>
         <div className="flex-1 min-w-0">

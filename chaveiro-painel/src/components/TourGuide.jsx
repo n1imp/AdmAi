@@ -35,7 +35,7 @@ const TOUR_CSS = `
 }
 .driver-popover.admai-tour button.driver-popover-next-btn:hover,
 .driver-popover.admai-tour button.driver-popover-prev-btn:hover { background: #232833; color: #FFFFFF; }
-.driver-popover.admai-tour button.driver-popover-next-btn { background: #22D3EE; color: #0A0C10; border-color: transparent; }
+.driver-popover.admai-tour button.driver-popover-next-btn { background: #c4b5fd; color: #170b2e; border-color: transparent; }
 .driver-popover.admai-tour button.driver-popover-next-btn:hover { background: #38DDF5; color: #0A0C10; }
 .driver-popover.admai-tour button.driver-popover-close-btn { color: #6B7280; transition: color 0.15s; }
 .driver-popover.admai-tour button.driver-popover-close-btn:hover { color: #FFFFFF; }
@@ -58,68 +58,123 @@ const PASSOS = [
     route: '/',
     popover: {
       title: '👋 Bem-vindo ao AdmAi',
-      description: 'Vou te mostrar em poucos passos como acompanhar seus serviços e finanças, passando por cada aba. Leva menos de um minuto — pode sair quando quiser com Esc.',
+      description:
+        'Vou te mostrar em poucos passos como acompanhar seus serviços e finanças, passando por cada aba. Leva menos de um minuto — pode sair quando quiser com Esc.',
     },
   },
   {
     route: '/',
     element: '[data-tour="periodos"]',
-    popover: { title: 'Filtre por período', description: 'Escolha Hoje, Semana, Mês ou um período personalizado. Todos os números do painel se ajustam.', side: 'bottom', align: 'start' },
+    popover: {
+      title: 'Filtre por período',
+      description:
+        'Escolha Hoje, Semana, Mês ou um período personalizado. Todos os números do painel se ajustam.',
+      side: 'bottom',
+      align: 'start',
+    },
   },
   {
     route: '/',
     element: '[data-tour="kpis"]',
-    popover: { title: 'Seus números principais', description: 'Receita, custo de material, comissões, serviços e ticket médio. As setinhas mostram a variação vs. o período anterior.', side: 'top', align: 'center' },
+    popover: {
+      title: 'Seus números principais',
+      description:
+        'Receita, custo de material, comissões, serviços e ticket médio. As setinhas mostram a variação vs. o período anterior.',
+      side: 'top',
+      align: 'center',
+    },
   },
   {
     route: '/servicos',
     element: 'a[href="/servicos"]',
-    popover: { title: 'Aba Serviços', description: 'Você está agora na aba de Serviços — aqui ficam todos os atendimentos registrados. É de onde sai a receita do painel. Use "Novo" para registrar um.', side: 'right', align: 'start' },
+    popover: {
+      title: 'Aba Serviços',
+      description:
+        'Você está agora na aba de Serviços — aqui ficam todos os atendimentos registrados. É de onde sai a receita do painel. Use "Novo" para registrar um.',
+      side: 'right',
+      align: 'start',
+    },
   },
   {
     route: '/materiais',
     element: 'a[href="/materiais"]',
-    popover: { title: 'Aba Materiais', description: 'Esta é a aba de Materiais/estoque. Cadastre o que usa nos serviços: o custo entra no cálculo do lucro e o estoque baixa automaticamente a cada serviço.', side: 'right', align: 'start' },
+    popover: {
+      title: 'Aba Materiais',
+      description:
+        'Esta é a aba de Materiais/estoque. Cadastre o que usa nos serviços: o custo entra no cálculo do lucro e o estoque baixa automaticamente a cada serviço.',
+      side: 'right',
+      align: 'start',
+    },
   },
   {
     route: '/configuracao/whatsapp',
     element: 'a[href="/configuracao/whatsapp"]',
-    popover: { title: 'Conecte o WhatsApp', description: 'O coração do AdmAi. Aqui você conecta o número da empresa (via QR Code) para registrar serviços e atender clientes direto pelo WhatsApp.', side: 'right', align: 'start' },
+    popover: {
+      title: 'Conecte o WhatsApp',
+      description:
+        'O coração do AdmAi. Aqui você conecta o número da empresa (via QR Code) para registrar serviços e atender clientes direto pelo WhatsApp.',
+      side: 'right',
+      align: 'start',
+    },
   },
   {
     route: '/',
     popover: {
       title: '🎉 Tudo pronto!',
-      description: 'Você já passeou pelas abas principais. Pode rever este tutorial quando quiser pelo botão "Ver tutorial" no cartão de boas-vindas.',
+      description:
+        'Você já passeou pelas abas principais. Pode rever este tutorial quando quiser pelo botão "Ver tutorial" no cartão de boas-vindas.',
     },
   },
 ];
 
-let instanciaAtiva = null;   // evita dois tours simultâneos
-let navegar = null;          // função navigate() do React Router (injetada no startTour)
-let transicionando = false;  // trava enquanto navega/espera o próximo passo
+let instanciaAtiva = null; // evita dois tours simultâneos
+let navegar = null; // função navigate() do React Router (injetada no startTour)
+let transicionando = false; // trava enquanto navega/espera o próximo passo
 
 export function tourJaVisto() {
-  try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch { return true; }
+  try {
+    return localStorage.getItem(STORAGE_KEY) === '1';
+  } catch {
+    return true;
+  }
 }
 function marcarComoVisto() {
-  try { localStorage.setItem(STORAGE_KEY, '1'); } catch { /* modo privado */ }
+  try {
+    localStorage.setItem(STORAGE_KEY, '1');
+  } catch {
+    /* modo privado */
+  }
 }
 
 const rotaAtual = () => (typeof window !== 'undefined' ? window.location.pathname : '/');
 const normRota = (p) => (p || '/').replace(/\/+$/, '') || '/';
 const esperarMs = (ms) => new Promise((r) => setTimeout(r, ms));
+const prefereMovimentoReduzido = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Aguarda um seletor aparecer no DOM (até `timeout`). Resolve mesmo se não achar.
 function esperarElemento(seletor, timeout = 2500) {
   return new Promise((resolve) => {
     if (!seletor) return resolve(false);
-    const achar = () => { try { return document.querySelector(seletor); } catch { return null; } };
+    const achar = () => {
+      try {
+        return document.querySelector(seletor);
+      } catch {
+        return null;
+      }
+    };
     if (achar()) return resolve(true);
     const inicio = Date.now();
     const id = setInterval(() => {
-      if (achar()) { clearInterval(id); resolve(true); }
-      else if (Date.now() - inicio > timeout) { clearInterval(id); resolve(false); }
+      if (achar()) {
+        clearInterval(id);
+        resolve(true);
+      } else if (Date.now() - inicio > timeout) {
+        clearInterval(id);
+        resolve(false);
+      }
     }, 80);
   });
 }
@@ -129,12 +184,19 @@ function irPara(destino) {
   const drv = instanciaAtiva;
   if (!drv || transicionando) return;
   if (destino < 0) return;
-  if (destino >= PASSOS.length) { drv.destroy(); return; } // "Concluir" no último
+  if (destino >= PASSOS.length) {
+    drv.destroy();
+    return;
+  } // "Concluir" no último
 
   const passo = PASSOS[destino];
   const precisaNavegar = normRota(rotaAtual()) !== normRota(passo.route);
   if (precisaNavegar && navegar) {
-    try { navegar(passo.route); } catch { /* router indisponível */ }
+    try {
+      navegar(passo.route);
+    } catch {
+      /* router indisponível */
+    }
   }
 
   transicionando = true;
@@ -161,8 +223,13 @@ export function startTour({ force = false, navigate } = {}) {
 
   garantirEstilos();
   transicionando = false;
+  const movimentoReduzido = prefereMovimentoReduzido();
 
-  const finalizar = () => { marcarComoVisto(); instanciaAtiva = null; transicionando = false; };
+  const finalizar = () => {
+    marcarComoVisto();
+    instanciaAtiva = null;
+    transicionando = false;
+  };
 
   instanciaAtiva = driver({
     showProgress: true,
@@ -171,7 +238,8 @@ export function startTour({ force = false, navigate } = {}) {
     overlayOpacity: 0.72,
     stagePadding: 6,
     stageRadius: 10,
-    smoothScroll: true,
+    animate: !movimentoReduzido,
+    smoothScroll: !movimentoReduzido,
     popoverClass: 'admai-tour',
     progressText: '{{current}} de {{total}}',
     nextBtnText: 'Próximo',
@@ -186,8 +254,19 @@ export function startTour({ force = false, navigate } = {}) {
 
   // Garante que o passo 0 começa na sua rota (normalmente '/').
   const precisaNavInicio = normRota(rotaAtual()) !== normRota(PASSOS[0].route);
-  if (precisaNavInicio && navegar) { try { navegar(PASSOS[0].route); } catch { /* */ } }
-  setTimeout(() => { if (instanciaAtiva) instanciaAtiva.drive(); }, precisaNavInicio ? 450 : 0);
+  if (precisaNavInicio && navegar) {
+    try {
+      navegar(PASSOS[0].route);
+    } catch {
+      /* */
+    }
+  }
+  setTimeout(
+    () => {
+      if (instanciaAtiva) instanciaAtiva.drive();
+    },
+    precisaNavInicio ? 450 : 0
+  );
 }
 
 // Componente opcional sem render (auto-start declarativo fica no efeito do Dashboard).

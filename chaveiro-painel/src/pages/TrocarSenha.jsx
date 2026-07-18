@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { KeyRound, Eye, EyeOff, ShieldCheck, ArrowRight, Loader2, LogOut, Check, X } from 'lucide-react';
+import {
+  KeyRound,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  ArrowRight,
+  Loader2,
+  LogOut,
+  Check,
+  X,
+} from 'lucide-react';
 import api from '../lib/api.js';
 import { avaliarForcaSenha } from '../lib/senha.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -33,21 +43,38 @@ export default function TrocarSenha() {
 
   async function enviar(e) {
     e.preventDefault();
-    if (!pinAtual.trim()) { setErro('Informe o PIN atual.'); return; }
-    if (nova.length < 8) { setErro('A nova senha precisa ter no mínimo 8 caracteres.'); return; }
-    if (!senhasIguais) { setErro('As senhas não coincidem.'); return; }
-    if (!forca.valida) { setErro('A nova senha é muito fraca.'); return; }
-    setCarregando(true); setErro('');
+    if (!pinAtual.trim()) {
+      setErro('Informe o PIN atual.');
+      return;
+    }
+    if (nova.length < 8) {
+      setErro('A nova senha precisa ter no mínimo 8 caracteres.');
+      return;
+    }
+    if (!senhasIguais) {
+      setErro('As senhas não coincidem.');
+      return;
+    }
+    if (!forca.valida) {
+      setErro('A nova senha é muito fraca.');
+      return;
+    }
+    setCarregando(true);
+    setErro('');
     try {
       const { data } = await api.patch('/me/senha', { senhaAtual: pinAtual, novaSenha: nova });
       login(data.token); // novo token já sem o flag de senha provisória
       navigate('/', { replace: true });
     } catch (err) {
       const r = err.response;
-      setErro(r?.data?.erro
-        ? `${r.data.erro}${r.data.requisitos ? ' — ' + Object.values(r.data.requisitos).filter(Boolean).join(', ') : ''}`
-        : 'Não foi possível trocar a senha. Tente novamente.');
-    } finally { setCarregando(false); }
+      setErro(
+        r?.data?.erro
+          ? `${r.data.erro}${r.data.requisitos ? ' — ' + Object.values(r.data.requisitos).filter(Boolean).join(', ') : ''}`
+          : 'Não foi possível trocar a senha. Tente novamente.'
+      );
+    } finally {
+      setCarregando(false);
+    }
   }
 
   function sair() {
@@ -75,7 +102,9 @@ export default function TrocarSenha() {
             <div className="w-12 h-12 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center mb-3">
               <ShieldCheck size={24} className="text-accent-300" />
             </div>
-            <h1 className="font-display font-bold text-lg text-white uppercase tracking-wide">Defina sua senha</h1>
+            <h1 className="font-display font-bold text-lg text-white uppercase tracking-wide">
+              Defina sua senha
+            </h1>
             <p className="text-muted text-sm mt-1">
               Você entrou com um PIN provisório. Crie uma senha definitiva para continuar.
             </p>
@@ -86,7 +115,10 @@ export default function TrocarSenha() {
             <div>
               <label className="kpi-label block mb-1.5">PIN atual (o que você recebeu)</label>
               <div className="relative">
-                <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <KeyRound
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
                 <input
                   type={mostrarPin ? 'text' : 'password'}
                   className="input pl-10 pr-11"
@@ -96,8 +128,11 @@ export default function TrocarSenha() {
                   autoComplete="current-password"
                   autoFocus
                 />
-                <button type="button" onClick={() => setMostrarPin(!mostrarPin)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setMostrarPin(!mostrarPin)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                >
                   {mostrarPin ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
@@ -107,7 +142,10 @@ export default function TrocarSenha() {
             <div>
               <label className="kpi-label block mb-1.5">Nova senha</label>
               <div className="relative">
-                <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <KeyRound
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
                 <input
                   type={mostrarNova ? 'text' : 'password'}
                   className="input pl-10 pr-11"
@@ -116,16 +154,24 @@ export default function TrocarSenha() {
                   onChange={(e) => setNova(e.target.value)}
                   autoComplete="new-password"
                 />
-                <button type="button" onClick={() => setMostrarNova(!mostrarNova)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setMostrarNova(!mostrarNova)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                >
                   {mostrarNova ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="text-[11px] text-muted mt-1.5">Mínimo 8 caracteres, com maiúscula, número e símbolo.</p>
+              <p className="text-[11px] text-muted mt-1.5">
+                Mínimo 8 caracteres, com maiúscula, número e símbolo.
+              </p>
               {nova && (
                 <ul className="flex flex-col gap-1 mt-2">
                   {REQUISITOS.map((r) => (
-                    <li key={r.chave} className={`flex items-center gap-1.5 text-xs ${forca.requisitos[r.chave] ? 'text-success' : 'text-muted'}`}>
+                    <li
+                      key={r.chave}
+                      className={`flex items-center gap-1.5 text-xs ${forca.requisitos[r.chave] ? 'text-success' : 'text-muted'}`}
+                    >
                       {forca.requisitos[r.chave] ? <Check size={12} /> : <X size={12} />}
                       {r.label}
                     </li>
@@ -138,7 +184,10 @@ export default function TrocarSenha() {
             <div>
               <label className="kpi-label block mb-1.5">Confirmar nova senha</label>
               <div className="relative">
-                <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <KeyRound
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
                 <input
                   type={mostrarNova ? 'text' : 'password'}
                   className="input pl-10 pr-11"
@@ -148,13 +197,23 @@ export default function TrocarSenha() {
                   autoComplete="new-password"
                 />
               </div>
-              {confirma && !senhasIguais && <p className="text-danger text-xs mt-1.5">As senhas não coincidem.</p>}
+              {confirma && !senhasIguais && (
+                <p className="text-danger text-xs mt-1.5">As senhas não coincidem.</p>
+              )}
             </div>
 
-            {erro && <p className="text-danger text-sm bg-danger/10 border border-danger/30 rounded-md px-4 py-3">{erro}</p>}
+            {erro && (
+              <p className="text-danger text-sm bg-danger/10 border border-danger/30 rounded-md px-4 py-3">
+                {erro}
+              </p>
+            )}
 
             <button type="submit" disabled={carregando || !podeEnviar} className="btn-primary mt-1">
-              {carregando ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+              {carregando ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <ArrowRight size={16} />
+              )}
               {carregando ? 'Salvando…' : 'Definir senha e entrar'}
             </button>
 

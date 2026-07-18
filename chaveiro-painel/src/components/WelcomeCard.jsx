@@ -33,9 +33,7 @@ export default function WelcomeCard({ onVerTutorial }) {
           <X size={16} />
         </button>
 
-        <h2 className="font-display text-xl font-bold text-white pr-8">
-          Bem-vindo ao AdmAi 👋
-        </h2>
+        <h2 className="font-display text-xl font-bold text-white pr-8">Bem-vindo ao AdmAi 👋</h2>
         <p className="text-muted text-sm mt-1">
           Seus serviços e finanças organizados direto do WhatsApp.
         </p>

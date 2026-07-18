@@ -1,0 +1,156 @@
+/* F5 — rollout da Direção A (Aurora) para o painel autenticado.
+ *
+ * Remapeia as classes de componente e os utilitários de acento legados (ciano/grafite)
+ * para os tokens --panel-* (violeta Aurora) DENTRO de `.panel-ui`. Assim todo o painel
+ * autenticado adota a identidade aprovada de uma vez, e a migração página a página para as
+ * primitives passa a ser refinamento, não pré-requisito visual.
+ *
+ * A landing e as páginas legais NÃO têm `.panel-ui`, então continuam com a identidade
+ * legada (fora do escopo desta fase). O seletor `.panel-ui .x` tem especificidade maior que
+ * o utilitário `.x`, então vence sem `!important`.
+ */
+
+.panel-ui.panel-canvas,
+.panel-ui .bg-dark-900,
+.panel-ui .bg-dark-950 {
+  background-color: var(--panel-canvas);
+}
+
+/* ── Superfícies ─────────────────────────────────────────────────────────── */
+.panel-ui .card {
+  background: var(--panel-surface);
+  border-color: var(--panel-border);
+  border-radius: var(--panel-radius-surface);
+  box-shadow: none;
+}
+
+.panel-ui .card-accent::before {
+  background: var(--panel-brand);
+}
+
+.panel-ui .bg-dark-800 {
+  background-color: var(--panel-surface);
+}
+
+.panel-ui .bg-dark-700 {
+  background-color: var(--panel-surface-raised);
+}
+
+.panel-ui .border-dark-600 {
+  border-color: var(--panel-border);
+}
+
+.panel-ui .border-dark-500 {
+  border-color: var(--panel-border-strong);
+}
+
+/* ── Botões ──────────────────────────────────────────────────────────────── */
+.panel-ui .btn-primary {
+  background: var(--panel-brand-strong);
+  color: var(--panel-brand-ink);
+  box-shadow: none;
+}
+
+.panel-ui .btn-primary:hover {
+  background: var(--panel-text);
+}
+
+.panel-ui .btn-ghost {
+  background: var(--panel-surface-raised);
+  border-color: var(--panel-border);
+  color: var(--panel-text);
+}
+
+.panel-ui .btn-ghost:hover {
+  border-color: var(--panel-brand-strong);
+  background: var(--panel-surface-hover);
+}
+
+/* ── Campos ──────────────────────────────────────────────────────────────── */
+.panel-ui .input {
+  background: var(--panel-canvas-soft);
+  border-color: var(--panel-border-strong);
+}
+
+.panel-ui .input:focus {
+  border-color: var(--panel-brand-strong);
+  box-shadow: 0 0 0 2px rgb(139 92 246 / 30%);
+}
+
+/* ── Badge / rótulos ─────────────────────────────────────────────────────── */
+.panel-ui .badge {
+  border-color: var(--panel-border);
+  background: var(--panel-surface-raised);
+  color: var(--panel-text-soft);
+}
+
+.panel-ui .section-label,
+.panel-ui .kpi-label {
+  color: var(--panel-text-secondary);
+}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+.panel-ui .skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--panel-surface-raised),
+    var(--panel-surface-hover),
+    var(--panel-surface-raised)
+  );
+}
+
+/* ── Acento: ciano → violeta de marca (utilitários mais usados) ──────────── */
+.panel-ui .text-accent-300 {
+  color: var(--panel-brand-strong);
+}
+
+/* Para TEXTO, usa a marca clara (AA em todos os tamanhos: 8–10:1). O `--panel-brand`
+ * escuro (#8b5cf6) é sub-AA para texto normal e fica reservado a bordas/fundos. */
+.panel-ui .text-accent-400 {
+  color: var(--panel-brand-strong);
+}
+
+.panel-ui .bg-accent-400 {
+  background-color: var(--panel-brand-strong);
+}
+
+.panel-ui .border-accent-400 {
+  border-color: var(--panel-brand);
+}
+
+.panel-ui .bg-accent-400\/10 {
+  background-color: rgb(139 92 246 / 10%);
+}
+
+.panel-ui .bg-accent-400\/15 {
+  background-color: rgb(139 92 246 / 15%);
+}
+
+.panel-ui .border-accent-400\/20 {
+  border-color: rgb(139 92 246 / 20%);
+}
+
+.panel-ui .border-accent-400\/30 {
+  border-color: rgb(139 92 246 / 30%);
+}
+
+/* Gradiente do herói (card-accent + from-accent-400/10): ciano → violeta */
+.panel-ui .from-accent-400\/10 {
+  --tw-gradient-from: rgb(139 92 246 / 0.1);
+}
+
+.panel-ui .hover\:text-accent-300:hover,
+.panel-ui .hover\:text-accent-400:hover {
+  color: var(--panel-brand-strong);
+}
+
+.panel-ui .hover\:border-accent-400\/50:hover {
+  border-color: rgb(196 181 253 / 50%);
+}
+
+/* Botão social do login (@apply compõe o ciano no build): hover ciano → violeta,
+ * borda + brilho. `:not(:disabled)` preserva o reset de sombra no estado desabilitado. */
+.panel-ui .btn-social:hover:not(:disabled) {
+  border-color: rgb(139 92 246 / 60%);
+  box-shadow: 0 10px 26px -12px rgb(139 92 246 / 55%);
+}

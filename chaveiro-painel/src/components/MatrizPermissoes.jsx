@@ -77,8 +77,8 @@ export default function MatrizPermissoes({
     <div className="flex flex-col gap-4">
       {bloqueado && (
         <div className="flex items-center gap-2 rounded-md bg-indigo-400/10 border border-indigo-400/20 px-3 py-2 text-xs text-indigo-300">
-          <ShieldCheck size={14} className="shrink-0" />
-          O dono tem acesso total a todos os módulos. Estas permissões não podem ser alteradas.
+          <ShieldCheck size={14} className="shrink-0" />O dono tem acesso total a todos os módulos.
+          Estas permissões não podem ser alteradas.
         </div>
       )}
 
@@ -87,17 +87,26 @@ export default function MatrizPermissoes({
         <p className="kpi-label mb-2 flex items-center gap-1.5">
           {bloqueado && <Lock size={11} />}
           Acesso aos módulos
-          {destacarProprio && <span className="text-muted normal-case font-normal tracking-normal">(desativados para funcionário)</span>}
+          {destacarProprio && (
+            <span className="text-muted normal-case font-normal tracking-normal">
+              (desativados para funcionário)
+            </span>
+          )}
         </p>
         <div className={`flex flex-col gap-2 ${destacarProprio ? 'opacity-60' : ''}`}>
           {modulos.map((modulo) => {
             const acoes = acoesPorModulo[modulo] ?? [];
             return (
               <div key={modulo} className="rounded-md border border-dark-600 bg-dark-700/40 p-3">
-                <p className="text-sm font-medium text-white mb-2">{ROTULO_MODULO[modulo] ?? modulo}</p>
+                <p className="text-sm font-medium text-white mb-2">
+                  {ROTULO_MODULO[modulo] ?? modulo}
+                </p>
                 <div className="flex flex-wrap gap-x-5 gap-y-2.5">
                   {acoes.map((acao) => (
-                    <label key={acao} className="flex items-center gap-2 cursor-pointer select-none">
+                    <label
+                      key={acao}
+                      className="flex items-center gap-2 cursor-pointer select-none"
+                    >
                       <Toggle
                         ligado={Boolean(matriz?.[modulo]?.[acao])}
                         onToggle={() => onToggleModulo(modulo, acao)}
@@ -119,11 +128,17 @@ export default function MatrizPermissoes({
         <p className="kpi-label mb-2 flex items-center gap-1.5">
           <UserCog size={11} />
           Permissões próprias
-          {destacarProprio && <span className="text-accent-300 normal-case font-normal tracking-normal">(foco do funcionário)</span>}
+          {destacarProprio && (
+            <span className="text-accent-300 normal-case font-normal tracking-normal">
+              (foco do funcionário)
+            </span>
+          )}
         </p>
         <div
           className={`rounded-md border p-3 flex flex-col gap-2.5 ${
-            destacarProprio ? 'border-accent-400/30 bg-accent-400/5' : 'border-dark-600 bg-dark-700/40'
+            destacarProprio
+              ? 'border-accent-400/30 bg-accent-400/5'
+              : 'border-dark-600 bg-dark-700/40'
           }`}
         >
           {capacidadesProprio.map((cap) => (

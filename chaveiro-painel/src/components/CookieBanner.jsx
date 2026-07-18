@@ -35,10 +35,16 @@ export default function CookieBanner() {
             <Cookie size={17} className="text-accent-300" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium">Usamos cookies para manter sua sessão e melhorar o produto.</p>
+            <p className="text-white text-sm font-medium">
+              Usamos cookies para manter sua sessão e melhorar o produto.
+            </p>
             <p className="text-muted text-xs mt-0.5">
-              Cookies necessários são essenciais para o funcionamento do painel. Os demais (analíticos e suporte) são opcionais.{' '}
-              <Link to="/cookies" className="text-accent-300 hover:text-accent-200 transition-colors">
+              Cookies necessários são essenciais para o funcionamento do painel. Os demais
+              (analíticos e suporte) são opcionais.{' '}
+              <Link
+                to="/cookies"
+                className="text-accent-300 hover:text-accent-200 transition-colors"
+              >
                 Saiba mais
               </Link>
             </p>

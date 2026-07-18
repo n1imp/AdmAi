@@ -72,7 +72,10 @@ export function AuthProvider({ children }) {
     if (tokenExpirado()) {
       logout();
     }
-    const aoSair = () => { setUser(null); setPermissoes(null); };
+    const aoSair = () => {
+      setUser(null);
+      setPermissoes(null);
+    };
     window.addEventListener('admai:logout', aoSair);
     return () => window.removeEventListener('admai:logout', aoSair);
   }, []);
@@ -80,12 +83,22 @@ export function AuthProvider({ children }) {
   // Carrega as permissões efetivas quando há sessão (e não está em senha provisória,
   // caso em que o backend bloquearia a rota). Refaz ao trocar de usuário.
   useEffect(() => {
-    if (!user || user.senhaProvisoria) { setPermissoes(null); return; }
+    if (!user || user.senhaProvisoria) {
+      setPermissoes(null);
+      return;
+    }
     let vivo = true;
-    api.get('/me/permissoes')
-      .then(({ data }) => { if (vivo) setPermissoes(data.permissoes ?? {}); })
-      .catch(() => { if (vivo) setPermissoes({}); });
-    return () => { vivo = false; };
+    api
+      .get('/me/permissoes')
+      .then(({ data }) => {
+        if (vivo) setPermissoes(data.permissoes ?? {});
+      })
+      .catch(() => {
+        if (vivo) setPermissoes({});
+      });
+    return () => {
+      vivo = false;
+    };
   }, [user?.id, user?.senhaProvisoria]);
 
   // Identifica o usuário no PostHog quando logado (consent-gated dentro do hook).
