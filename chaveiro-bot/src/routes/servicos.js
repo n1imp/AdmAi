@@ -10,7 +10,7 @@ import { contemInsensivel } from '../utils/busca.js';
 import { construirFiltroPeriodo, construirFiltroPeriodoAnterior } from '../services/periodo.js';
 import { diaLocal } from '../services/ponto.js';
 import { env } from '../config/env.js';
-import { capturarErro } from '../config/sentry.js';
+import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -563,7 +563,10 @@ router.get('/gestor/indicadores', requirePermissao('dashboard', 'ver'), async (r
       avaliacoes: { media, total: aval._count },
     });
   } catch (erro) {
-    logger.error('Erro GET /gestor/indicadores', { erro: erro.message });
+    logger.error('Erro GET /gestor/indicadores', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'gestor-indicadores',
       userId: req.user?.id,
@@ -599,7 +602,10 @@ router.get('/me/servico-atual', recursoServicoAtual, async (req, res) => {
     });
     res.json({ servico: servico ?? null });
   } catch (erro) {
-    logger.error('Erro GET /me/servico-atual', { erro: erro.message });
+    logger.error('Erro GET /me/servico-atual', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'servico-atual',
       userId: req.user?.id,
@@ -639,7 +645,10 @@ router.post('/servicos/:id/iniciar', recursoServicoAtual, async (req, res) => {
     const servico = await req.db.servico.findFirst({ where: { id }, include: incluiTecnico });
     res.json({ servico });
   } catch (erro) {
-    logger.error('Erro POST /servicos/:id/iniciar', { erro: erro.message });
+    logger.error('Erro POST /servicos/:id/iniciar', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'servico-atual',
       userId: req.user?.id,
@@ -662,7 +671,10 @@ router.post('/servicos/:id/concluir', recursoServicoAtual, async (req, res) => {
     const servico = await req.db.servico.findFirst({ where: { id }, include: incluiTecnico });
     res.json({ servico });
   } catch (erro) {
-    logger.error('Erro POST /servicos/:id/concluir', { erro: erro.message });
+    logger.error('Erro POST /servicos/:id/concluir', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'servico-atual',
       userId: req.user?.id,

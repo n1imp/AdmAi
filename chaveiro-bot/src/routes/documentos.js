@@ -25,7 +25,7 @@ import {
   removerImagem,
 } from '../services/storage.js';
 import { env } from '../config/env.js';
-import { capturarErro } from '../config/sentry.js';
+import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -77,7 +77,7 @@ router.get('/me/documentos', recursoDocumentos, async (req, res) => {
     });
     res.json({ documentos: docs.map(saida) });
   } catch (erro) {
-    logger.error('Erro GET /me/documentos', { erro: erro.message });
+    logger.error('Erro GET /me/documentos', { erro: erro.message, [JA_ENVIADO_AO_SENTRY]: true });
     capturarErro(erro, {
       feature: 'documentos',
       userId: req.user?.id,
@@ -123,7 +123,7 @@ router.post('/me/documentos', recursoDocumentos, async (req, res) => {
     });
     res.status(201).json({ documento: saida(doc) });
   } catch (erro) {
-    logger.error('Erro POST /me/documentos', { erro: erro.message });
+    logger.error('Erro POST /me/documentos', { erro: erro.message, [JA_ENVIADO_AO_SENTRY]: true });
     capturarErro(erro, {
       feature: 'documentos',
       userId: req.user?.id,
@@ -157,7 +157,10 @@ router.get('/me/documentos/:id/arquivo', recursoDocumentos, async (req, res) => 
     res.type(doc.mime);
     return res.sendFile(caminho);
   } catch (erro) {
-    logger.error('Erro GET /me/documentos/:id/arquivo', { erro: erro.message });
+    logger.error('Erro GET /me/documentos/:id/arquivo', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'documentos',
       userId: req.user?.id,
@@ -193,7 +196,10 @@ router.delete('/me/documentos/:id', recursoDocumentos, async (req, res) => {
     }
     res.json({ removido: true, id });
   } catch (erro) {
-    logger.error('Erro DELETE /me/documentos/:id', { erro: erro.message });
+    logger.error('Erro DELETE /me/documentos/:id', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'documentos',
       userId: req.user?.id,
