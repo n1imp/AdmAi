@@ -22,6 +22,7 @@ import {
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
+import { capturarErro } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -585,6 +586,61 @@ router.post('/me/logout-all', async (req, res) => {
     res.json({ mensagem: 'Todas as sessões foram encerradas' });
   } catch (erro) {
     logger.error('Erro POST /me/logout-all', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── F9/M5: preferências de UI do usuário (dashboard) — sync cross-device ──────────
+// Persistência server-side das prefs de widget do dashboard (ordem/visibilidade). O painel
+// usa localStorage como cache offline e sincroniza por aqui. Escopado ao PRÓPRIO usuário
+// (req.user.id); Usuario não é tenant-scoped, então usa o prisma base com filtro por id.
+// Aditivo: sem prefs salvas, GET devolve dashboard=null e o painel cai nos defaults locais.
+const prefsDashboardSchema = z.object({
+  ordem: z.array(z.string().min(1).max(64)).max(50).default([]),
+  ocultos: z.array(z.string().min(1).max(64)).max(50).default([]),
+});
+
+router.get('/me/preferencias/dashboard', async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { preferencias: true },
+    });
+    const dashboard = usuario?.preferencias?.dashboard ?? null;
+    res.json({ dashboard });
+  } catch (erro) {
+    logger.error('Erro GET /me/preferencias/dashboard', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'preferencias',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+    });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.put('/me/preferencias/dashboard', async (req, res) => {
+  try {
+    const parse = prefsDashboardSchema.safeParse(req.body ?? {});
+    if (!parse.success)
+      return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    // Merge preservando outros namespaces de `preferencias` (só substitui .dashboard).
+    const atual = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { preferencias: true },
+    });
+    const base =
+      atual?.preferencias && typeof atual.preferencias === 'object' ? atual.preferencias : {};
+    const preferencias = { ...base, dashboard: parse.data };
+    await prisma.usuario.update({ where: { id: req.user.id }, data: { preferencias } });
+    res.json({ dashboard: parse.data });
+  } catch (erro) {
+    logger.error('Erro PUT /me/preferencias/dashboard', { erro: erro.message });
+    capturarErro(erro, {
+      feature: 'preferencias',
+      userId: req.user?.id,
+      empresaId: req.user?.empresaId,
+    });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });
