@@ -34,7 +34,14 @@ export async function agendarAvaliacao({ empresaId, servicoId, clienteTelefone, 
 
     const aval = await prisma.avaliacao.upsert({
       where: { servicoId },
-      create: { empresaId, servicoId, clienteTelefone, clienteNome: clienteNome ?? null, status: 'pendente', agendadoPara },
+      create: {
+        empresaId,
+        servicoId,
+        clienteTelefone,
+        clienteNome: clienteNome ?? null,
+        status: 'pendente',
+        agendadoPara,
+      },
       update: {}, // já existe → mantém
     });
     logger.info('Avaliação agendada', { empresaId, servicoId, agendadoPara });
@@ -70,7 +77,11 @@ export async function dispararAvaliacoesPendentes(agora = new Date()) {
         });
         continue;
       }
-      const texto = montarMensagemSolicitacao(aval.clienteNome, cfg?.reviewLink, cfg?.reviewTemplate);
+      const texto = montarMensagemSolicitacao(
+        aval.clienteNome,
+        cfg?.reviewLink,
+        cfg?.reviewTemplate
+      );
       await enviarMensagem(aval.clienteTelefone, texto);
       await prisma.avaliacao.update({
         where: { id: aval.id },
@@ -82,7 +93,8 @@ export async function dispararAvaliacoesPendentes(agora = new Date()) {
       // permanece "pendente" para nova tentativa no próximo ciclo
     }
   }
-  if (enviadas > 0) logger.info('Avaliações enviadas', { enviadas, totalPendentes: pendentes.length });
+  if (enviadas > 0)
+    logger.info('Avaliações enviadas', { enviadas, totalPendentes: pendentes.length });
   return enviadas;
 }
 
@@ -111,20 +123,26 @@ export async function tentarCapturarResposta(telefone, texto) {
   if (nota == null) {
     return {
       capturado: true,
-      resposta: `🙏 Para avaliar, responda com um número de *1 a 5*.\n` +
-        `1 = muito ruim, 5 = excelente.`,
+      resposta:
+        `🙏 Para avaliar, responda com um número de *1 a 5*.\n` + `1 = muito ruim, 5 = excelente.`,
     };
   }
 
   await prisma.avaliacao.update({
     where: { id: aval.id },
-    data: { nota, status: 'respondida', respondidoEm: new Date(), comentario: texto.trim().slice(0, 500) },
+    data: {
+      nota,
+      status: 'respondida',
+      respondidoEm: new Date(),
+      comentario: texto.trim().slice(0, 500),
+    },
   });
   logger.info('Avaliação respondida', { avaliacaoId: aval.id, nota });
 
-  const agradecimento = nota >= 4
-    ? `⭐ Muito obrigado pela nota *${nota}*! Ficamos felizes em atender você. 💙`
-    : `Obrigado pela sua nota *${nota}*. Sua opinião nos ajuda a melhorar. 🙏`;
+  const agradecimento =
+    nota >= 4
+      ? `⭐ Muito obrigado pela nota *${nota}*! Ficamos felizes em atender você. 💙`
+      : `Obrigado pela sua nota *${nota}*. Sua opinião nos ajuda a melhorar. 🙏`;
   return { capturado: true, resposta: agradecimento };
 }
 

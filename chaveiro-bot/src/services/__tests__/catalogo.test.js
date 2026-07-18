@@ -45,10 +45,16 @@ describe('similaridade', () => {
 
 describe('parsearItemMaterial', () => {
   it('quantidade padrão 1 quando não informada', () => {
-    expect(parsearItemMaterial('Fechadura Tetra')).toEqual({ nome: 'Fechadura Tetra', quantidade: 1 });
+    expect(parsearItemMaterial('Fechadura Tetra')).toEqual({
+      nome: 'Fechadura Tetra',
+      quantidade: 1,
+    });
   });
   it('formato "Nome xN"', () => {
-    expect(parsearItemMaterial('Fechadura Tetra x2')).toEqual({ nome: 'Fechadura Tetra', quantidade: 2 });
+    expect(parsearItemMaterial('Fechadura Tetra x2')).toEqual({
+      nome: 'Fechadura Tetra',
+      quantidade: 2,
+    });
   });
   it('formato "Nome - N"', () => {
     expect(parsearItemMaterial('Espelho - 3')).toEqual({ nome: 'Espelho', quantidade: 3 });
@@ -90,8 +96,22 @@ describe('resolverMateriaisDoServico (com client Prisma mockado)', () => {
   const client = {
     material: {
       findMany: async () => [
-        { id: 1, nome: 'Fechadura Tetra', precoUnit: 50, precoVenda: 80, unidade: 'un', quantidadeAtual: 10 },
-        { id: 2, nome: 'Espelho', precoUnit: 10, precoVenda: 18, unidade: 'un', quantidadeAtual: 5 },
+        {
+          id: 1,
+          nome: 'Fechadura Tetra',
+          precoUnit: 50,
+          precoVenda: 80,
+          unidade: 'un',
+          quantidadeAtual: 10,
+        },
+        {
+          id: 2,
+          nome: 'Espelho',
+          precoUnit: 10,
+          precoVenda: 18,
+          unidade: 'un',
+          quantidadeAtual: 5,
+        },
       ],
     },
   };

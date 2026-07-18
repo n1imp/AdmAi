@@ -52,13 +52,74 @@ describe('GET /api/dashboard — equivalência de valor (aggregate + groupBy, F3
 
     await prisma.servico.createMany({
       data: [
-        { ...sBase, empresaId, tecnicoId: ana1.id, local: 'Centro', valorCobrado: 120, valorMaterial: 20, valorLiquido: 100, comissaoGerada: 10, criadoEm: dia10 },
-        { ...sBase, empresaId, tecnicoId: bruno.id, local: 'Centro', valorCobrado: 250, valorMaterial: 50, valorLiquido: 200, comissaoGerada: 40, criadoEm: dia10 },
-        { ...sBase, empresaId, tecnicoId: bruno.id, local: 'Zona Sul', valorCobrado: 60, valorMaterial: 10, valorLiquido: 50, comissaoGerada: 5, criadoEm: dia11 },
-        { ...sBase, empresaId, tecnicoId: ana2.id, local: 'Zona Sul', valorCobrado: 40, valorMaterial: 10, valorLiquido: 30, comissaoGerada: 3, criadoEm: dia11 },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: ana1.id,
+          local: 'Centro',
+          valorCobrado: 120,
+          valorMaterial: 20,
+          valorLiquido: 100,
+          comissaoGerada: 10,
+          criadoEm: dia10,
+        },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: bruno.id,
+          local: 'Centro',
+          valorCobrado: 250,
+          valorMaterial: 50,
+          valorLiquido: 200,
+          comissaoGerada: 40,
+          criadoEm: dia10,
+        },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: bruno.id,
+          local: 'Zona Sul',
+          valorCobrado: 60,
+          valorMaterial: 10,
+          valorLiquido: 50,
+          comissaoGerada: 5,
+          criadoEm: dia11,
+        },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: ana2.id,
+          local: 'Zona Sul',
+          valorCobrado: 40,
+          valorMaterial: 10,
+          valorLiquido: 30,
+          comissaoGerada: 3,
+          criadoEm: dia11,
+        },
         // Excluídos: pendente e fora da janela.
-        { ...sBase, empresaId, tecnicoId: bruno.id, local: 'Centro', valorCobrado: 999, valorMaterial: 0, valorLiquido: 999, comissaoGerada: 999, status: 'pendente', criadoEm: dia10 },
-        { ...sBase, empresaId, tecnicoId: ana1.id, local: 'Centro', valorCobrado: 500, valorMaterial: 0, valorLiquido: 500, comissaoGerada: 50, criadoEm: foraJanela },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: bruno.id,
+          local: 'Centro',
+          valorCobrado: 999,
+          valorMaterial: 0,
+          valorLiquido: 999,
+          comissaoGerada: 999,
+          status: 'pendente',
+          criadoEm: dia10,
+        },
+        {
+          ...sBase,
+          empresaId,
+          tecnicoId: ana1.id,
+          local: 'Centro',
+          valorCobrado: 500,
+          valorMaterial: 0,
+          valorLiquido: 500,
+          comissaoGerada: 50,
+          criadoEm: foraJanela,
+        },
       ],
     });
 
@@ -79,8 +140,24 @@ describe('GET /api/dashboard — equivalência de valor (aggregate + groupBy, F3
 
     // porTecnico: "Ana" colapsa ana1+ana2; ordenado por receitaLiquida desc.
     expect(res.body.porTecnico).toEqual([
-      { tecnico: 'Bruno', servicos: 2, receitaBruta: 310, receitaLiquida: 250, comissao: 45, percentualReceita: 65.8, ticketMedio: 125 },
-      { tecnico: 'Ana', servicos: 2, receitaBruta: 160, receitaLiquida: 130, comissao: 13, percentualReceita: 34.2, ticketMedio: 65 },
+      {
+        tecnico: 'Bruno',
+        servicos: 2,
+        receitaBruta: 310,
+        receitaLiquida: 250,
+        comissao: 45,
+        percentualReceita: 65.8,
+        ticketMedio: 125,
+      },
+      {
+        tecnico: 'Ana',
+        servicos: 2,
+        receitaBruta: 160,
+        receitaLiquida: 130,
+        comissao: 13,
+        percentualReceita: 34.2,
+        ticketMedio: 65,
+      },
     ]);
 
     // porLocal: ordenado por receita desc.

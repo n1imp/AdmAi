@@ -44,9 +44,15 @@ function clienteStorage() {
  * migração idempotente de mídia legada (backfill), onde re-executar deve ser inócuo.
  * @returns {Promise<string>} URL pública do objeto.
  */
-export async function uploadImagem(bucket, nomeArquivo, buffer, contentType, { upsert = false } = {}) {
-  const { error } = await clienteStorage().storage
-    .from(bucket)
+export async function uploadImagem(
+  bucket,
+  nomeArquivo,
+  buffer,
+  contentType,
+  { upsert = false } = {}
+) {
+  const { error } = await clienteStorage()
+    .storage.from(bucket)
     .upload(nomeArquivo, buffer, { contentType, upsert });
   if (error) throw new Error(`Falha no upload para ${bucket}/${nomeArquivo}: ${error.message}`);
   const { data } = clienteStorage().storage.from(bucket).getPublicUrl(nomeArquivo);
@@ -58,9 +64,15 @@ export async function uploadImagem(bucket, nomeArquivo, buffer, contentType, { u
  * o chamador decide o fallback. Usado para mídia sensível (selfies de ponto, LGPD).
  * `upsert` (default false) idem `uploadImagem`: sobrescreve no backfill idempotente.
  */
-export async function uploadPrivado(bucket, nomeArquivo, buffer, contentType, { upsert = false } = {}) {
-  const { error } = await clienteStorage().storage
-    .from(bucket)
+export async function uploadPrivado(
+  bucket,
+  nomeArquivo,
+  buffer,
+  contentType,
+  { upsert = false } = {}
+) {
+  const { error } = await clienteStorage()
+    .storage.from(bucket)
     .upload(nomeArquivo, buffer, { contentType, upsert });
   if (error) throw new Error(`Falha no upload privado ${bucket}/${nomeArquivo}: ${error.message}`);
 }
@@ -71,7 +83,9 @@ export async function uploadPrivado(bucket, nomeArquivo, buffer, contentType, { 
  */
 export async function urlAssinada(bucket, nomeArquivo, expiraSegundos = 60) {
   try {
-    const { data, error } = await clienteStorage().storage.from(bucket).createSignedUrl(nomeArquivo, expiraSegundos);
+    const { data, error } = await clienteStorage()
+      .storage.from(bucket)
+      .createSignedUrl(nomeArquivo, expiraSegundos);
     if (error) return null;
     return data.signedUrl;
   } catch {
@@ -82,7 +96,8 @@ export async function urlAssinada(bucket, nomeArquivo, expiraSegundos = 60) {
 /** Remove um objeto do bucket (best-effort; loga aviso em falha, não lança). */
 export async function removerImagem(bucket, nomeArquivo) {
   const { error } = await clienteStorage().storage.from(bucket).remove([nomeArquivo]);
-  if (error) logger.warn('Falha ao remover do storage', { bucket, nomeArquivo, erro: error.message });
+  if (error)
+    logger.warn('Falha ao remover do storage', { bucket, nomeArquivo, erro: error.message });
 }
 
 /**
@@ -100,11 +115,20 @@ export async function uploadComFallback(bucket, nomeArquivo, buffer, contentType
     try {
       return await uploadImagem(bucket, nomeArquivo, buffer, contentType);
     } catch (erro) {
-      if (storageEstrito()) throw new Error(`Upload para ${bucket}/${nomeArquivo} falhou e STORAGE_STRICT proíbe o fallback pro disco: ${erro.message}`);
-      logger.warn('Storage indisponível no upload; caindo para disco', { bucket, nomeArquivo, erro: erro.message });
+      if (storageEstrito())
+        throw new Error(
+          `Upload para ${bucket}/${nomeArquivo} falhou e STORAGE_STRICT proíbe o fallback pro disco: ${erro.message}`
+        );
+      logger.warn('Storage indisponível no upload; caindo para disco', {
+        bucket,
+        nomeArquivo,
+        erro: erro.message,
+      });
     }
   } else if (storageEstrito()) {
-    throw new Error('STORAGE_STRICT=true exige object storage configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY ausentes).');
+    throw new Error(
+      'STORAGE_STRICT=true exige object storage configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY ausentes).'
+    );
   }
   await mkdir(uploadsDir, { recursive: true });
   await writeFile(path.join(uploadsDir, nomeArquivo), buffer);

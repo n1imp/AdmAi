@@ -42,9 +42,15 @@ export async function registrarServico(dados) {
         msgOriginal: dados.msgOriginal,
         remetenteWpp: dados.remetenteWpp,
         // Vínculo serviço ↔ produtos do catálogo consumidos
-        materiais: itensCatalogo.length > 0
-          ? { create: itensCatalogo.map((i) => ({ materialId: i.materialId, quantidade: i.quantidade })) }
-          : undefined,
+        materiais:
+          itensCatalogo.length > 0
+            ? {
+                create: itensCatalogo.map((i) => ({
+                  materialId: i.materialId,
+                  quantidade: i.quantidade,
+                })),
+              }
+            : undefined,
       },
       include: { tecnico: true },
     });
@@ -56,9 +62,7 @@ export async function registrarServico(dados) {
   };
 
   // Tudo numa transação quando há materiais (serviço + vínculos + baixa atômicos)
-  const servico = itensCatalogo.length > 0
-    ? await prisma.$transaction(criar)
-    : await criar(prisma);
+  const servico = itensCatalogo.length > 0 ? await prisma.$transaction(criar) : await criar(prisma);
 
   logger.info('Serviço registrado', {
     id: servico.id,

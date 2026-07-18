@@ -23,7 +23,13 @@ async function enviar({ to, subject, html, text }) {
     return;
   }
   try {
-    await breakerEmail(() => comTimeout(resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text }), 15000, 'resend.send'));
+    await breakerEmail(() =>
+      comTimeout(
+        resend.emails.send({ from: env.FROM_EMAIL, to, subject, html, text }),
+        15000,
+        'resend.send'
+      )
+    );
     logger.info('email_enviado', { to, subject });
   } catch (e) {
     logger.warn('email_falha', { to, subject, erro: e.message });
@@ -70,12 +76,15 @@ export async function enviarEmailVerificacao(usuario, token) {
   await enviar({
     to: usuario.email,
     subject: 'Verifique seu e-mail — AdmAi',
-    html: layout('Verifique seu e-mail', `
+    html: layout(
+      'Verifique seu e-mail',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Clique no botão abaixo para verificar seu e-mail e ativar sua conta.</p>
       <a href="${link}" class="btn">Verificar e-mail</a>
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">Link válido por 24 horas. Se não foi você, ignore este e-mail.</p>
-    `),
+    `
+    ),
     text: `Olá ${usuario.nome},\n\nVerifique seu e-mail acessando: ${link}\n\nLink válido por 24 horas.`,
   });
 }
@@ -84,12 +93,15 @@ export async function enviarEmailBoasVindas(usuario) {
   await enviar({
     to: usuario.email,
     subject: 'Bem-vindo ao AdmAi! 🎉',
-    html: layout('Bem-vindo!', `
+    html: layout(
+      'Bem-vindo!',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Sua conta foi verificada com sucesso. Agora você pode aproveitar todos os recursos do AdmAi.</p>
       <a href="${baseUrl()}" class="btn">Acessar o painel</a>
       <p style="margin-top:24px">Comece configurando seu WhatsApp para registrar serviços automaticamente.</p>
-    `),
+    `
+    ),
     text: `Bem-vindo ao AdmAi, ${usuario.nome}!\n\nAcesse o painel: ${baseUrl()}`,
   });
 }
@@ -99,14 +111,17 @@ export async function enviarEmailResetSenha(usuario, token) {
   await enviar({
     to: usuario.email,
     subject: 'Redefinição de senha — AdmAi',
-    html: layout('Redefinição de senha', `
+    html: layout(
+      'Redefinição de senha',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Recebemos uma solicitação de redefinição de senha para sua conta.</p>
       <a href="${link}" class="btn">Redefinir senha</a>
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">
         Link válido por 1 hora. Se não foi você, sua senha continua protegida — ignore este e-mail.
       </p>
-    `),
+    `
+    ),
     text: `Redefinição de senha AdmAi:\n\n${link}\n\nVálido por 1 hora.`,
   });
 }
@@ -117,11 +132,14 @@ export async function enviarEmailConvite(email, empresa, papel, token) {
   await enviar({
     to: email,
     subject: `Você foi convidado para ${empresa} — AdmAi`,
-    html: layout('Convite de equipe', `
+    html: layout(
+      'Convite de equipe',
+      `
       <p>Você foi convidado para entrar na empresa <strong>${empresa}</strong> como <strong>${papelLabel}</strong>.</p>
       <a href="${link}" class="btn">Aceitar convite</a>
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">Convite válido por 48 horas.</p>
-    `),
+    `
+    ),
     text: `Você foi convidado para ${empresa} (${papelLabel}).\n\nAcesse: ${link}\n\nVálido por 48 horas.`,
   });
 }
@@ -130,12 +148,15 @@ export async function enviarEmailRecibo(usuario, valorFmt, planoNome) {
   await enviar({
     to: usuario.email,
     subject: `Pagamento confirmado — ${planoNome} — AdmAi`,
-    html: layout('Pagamento confirmado', `
+    html: layout(
+      'Pagamento confirmado',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Seu pagamento de <strong>${valorFmt}</strong> para o plano <strong>${planoNome}</strong> foi confirmado.</p>
       <p>Sua assinatura foi renovada com sucesso.</p>
       <a href="${baseUrl()}/configuracao/billing" class="btn">Ver minha assinatura</a>
-    `),
+    `
+    ),
     text: `Pagamento confirmado: ${valorFmt} — ${planoNome}.\n\nAdmAi: ${baseUrl()}`,
   });
 }
@@ -144,7 +165,9 @@ export async function enviarEmailOnboardingDia1(usuario) {
   await enviar({
     to: usuario.email,
     subject: 'Conecte seu WhatsApp — AdmAi',
-    html: layout('Configure seu WhatsApp', `
+    html: layout(
+      'Configure seu WhatsApp',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Você ainda não conectou seu WhatsApp ao AdmAi. É ele que captura os serviços automaticamente.</p>
       <p>Leva menos de 2 minutos:</p>
@@ -154,7 +177,8 @@ export async function enviarEmailOnboardingDia1(usuario) {
         <li>Escolha o grupo que receberá os resumos</li>
       </ol>
       <a href="${baseUrl()}/configuracao/whatsapp" class="btn">Conectar agora</a>
-    `),
+    `
+    ),
     text: `Olá ${usuario.nome},\n\nConecte seu WhatsApp em: ${baseUrl()}/configuracao/whatsapp`,
   });
 }
@@ -163,7 +187,9 @@ export async function enviarEmailOnboardingDia3(usuario) {
   await enviar({
     to: usuario.email,
     subject: 'Dica: como registrar seu primeiro serviço — AdmAi',
-    html: layout('Registre seu primeiro serviço', `
+    html: layout(
+      'Registre seu primeiro serviço',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Você sabia que pode registrar serviços direto pelo WhatsApp? Basta o técnico enviar uma mensagem no formato:</p>
       <div style="background:#0f172a;border-radius:8px;padding:16px;margin:16px 0;font-family:monospace;font-size:13px;color:#94a3b8">
@@ -174,7 +200,8 @@ export async function enviarEmailOnboardingDia3(usuario) {
       </div>
       <p>O AdmAi lê, extrai e registra automaticamente. Sem digitação no painel.</p>
       <a href="${baseUrl()}/ajuda" class="btn">Ver guia completo</a>
-    `),
+    `
+    ),
     text: `Olá ${usuario.nome},\n\nVeja como registrar serviços: ${baseUrl()}/ajuda`,
   });
 }
@@ -183,7 +210,9 @@ export async function enviarEmailOnboardingDia7(usuario) {
   await enviar({
     to: usuario.email,
     subject: 'Uma semana com AdmAi — como está indo?',
-    html: layout('Como está indo?', `
+    html: layout(
+      'Como está indo?',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Faz uma semana que você criou sua conta no AdmAi. Esperamos que esteja sendo útil!</p>
       <p>Funcionalidades que você pode ainda não ter explorado:</p>
@@ -196,7 +225,8 @@ export async function enviarEmailOnboardingDia7(usuario) {
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">
         Dúvidas? Responda este e-mail ou acesse <a href="${baseUrl()}/ajuda" style="color:#6366f1">suporte</a>.
       </p>
-    `),
+    `
+    ),
     text: `Olá ${usuario.nome},\n\nComo está indo? Explore o painel: ${baseUrl()}`,
   });
 }
@@ -206,12 +236,15 @@ export async function enviarEmailMagicLink(usuario, token) {
   await enviar({
     to: usuario.email,
     subject: 'Seu link de acesso — AdmAi',
-    html: layout('Link de acesso', `
+    html: layout(
+      'Link de acesso',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Clique no botão abaixo para entrar no AdmAi sem precisar de senha.</p>
       <a href="${link}" class="btn">Entrar agora</a>
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">Link válido por 15 minutos e de uso único. Se não foi você, ignore este e-mail.</p>
-    `),
+    `
+    ),
     text: `Acesse AdmAi: ${link}\n\nVálido por 15 minutos.`,
   });
 }
@@ -220,7 +253,9 @@ export async function enviarEmailFalhaPagamento(usuario) {
   await enviar({
     to: usuario.email,
     subject: 'Falha no pagamento — Ação necessária — AdmAi',
-    html: layout('Falha no pagamento', `
+    html: layout(
+      'Falha no pagamento',
+      `
       <p>Olá, <strong>${usuario.nome}</strong>!</p>
       <p>Não conseguimos processar o pagamento da sua assinatura AdmAi.</p>
       <p>Atualize seu método de pagamento para continuar usando o serviço.</p>
@@ -228,7 +263,8 @@ export async function enviarEmailFalhaPagamento(usuario) {
       <p style="margin-top:24px;font-size:13px;color:#94a3b8">
         Você tem um período de graça de 7 dias antes que o acesso seja suspenso.
       </p>
-    `),
+    `
+    ),
     text: `Falha no pagamento AdmAi. Atualize em: ${baseUrl()}/configuracao/billing`,
   });
 }

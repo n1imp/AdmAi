@@ -4,7 +4,7 @@ import { conferirMagicBytes } from '../upload.js';
 // 1x1 PNG transparente (mesma fixture do e2e) — assinatura PNG real.
 const PNG_1x1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-  'base64',
+  'base64'
 );
 
 describe('conferirMagicBytes', () => {
@@ -23,5 +23,11 @@ describe('conferirMagicBytes', () => {
     expect(conferirMagicBytes(Buffer.from([0x89, 0x50]), 'image/png')).toBe(false);
     expect(conferirMagicBytes('nope', 'image/png')).toBe(false);
     expect(conferirMagicBytes(PNG_1x1, 'application/zip')).toBe(false);
+  });
+
+  it('aceita PDF real (%PDF-) e rejeita não-PDF declarado como pdf (F9/M4)', () => {
+    const pdf = Buffer.from('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', 'latin1');
+    expect(conferirMagicBytes(pdf, 'application/pdf')).toBe(true);
+    expect(conferirMagicBytes(PNG_1x1, 'application/pdf')).toBe(false);
   });
 });

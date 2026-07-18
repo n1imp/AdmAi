@@ -13,7 +13,7 @@ export async function limparBanco() {
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
       "ServicoMaterial","MovimentacaoEstoque","Pagamento","Avaliacao",
-      "SessaoConversa","Notificacao","Servico","Material","Tecnico",
+      "SessaoConversa","Notificacao","DocumentoTecnico","Servico","Material","Tecnico",
       "Usuario","EmpresaWhatsapp","Empresa"
     CASCADE;
   `);
@@ -46,6 +46,36 @@ export async function criarEmpresaComAdmin(request, app, sufixo = '') {
     throw new Error(`Falha ao criar empresa/admin: ${res.status} ${JSON.stringify(res.body)}`);
   }
   return { token: res.body.token, empresaId: res.body.empresaId, userId: res.body.id };
+}
+
+/**
+ * Cria um técnico COM acesso ao painel, faz login por telefone+PIN e troca a senha
+ * provisória — devolvendo um FUNCIONÁRIO pronto (self-scope) para exercitar /me/*.
+ * @returns {Promise<{ tecnicoId: number, token: string, telefone: string }>}
+ */
+export async function criarFuncionarioComAcesso(
+  request,
+  app,
+  tokenDono,
+  { nome = 'Func', telefone, comissao = 20 } = {}
+) {
+  const tel = telefone ?? '5521' + String(Date.now()).slice(-9);
+  const resTec = await request(app)
+    .post('/api/tecnicos')
+    .set('Authorization', `Bearer ${tokenDono}`)
+    .send({ nome, telefone: tel, comissao, criarAcesso: true });
+  if (resTec.status !== 201) {
+    throw new Error(`Falha ao criar técnico: ${resTec.status} ${JSON.stringify(resTec.body)}`);
+  }
+  const pin = resTec.body.acesso.pin;
+  const resLogin = await request(app)
+    .post('/api/auth/login')
+    .send({ telefone: tel, password: pin });
+  const resTroca = await request(app)
+    .patch('/api/me/senha')
+    .set('Authorization', `Bearer ${resLogin.body.token}`)
+    .send({ senhaAtual: pin, novaSenha: 'NovaSenhaForte1!' });
+  return { tecnicoId: resTec.body.id, token: resTroca.body.token, telefone: tel };
 }
 
 export { prisma };

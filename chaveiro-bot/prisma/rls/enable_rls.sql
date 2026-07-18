@@ -37,7 +37,7 @@ DECLARE
   t text;
   tabelas text[] := ARRAY[
     'Tecnico', 'Servico', 'Material', 'Pagamento',
-    'EmpresaWhatsapp', 'Avaliacao', 'RegistroPonto'
+    'EmpresaWhatsapp', 'Avaliacao', 'RegistroPonto', 'DocumentoTecnico'
   ];
 BEGIN
   FOREACH t IN ARRAY tabelas LOOP
@@ -146,7 +146,7 @@ COMMIT;
 --   DO $$
 --   DECLARE t text;
 --     tabelas text[] := ARRAY['Tecnico','Servico','Material','Pagamento','EmpresaWhatsapp',
---       'Avaliacao','RegistroPonto','BatidaPonto','MovimentacaoEstoque','ServicoMaterial','Notificacao'];
+--       'Avaliacao','RegistroPonto','DocumentoTecnico','BatidaPonto','MovimentacaoEstoque','ServicoMaterial','Notificacao'];
 --   BEGIN
 --     FOREACH t IN ARRAY tabelas LOOP
 --       EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I;', t);

@@ -3,7 +3,12 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma.js';
-import { gerarJWT, gerarRefreshTokenRaw, hashRefreshToken, dataExpiracaoRefresh } from '../services/auth.js';
+import {
+  gerarJWT,
+  gerarRefreshTokenRaw,
+  hashRefreshToken,
+  dataExpiracaoRefresh,
+} from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { verificarCodigo, decifrarSegredo } from '../services/totp.js';
@@ -11,7 +16,12 @@ import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../se
 import { canonizarTelefone, variantesTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { verificarIdToken, provedoresHabilitados, OAuthError } from '../services/oauth.js';
-import { enviarEmailVerificacao, enviarEmailBoasVindas, enviarEmailResetSenha, enviarEmailMagicLink } from '../services/email.js';
+import {
+  enviarEmailVerificacao,
+  enviarEmailBoasVindas,
+  enviarEmailResetSenha,
+  enviarEmailMagicLink,
+} from '../services/email.js';
 import { agendarSequencia } from '../services/onboarding.js';
 import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
@@ -20,10 +30,14 @@ import { logger } from '../utils/logger.js';
 const router = Router();
 
 async function gerarSlugEmpresa(nome) {
-  const base = nome
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    .slice(0, 40) || 'empresa';
+  const base =
+    nome
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'empresa';
   let slug = base;
   let n = 1;
   while (await prisma.empresa.findUnique({ where: { slug } })) slug = `${base}-${n++}`;
@@ -31,11 +45,15 @@ async function gerarSlugEmpresa(nome) {
 }
 
 async function gerarUsernameUnico(base) {
-  const limpo = String(base || '')
-    .split('@')[0]
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
-    .slice(0, 24) || 'usuario';
+  const limpo =
+    String(base || '')
+      .split('@')[0]
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 24) || 'usuario';
   let username = limpo;
   let n = 1;
   while (await prisma.usuario.findUnique({ where: { username } })) username = `${limpo}_${n++}`;
@@ -51,7 +69,9 @@ const COOKIE_OPTS = {
 async function emitirRefreshCookie(res, usuarioId) {
   const raw = gerarRefreshTokenRaw();
   const tokenHash = hashRefreshToken(raw);
-  await prisma.refreshToken.create({ data: { tokenHash, usuarioId, expiraEm: dataExpiracaoRefresh() } });
+  await prisma.refreshToken.create({
+    data: { tokenHash, usuarioId, expiraEm: dataExpiracaoRefresh() },
+  });
   res.cookie('refresh_token', raw, {
     ...COOKIE_OPTS,
     secure: env.NODE_ENV === 'production',
@@ -81,7 +101,10 @@ async function responderSessao(res, usuario, via) {
 }
 
 function gerarDesafio2fa(userId) {
-  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '5m' });
+  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: '5m',
+  });
 }
 
 function verificarDesafio2fa(desafio) {
@@ -96,35 +119,47 @@ const OTP_REENVIO_MS = 5 * 60_000;
 async function gerarEEnviarOtp(userId, telefone) {
   const agora = Date.now();
   const anterior = ultimoOtpEnviado.get(userId);
-  if (anterior && agora - anterior < OTP_REENVIO_MS) { logger.info('otp_reenvio_throttled', { userId }); return; }
+  if (anterior && agora - anterior < OTP_REENVIO_MS) {
+    logger.info('otp_reenvio_throttled', { userId });
+    return;
+  }
   ultimoOtpEnviado.set(userId, agora);
   const codigo = await definirOtpTelefone(userId);
   const destino = canonizarTelefone(telefone);
   if (destino) {
-    await enviarMensagem(destino, `🔑 Seu código de verificação ADMAI é *${codigo}* (válido por 10 minutos).`)
-      .catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
+    await enviarMensagem(
+      destino,
+      `🔑 Seu código de verificação ADMAI é *${codigo}* (válido por 10 minutos).`
+    ).catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
   }
 }
 
 const registerSchema = z.object({
-  nome:        z.string().min(2),
+  nome: z.string().min(2),
   nomeEmpresa: z.string().min(2),
-  username:    z.string().min(3).regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
-  email:       z.string().email(),
-  telefone:    z.string().min(8).max(20),
-  senha:       z.string().min(8),
+  username: z
+    .string()
+    .min(3)
+    .regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
+  email: z.string().email(),
+  telefone: z.string().min(8).max(20),
+  senha: z.string().min(8),
 });
 
 const PROVEDORES_VALIDOS = new Set(['google', 'microsoft', 'apple']);
 const oauthSchema = z.object({ idToken: z.string().min(1), nonce: z.string().min(1).optional() });
 
 router.post('/auth/login', async (req, res) => {
-  const schema = z.object({
-    username: z.string().min(1).optional(),
-    telefone: z.string().min(1).optional(),
-    usuarioId: z.number().int().positive().optional(),
-    password: z.string().min(1),
-  }).refine((d) => d.username || d.telefone || d.usuarioId, { message: 'Informe usuário ou telefone' });
+  const schema = z
+    .object({
+      username: z.string().min(1).optional(),
+      telefone: z.string().min(1).optional(),
+      usuarioId: z.number().int().positive().optional(),
+      password: z.string().min(1),
+    })
+    .refine((d) => d.username || d.telefone || d.usuarioId, {
+      message: 'Informe usuário ou telefone',
+    });
   const parse = schema.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
 
@@ -146,26 +181,50 @@ router.post('/auth/login', async (req, res) => {
         : [];
       if (candidatos.length > 1) {
         logger.info('login_desambiguacao', { telefone: '***', n: candidatos.length });
-        return res.json({ desambiguacao: candidatos.map((c) => ({ usuarioId: c.id, empresa: c.empresa?.nome ?? '—' })) });
+        return res.json({
+          desambiguacao: candidatos.map((c) => ({
+            usuarioId: c.id,
+            empresa: c.empresa?.nome ?? '—',
+          })),
+        });
       }
       usuario = candidatos[0] ?? null;
     }
-    if (!usuario) { logger.info('login_failure', { ref, motivo: 'user_not_found' }); return res.status(401).json({ erro: 'Credenciais inválidas' }); }
-    if (!usuario.ativo) { logger.info('login_failure', { ref, motivo: 'user_inactive' }); return res.status(401).json({ erro: 'Usuário inativo' }); }
+    if (!usuario) {
+      logger.info('login_failure', { ref, motivo: 'user_not_found' });
+      return res.status(401).json({ erro: 'Credenciais inválidas' });
+    }
+    if (!usuario.ativo) {
+      logger.info('login_failure', { ref, motivo: 'user_inactive' });
+      return res.status(401).json({ erro: 'Usuário inativo' });
+    }
     if (!usuario.senhaHash) {
       logger.info('login_failure', { ref, motivo: 'sem_senha_social' });
-      return res.status(401).json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
+      return res
+        .status(401)
+        .json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
     }
     const senhaCorreta = await bcrypt.compare(password, usuario.senhaHash);
-    if (!senhaCorreta) { logger.info('login_failure', { ref, motivo: 'invalid_password' }); return res.status(401).json({ erro: 'Credenciais inválidas' }); }
+    if (!senhaCorreta) {
+      logger.info('login_failure', { ref, motivo: 'invalid_password' });
+      return res.status(401).json({ erro: 'Credenciais inválidas' });
+    }
     if (usuario.twoFactorAtivo && usuario.totpSecret) {
       logger.info('login_2fa_required', { userId: usuario.id, metodo: 'totp' });
-      return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id), metodo: 'totp' });
+      return res.json({
+        twoFactorRequerido: true,
+        desafio: gerarDesafio2fa(usuario.id),
+        metodo: 'totp',
+      });
     }
     if (usuario.phone2faAtivo && usuario.telefone) {
       await gerarEEnviarOtp(usuario.id, usuario.telefone);
       logger.info('login_2fa_required', { userId: usuario.id, metodo: 'telefone' });
-      return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id), metodo: 'telefone' });
+      return res.json({
+        twoFactorRequerido: true,
+        desafio: gerarDesafio2fa(usuario.id),
+        metodo: 'telefone',
+      });
     }
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
@@ -178,17 +237,27 @@ router.post('/auth/login', async (req, res) => {
 });
 
 router.post('/auth/login/2fa', async (req, res) => {
-  const parse = z.object({ desafio: z.string().min(1), codigo: z.string().min(1) }).safeParse(req.body);
+  const parse = z
+    .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
+    .safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
   try {
     let payload;
-    try { payload = verificarDesafio2fa(parse.data.desafio); } catch { return res.status(401).json({ erro: 'Desafio inválido ou expirado' }); }
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
     const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
-    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario || !usuario.ativo)
+      return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
     if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
     const segredo = decifrarSegredo(usuario.totpSecret);
     const ok = await verificarCodigo(segredo, parse.data.codigo);
-    if (!ok) { logger.info('login_2fa_failure', { userId: usuario.id }); return res.status(400).json({ erro: 'Código inválido' }); }
+    if (!ok) {
+      logger.info('login_2fa_failure', { userId: usuario.id });
+      return res.status(400).json({ erro: 'Código inválido' });
+    }
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa' });
@@ -200,14 +269,22 @@ router.post('/auth/login/2fa', async (req, res) => {
 });
 
 router.post('/auth/login/2fa-telefone', async (req, res) => {
-  const parse = z.object({ desafio: z.string().min(1), codigo: z.string().min(1) }).safeParse(req.body);
+  const parse = z
+    .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
+    .safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
   try {
     let payload;
-    try { payload = verificarDesafio2fa(parse.data.desafio); } catch { return res.status(401).json({ erro: 'Desafio inválido ou expirado' }); }
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
     const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
-    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
-    if (!usuario.phone2faAtivo) return res.status(400).json({ erro: '2FA por telefone não está ativo' });
+    if (!usuario || !usuario.ativo)
+      return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario.phone2faAtivo)
+      return res.status(400).json({ erro: '2FA por telefone não está ativo' });
     if (!validarOtpTelefone(usuario, parse.data.codigo)) {
       logger.info('login_2fa_telefone_failure', { userId: usuario.id });
       return res.status(400).json({ erro: 'Código inválido ou expirado' });
@@ -230,11 +307,15 @@ router.post('/setup', async (req, res) => {
     const schema = z.object({
       nome: z.string().min(2),
       nomeEmpresa: z.string().min(2),
-      username: z.string().min(3).regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
+      username: z
+        .string()
+        .min(3)
+        .regex(/^[a-zA-Z0-9_]+$/, 'Apenas letras, números e _'),
       senha: z.string().min(6),
     });
     const parse = schema.safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    if (!parse.success)
+      return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const { nome, nomeEmpresa, username, senha } = parse.data;
     const senhaHash = await bcrypt.hash(senha, 12);
     const slug = await gerarSlugEmpresa(nomeEmpresa);
@@ -258,10 +339,12 @@ router.post('/setup', async (req, res) => {
 
 router.post('/auth/register', async (req, res) => {
   const parse = registerSchema.safeParse(req.body);
-  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+  if (!parse.success)
+    return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
   const { nome, nomeEmpresa, username, email, telefone, senha } = parse.data;
   const forca = avaliarForcaSenha(senha);
-  if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
+  if (!forca.valida)
+    return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
   const senhaHash = await bcrypt.hash(senha, 12);
   const telefoneCanonico = canonizarTelefone(telefone);
   try {
@@ -270,14 +353,38 @@ router.post('/auth/register', async (req, res) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
       return tx.usuario.create({
-        data: { nome, username, email, telefone: telefoneCanonico, senhaHash, admin: true, papel: 'dono', empresaId: empresa.id },
-        select: { id: true, nome: true, username: true, email: true, telefone: true, admin: true, ativo: true, telefoneVerificado: true, empresaId: true, criadoEm: true },
+        data: {
+          nome,
+          username,
+          email,
+          telefone: telefoneCanonico,
+          senhaHash,
+          admin: true,
+          papel: 'dono',
+          empresaId: empresa.id,
+        },
+        select: {
+          id: true,
+          nome: true,
+          username: true,
+          email: true,
+          telefone: true,
+          admin: true,
+          ativo: true,
+          telefoneVerificado: true,
+          empresaId: true,
+          criadoEm: true,
+        },
       });
     });
     await gerarEEnviarOtp(usuario.id, telefoneCanonico);
 
     if (usuario.email) {
-      const tokenEmail = jwt.sign({ sub: usuario.id, tipo: 'email_verify', email: usuario.email }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+      const tokenEmail = jwt.sign(
+        { sub: usuario.id, tipo: 'email_verify', email: usuario.email },
+        env.JWT_SECRET,
+        { algorithm: 'HS256', expiresIn: '24h' }
+      );
       enviarEmailVerificacao(usuario, tokenEmail).catch(() => {});
       agendarSequencia(usuario.id, usuario.email, usuario.nome).catch(() => {});
     }
@@ -301,7 +408,12 @@ const authLimiter = (() => {
   return async (req, res, next) => {
     if (!_limiter) {
       const { rateLimit } = await import('express-rate-limit');
-      _limiter = rateLimit({ windowMs: 15 * 60_000, limit: 5, standardHeaders: true, legacyHeaders: false });
+      _limiter = rateLimit({
+        windowMs: 15 * 60_000,
+        limit: 5,
+        standardHeaders: true,
+        legacyHeaders: false,
+      });
     }
     return _limiter(req, res, next);
   };
@@ -313,7 +425,10 @@ router.post('/auth/recuperar-senha', authLimiter, async (req, res) => {
   try {
     const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
     if (usuario && usuario.email) {
-      const token = jwt.sign({ sub: usuario.id, tipo: 'password_reset' }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
+      const token = jwt.sign({ sub: usuario.id, tipo: 'password_reset' }, env.JWT_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '1h',
+      });
       enviarEmailResetSenha(usuario, token).catch(() => {});
     }
     // Sempre retorna OK para evitar user enumeration
@@ -325,7 +440,9 @@ router.post('/auth/recuperar-senha', authLimiter, async (req, res) => {
 });
 
 router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
-  const parse = z.object({ token: z.string().min(1), novaSenha: z.string().min(8) }).safeParse(req.body);
+  const parse = z
+    .object({ token: z.string().min(1), novaSenha: z.string().min(8) })
+    .safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
   try {
     let payload;
@@ -347,7 +464,8 @@ router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
 
     const { avaliarForcaSenha } = await import('../services/senha.js');
     const forca = avaliarForcaSenha(parse.data.novaSenha);
-    if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
+    if (!forca.valida)
+      return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
 
     const bcrypt = await import('bcryptjs');
     const senhaHash = await bcrypt.default.hash(parse.data.novaSenha, 12);
@@ -395,7 +513,11 @@ router.post('/auth/email/reenviar', async (req, res) => {
   try {
     const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
     if (usuario && !usuario.emailVerificado && usuario.email) {
-      const token = jwt.sign({ sub: usuario.id, tipo: 'email_verify', email: usuario.email }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+      const token = jwt.sign(
+        { sub: usuario.id, tipo: 'email_verify', email: usuario.email },
+        env.JWT_SECRET,
+        { algorithm: 'HS256', expiresIn: '24h' }
+      );
       enviarEmailVerificacao(usuario, token).catch(() => {});
     }
     return res.json({ enviado: true });
@@ -408,10 +530,20 @@ router.post('/auth/email/reenviar', async (req, res) => {
 router.get('/convite/:token', async (req, res) => {
   const tokenHash = createHash('sha256').update(req.params.token).digest('hex');
   try {
-    const convite = await prisma.conviteUsuario.findFirst({ where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } } });
+    const convite = await prisma.conviteUsuario.findFirst({
+      where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } },
+    });
     if (!convite) return res.status(404).json({ erro: 'Convite inválido ou expirado' });
-    const empresa = await prisma.empresa.findUnique({ where: { id: convite.empresaId }, select: { nome: true } });
-    res.json({ email: convite.email, papel: convite.papel, empresa: empresa?.nome ?? '', convidadoPor: convite.nomeConvidadoPor });
+    const empresa = await prisma.empresa.findUnique({
+      where: { id: convite.empresaId },
+      select: { nome: true },
+    });
+    res.json({
+      email: convite.email,
+      papel: convite.papel,
+      empresa: empresa?.nome ?? '',
+      convidadoPor: convite.nomeConvidadoPor,
+    });
   } catch (erro) {
     logger.error('Erro GET /convite/:token', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -420,18 +552,48 @@ router.get('/convite/:token', async (req, res) => {
 
 router.post('/convite/:token/aceitar', async (req, res) => {
   const tokenHash = createHash('sha256').update(req.params.token).digest('hex');
-  const parse = z.object({ nome: z.string().min(2), username: z.string().min(3).regex(/^[a-zA-Z0-9_]+$/), senha: z.string().min(8) }).safeParse(req.body);
-  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+  const parse = z
+    .object({
+      nome: z.string().min(2),
+      username: z
+        .string()
+        .min(3)
+        .regex(/^[a-zA-Z0-9_]+$/),
+      senha: z.string().min(8),
+    })
+    .safeParse(req.body);
+  if (!parse.success)
+    return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
   try {
-    const convite = await prisma.conviteUsuario.findFirst({ where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } } });
+    const convite = await prisma.conviteUsuario.findFirst({
+      where: { tokenHash, aceitoEm: null, expiraEm: { gt: new Date() } },
+    });
     if (!convite) return res.status(404).json({ erro: 'Convite inválido ou expirado' });
     const forca = avaliarForcaSenha(parse.data.senha);
-    if (!forca.valida) return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
+    if (!forca.valida)
+      return res.status(400).json({ erro: 'Senha muito fraca', requisitos: forca.requisitos });
     const senhaHash = await bcrypt.hash(parse.data.senha, 12);
     const usuario = await prisma.$transaction(async (tx) => {
       const novo = await tx.usuario.create({
-        data: { nome: parse.data.nome, username: parse.data.username, email: convite.email, senhaHash, papel: convite.papel, admin: convite.papel === 'dono', emailVerificado: true, empresaId: convite.empresaId },
-        select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true, senhaProvisoria: true },
+        data: {
+          nome: parse.data.nome,
+          username: parse.data.username,
+          email: convite.email,
+          senhaHash,
+          papel: convite.papel,
+          admin: convite.papel === 'dono',
+          emailVerificado: true,
+          empresaId: convite.empresaId,
+        },
+        select: {
+          id: true,
+          nome: true,
+          username: true,
+          admin: true,
+          papel: true,
+          empresaId: true,
+          senhaProvisoria: true,
+        },
       });
       await tx.conviteUsuario.update({ where: { id: convite.id }, data: { aceitoEm: new Date() } });
       return novo;
@@ -441,7 +603,8 @@ router.post('/convite/:token/aceitar', async (req, res) => {
     const token = gerarJWT(usuario);
     res.status(201).json(payloadSessao(usuario, token));
   } catch (erro) {
-    if (erro.code === 'P2002') return res.status(409).json({ erro: 'Username ou e-mail já em uso' });
+    if (erro.code === 'P2002')
+      return res.status(409).json({ erro: 'Username ou e-mail já em uso' });
     logger.error('Erro POST /convite/:token/aceitar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
@@ -452,7 +615,10 @@ router.post('/auth/refresh', async (req, res) => {
   if (!raw) return res.status(401).json({ erro: 'Refresh token ausente' });
   try {
     const tokenHash = hashRefreshToken(raw);
-    const registro = await prisma.refreshToken.findUnique({ where: { tokenHash }, include: { usuario: true } });
+    const registro = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { usuario: true },
+    });
     if (!registro || registro.expiraEm < new Date()) {
       res.clearCookie('refresh_token', { ...COOKIE_OPTS });
       return res.status(401).json({ erro: 'Sessão expirada' });
@@ -489,7 +655,10 @@ router.post('/auth/magic-link', authLimiter, async (req, res) => {
   try {
     const usuario = await prisma.usuario.findUnique({ where: { email: parse.data.email } });
     if (usuario && usuario.ativo && usuario.email) {
-      const token = jwt.sign({ sub: usuario.id, tipo: 'magic_link' }, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '15m' });
+      const token = jwt.sign({ sub: usuario.id, tipo: 'magic_link' }, env.JWT_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '15m',
+      });
       enviarEmailMagicLink(usuario, token).catch(() => {});
     }
     return res.json({ enviado: true });
@@ -531,7 +700,8 @@ router.get('/auth/providers', (req, res) => {
 
 router.post('/auth/oauth/:provedor', async (req, res) => {
   const provedor = String(req.params.provedor || '').toLowerCase();
-  if (!PROVEDORES_VALIDOS.has(provedor)) return res.status(404).json({ erro: 'Provedor não suportado' });
+  if (!PROVEDORES_VALIDOS.has(provedor))
+    return res.status(404).json({ erro: 'Provedor não suportado' });
   const parse = oauthSchema.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
 
@@ -542,7 +712,12 @@ router.post('/auth/oauth/:provedor', async (req, res) => {
     if (erro instanceof OAuthError) {
       logger.info('oauth_falha', { provedor, codigo: erro.codigo });
       const status = erro.status === 404 ? 404 : 400;
-      return res.status(status).json({ erro: status === 404 ? 'Provedor indisponível' : 'Não foi possível validar o login social. Tente novamente.' });
+      return res.status(status).json({
+        erro:
+          status === 404
+            ? 'Provedor indisponível'
+            : 'Não foi possível validar o login social. Tente novamente.',
+      });
     }
     logger.error('Erro verificar ID token', { provedor, erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });
@@ -562,7 +737,9 @@ router.post('/auth/oauth/:provedor', async (req, res) => {
       const existente = await prisma.usuario.findUnique({ where: { email } });
       if (existente) {
         if (!existente.ativo) return res.status(403).json({ erro: 'Usuário inativo' });
-        await prisma.contaSocial.create({ data: { usuarioId: existente.id, provedor, provedorSub: sub, email } });
+        await prisma.contaSocial.create({
+          data: { usuarioId: existente.id, provedor, provedorSub: sub, email },
+        });
         logger.info('oauth_vinculo_email', { userId: existente.id, provedor });
         return responderSessao(res, existente, `oauth:${provedor}`);
       }
@@ -575,15 +752,27 @@ router.post('/auth/oauth/:provedor', async (req, res) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
       const novo = await tx.usuario.create({
-        data: { nome, username, email: emailConfiavel, senhaHash: null, admin: true, papel: 'dono', empresaId: empresa.id, emailVerificado: Boolean(emailConfiavel) },
+        data: {
+          nome,
+          username,
+          email: emailConfiavel,
+          senhaHash: null,
+          admin: true,
+          papel: 'dono',
+          empresaId: empresa.id,
+          emailVerificado: Boolean(emailConfiavel),
+        },
       });
-      await tx.contaSocial.create({ data: { usuarioId: novo.id, provedor, provedorSub: sub, email: email ?? null } });
+      await tx.contaSocial.create({
+        data: { usuarioId: novo.id, provedor, provedorSub: sub, email: email ?? null },
+      });
       return novo;
     });
     logger.info('oauth_cadastro', { userId: usuario.id, provedor });
     return responderSessao(res, usuario, `oauth:${provedor}`);
   } catch (erro) {
-    if (erro.code === 'P2002') return res.status(409).json({ erro: 'Conflito ao criar a conta. Tente novamente.' });
+    if (erro.code === 'P2002')
+      return res.status(409).json({ erro: 'Conflito ao criar a conta. Tente novamente.' });
     logger.error('Erro POST /auth/oauth', { provedor, erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });
   }

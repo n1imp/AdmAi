@@ -6,8 +6,13 @@ import { logger } from '../utils/logger.js';
 import { uploadComFallback } from './storage.js';
 import { normalizarTelefone } from './parser.js';
 import {
-  processarMensagemPrivada, carregarSessao, ehGatilho, ehGatilhoPonto,
-  iniciarRegistro, iniciarSelecaoEmpresa, tratarSelecaoEmpresa,
+  processarMensagemPrivada,
+  carregarSessao,
+  ehGatilho,
+  ehGatilhoPonto,
+  iniciarRegistro,
+  iniciarSelecaoEmpresa,
+  tratarSelecaoEmpresa,
 } from './conversa.js';
 import { resolverRemetente } from './identidade.js';
 import { registrarPonto } from './ponto.js';
@@ -40,7 +45,8 @@ export async function rotearMensagemInbound(evento) {
   // bot fica inerte (o webhook ainda responde 200, mas nenhum evento é processado).
   // Toda a estrutura (Evolution, conversa, ponto/serviço via chat) segue pronta para
   // religar só virando a flag.
-  if (env.WHATSAPP_HABILITADO !== 'true') return { tratado: false, ignorado: 'whatsapp_desabilitado' };
+  if (env.WHATSAPP_HABILITADO !== 'true')
+    return { tratado: false, ignorado: 'whatsapp_desabilitado' };
 
   const msg = extrairMensagem(evento);
   if (!msg) return { tratado: false };
@@ -61,7 +67,9 @@ export async function rotearMensagemInbound(evento) {
   const responder = (texto) => enviarMensagem(jid, texto);
 
   // Foto: se a mensagem trouxe imagem em base64, salva e gera URL pública
-  const imagemUrl = msg.imagemBase64 ? await salvarFotoBase64(msg.imagemBase64, msg.mimetype) : null;
+  const imagemUrl = msg.imagemBase64
+    ? await salvarFotoBase64(msg.imagemBase64, msg.mimetype)
+    : null;
 
   // 1) Há uma sessão ativa por este telefone? Continua o fluxo dela.
   const sessao = await carregarSessao(jid);
@@ -91,7 +99,9 @@ export async function rotearMensagemInbound(evento) {
     // Ponto é por pessoa; se o telefone está em N empresas, usa a 1ª (determinístico).
     const v = vinculosPonto[0];
     const { resposta } = await registrarPonto({
-      empresaId: v.empresaId, tecnicoId: v.tecnicoId, agora: new Date(),
+      empresaId: v.empresaId,
+      tecnicoId: v.tecnicoId,
+      agora: new Date(),
     });
     await responder(resposta);
     return { tratado: true };
@@ -107,7 +117,7 @@ export async function rotearMensagemInbound(evento) {
     if (gatilho) {
       await responder(
         `⚠️ Seu número ainda não está cadastrado.\n` +
-        `Crie sua conta no painel ou peça ao administrador para cadastrá-lo como técnico.`
+          `Crie sua conta no painel ou peça ao administrador para cadastrá-lo como técnico.`
       );
       return { tratado: true };
     }
@@ -120,8 +130,10 @@ export async function rotearMensagemInbound(evento) {
   if (vinculos.length === 1) {
     const v = vinculos[0];
     return iniciarRegistro({
-      jid, empresaId: v.empresaId,
-      tecnico: { id: v.tecnicoId, nome: v.tecnicoNome }, responder,
+      jid,
+      empresaId: v.empresaId,
+      tecnico: { id: v.tecnicoId, nome: v.tecnicoNome },
+      responder,
     });
   }
 
@@ -137,20 +149,26 @@ export async function rotearMensagemInbound(evento) {
 async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, responder) {
   const tecnico = await prisma.tecnico.findUnique({ where: { id: tecnicoId } });
   if (!tecnico) {
-    await responder(`⚠️ Não encontrei seu cadastro de técnico. Peça ao administrador para verificar.`);
+    await responder(
+      `⚠️ Não encontrei seu cadastro de técnico. Peça ao administrador para verificar.`
+    );
     throw new Error('técnico não encontrado ao concluir registro');
   }
   // Resolve materiais no catálogo (mesma regra do fluxo de grupo)
-  let itens = [], naoEncontrados = [], valorMaterial = 0;
+  let itens = [],
+    naoEncontrados = [],
+    valorMaterial = 0;
   if (dados.material) {
     const r = await resolverMateriaisDoServico(dados.material, empresaId);
-    itens = r.itens; naoEncontrados = r.naoEncontrados; valorMaterial = r.valorMaterialTotal;
+    itens = r.itens;
+    naoEncontrados = r.naoEncontrados;
+    valorMaterial = r.valorMaterialTotal;
   }
   if (naoEncontrados.length > 0) {
     const lista = naoEncontrados.map((n) => `• ${n}`).join('\n');
     await responder(
       `⚠️ Não registrei o serviço.\nMateriais fora do catálogo:\n${lista}\n\n` +
-      `Cadastre-os no app (tela *Materiais*) e mande *serviço* de novo.`
+        `Cadastre-os no app (tela *Materiais*) e mande *serviço* de novo.`
     );
     throw new Error('material fora do catálogo');
   }
@@ -158,7 +176,8 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
   const valorCobrado = Number(dados.valorCobrado);
   const valorLiquido = valorCobrado - valorMaterial;
   const comissaoGerada = valorLiquido * ((tecnico?.comissao ?? 0) / 100);
-  const materialTexto = itens.length > 0 ? itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ') : null;
+  const materialTexto =
+    itens.length > 0 ? itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ') : null;
 
   const servico = await registrarServico({
     empresaId,
@@ -192,17 +211,27 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
   // Confirma ao técnico no privado
   await responder(
     `✅ Serviço registrado com sucesso!\n` +
-    `💵 Líquido: ${formatarMoeda(valorLiquido)}` +
-    (tecnico?.comissao > 0 ? `\n🤝 Sua comissão: ${formatarMoeda(comissaoGerada)}` : '') +
-    `\n\nA avaliação será enviada ao cliente automaticamente. Obrigado!`
+      `💵 Líquido: ${formatarMoeda(valorLiquido)}` +
+      (tecnico?.comissao > 0 ? `\n🤝 Sua comissão: ${formatarMoeda(comissaoGerada)}` : '') +
+      `\n\nA avaliação será enviada ao cliente automaticamente. Obrigado!`
   );
 
   // Posta o resumo no grupo escolhido pela empresa (se configurado)
   const cfg = await prisma.empresaWhatsapp.findUnique({
-    where: { empresaId }, select: { grupoJid: true },
+    where: { empresaId },
+    select: { grupoJid: true },
   });
   if (cfg?.grupoJid) {
-    const resumo = montarResumoGrupo({ tecnico, dados, valorCobrado, valorMaterial, valorLiquido, comissaoGerada, itens, servico });
+    const resumo = montarResumoGrupo({
+      tecnico,
+      dados,
+      valorCobrado,
+      valorMaterial,
+      valorLiquido,
+      comissaoGerada,
+      itens,
+      servico,
+    });
     await enviarMensagem(cfg.grupoJid, resumo).catch((e) =>
       logger.warn('Falha ao postar resumo no grupo', { empresaId, erro: e.message })
     );
@@ -210,14 +239,28 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
     logger.info('Sem grupo configurado — resumo não postado', { empresaId });
   }
 
-  logger.info('Serviço registrado via conversa privada', { empresaId, servicoId: servico.id, tecnicoId: tecnico.id });
+  logger.info('Serviço registrado via conversa privada', {
+    empresaId,
+    servicoId: servico.id,
+    tecnicoId: tecnico.id,
+  });
   return servico;
 }
 
-function montarResumoGrupo({ tecnico, dados, valorCobrado, valorMaterial, valorLiquido, comissaoGerada, itens, servico }) {
-  const linhasMateriais = itens.length > 0
-    ? itens.map((i) => `   • ${i.quantidade}x ${i.nome} — ${formatarMoeda(i.valorTotal)}`)
-    : [];
+function montarResumoGrupo({
+  tecnico,
+  dados,
+  valorCobrado,
+  valorMaterial,
+  valorLiquido,
+  comissaoGerada,
+  itens,
+  servico,
+}) {
+  const linhasMateriais =
+    itens.length > 0
+      ? itens.map((i) => `   • ${i.quantidade}x ${i.nome} — ${formatarMoeda(i.valorTotal)}`)
+      : [];
   return [
     `✅ *SERVIÇO CONCLUÍDO*`,
     `👷 Técnico: ${tecnico.nome}`,
@@ -229,10 +272,14 @@ function montarResumoGrupo({ tecnico, dados, valorCobrado, valorMaterial, valorL
     `🔧 Material: ${formatarMoeda(valorMaterial)}`,
     ...linhasMateriais,
     `💵 Líquido: ${formatarMoeda(valorLiquido)}`,
-    tecnico.comissao > 0 ? `🤝 Comissão (${tecnico.comissao}%): ${formatarMoeda(comissaoGerada)}` : null,
+    tecnico.comissao > 0
+      ? `🤝 Comissão (${tecnico.comissao}%): ${formatarMoeda(comissaoGerada)}`
+      : null,
     dados.foto ? `📷 Foto de evidência anexada` : null,
     `🕐 ${formatarData(servico.criadoEm)}`,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 // ── Extração do payload Evolution v2 ──────────────────────────────────────────
@@ -252,7 +299,7 @@ function extrairMensagem(evento) {
 
   const img = message.imageMessage;
   // Com base64:true, a Evolution inclui o conteúdo em base64 no próprio item
-  const imagemBase64 = img ? (item.message?.base64 || item.base64 || null) : null;
+  const imagemBase64 = img ? item.message?.base64 || item.base64 || null : null;
 
   return {
     id: item.key.id ?? null,
@@ -269,7 +316,13 @@ async function salvarFotoBase64(base64, mimetype) {
     const buffer = Buffer.from(base64, 'base64');
     const ext = (mimetype?.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
     const nomeArquivo = `${randomUUID()}.${ext}`;
-    return await uploadComFallback('inbound', nomeArquivo, buffer, mimetype || 'image/jpeg', UPLOADS_DIR);
+    return await uploadComFallback(
+      'inbound',
+      nomeArquivo,
+      buffer,
+      mimetype || 'image/jpeg',
+      UPLOADS_DIR
+    );
   } catch (erro) {
     logger.warn('Falha ao salvar foto inbound', { erro: erro.message });
     return null;

@@ -48,13 +48,16 @@ function tratarErro(contexto, erro) {
  */
 export async function enviarTexto({ phoneNumberId, accessToken, to, texto }) {
   try {
-    const { data } = await http(accessToken).post(`/${encodeURIComponent(phoneNumberId)}/messages`, {
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to,
-      type: 'text',
-      text: { preview_url: false, body: texto },
-    });
+    const { data } = await http(accessToken).post(
+      `/${encodeURIComponent(phoneNumberId)}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'text',
+        text: { preview_url: false, body: texto },
+      }
+    );
     return data;
   } catch (erro) {
     tratarErro('enviarTexto', erro);
@@ -72,19 +75,29 @@ export async function enviarTexto({ phoneNumberId, accessToken, to, texto }) {
  * @param {string} [p.idioma]   código do idioma (default 'pt_BR')
  * @param {object[]} [p.componentes]  components (variáveis/botões) do template
  */
-export async function enviarTemplate({ phoneNumberId, accessToken, to, template, idioma = 'pt_BR', componentes }) {
+export async function enviarTemplate({
+  phoneNumberId,
+  accessToken,
+  to,
+  template,
+  idioma = 'pt_BR',
+  componentes,
+}) {
   try {
-    const { data } = await http(accessToken).post(`/${encodeURIComponent(phoneNumberId)}/messages`, {
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to,
-      type: 'template',
-      template: {
-        name: template,
-        language: { code: idioma },
-        ...(componentes ? { components: componentes } : {}),
-      },
-    });
+    const { data } = await http(accessToken).post(
+      `/${encodeURIComponent(phoneNumberId)}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'template',
+        template: {
+          name: template,
+          language: { code: idioma },
+          ...(componentes ? { components: componentes } : {}),
+        },
+      }
+    );
     return data;
   } catch (erro) {
     tratarErro('enviarTemplate', erro);

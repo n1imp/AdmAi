@@ -104,8 +104,13 @@ jobs:
       - name: Lint (ESLint)
         run: npm run lint
 
-      - name: Testes unitários
-        run: npm test
+      # Gate de formatação (Prettier). O backend foi normalizado globalmente (F9/M6);
+      # cobre src/ e test/. O job frontend ainda não tem este gate (normalização própria).
+      - name: Formatação (Prettier)
+        run: npm run format:check
+
+      - name: Testes unitários + cobertura (v8)
+        run: npm run test:coverage
 
       - name: Testes de integração (Supertest + Postgres)
         run: npm run test:integration

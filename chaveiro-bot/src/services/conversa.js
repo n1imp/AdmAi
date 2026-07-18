@@ -34,7 +34,7 @@ export function ehGatilhoPonto(texto) {
  */
 export function normalizarTelefoneBR(txt) {
   const d = String(txt ?? '').replace(/\D/g, '');
-  if (d.length === 10 || d.length === 11) return '55' + d;           // DDD + número
+  if (d.length === 10 || d.length === 11) return '55' + d; // DDD + número
   if ((d.length === 12 || d.length === 13) && d.startsWith('55')) return d; // já com 55
   return null;
 }
@@ -107,8 +107,7 @@ const PASSOS = [
   {
     id: 'clienteTelefone',
     pergunta: () =>
-      `📱 *Qual o telefone do cliente?*\n` +
-      `(com DDD — usaremos para pedir a avaliação depois)`,
+      `📱 *Qual o telefone do cliente?*\n` + `(com DDD — usaremos para pedir a avaliação depois)`,
     validar: (txt) => {
       const tel = normalizarTelefoneBR(txt);
       if (!tel) {
@@ -132,7 +131,8 @@ const PASSOS = [
     pergunta: (d) => montarResumoConfirmacao(d),
     validar: (txt) => {
       const t = txt.trim().toLowerCase();
-      if (['sim', 's', 'confirmar', 'ok', 'confirmo'].includes(t)) return { ok: true, valor: 'sim' };
+      if (['sim', 's', 'confirmar', 'ok', 'confirmo'].includes(t))
+        return { ok: true, valor: 'sim' };
       if (['nao', 'não', 'n', 'cancelar'].includes(t)) return { ok: true, valor: 'nao' };
       return { ok: false, erro: 'Responda *sim* para confirmar ou *não* para cancelar.' };
     },
@@ -180,7 +180,10 @@ export async function carregarSessao(jid) {
   return s;
 }
 
-async function salvarSessao(jid, { empresaId = null, tecnicoId = null, fluxo = 'registro_servico', estadoAtual, dadosParciais }) {
+async function salvarSessao(
+  jid,
+  { empresaId = null, tecnicoId = null, fluxo = 'registro_servico', estadoAtual, dadosParciais }
+) {
   return prisma.sessaoConversa.upsert({
     where: { jid },
     create: { jid, empresaId, tecnicoId, fluxo, estadoAtual, dadosParciais },
@@ -211,12 +214,16 @@ function montarMenuEmpresas(candidatos) {
 export async function iniciarRegistro({ jid, empresaId, tecnico, responder }) {
   const primeiro = PASSOS[0];
   await salvarSessao(jid, {
-    empresaId, tecnicoId: tecnico.id, fluxo: 'registro_servico',
-    estadoAtual: primeiro.id, dadosParciais: {},
+    empresaId,
+    tecnicoId: tecnico.id,
+    fluxo: 'registro_servico',
+    estadoAtual: primeiro.id,
+    dadosParciais: {},
   });
   await responder(
     `👋 Olá, ${tecnico.nome}! Vamos registrar um serviço.\n` +
-    `A qualquer momento digite *cancelar* para sair.\n\n` + primeiro.pergunta({})
+      `A qualquer momento digite *cancelar* para sair.\n\n` +
+      primeiro.pergunta({})
   );
   return { tratado: true };
 }
@@ -230,12 +237,17 @@ export async function iniciarRegistro({ jid, empresaId, tecnico, responder }) {
  */
 export async function iniciarSelecaoEmpresa({ jid, vinculos, responder }) {
   const candidatos = vinculos.map((v) => ({
-    empresaId: v.empresaId, empresaNome: v.empresaNome,
-    tecnicoId: v.tecnicoId, tecnicoNome: v.tecnicoNome,
+    empresaId: v.empresaId,
+    empresaNome: v.empresaNome,
+    tecnicoId: v.tecnicoId,
+    tecnicoNome: v.tecnicoNome,
   }));
   await salvarSessao(jid, {
-    empresaId: null, tecnicoId: null, fluxo: 'selecao_empresa',
-    estadoAtual: 'aguardando_escolha', dadosParciais: { candidatos },
+    empresaId: null,
+    tecnicoId: null,
+    fluxo: 'selecao_empresa',
+    estadoAtual: 'aguardando_escolha',
+    dadosParciais: { candidatos },
   });
   await responder(montarMenuEmpresas(candidatos));
   return { tratado: true };
@@ -257,13 +269,17 @@ export async function tratarSelecaoEmpresa({ jid, texto, sessao, responder }) {
   }
   const n = parseInt(txt, 10);
   if (!Number.isInteger(n) || n < 1 || n > candidatos.length) {
-    await responder(`⚠️ Escolha um número de 1 a ${candidatos.length}.\n\n${montarMenuEmpresas(candidatos)}`);
+    await responder(
+      `⚠️ Escolha um número de 1 a ${candidatos.length}.\n\n${montarMenuEmpresas(candidatos)}`
+    );
     return { tratado: true };
   }
   const escolha = candidatos[n - 1];
   return iniciarRegistro({
-    jid, empresaId: escolha.empresaId,
-    tecnico: { id: escolha.tecnicoId, nome: escolha.tecnicoNome }, responder,
+    jid,
+    empresaId: escolha.empresaId,
+    tecnico: { id: escolha.tecnicoId, nome: escolha.tecnicoNome },
+    responder,
   });
 }
 
@@ -301,7 +317,11 @@ export async function processarMensagemPrivada(ctx) {
   const dados = sessao.dadosParciais ?? {};
   let idxAtual = IDX[sessao.estadoAtual] ?? 0;
   const passoAtual = PASSOS[idxAtual];
-  const base = { empresaId: sessao.empresaId, tecnicoId: sessao.tecnicoId, fluxo: 'registro_servico' };
+  const base = {
+    empresaId: sessao.empresaId,
+    tecnicoId: sessao.tecnicoId,
+    fluxo: 'registro_servico',
+  };
 
   if (cmd === 'voltar') {
     if (idxAtual === 0) {

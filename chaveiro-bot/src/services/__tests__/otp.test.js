@@ -27,7 +27,12 @@ vi.mock('../../db/prisma.js', () => ({
 }));
 
 import { prisma } from '../../db/prisma.js';
-import { gerarCodigoOtp, definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../otp.js';
+import {
+  gerarCodigoOtp,
+  definirOtpTelefone,
+  validarOtpTelefone,
+  limparOtpTelefone,
+} from '../otp.js';
 
 beforeEach(() => {
   vi.clearAllMocks();

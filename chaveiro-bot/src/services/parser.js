@@ -25,7 +25,9 @@ export function converterValor(str) {
  */
 export function normalizarTelefone(jid) {
   // JIDs multi-device têm formato "numero:dispositivo@host" — strip do sufixo :N antes de remover não-dígitos
-  const numero = String(jid ?? '').split('@')[0].split(':')[0];
+  const numero = String(jid ?? '')
+    .split('@')[0]
+    .split(':')[0];
   return numero.replace(/\D/g, '');
 }
 

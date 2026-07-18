@@ -71,7 +71,10 @@ describe('RLS no banco (F4-RLS.1)', () => {
 
     // (b) app_rw COM set_config(empA) numa transação → só técnicos da A.
     const daA = await appRw.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe("SELECT set_config('app.empresa_id', $1, true)", String(A.empresaId));
+      await tx.$executeRawUnsafe(
+        "SELECT set_config('app.empresa_id', $1, true)",
+        String(A.empresaId)
+      );
       return tx.tecnico.findMany();
     });
     expect(daA.length).toBeGreaterThan(0);
