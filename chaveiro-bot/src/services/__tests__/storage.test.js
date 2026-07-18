@@ -12,9 +12,11 @@ const uploadMock = vi.hoisted(() => vi.fn());
 const getPublicUrlMock = vi.hoisted(() => vi.fn());
 const removeMock = vi.hoisted(() => vi.fn());
 const createSignedUrlMock = vi.hoisted(() => vi.fn());
+const getBucketMock = vi.hoisted(() => vi.fn());
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     storage: {
+      getBucket: getBucketMock,
       from: () => ({
         upload: uploadMock,
         getPublicUrl: getPublicUrlMock,
@@ -36,6 +38,7 @@ import {
   uploadComFallback,
   uploadPrivado,
   urlAssinada,
+  inspecionarBucket,
 } from '../storage.js';
 
 const URL_PUBLICA = 'https://x.supabase.co/storage/v1/object/public/estoque/produto-1.png';
@@ -52,6 +55,7 @@ beforeEach(() => {
   createSignedUrlMock
     .mockReset()
     .mockResolvedValue({ data: { signedUrl: URL_ASSINADA }, error: null });
+  getBucketMock.mockReset().mockResolvedValue({ data: { public: false }, error: null });
 });
 
 describe('storage (F1b)', () => {
@@ -220,5 +224,38 @@ describe('storage (F1b)', () => {
     createSignedUrlMock.mockResolvedValue({ data: null, error: { message: 'not found' } });
     const url = await urlAssinada('selfies-ponto', 'missing.jpg', 60);
     expect(url).toBeNull();
+  });
+
+  it('inspecionarBucket: null sem storage configurado (não consulta)', async () => {
+    envMock.env = {};
+    expect(await inspecionarBucket('documentos-tecnico')).toBeNull();
+    expect(getBucketMock).not.toHaveBeenCalled();
+  });
+
+  it('inspecionarBucket: bucket privado → { existe:true, privado:true }', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    getBucketMock.mockResolvedValue({ data: { public: false }, error: null });
+    expect(await inspecionarBucket('documentos-tecnico')).toEqual({ existe: true, privado: true });
+  });
+
+  it('inspecionarBucket: bucket público → { existe:true, privado:false }', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    getBucketMock.mockResolvedValue({ data: { public: true }, error: null });
+    expect(await inspecionarBucket('documentos-tecnico')).toEqual({ existe: true, privado: false });
+  });
+
+  it('inspecionarBucket: not found → { existe:false }', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    getBucketMock.mockResolvedValue({ data: null, error: { message: 'Bucket not found' } });
+    expect(await inspecionarBucket('documentos-tecnico')).toEqual({
+      existe: false,
+      privado: false,
+    });
+  });
+
+  it('inspecionarBucket: exceção → null (best-effort, nunca lança)', async () => {
+    envMock.env = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k' };
+    getBucketMock.mockRejectedValue(new Error('network'));
+    expect(await inspecionarBucket('documentos-tecnico')).toBeNull();
   });
 });
