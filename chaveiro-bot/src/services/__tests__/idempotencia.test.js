@@ -23,7 +23,10 @@ vi.mock('ioredis', () => {
 import { marcarSeNovo } from '../idempotencia.js';
 
 describe('marcarSeNovo (F5.2)', () => {
-  beforeEach(() => { ctl.throwOnSet = false; ctl.store.clear(); });
+  beforeEach(() => {
+    ctl.throwOnSet = false;
+    ctl.store.clear();
+  });
 
   it('1ª vez → true (novo); mesma chave de novo → false (duplicata)', async () => {
     expect(await marcarSeNovo('stripe:evt_1', 60)).toBe(true);

@@ -18,7 +18,10 @@ afterAll(async () => {
 describe('POST /api/setup', () => {
   it('cria o primeiro admin + empresa em banco vazio', async () => {
     const res = await request(app).post('/api/setup').send({
-      nome: 'Dono', nomeEmpresa: 'Chaveiro X', username: 'dono', senha: 'segredo',
+      nome: 'Dono',
+      nomeEmpresa: 'Chaveiro X',
+      username: 'dono',
+      senha: 'segredo',
     });
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('token');
@@ -27,10 +30,16 @@ describe('POST /api/setup', () => {
 
   it('bloqueia segundo setup (409) quando já existe usuário', async () => {
     await request(app).post('/api/setup').send({
-      nome: 'Dono', nomeEmpresa: 'Empresa X', username: 'dono', senha: 'segredo',
+      nome: 'Dono',
+      nomeEmpresa: 'Empresa X',
+      username: 'dono',
+      senha: 'segredo',
     });
     const res = await request(app).post('/api/setup').send({
-      nome: 'Outro', nomeEmpresa: 'Empresa Y', username: 'outro', senha: 'segredo',
+      nome: 'Outro',
+      nomeEmpresa: 'Empresa Y',
+      username: 'outro',
+      senha: 'segredo',
     });
     expect(res.status).toBe(409);
   });
@@ -39,18 +48,25 @@ describe('POST /api/setup', () => {
 describe('POST /api/auth/login', () => {
   beforeEach(async () => {
     await request(app).post('/api/setup').send({
-      nome: 'Dono', nomeEmpresa: 'Empresa X', username: 'dono', senha: 'segredo',
+      nome: 'Dono',
+      nomeEmpresa: 'Empresa X',
+      username: 'dono',
+      senha: 'segredo',
     });
   });
 
   it('200 + token com credenciais válidas', async () => {
-    const res = await request(app).post('/api/auth/login').send({ username: 'dono', password: 'segredo' });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'dono', password: 'segredo' });
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('token');
   });
 
   it('401 com senha errada', async () => {
-    const res = await request(app).post('/api/auth/login').send({ username: 'dono', password: 'errada' });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'dono', password: 'errada' });
     expect(res.status).toBe(401);
   });
 
@@ -58,7 +74,9 @@ describe('POST /api/auth/login', () => {
     for (let i = 0; i < 5; i++) {
       await request(app).post('/api/auth/login').send({ username: 'dono', password: 'errada' });
     }
-    const res = await request(app).post('/api/auth/login').send({ username: 'dono', password: 'errada' });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'dono', password: 'errada' });
     expect(res.status).toBe(429);
   });
 });

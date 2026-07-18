@@ -45,7 +45,8 @@ async function criarFuncionarioComToken(tokenDono, { nome, telefone, comissao = 
     .post('/api/tecnicos')
     .set('Authorization', `Bearer ${tokenDono}`)
     .send({ nome, telefone, comissao, criarAcesso: true });
-  if (resTec.status !== 201) throw new Error(`criar técnico: ${resTec.status} ${JSON.stringify(resTec.body)}`);
+  if (resTec.status !== 201)
+    throw new Error(`criar técnico: ${resTec.status} ${JSON.stringify(resTec.body)}`);
   const tecnicoId = resTec.body.id;
   const pin = resTec.body.acesso.pin;
 
@@ -72,12 +73,48 @@ describe('GET /api/me/metricas — equivalência de valor (aggregate no banco, F
     await prisma.servico.createMany({
       data: [
         // Ativos no mês corrente → contam em tudo.
-        { ...servicoBase, empresaId, tecnicoId, valorCobrado: 100, valorLiquido: 100, comissaoGerada: 20, status: 'ativo', criadoEm: agora },
-        { ...servicoBase, empresaId, tecnicoId, valorCobrado: 50, valorLiquido: 50, comissaoGerada: 10, status: 'ativo', criadoEm: agora },
+        {
+          ...servicoBase,
+          empresaId,
+          tecnicoId,
+          valorCobrado: 100,
+          valorLiquido: 100,
+          comissaoGerada: 20,
+          status: 'ativo',
+          criadoEm: agora,
+        },
+        {
+          ...servicoBase,
+          empresaId,
+          tecnicoId,
+          valorCobrado: 50,
+          valorLiquido: 50,
+          comissaoGerada: 10,
+          status: 'ativo',
+          criadoEm: agora,
+        },
         // Ativo em mês antigo → conta em "todos", NÃO em mesAtual.
-        { ...servicoBase, empresaId, tecnicoId, valorCobrado: 200, valorLiquido: 200, comissaoGerada: 40, status: 'ativo', criadoEm: mesPassado },
+        {
+          ...servicoBase,
+          empresaId,
+          tecnicoId,
+          valorCobrado: 200,
+          valorLiquido: 200,
+          comissaoGerada: 40,
+          status: 'ativo',
+          criadoEm: mesPassado,
+        },
         // Pendente → NÃO entra em soma nenhuma, só em servicosPendentes.
-        { ...servicoBase, empresaId, tecnicoId, valorCobrado: 999, valorLiquido: 999, comissaoGerada: 999, status: 'pendente', criadoEm: agora },
+        {
+          ...servicoBase,
+          empresaId,
+          tecnicoId,
+          valorCobrado: 999,
+          valorLiquido: 999,
+          comissaoGerada: 999,
+          status: 'pendente',
+          criadoEm: agora,
+        },
       ],
     });
     await prisma.pagamento.createMany({
@@ -87,7 +124,9 @@ describe('GET /api/me/metricas — equivalência de valor (aggregate no banco, F
       ],
     });
 
-    const res = await request(app).get('/api/me/metricas').set('Authorization', `Bearer ${tokenFunc}`);
+    const res = await request(app)
+      .get('/api/me/metricas')
+      .set('Authorization', `Bearer ${tokenFunc}`);
     expect(res.status).toBe(200);
     // Somas esperadas (calculadas à mão sobre o seed) — devem bater com o SUM/COUNT do banco.
     expect(res.body.totalServicos).toBe(3); // 3 ativos (pendente excluído)
@@ -106,7 +145,9 @@ describe('GET /api/me/metricas — equivalência de valor (aggregate no banco, F
       telefone: '5521990000011',
     });
 
-    const res = await request(app).get('/api/me/metricas').set('Authorization', `Bearer ${tokenFunc}`);
+    const res = await request(app)
+      .get('/api/me/metricas')
+      .set('Authorization', `Bearer ${tokenFunc}`);
     expect(res.status).toBe(200);
     expect(res.body.totalServicos).toBe(0);
     expect(res.body.comissaoGanha).toBe(0);

@@ -43,9 +43,15 @@ export async function gerarUsernameTecnico(telefoneCanonico, tx = prisma) {
  * @param {{ tecnico:object, empresaId:number, papel?:string, tx?:object }} args
  * @returns {Promise<{ usuario:object, pin:string }>}
  */
-export async function criarAcessoTecnico({ tecnico, empresaId, papel = 'funcionario', tx = prisma }) {
+export async function criarAcessoTecnico({
+  tecnico,
+  empresaId,
+  papel = 'funcionario',
+  tx = prisma,
+}) {
   const telefoneCanonico =
-    tecnico.telefone || (tecnico.telefoneDisplay ? canonizarTelefone(tecnico.telefoneDisplay) : null);
+    tecnico.telefone ||
+    (tecnico.telefoneDisplay ? canonizarTelefone(tecnico.telefoneDisplay) : null);
   if (!telefoneCanonico) {
     const e = new Error('Técnico sem telefone — não é possível criar acesso por telefone');
     e.codigo = 'sem_telefone';

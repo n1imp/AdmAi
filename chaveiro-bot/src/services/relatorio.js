@@ -74,12 +74,7 @@ export async function gerarRelatorioPDF(inicio, fim, empresaId) {
     doc.text(`Período: ${periodoStr}`, { align: 'center' }).moveDown(1.5);
 
     // ── RESUMO GERAL ────────────────────────────────────────────
-    doc
-      .fontSize(13)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a2e')
-      .text('Resumo Geral')
-      .moveDown(0.4);
+    doc.fontSize(13).font('Helvetica-Bold').fillColor('#1a1a2e').text('Resumo Geral').moveDown(0.4);
 
     const resumo = [
       ['Total de Serviços', String(servicos.length)],
@@ -188,10 +183,9 @@ export async function gerarRelatorioPDF(inicio, fim, empresaId) {
         .fontSize(9)
         .font('Helvetica-Bold')
         .fillColor('#333')
-        .text(
-          `#${s.id} • ${s.tecnico.nome} • ${formatarData(s.criadoEm)} • ${s.local}`,
-          { continued: false }
-        );
+        .text(`#${s.id} • ${s.tecnico.nome} • ${formatarData(s.criadoEm)} • ${s.local}`, {
+          continued: false,
+        });
 
       doc
         .fontSize(8)
@@ -214,12 +208,20 @@ const TZ = 'America/Sao_Paulo';
 
 function fmtHoraTZ(d) {
   if (!d) return '—';
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(new Date(d));
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(d));
 }
 
 function fmtDiaTZ(d) {
   if (!d) return '—';
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, day: '2-digit', month: '2-digit' }).format(new Date(d));
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TZ,
+    day: '2-digit',
+    month: '2-digit',
+  }).format(new Date(d));
 }
 
 function fmtSaldo(min) {
@@ -260,24 +262,46 @@ export async function gerarRelatorioPonto(empresaId, tecnicoId, mes) {
     doc.on('data', (c) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-    doc.fontSize(20).font('Helvetica-Bold').fillColor('#1a1a2e').text('🔑 AdmAi', { align: 'center' });
-    doc.fontSize(11).font('Helvetica').fillColor('#555').text('Banco de Horas', { align: 'center' });
+    doc
+      .fontSize(20)
+      .font('Helvetica-Bold')
+      .fillColor('#1a1a2e')
+      .text('🔑 AdmAi', { align: 'center' });
+    doc
+      .fontSize(11)
+      .font('Helvetica')
+      .fillColor('#555')
+      .text('Banco de Horas', { align: 'center' });
     doc.text(`${tecnico.nome} • ${mes}`, { align: 'center' }).moveDown(0.4);
-    doc.fontSize(8).fillColor('#999')
-      .text('Relatório gerencial — não substitui o ponto oficial para fins trabalhistas/jurídicos.', { align: 'center' })
+    doc
+      .fontSize(8)
+      .fillColor('#999')
+      .text(
+        'Relatório gerencial — não substitui o ponto oficial para fins trabalhistas/jurídicos.',
+        { align: 'center' }
+      )
       .moveDown(1);
 
     // Resumo
-    doc.fontSize(13).font('Helvetica-Bold').fillColor('#1a1a2e').text('Resumo do mês').moveDown(0.4);
+    doc
+      .fontSize(13)
+      .font('Helvetica-Bold')
+      .fillColor('#1a1a2e')
+      .text('Resumo do mês')
+      .moveDown(0.4);
     const resumo = [
       ['Total trabalhado', formatarDuracao(totalTrabalhadoMin)],
       ['Hora extra', formatarDuracao(horaExtraMin)],
       ['Saldo do banco', fmtSaldo(saldoBancoMin)],
     ];
     for (const [label, valor] of resumo) {
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#333')
+      doc
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .fillColor('#333')
         .text(label, { continued: true, width: 200 })
-        .font('Helvetica').text(valor, { align: 'left' });
+        .font('Helvetica')
+        .text(valor, { align: 'left' });
     }
     doc.moveDown(1);
 
@@ -295,7 +319,11 @@ export async function gerarRelatorioPonto(empresaId, tecnicoId, mes) {
     doc.moveDown(0.1);
 
     if (dias.length === 0) {
-      doc.fontSize(9).font('Helvetica').fillColor('#666').text('Nenhum registro de ponto neste mês.', 40, doc.y + 4);
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor('#666')
+        .text('Nenhum registro de ponto neste mês.', 40, doc.y + 4);
     }
     for (let idx = 0; idx < dias.length; idx++) {
       const d = dias[idx];
@@ -340,13 +368,22 @@ export async function gerarCsvPonto(empresaId, tecnicoId, mes) {
   ]);
   if (!tecnico) throw new Error('Técnico não encontrado');
   const { dias } = resumoMes(tecnico, registros);
-  const linhas = ['Data;Entrada;Saida almoco;Volta almoco;Saida;Horas (min);Hora extra (min);Saldo (min)'];
+  const linhas = [
+    'Data;Entrada;Saida almoco;Volta almoco;Saida;Horas (min);Hora extra (min);Saldo (min)',
+  ];
   for (const d of dias) {
-    linhas.push([
-      fmtDiaTZ(d.data), fmtHoraTZ(d.entradaEm), fmtHoraTZ(d.almocoSaidaEm),
-      fmtHoraTZ(d.almocoVoltaEm), fmtHoraTZ(d.saidaEm),
-      d.totalMinutos, d.horaExtraMinutos, d.saldoMinutos,
-    ].join(';'));
+    linhas.push(
+      [
+        fmtDiaTZ(d.data),
+        fmtHoraTZ(d.entradaEm),
+        fmtHoraTZ(d.almocoSaidaEm),
+        fmtHoraTZ(d.almocoVoltaEm),
+        fmtHoraTZ(d.saidaEm),
+        d.totalMinutos,
+        d.horaExtraMinutos,
+        d.saldoMinutos,
+      ].join(';')
+    );
   }
   return linhas.join('\n');
 }

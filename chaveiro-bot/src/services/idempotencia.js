@@ -17,7 +17,9 @@ let redis = null;
 function cliente() {
   if (!redis) {
     redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
-    redis.on('error', () => { /* evita crash quando o Redis está indisponível */ });
+    redis.on('error', () => {
+      /* evita crash quando o Redis está indisponível */
+    });
   }
   return redis;
 }
@@ -27,7 +29,10 @@ export async function marcarSeNovo(chave, ttlSegundos) {
     const r = await cliente().set(`idemp:${chave}`, '1', 'EX', ttlSegundos, 'NX');
     return r === 'OK'; // OK = marcou agora (novo) · null = já existia (duplicata)
   } catch (erro) {
-    logger.warn('idempotencia: Redis indisponível — processando (fail-open)', { chave, erro: erro.message });
+    logger.warn('idempotencia: Redis indisponível — processando (fail-open)', {
+      chave,
+      erro: erro.message,
+    });
     return true;
   }
 }

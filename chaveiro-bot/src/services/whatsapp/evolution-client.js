@@ -25,7 +25,10 @@ function http() {
 function tratarErro(contexto, erro) {
   const status = erro.response?.status;
   const corpo = erro.response?.data;
-  logger.error(`Evolution API erro (${contexto})`, { status, corpo: typeof corpo === 'object' ? JSON.stringify(corpo).slice(0, 300) : corpo });
+  logger.error(`Evolution API erro (${contexto})`, {
+    status,
+    corpo: typeof corpo === 'object' ? JSON.stringify(corpo).slice(0, 300) : corpo,
+  });
   const e = new Error(`Evolution API falhou: ${contexto}`);
   e.status = status;
   e.detalhe = corpo;
@@ -81,7 +84,9 @@ export async function conectarInstancia(instanceName) {
 /** Estado da conexão: { instance: { state: 'open'|'connecting'|'close' } }. */
 export async function estadoConexao(instanceName) {
   try {
-    const { data } = await http().get(`/instance/connectionState/${encodeURIComponent(instanceName)}`);
+    const { data } = await http().get(
+      `/instance/connectionState/${encodeURIComponent(instanceName)}`
+    );
     return data;
   } catch (erro) {
     if (erro.response?.status === 404) return { instance: { state: 'close' }, naoExiste: true };
@@ -110,12 +115,15 @@ export async function definirWebhook(instanceName, webhookUrl, eventos) {
 /** Lista os grupos dos quais a instância participa. */
 export async function listarGrupos(instanceName) {
   try {
-    const { data } = await http().get(
-      `/group/fetchAllGroups/${encodeURIComponent(instanceName)}`,
-      { params: { getParticipants: 'false' } }
-    );
-    const arr = Array.isArray(data) ? data : data?.groups ?? [];
-    return arr.map((g) => ({ id: g.id, nome: g.subject ?? g.name ?? g.id, participantes: g.size ?? g.participants?.length ?? 0 }));
+    const { data } = await http().get(`/group/fetchAllGroups/${encodeURIComponent(instanceName)}`, {
+      params: { getParticipants: 'false' },
+    });
+    const arr = Array.isArray(data) ? data : (data?.groups ?? []);
+    return arr.map((g) => ({
+      id: g.id,
+      nome: g.subject ?? g.name ?? g.id,
+      participantes: g.size ?? g.participants?.length ?? 0,
+    }));
   } catch (erro) {
     tratarErro('listarGrupos', erro);
   }
@@ -137,7 +145,9 @@ export async function enviarTexto(instanceName, numeroOuJid, texto) {
 /** Remove (loga out + deleta) uma instância. Tolerante a 404. */
 export async function deletarInstancia(instanceName) {
   try {
-    await http().delete(`/instance/logout/${encodeURIComponent(instanceName)}`).catch(() => {});
+    await http()
+      .delete(`/instance/logout/${encodeURIComponent(instanceName)}`)
+      .catch(() => {});
     const { data } = await http().delete(`/instance/delete/${encodeURIComponent(instanceName)}`);
     return data;
   } catch (erro) {

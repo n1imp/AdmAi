@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
-  presetDoPapel, permissoesEfetivas, pode, podeProprio, sanitizarPermissoes,
-  PAPEIS, MODULOS,
+  presetDoPapel,
+  permissoesEfetivas,
+  pode,
+  podeProprio,
+  sanitizarPermissoes,
+  PAPEIS,
+  MODULOS,
 } from '../permissoes.js';
 
 describe('presetDoPapel', () => {
@@ -46,7 +51,7 @@ describe('permissoesEfetivas (preset ⊕ overrides)', () => {
       permissoes: { financeiro: { ver: false }, usuarios: { ver: true } },
     });
     expect(ef.financeiro.ver).toBe(false); // restringido
-    expect(ef.usuarios.ver).toBe(true);    // liberado
+    expect(ef.usuarios.ver).toBe(true); // liberado
     expect(ef.servicos.deletar).toBe(true); // preset preservado onde não houve override
   });
 

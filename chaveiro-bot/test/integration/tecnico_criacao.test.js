@@ -49,9 +49,7 @@ describe('POST /api/tecnicos com campos estendidos', () => {
     expect(resPost.body.nome).toBe('Carlos Chave');
     expect(resPost.body.comissao).toBe(15);
 
-    const resGet = await request(app)
-      .get('/api/tecnicos')
-      .set('Authorization', `Bearer ${token}`);
+    const resGet = await request(app).get('/api/tecnicos').set('Authorization', `Bearer ${token}`);
 
     expect(resGet.status).toBe(200);
 
@@ -77,9 +75,7 @@ describe('POST /api/tecnicos com campos estendidos', () => {
 
     expect(resPost.status).toBe(201);
 
-    const resGet = await request(app)
-      .get('/api/tecnicos')
-      .set('Authorization', `Bearer ${token}`);
+    const resGet = await request(app).get('/api/tecnicos').set('Authorization', `Bearer ${token}`);
 
     expect(resGet.status).toBe(200);
 

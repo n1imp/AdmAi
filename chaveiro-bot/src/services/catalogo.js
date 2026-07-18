@@ -23,7 +23,7 @@ export function normalizar(texto) {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '') // remove diacríticos
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')    // pontuação vira espaço
+    .replace(/[^a-z0-9\s]/g, ' ') // pontuação vira espaço
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -42,9 +42,9 @@ export function levenshtein(a, b) {
     for (let j = 0; j < b.length; j++) {
       const custo = a[i] === b[j] ? 0 : 1;
       linhaAtual[j + 1] = Math.min(
-        linhaAtual[j] + 1,        // inserção
+        linhaAtual[j] + 1, // inserção
         linhaAnterior[j + 1] + 1, // remoção
-        linhaAnterior[j] + custo  // substituição
+        linhaAnterior[j] + custo // substituição
       );
     }
     [linhaAnterior, linhaAtual] = [linhaAtual, linhaAnterior];
@@ -177,7 +177,14 @@ export async function resolverMateriaisDoServico(materialTexto, empresaId, clien
 
   const catalogo = await client.material.findMany({
     where: { empresaId },
-    select: { id: true, nome: true, precoUnit: true, precoVenda: true, unidade: true, quantidadeAtual: true },
+    select: {
+      id: true,
+      nome: true,
+      precoUnit: true,
+      precoVenda: true,
+      unidade: true,
+      quantidadeAtual: true,
+    },
   });
 
   const itens = [];

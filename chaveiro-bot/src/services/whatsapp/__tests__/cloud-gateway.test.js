@@ -30,7 +30,13 @@ describe('cloud-gateway: normalizarInboundCloud', () => {
                 metadata: { phone_number_id: '123', display_phone_number: '5511...' },
                 contacts: [{ wa_id: '5511999998888', profile: { name: 'Cliente' } }],
                 messages: [
-                  { from: '5511999998888', id: 'wamid.X', timestamp: '1700000000', type: 'text', text: { body: 'serviço' } },
+                  {
+                    from: '5511999998888',
+                    id: 'wamid.X',
+                    timestamp: '1700000000',
+                    type: 'text',
+                    text: { body: 'serviço' },
+                  },
                 ],
               },
             },
@@ -52,7 +58,21 @@ describe('cloud-gateway: normalizarInboundCloud', () => {
   it('extrai texto de respostas interativas (botão)', () => {
     const body = {
       entry: [
-        { changes: [{ value: { messages: [{ from: '551130000000', type: 'interactive', interactive: { button_reply: { id: 'b1', title: '5' } } }] } }] },
+        {
+          changes: [
+            {
+              value: {
+                messages: [
+                  {
+                    from: '551130000000',
+                    type: 'interactive',
+                    interactive: { button_reply: { id: 'b1', title: '5' } },
+                  },
+                ],
+              },
+            },
+          ],
+        },
       ],
     };
     const [ev] = normalizarInboundCloud(body);
@@ -60,7 +80,9 @@ describe('cloud-gateway: normalizarInboundCloud', () => {
   });
 
   it('ignora payloads de status (sem messages)', () => {
-    const body = { entry: [{ changes: [{ value: { statuses: [{ id: 'wamid', status: 'delivered' }] } }] }] };
+    const body = {
+      entry: [{ changes: [{ value: { statuses: [{ id: 'wamid', status: 'delivered' }] } }] }],
+    };
     expect(normalizarInboundCloud(body)).toEqual([]);
   });
 

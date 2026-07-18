@@ -34,7 +34,12 @@ async function criarServicoComCliente(token, empresaId, tecnicoNome) {
   const res = await request(app)
     .post('/api/servicos')
     .set('Authorization', `Bearer ${token}`)
-    .send({ tecnico: tecnicoNome, local: 'Casa', descricao: 'Troca de fechadura', valorCobrado: 200 });
+    .send({
+      tecnico: tecnicoNome,
+      local: 'Casa',
+      descricao: 'Troca de fechadura',
+      valorCobrado: 200,
+    });
   expect(res.status).toBe(201);
   const servicoId = res.body.id;
   // A PII do cliente normalmente vem da conversa do bot; aqui setamos direto.

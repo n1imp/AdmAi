@@ -49,9 +49,14 @@ export function decrypt(blob) {
     // Rejeita tag fora dos 128 bits ANTES de decifrar (defesa explícita contra truncamento;
     // o authTagLength abaixo também força isso no setAuthTag).
     if (tag.length !== TAG_BYTES) return null;
-    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'), { authTagLength: TAG_BYTES });
+    const decipher = crypto.createDecipheriv(ALG, chave(), Buffer.from(ivB64, 'base64'), {
+      authTagLength: TAG_BYTES,
+    });
     decipher.setAuthTag(tag);
-    return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
+    return Buffer.concat([
+      decipher.update(Buffer.from(ctB64, 'base64')),
+      decipher.final(),
+    ]).toString('utf8');
   } catch (erro) {
     // Falha real de decifragem (auth tag/chave rotacionada/tampering): observabilidade
     // sem derrubar a requisição. Não loga o blob (poderia conter ciphertext sensível).

@@ -19,7 +19,12 @@ async function criarBatidaComSelfie(empresaId) {
   await mkdir(PONTO_SELFIES_DIR, { recursive: true });
   await writeFile(path.join(PONTO_SELFIES_DIR, arquivo), Buffer.from([0xff, 0xd8, 0xff, 0x00]));
   await prisma.batidaPonto.create({
-    data: { registroId: registro.id, tipo: 'entrada', em: new Date(), selfieUrl: `/uploads-ponto/${arquivo}` },
+    data: {
+      registroId: registro.id,
+      tipo: 'entrada',
+      em: new Date(),
+      selfieUrl: `/uploads-ponto/${arquivo}`,
+    },
   });
   return arquivo;
 }
@@ -39,7 +44,10 @@ afterAll(async () => {
 // Cria o primeiro dono + empresa e devolve { token, id }.
 async function setupDono() {
   const res = await request(app).post('/api/setup').send({
-    nome: 'Dono', nomeEmpresa: 'Empresa X', username: 'dono', senha: 'Segredo#123',
+    nome: 'Dono',
+    nomeEmpresa: 'Empresa X',
+    username: 'dono',
+    senha: 'Segredo#123',
   });
   return { token: res.body.token, id: res.body.id };
 }
@@ -83,7 +91,13 @@ describe('Segurança — RBAC e força de senha (admin)', () => {
     // Cria uma SEGUNDA empresa + usuário direto no banco (o /setup só roda em banco vazio).
     const outra = await prisma.empresa.create({ data: { nome: 'Empresa Y', slug: 'empresa-y' } });
     const alvo = await prisma.usuario.create({
-      data: { nome: 'Outro', username: 'outro_y', senhaHash: 'x', papel: 'gestor', empresaId: outra.id },
+      data: {
+        nome: 'Outro',
+        username: 'outro_y',
+        senhaHash: 'x',
+        papel: 'gestor',
+        empresaId: outra.id,
+      },
       select: { id: true },
     });
 
@@ -111,7 +125,9 @@ describe('Segurança — selfie de ponto (biometria/LGPD) servida só via API au
 
   it('não serve a selfie de OUTRA empresa (404, anti-IDOR cross-tenant)', async () => {
     const dono = await setupDono();
-    const empresaId = (await prisma.usuario.findUnique({ where: { id: dono.id }, select: { empresaId: true } })).empresaId;
+    const empresaId = (
+      await prisma.usuario.findUnique({ where: { id: dono.id }, select: { empresaId: true } })
+    ).empresaId;
     const arquivo = await criarBatidaComSelfie(empresaId);
 
     // Segundo dono, de outra empresa, tenta baixar a selfie da primeira.
@@ -126,7 +142,9 @@ describe('Segurança — selfie de ponto (biometria/LGPD) servida só via API au
 
   it('serve a selfie para quem tem permissão de ver ponto na MESMA empresa (200)', async () => {
     const dono = await setupDono();
-    const empresaId = (await prisma.usuario.findUnique({ where: { id: dono.id }, select: { empresaId: true } })).empresaId;
+    const empresaId = (
+      await prisma.usuario.findUnique({ where: { id: dono.id }, select: { empresaId: true } })
+    ).empresaId;
     const arquivo = await criarBatidaComSelfie(empresaId);
 
     const res = await request(app)

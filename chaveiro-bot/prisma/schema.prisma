@@ -31,6 +31,7 @@ model Empresa {
   servicos   Servico[]
   materiais  Material[]
   pagamentos Pagamento[]
+  documentos DocumentoTecnico[]
   assinatura Assinatura?
   criadoEm   DateTime @default(now())
 }
@@ -89,6 +90,7 @@ model Tecnico {
   servicos        Servico[]
   pagamentos      Pagamento[]
   pontos          RegistroPonto[]
+  documentos      DocumentoTecnico[]
   criadoEm       DateTime    @default(now())
 
   // telefone é único POR EMPRESA (o mesmo número pode existir em empresas diferentes)
@@ -96,6 +98,26 @@ model Tecnico {
   @@index([empresaId])
   // Lookup GLOBAL por telefone — o robô de número único resolve a empresa pelo remetente.
   @@index([telefone])
+}
+
+// Documentos do técnico (contrato, RG, CNH…) — F9/M4, atrás da flag DOCUMENTOS_ENABLED.
+// Armazenados em bucket PRIVADO (Supabase Storage) com URL assinada curta; o painel do
+// funcionário gerencia só os PRÓPRIOS documentos (capacidade RBAC proprio.documentos).
+// Escopado por empresaId (tenant) — ver src/db/tenant.js e prisma/rls/enable_rls.sql.
+model DocumentoTecnico {
+  id         Int      @id @default(autoincrement())
+  empresa    Empresa  @relation(fields: [empresaId], references: [id])
+  empresaId  Int
+  tecnico    Tecnico  @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  tecnicoId  Int
+  tipo       String   // categoria: contrato | rg | cpf | cnh | comprovante | outro
+  nome       String   // nome de exibição (do arquivo enviado)
+  mime       String   // application/pdf | image/jpeg | image/png
+  tamanho    Int      // bytes
+  storageKey String   // objeto no bucket privado (ou nome do arquivo no disco em dev/test)
+  criadoEm   DateTime @default(now())
+
+  @@index([empresaId, tecnicoId])
 }
 
 model Servico {
@@ -120,9 +142,14 @@ model Servico {
   remetenteWpp   String
   // Fluxo de aprovação: "ativo" (conta normalmente) | "pendente" (aguarda dono/gestor) |
   // "rejeitado". Serviços "pendente"/"rejeitado" NÃO geram comissão nem baixam estoque.
+  // F9/M3 (flag SERVICO_ANDAMENTO_ENABLED): "em_andamento" é um estado transitório do
+  // "serviço atual" do técnico — não conta em dashboards até concluir (volta a "ativo").
   status         String            @default("ativo")
   aprovadoPor    Int?              // Usuario que aprovou (auditoria)
   aprovadoEm     DateTime?
+  // F9/M3 — marcas do serviço em execução ("serviço atual"). Nulas por padrão; aditivas.
+  iniciadoEm     DateTime?
+  finalizadoEm   DateTime?
   materiais      ServicoMaterial[]
   movimentacoes  MovimentacaoEstoque[]
   criadoEm      DateTime          @default(now())
@@ -131,6 +158,8 @@ model Servico {
   @@index([empresaId, criadoEm])
   @@index([empresaId, status])
   @@index([tecnicoId])
+  // F9/M3 — busca do "serviço atual" (status em_andamento) por técnico.
+  @@index([tecnicoId, status])
   @@index([local])
   @@index([endereco])
   @@index([clienteTelefone])

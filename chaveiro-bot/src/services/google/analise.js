@@ -47,7 +47,8 @@ const SYSTEM = [
 let _cliente = null;
 function cliente() {
   if (!env.ANTHROPIC_API_KEY) return null;
-  if (!_cliente) _cliente = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: 20000, maxRetries: 2 });
+  if (!_cliente)
+    _cliente = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: 20000, maxRetries: 2 });
   return _cliente;
 }
 
@@ -65,22 +66,29 @@ function extrairJson(msg) {
   } catch {
     // fallback: tenta achar o primeiro objeto JSON no texto
     const m = txt.match(/\{[\s\S]*\}/);
-    if (m) { try { return JSON.parse(m[0]); } catch { /* ignora */ } }
+    if (m) {
+      try {
+        return JSON.parse(m[0]);
+      } catch {
+        /* ignora */
+      }
+    }
     return null;
   }
 }
 
 /** Analisa UMA avaliação. Retorna {elogios,criticas,sugestaoResposta} ou null. */
 async function analisarUma(client, aval) {
-  const userMsg =
-    `Avaliação (nota ${aval.nota ?? 's/ nota'}): "${aval.comentario ?? '(sem comentário)'}"`;
-  const msg = await breakerIA(() => client.messages.create({
-    model: env.AI_REVIEWS_MODEL,
-    max_tokens: 1024,
-    system: SYSTEM,
-    messages: [{ role: 'user', content: userMsg }],
-    output_config: { format: { type: 'json_schema', schema: SCHEMA_REVIEW } },
-  }));
+  const userMsg = `Avaliação (nota ${aval.nota ?? 's/ nota'}): "${aval.comentario ?? '(sem comentário)'}"`;
+  const msg = await breakerIA(() =>
+    client.messages.create({
+      model: env.AI_REVIEWS_MODEL,
+      max_tokens: 1024,
+      system: SYSTEM,
+      messages: [{ role: 'user', content: userMsg }],
+      output_config: { format: { type: 'json_schema', schema: SCHEMA_REVIEW } },
+    })
+  );
   const json = extrairJson(msg);
   if (!json) return null;
   return {
@@ -119,7 +127,11 @@ export async function analisarNovas(empresaId) {
       ultimoReviewAnalisado = aval.reviewId;
       analisadas++;
     } catch (erro) {
-      logger.warn('Falha ao analisar avaliação', { empresaId, reviewId: aval.reviewId, erro: erro.message });
+      logger.warn('Falha ao analisar avaliação', {
+        empresaId,
+        reviewId: aval.reviewId,
+        erro: erro.message,
+      });
     }
   }
 
@@ -150,7 +162,10 @@ async function consolidarResumo(empresaId, ultimoReviewAnalisado) {
         if (k) mapa.set(k, (mapa.get(k) ?? 0) + 1);
       }
     }
-    return [...mapa.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t]) => t);
+    return [...mapa.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([t]) => t);
   };
   const resumoElogios = freq('elogios').join('; ') || null;
   const resumoCriticas = freq('criticas').join('; ') || null;
@@ -158,7 +173,11 @@ async function consolidarResumo(empresaId, ultimoReviewAnalisado) {
   await prisma.analiseAvaliacoes.upsert({
     where: { empresaId },
     create: { empresaId, resumoElogios, resumoCriticas, ultimoReviewAnalisado },
-    update: { resumoElogios, resumoCriticas, ...(ultimoReviewAnalisado ? { ultimoReviewAnalisado } : {}) },
+    update: {
+      resumoElogios,
+      resumoCriticas,
+      ...(ultimoReviewAnalisado ? { ultimoReviewAnalisado } : {}),
+    },
   });
 }
 

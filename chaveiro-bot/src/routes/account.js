@@ -5,10 +5,20 @@ import QRCode from 'qrcode';
 import { prisma } from '../db/prisma.js';
 import { gerarJWT } from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
+import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
 import { avaliarForcaSenha } from '../services/senha.js';
-import { gerarSegredoTotp, montarOtpauthUrl, verificarCodigo, cifrarSegredo, decifrarSegredo } from '../services/totp.js';
+import {
+  gerarSegredoTotp,
+  montarOtpauthUrl,
+  verificarCodigo,
+  cifrarSegredo,
+  decifrarSegredo,
+} from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
-import { gerarCodigos, verificarCodigo as verificarCodigoRecuperacao } from '../services/codigosRecuperacao.js';
+import {
+  gerarCodigos,
+  verificarCodigo as verificarCodigoRecuperacao,
+} from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
@@ -19,10 +29,20 @@ router.use(requireAuth);
 router.use(senhaProvisoria);
 
 const SELECT_ME = {
-  id: true, nome: true, username: true, email: true, telefone: true,
-  admin: true, papel: true, senhaProvisoria: true, ativo: true,
-  emailVerificado: true, telefoneVerificado: true,
-  twoFactorAtivo: true, senhaAlteradaEm: true, criadoEm: true,
+  id: true,
+  nome: true,
+  username: true,
+  email: true,
+  telefone: true,
+  admin: true,
+  papel: true,
+  senhaProvisoria: true,
+  ativo: true,
+  emailVerificado: true,
+  telefoneVerificado: true,
+  twoFactorAtivo: true,
+  senhaAlteradaEm: true,
+  criadoEm: true,
 };
 
 const ultimoOtpEnviado = new Map();
@@ -31,13 +51,18 @@ const OTP_REENVIO_MS = 5 * 60_000;
 async function gerarEEnviarOtp(userId, telefone) {
   const agora = Date.now();
   const anterior = ultimoOtpEnviado.get(userId);
-  if (anterior && agora - anterior < OTP_REENVIO_MS) { logger.info('otp_reenvio_throttled', { userId }); return; }
+  if (anterior && agora - anterior < OTP_REENVIO_MS) {
+    logger.info('otp_reenvio_throttled', { userId });
+    return;
+  }
   ultimoOtpEnviado.set(userId, agora);
   const codigo = await definirOtpTelefone(userId);
   const destino = canonizarTelefone(telefone);
   if (destino) {
-    await enviarMensagem(destino, `🔑 Seu código de verificação ADMAI é *${codigo}* (válido por 10 minutos).`)
-      .catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
+    await enviarMensagem(
+      destino,
+      `🔑 Seu código de verificação ADMAI é *${codigo}* (válido por 10 minutos).`
+    ).catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
   }
 }
 
@@ -62,7 +87,10 @@ async function apagarEmpresaEmCascata(empresaId) {
 
 router.get('/me', async (req, res) => {
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id }, select: SELECT_ME });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: SELECT_ME,
+    });
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
     res.json(usuario);
   } catch (erro) {
@@ -72,30 +100,78 @@ router.get('/me', async (req, res) => {
 });
 
 router.get('/me/permissoes', (req, res) => {
-  res.json({ papel: req.user.papel, admin: req.user.admin, permissoes: req.user.permissoesEfetivas });
+  res.json({
+    papel: req.user.papel,
+    admin: req.user.admin,
+    permissoes: req.user.permissoesEfetivas,
+  });
+});
+
+const metricasQuerySchema = z.object({
+  periodo: z.enum(['hoje', 'semana', 'mes', 'custom']).optional().default('mes'),
+  inicio: z.string().optional(),
+  fim: z.string().optional(),
 });
 
 router.get('/me/metricas', async (req, res) => {
   try {
-    if (!podeProprio(req.user, 'ver_metricas')) return res.status(403).json({ erro: 'Sem permissão' });
-    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    if (!podeProprio(req.user, 'ver_metricas'))
+      return res.status(403).json({ erro: 'Sem permissão' });
+    if (!req.user.tecnicoId)
+      return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    const parsed = metricasQuerySchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ erro: 'Parâmetros inválidos' });
+    const { periodo, inicio, fim } = parsed.data;
     const id = req.user.tecnicoId;
-    const filtroMes = { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), lte: new Date() };
-    const [tecnico, aggTotal, aggPagamentos, aggMes, pendentes] = await Promise.all([
-      req.db.tecnico.findUnique({ where: { id } }),
-      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo' }, _sum: { comissaoGerada: true }, _count: true }),
-      req.db.pagamento.aggregate({ where: { tecnicoId: id }, _sum: { valor: true } }),
-      req.db.servico.aggregate({ where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMes }, _sum: { valorLiquido: true, comissaoGerada: true } }),
-      req.db.servico.count({ where: { tecnicoId: id, status: 'pendente' } }),
-    ]);
+    const filtroMes = {
+      gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      lte: new Date(),
+    };
+    // F9/M1: período selecionável (aditivo — `mesAtual` e demais campos preservados).
+    const filtroPeriodo = construirFiltroPeriodo(periodo, inicio, fim);
+    const [tecnico, aggTotal, aggPagamentos, aggMes, pendentes, aggPeriodo, servicosPeriodo] =
+      await Promise.all([
+        req.db.tecnico.findUnique({ where: { id } }),
+        req.db.servico.aggregate({
+          where: { tecnicoId: id, status: 'ativo' },
+          _sum: { comissaoGerada: true },
+          _count: true,
+        }),
+        req.db.pagamento.aggregate({ where: { tecnicoId: id }, _sum: { valor: true } }),
+        req.db.servico.aggregate({
+          where: { tecnicoId: id, status: 'ativo', criadoEm: filtroMes },
+          _sum: { valorLiquido: true, comissaoGerada: true },
+        }),
+        req.db.servico.count({ where: { tecnicoId: id, status: 'pendente' } }),
+        req.db.servico.aggregate({
+          where: { tecnicoId: id, status: 'ativo', criadoEm: filtroPeriodo },
+          _sum: { valorLiquido: true, comissaoGerada: true },
+          _count: true,
+        }),
+        req.db.servico.findMany({
+          where: { tecnicoId: id, status: 'ativo', criadoEm: filtroPeriodo },
+          select: { criadoEm: true, valorLiquido: true, comissaoGerada: true },
+          take: 10_000,
+        }),
+      ]);
     if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
     // Agregação no banco (SUM/COUNT) — antes carregava até 10k linhas e somava em JS (F3: mata take:10000).
     const comissaoGanha = aggTotal._sum.comissaoGerada ?? 0;
     const recebido = aggPagamentos._sum.valor ?? 0;
     const receitaMes = aggMes._sum.valorLiquido ?? 0;
     const comissaoMes = aggMes._sum.comissaoGerada ?? 0;
+    const receitaPeriodo = aggPeriodo._sum.valorLiquido ?? 0;
+    const comissaoPeriodo = aggPeriodo._sum.comissaoGerada ?? 0;
+    const progresso = (receita) =>
+      tecnico.metaMensal ? Math.min(100, Math.round((receita / tecnico.metaMensal) * 100)) : null;
     res.json({
-      tecnico: { id: tecnico.id, nome: tecnico.nome, comissao: tecnico.comissao, metaMensal: tecnico.metaMensal, fotoPerfil: tecnico.fotoPerfil },
+      tecnico: {
+        id: tecnico.id,
+        nome: tecnico.nome,
+        comissao: tecnico.comissao,
+        metaMensal: tecnico.metaMensal,
+        fotoPerfil: tecnico.fotoPerfil,
+      },
       totalServicos: aggTotal._count,
       comissaoGanha: parseFloat(comissaoGanha.toFixed(2)),
       totalRecebido: parseFloat(recebido.toFixed(2)),
@@ -105,8 +181,22 @@ router.get('/me/metricas', async (req, res) => {
         receitaLiquida: parseFloat(receitaMes.toFixed(2)),
         comissao: parseFloat(comissaoMes.toFixed(2)),
         meta: tecnico.metaMensal ?? null,
-        progressoMeta: tecnico.metaMensal ? Math.min(100, Math.round((receitaMes / tecnico.metaMensal) * 100)) : null,
+        progressoMeta: progresso(receitaMes),
       },
+      // F9/M1 (aditivo): métricas do período selecionado + série diária pessoal.
+      periodo: {
+        chave: periodo,
+        servicos: aggPeriodo._count,
+        receitaLiquida: parseFloat(receitaPeriodo.toFixed(2)),
+        comissao: parseFloat(comissaoPeriodo.toFixed(2)),
+        meta: tecnico.metaMensal ?? null,
+        progressoMeta: progresso(receitaPeriodo),
+      },
+      serie: agruparReceitaPorDia(servicosPeriodo).map((d) => ({
+        data: d.data,
+        receita: parseFloat(d.receita.toFixed(2)),
+        comissao: parseFloat(d.comissao.toFixed(2)),
+      })),
     });
   } catch (erro) {
     logger.error('Erro GET /me/metricas', { erro: erro.message });
@@ -119,8 +209,13 @@ router.get('/me/servicos', async (req, res) => {
     if (!podeProprio(req.user, 'ver_metricas') && !podeProprio(req.user, 'registrar_servico')) {
       return res.status(403).json({ erro: 'Sem permissão' });
     }
-    if (!req.user.tecnicoId) return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
-    const servicos = await req.db.servico.findMany({ where: { tecnicoId: req.user.tecnicoId }, orderBy: { criadoEm: 'desc' }, take: 100 });
+    if (!req.user.tecnicoId)
+      return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
+    const servicos = await req.db.servico.findMany({
+      where: { tecnicoId: req.user.tecnicoId },
+      orderBy: { criadoEm: 'desc' },
+      take: 100,
+    });
     res.json(servicos);
   } catch (erro) {
     logger.error('Erro GET /me/servicos', { erro: erro.message });
@@ -136,7 +231,8 @@ router.patch('/me', async (req, res) => {
       telefone: z.string().min(8).max(20).optional().nullable().or(z.literal('')),
     });
     const parse = schema.safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
+    if (!parse.success)
+      return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const data = {};
     const atual = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (parse.data.nome !== undefined) data.nome = parse.data.nome;
@@ -150,10 +246,15 @@ router.patch('/me', async (req, res) => {
       data.telefone = telefone;
       if (telefone !== atual.telefone) data.telefoneVerificado = false;
     }
-    const usuario = await prisma.usuario.update({ where: { id: req.user.id }, data, select: SELECT_ME });
+    const usuario = await prisma.usuario.update({
+      where: { id: req.user.id },
+      data,
+      select: SELECT_ME,
+    });
     res.json(usuario);
   } catch (erro) {
-    if (erro.code === 'P2002') return res.status(409).json({ erro: 'E-mail já em uso por outra conta' });
+    if (erro.code === 'P2002')
+      return res.status(409).json({ erro: 'E-mail já em uso por outra conta' });
     logger.error('Erro PATCH /me', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
@@ -161,14 +262,19 @@ router.patch('/me', async (req, res) => {
 
 router.patch('/me/senha', async (req, res) => {
   try {
-    const parse = z.object({ senhaAtual: z.string().min(1), novaSenha: z.string().min(8) }).safeParse(req.body);
+    const parse = z
+      .object({ senhaAtual: z.string().min(1), novaSenha: z.string().min(8) })
+      .safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
     const { senhaAtual, novaSenha } = parse.data;
     const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     const confere = await bcrypt.compare(senhaAtual, usuario.senhaHash);
     if (!confere) return res.status(401).json({ erro: 'Senha atual incorreta' });
     const forca = avaliarForcaSenha(novaSenha);
-    if (!forca.valida) return res.status(400).json({ erro: 'A nova senha é muito fraca', requisitos: forca.requisitos });
+    if (!forca.valida)
+      return res
+        .status(400)
+        .json({ erro: 'A nova senha é muito fraca', requisitos: forca.requisitos });
     const senhaHash = await bcrypt.hash(novaSenha, 12);
     const agora = new Date();
     const corte = new Date(agora.getTime() - 1000);
@@ -187,7 +293,9 @@ router.patch('/me/senha', async (req, res) => {
 
 router.delete('/me/conta', async (req, res) => {
   try {
-    const parse = z.object({ senha: z.string().optional(), codigo: z.string().optional() }).safeParse(req.body ?? {});
+    const parse = z
+      .object({ senha: z.string().optional(), codigo: z.string().optional() })
+      .safeParse(req.body ?? {});
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
     const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
@@ -201,12 +309,18 @@ router.delete('/me/conta', async (req, res) => {
       if (!ok) return res.status(403).json({ erro: 'Código 2FA inválido' });
     }
     const { empresaId } = usuario;
-    const adminsAtivos = await prisma.usuario.count({ where: { empresaId, ativo: true, admin: true } });
+    const adminsAtivos = await prisma.usuario.count({
+      where: { empresaId, ativo: true, admin: true },
+    });
     const apagaEmpresa = usuario.admin && adminsAtivos <= 1;
     if (apagaEmpresa) {
       await apagarEmpresaEmCascata(empresaId);
       logger.info('conta_excluida_empresa', { userId: usuario.id, empresaId });
-      return res.json({ ok: true, escopo: 'empresa', mensagem: 'Conta e empresa excluídas permanentemente' });
+      return res.json({
+        ok: true,
+        escopo: 'empresa',
+        mensagem: 'Conta e empresa excluídas permanentemente',
+      });
     }
     await prisma.usuario.delete({ where: { id: usuario.id } });
     logger.info('conta_excluida_usuario', { userId: usuario.id, empresaId });
@@ -226,7 +340,10 @@ router.post('/me/2fa/setup', async (req, res) => {
     const secret = gerarSegredoTotp();
     const otpauthUrl = montarOtpauthUrl(secret, req.user.nome);
     const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
-    await prisma.usuario.update({ where: { id: req.user.id }, data: { totpPendente: cifrarSegredo(secret) } });
+    await prisma.usuario.update({
+      where: { id: req.user.id },
+      data: { totpPendente: cifrarSegredo(secret) },
+    });
     res.json({ secret, otpauthUrl, qrDataUrl });
   } catch (erro) {
     logger.error('Erro POST /me/2fa/setup', { erro: erro.message });
@@ -238,7 +355,10 @@ router.post('/me/2fa/ativar', async (req, res) => {
   try {
     const parse = z.object({ codigo: z.string().min(1) }).safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id }, select: { totpPendente: true } });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { totpPendente: true },
+    });
     const segredo = decifrarSegredo(usuario?.totpPendente);
     if (!segredo) return res.status(400).json({ erro: 'Inicie a configuração em /me/2fa/setup' });
     const ok = await verificarCodigo(segredo, parse.data.codigo);
@@ -246,7 +366,10 @@ router.post('/me/2fa/ativar', async (req, res) => {
 
     let codigosRecuperacao;
     await prisma.$transaction(async (tx) => {
-      await tx.usuario.update({ where: { id: req.user.id }, data: { totpSecret: cifrarSegredo(segredo), totpPendente: null, twoFactorAtivo: true } });
+      await tx.usuario.update({
+        where: { id: req.user.id },
+        data: { totpSecret: cifrarSegredo(segredo), totpPendente: null, twoFactorAtivo: true },
+      });
       codigosRecuperacao = await gerarCodigos(req.user.id, tx);
     });
 
@@ -260,7 +383,9 @@ router.post('/me/2fa/ativar', async (req, res) => {
 
 router.post('/me/2fa/recuperar', async (req, res) => {
   try {
-    const parse = z.object({ desafio: z.string().min(1), codigo: z.string().min(1) }).safeParse(req.body);
+    const parse = z
+      .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
+      .safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
 
     let payload;
@@ -286,7 +411,13 @@ router.post('/me/2fa/recuperar', async (req, res) => {
     const { gerarJWT } = await import('../services/auth.js');
     const token = gerarJWT(usuario);
     logger.info('recuperacao_2fa_sucesso', { userId: usuario.id });
-    res.json({ token, nome: usuario.nome, admin: usuario.admin, papel: usuario.papel, senhaProvisoria: usuario.senhaProvisoria });
+    res.json({
+      token,
+      nome: usuario.nome,
+      admin: usuario.admin,
+      papel: usuario.papel,
+      senhaProvisoria: usuario.senhaProvisoria,
+    });
   } catch (erro) {
     logger.error('Erro POST /me/2fa/recuperar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -297,12 +428,18 @@ router.post('/me/2fa/desativar', async (req, res) => {
   try {
     const parse = z.object({ codigo: z.string().min(1) }).safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id }, select: { totpSecret: true, twoFactorAtivo: true } });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { totpSecret: true, twoFactorAtivo: true },
+    });
     if (!usuario?.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
     const segredo = decifrarSegredo(usuario.totpSecret);
     const ok = await verificarCodigo(segredo, parse.data.codigo);
     if (!ok) return res.status(400).json({ erro: 'Código inválido' });
-    await prisma.usuario.update({ where: { id: req.user.id }, data: { twoFactorAtivo: false, totpSecret: null, totpPendente: null } });
+    await prisma.usuario.update({
+      where: { id: req.user.id },
+      data: { twoFactorAtivo: false, totpSecret: null, totpPendente: null },
+    });
     logger.info('2fa_desativado', { userId: req.user.id });
     res.json({ twoFactorAtivo: false });
   } catch (erro) {
@@ -313,7 +450,10 @@ router.post('/me/2fa/desativar', async (req, res) => {
 
 router.post('/me/telefone/otp/enviar', async (req, res) => {
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id }, select: { telefone: true } });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { telefone: true },
+    });
     if (!usuario?.telefone) return res.status(400).json({ erro: 'Cadastre um telefone primeiro' });
     await gerarEEnviarOtp(req.user.id, usuario.telefone);
     res.json({ enviado: true });
@@ -329,25 +469,56 @@ router.post('/me/telefone/otp/verificar', async (req, res) => {
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
     const usuario = await prisma.usuario.findUnique({
       where: { id: req.user.id },
-      select: { id: true, nome: true, telefone: true, empresaId: true, telefoneOtpHash: true, telefoneOtpExpira: true },
+      select: {
+        id: true,
+        nome: true,
+        telefone: true,
+        empresaId: true,
+        telefoneOtpHash: true,
+        telefoneOtpExpira: true,
+      },
     });
     if (!usuario?.telefone) return res.status(400).json({ erro: 'Cadastre um telefone primeiro' });
-    if (!validarOtpTelefone(usuario, parse.data.codigo)) return res.status(400).json({ erro: 'Código inválido ou expirado' });
+    if (!validarOtpTelefone(usuario, parse.data.codigo))
+      return res.status(400).json({ erro: 'Código inválido ou expirado' });
     const telefone = canonizarTelefone(usuario.telefone);
-    await prisma.usuario.update({ where: { id: usuario.id }, data: { telefoneVerificado: true, telefoneOtpHash: null, telefoneOtpExpira: null } });
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { telefoneVerificado: true, telefoneOtpHash: null, telefoneOtpExpira: null },
+    });
     try {
-      const existente = await prisma.tecnico.findFirst({ where: { empresaId: usuario.empresaId, telefone } });
+      const existente = await prisma.tecnico.findFirst({
+        where: { empresaId: usuario.empresaId, telefone },
+      });
       if (existente) {
         if (existente.usuarioId == null) {
-          await prisma.tecnico.update({ where: { id: existente.id }, data: { usuarioId: usuario.id, ativo: true } });
+          await prisma.tecnico.update({
+            where: { id: existente.id },
+            data: { usuarioId: usuario.id, ativo: true },
+          });
         } else if (existente.usuarioId !== usuario.id) {
-          logger.warn('Técnico do telefone já vinculado a outro usuário', { userId: usuario.id, tecnicoId: existente.id, empresaId: usuario.empresaId });
+          logger.warn('Técnico do telefone já vinculado a outro usuário', {
+            userId: usuario.id,
+            tecnicoId: existente.id,
+            empresaId: usuario.empresaId,
+          });
         }
       } else {
-        await prisma.tecnico.create({ data: { empresaId: usuario.empresaId, nome: usuario.nome, telefone, telefoneDisplay: telefone, usuarioId: usuario.id } });
+        await prisma.tecnico.create({
+          data: {
+            empresaId: usuario.empresaId,
+            nome: usuario.nome,
+            telefone,
+            telefoneDisplay: telefone,
+            usuarioId: usuario.id,
+          },
+        });
       }
     } catch (e) {
-      logger.warn('Falha ao criar técnico do dono na verificação', { userId: usuario.id, erro: e.message });
+      logger.warn('Falha ao criar técnico do dono na verificação', {
+        userId: usuario.id,
+        erro: e.message,
+      });
     }
     logger.info('telefone_verificado', { userId: usuario.id });
     res.json({ telefoneVerificado: true });
@@ -359,8 +530,14 @@ router.post('/me/telefone/otp/verificar', async (req, res) => {
 
 router.post('/me/telefone/2fa/ativar', async (req, res) => {
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id }, select: { telefoneVerificado: true } });
-    if (!usuario?.telefoneVerificado) return res.status(400).json({ erro: 'Verifique seu telefone antes de ativar o 2FA por telefone' });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.user.id },
+      select: { telefoneVerificado: true },
+    });
+    if (!usuario?.telefoneVerificado)
+      return res
+        .status(400)
+        .json({ erro: 'Verifique seu telefone antes de ativar o 2FA por telefone' });
     await prisma.usuario.update({ where: { id: req.user.id }, data: { phone2faAtivo: true } });
     logger.info('phone2fa_ativado', { userId: req.user.id });
     res.json({ phone2faAtivo: true });

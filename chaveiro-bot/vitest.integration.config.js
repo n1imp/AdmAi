@@ -11,6 +11,13 @@ process.env.JWT_SECRET ??= '0123456789012345678901234567890123456789';
 // O robô do WhatsApp é uma feature futura (inerte por padrão). Nos testes de integração
 // ligamos a flag para exercitar o roteamento inbound (número único) — é código válido.
 process.env.WHATSAPP_HABILITADO ??= 'true';
+// F9/M3: liga o "serviço em andamento" para exercitar iniciar/concluir/servico-atual.
+// Só ativa os 3 endpoints novos; nenhuma rota existente muda. O caso flag-off (404) é
+// coberto isoladamente no próprio teste via re-import com a flag desligada.
+process.env.SERVICO_ANDAMENTO_ENABLED ??= 'true';
+// F9/M4: liga os documentos do funcionário (/me/documentos). Sem SUPABASE_URL, o upload
+// cai pro disco local (./uploads-docs) — suficiente para exercitar o CRUD nos testes.
+process.env.DOCUMENTOS_ENABLED ??= 'true';
 
 // Paridade com vitest.config.js: o .env do host pode trazer ADMIN_USERNAME/ADMIN_PASSWORD
 // inválidos (ex.: senha < 8 chars, ou um `#` que o dotenv corta como comentário inline),

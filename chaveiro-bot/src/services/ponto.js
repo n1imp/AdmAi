@@ -92,20 +92,28 @@ export function resumoMes(tecnico, registros) {
 /** Dia local (UTC à meia-noite do dia-calendário de São Paulo) para chavear o RegistroPonto. */
 export function diaLocal(agora = new Date()) {
   const s = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   }).format(agora); // "YYYY-MM-DD"
   return new Date(`${s}T00:00:00.000Z`);
 }
 
 function fmtHora(d) {
   return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ, hour: '2-digit', minute: '2-digit',
+    timeZone: TZ,
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(d);
 }
 
 function fmtData(d) {
   return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TZ, day: '2-digit', month: '2-digit', year: 'numeric',
+    timeZone: TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   }).format(d);
 }
 
@@ -139,21 +147,34 @@ export async function registrarPonto({ empresaId, tecnicoId, tecnico = null, ago
   // Estado 0 — sem entrada → registra ENTRADA
   if (!reg.entradaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { entradaEm: agora } });
-    return { resposta: `✅ Entrada registrada: ${fmtHora(agora)} do dia ${fmtData(agora)}`, tipo: 'entrada', registroId: reg.id };
+    return {
+      resposta: `✅ Entrada registrada: ${fmtHora(agora)} do dia ${fmtData(agora)}`,
+      tipo: 'entrada',
+      registroId: reg.id,
+    };
   }
   // Estado 1 — entrada feita → SAÍDA ALMOÇO
   if (!reg.almocoSaidaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { almocoSaidaEm: agora } });
-    return { resposta: `✅ Saída para almoço: ${fmtHora(agora)}`, tipo: 'almoco_saida', registroId: reg.id };
+    return {
+      resposta: `✅ Saída para almoço: ${fmtHora(agora)}`,
+      tipo: 'almoco_saida',
+      registroId: reg.id,
+    };
   }
   // Estado 2 — almoço saída feita → VOLTA ALMOÇO
   if (!reg.almocoVoltaEm) {
     await prisma.registroPonto.update({ where: { id: reg.id }, data: { almocoVoltaEm: agora } });
-    return { resposta: `✅ Volta do almoço: ${fmtHora(agora)}`, tipo: 'almoco_volta', registroId: reg.id };
+    return {
+      resposta: `✅ Volta do almoço: ${fmtHora(agora)}`,
+      tipo: 'almoco_volta',
+      registroId: reg.id,
+    };
   }
   // Estado 3 — volta feita → SAÍDA FINAL (calcula total + HE)
   if (!reg.saidaEm) {
-    const totalMinutos = diffMin(agora, reg.entradaEm) - diffMin(reg.almocoVoltaEm, reg.almocoSaidaEm);
+    const totalMinutos =
+      diffMin(agora, reg.entradaEm) - diffMin(reg.almocoVoltaEm, reg.almocoSaidaEm);
     const { horaExtraMinutos } = calcularDia(tec, totalMinutos);
     await prisma.registroPonto.update({
       where: { id: reg.id },

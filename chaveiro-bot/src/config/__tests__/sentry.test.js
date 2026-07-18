@@ -9,11 +9,17 @@ const initMock = vi.hoisted(() => vi.fn());
 const captureMock = vi.hoisted(() => vi.fn());
 const scope = vi.hoisted(() => ({ setUser: vi.fn(), setTag: vi.fn(), setExtra: vi.fn() }));
 const withScopeMock = vi.hoisted(() => vi.fn((cb) => cb(scope)));
-vi.mock('@sentry/node', () => ({ init: initMock, captureException: captureMock, withScope: withScopeMock }));
+vi.mock('@sentry/node', () => ({
+  init: initMock,
+  captureException: captureMock,
+  withScope: withScopeMock,
+}));
 
 const envMock = vi.hoisted(() => ({ env: {} }));
 vi.mock('../env.js', () => envMock);
-vi.mock('../../utils/logger.js', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+vi.mock('../../utils/logger.js', () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 const DSN = 'https://k@o0.ingest.sentry.io/1';
 
@@ -58,7 +64,12 @@ describe('sentry (F5)', () => {
     envMock.env = { SENTRY_DSN: DSN, NODE_ENV: 'production' };
     const { iniciarSentry, capturarErro } = await freshSentry();
     iniciarSentry();
-    capturarErro(new Error('boom'), { userId: 9, empresaId: 7, feature: 'http', extra: { path: '/x' } });
+    capturarErro(new Error('boom'), {
+      userId: 9,
+      empresaId: 7,
+      feature: 'http',
+      extra: { path: '/x' },
+    });
     expect(scope.setUser).toHaveBeenCalledWith({ id: '9' });
     expect(scope.setTag).toHaveBeenCalledWith('empresaId', '7');
     expect(scope.setTag).toHaveBeenCalledWith('feature', 'http');

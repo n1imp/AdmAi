@@ -65,16 +65,24 @@ export function urlAutorizacao(empresaId) {
  */
 export async function trocarCodigo(code, state) {
   const { empresaId } = validarState(state);
-  if (!env.GOOGLE_OAUTH_CLIENT_ID || !env.GOOGLE_OAUTH_CLIENT_SECRET || !env.GOOGLE_OAUTH_REDIRECT_URI) {
+  if (
+    !env.GOOGLE_OAUTH_CLIENT_ID ||
+    !env.GOOGLE_OAUTH_CLIENT_SECRET ||
+    !env.GOOGLE_OAUTH_REDIRECT_URI
+  ) {
     throw new Error('OAuth do Google não configurado');
   }
-  const resp = await axios.post(TOKEN_URL, new URLSearchParams({
-    code,
-    client_id: env.GOOGLE_OAUTH_CLIENT_ID,
-    client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-    redirect_uri: env.GOOGLE_OAUTH_REDIRECT_URI,
-    grant_type: 'authorization_code',
-  }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 });
+  const resp = await axios.post(
+    TOKEN_URL,
+    new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+      client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+      redirect_uri: env.GOOGLE_OAUTH_REDIRECT_URI,
+      grant_type: 'authorization_code',
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 }
+  );
 
   const { access_token, refresh_token, expires_in, scope } = resp.data;
   const tokenExpira = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
@@ -124,12 +132,16 @@ export async function renovarToken(empresaId, { forcar = false } = {}) {
   }
 
   try {
-    const resp = await axios.post(TOKEN_URL, new URLSearchParams({
-      refresh_token: refresh,
-      client_id: env.GOOGLE_OAUTH_CLIENT_ID,
-      client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-    }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 });
+    const resp = await axios.post(
+      TOKEN_URL,
+      new URLSearchParams({
+        refresh_token: refresh,
+        client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+        grant_type: 'refresh_token',
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 }
+    );
 
     const { access_token, expires_in } = resp.data;
     const tokenExpira = expires_in ? new Date(Date.now() + expires_in * 1000) : null;

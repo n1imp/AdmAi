@@ -86,11 +86,28 @@ export function criarApp() {
     next();
   });
 
-  const limiter = rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
+  const limiter = rateLimit({
+    windowMs: 60_000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Nos testes de integração, centenas de chamadas /api partem do MESMO IP (supertest,
+    // 127.0.0.1) num único minuto e estouram o balde de 120 → 429 espúrios em cascata
+    // (o limiter global é infra, não é exercido por nenhum teste). Desliga só em teste;
+    // dev/produção seguem protegidos. Os limiters de auth/2FA (testados) continuam ativos.
+    skip: () => env.NODE_ENV === 'test',
+    store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
+  });
   app.use('/api', limiter);
 
   // Rate limit dedicado e mais permissivo para o webhook inbound (por IP da Evolution).
-  const webhookLimiter = rateLimit({ windowMs: 60_000, limit: 600, standardHeaders: true, legacyHeaders: false, store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }) });
+  const webhookLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
+  });
   app.use('/webhook', webhookLimiter);
 
   // Rate limit AGRESSIVO contra brute force em login/registro (guia §3.2).
@@ -158,7 +175,10 @@ export function criarApp() {
       await prisma.$queryRaw`SELECT 1`;
       saude.checks.database = 'ok';
       // Estado da conexão ÚNICA do robô (número único) — singleton ConexaoBot (id=1).
-      const conexao = await prisma.conexaoBot.findUnique({ where: { id: 1 }, select: { estadoConexao: true } });
+      const conexao = await prisma.conexaoBot.findUnique({
+        where: { id: 1 },
+        select: { estadoConexao: true },
+      });
       saude.whatsapp = conexao?.estadoConexao ?? 'desconectado';
     } catch {
       saude.checks.database = 'error';

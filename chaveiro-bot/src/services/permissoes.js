@@ -17,27 +17,40 @@
 
 // Módulos de empresa (acesso amplo — dono/gestor). Ordem = ordem de exibição no painel.
 export const MODULOS = [
-  'dashboard', 'servicos', 'tecnicos', 'estoque',
-  'financeiro', 'avaliacoes', 'ponto', 'aprovacoes',
-  'usuarios', 'configuracao',
+  'dashboard',
+  'servicos',
+  'tecnicos',
+  'estoque',
+  'financeiro',
+  'avaliacoes',
+  'ponto',
+  'aprovacoes',
+  'usuarios',
+  'configuracao',
 ];
 
 // Ações disponíveis por módulo (o que pode ser ligado/desligado na matriz do painel).
 export const ACOES_POR_MODULO = {
-  dashboard:    ['ver'],
-  servicos:     ['ver', 'criar', 'editar', 'deletar'],
-  tecnicos:     ['ver', 'editar'],
-  estoque:      ['ver', 'editar'],
-  financeiro:   ['ver', 'editar'],
-  avaliacoes:   ['ver', 'editar'],
-  ponto:        ['ver', 'editar'],   // ver = banco de horas de TODOS; editar = ajustar pontos
-  aprovacoes:   ['ver', 'aprovar'],
-  usuarios:     ['ver', 'editar'],
+  dashboard: ['ver'],
+  servicos: ['ver', 'criar', 'editar', 'deletar'],
+  tecnicos: ['ver', 'editar'],
+  estoque: ['ver', 'editar'],
+  financeiro: ['ver', 'editar'],
+  avaliacoes: ['ver', 'editar'],
+  ponto: ['ver', 'editar'], // ver = banco de horas de TODOS; editar = ajustar pontos
+  aprovacoes: ['ver', 'aprovar'],
+  usuarios: ['ver', 'editar'],
   configuracao: ['ver', 'editar'],
 };
 
 // Capacidades do escopo "próprio" (painel simplificado do funcionário).
-export const CAPACIDADES_PROPRIO = ['bater_ponto', 'ver_metricas', 'editar_perfil', 'registrar_servico'];
+export const CAPACIDADES_PROPRIO = [
+  'bater_ponto',
+  'ver_metricas',
+  'editar_perfil',
+  'registrar_servico',
+  'documentos',
+];
 
 export const PAPEIS = ['dono', 'gestor', 'funcionario'];
 
@@ -61,17 +74,17 @@ function grantTotal() {
 // dono não tem preset estático (é sempre grantTotal, ver permissoesEfetivas).
 
 const PRESET_GESTOR = {
-  dashboard:    { ver: true },
-  servicos:     { ver: true, criar: true, editar: true, deletar: true },
-  tecnicos:     { ver: true, editar: true },
-  estoque:      { ver: true, editar: true },
-  financeiro:   { ver: true, editar: false },   // gestor VÊ financeiro, não edita
-  avaliacoes:   { ver: true, editar: true },
-  ponto:        { ver: true, editar: true },
-  aprovacoes:   { ver: true, aprovar: true },
-  usuarios:     { ver: false, editar: false },  // só o dono gerencia contas
+  dashboard: { ver: true },
+  servicos: { ver: true, criar: true, editar: true, deletar: true },
+  tecnicos: { ver: true, editar: true },
+  estoque: { ver: true, editar: true },
+  financeiro: { ver: true, editar: false }, // gestor VÊ financeiro, não edita
+  avaliacoes: { ver: true, editar: true },
+  ponto: { ver: true, editar: true },
+  aprovacoes: { ver: true, aprovar: true },
+  usuarios: { ver: false, editar: false }, // só o dono gerencia contas
   configuracao: { ver: false, editar: false },
-  proprio:      presetProprio(true),            // gestor também é pessoa: pode bater o próprio ponto etc.
+  proprio: presetProprio(true), // gestor também é pessoa: pode bater o próprio ponto etc.
 };
 
 const PRESET_FUNCIONARIO = (() => {
