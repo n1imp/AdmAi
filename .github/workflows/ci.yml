@@ -159,6 +159,12 @@ jobs:
       - name: Testes (Vitest + RTL) + cobertura (v8)
         run: npm run test:coverage
 
+      # Acessibilidade automatizada (axe-core), F9/M6 fase B. NAO-bloqueante no inicio
+      # ("comecar reportando"; sobe p/ bloqueante por marco). Roda so os *.axe.jsx.
+      - name: Acessibilidade (axe-core) — nao-bloqueante
+        run: npm run test:a11y
+        continue-on-error: true
+
       - name: Build de produção
         run: npm run build
 
