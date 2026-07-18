@@ -22,7 +22,7 @@ import {
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
-import { capturarErro } from '../config/sentry.js';
+import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -609,7 +609,10 @@ router.get('/me/preferencias/dashboard', async (req, res) => {
     const dashboard = usuario?.preferencias?.dashboard ?? null;
     res.json({ dashboard });
   } catch (erro) {
-    logger.error('Erro GET /me/preferencias/dashboard', { erro: erro.message });
+    logger.error('Erro GET /me/preferencias/dashboard', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'preferencias',
       userId: req.user?.id,
@@ -635,7 +638,10 @@ router.put('/me/preferencias/dashboard', async (req, res) => {
     await prisma.usuario.update({ where: { id: req.user.id }, data: { preferencias } });
     res.json({ dashboard: parse.data });
   } catch (erro) {
-    logger.error('Erro PUT /me/preferencias/dashboard', { erro: erro.message });
+    logger.error('Erro PUT /me/preferencias/dashboard', {
+      erro: erro.message,
+      [JA_ENVIADO_AO_SENTRY]: true,
+    });
     capturarErro(erro, {
       feature: 'preferencias',
       userId: req.user?.id,

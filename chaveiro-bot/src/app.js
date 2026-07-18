@@ -12,7 +12,7 @@ import Redis from 'ioredis';
 import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
 import { env } from './config/env.js';
-import { capturarErro } from './config/sentry.js';
+import { capturarErro, JA_ENVIADO_AO_SENTRY } from './config/sentry.js';
 import { metricsMiddleware, metricsHandler } from './config/metrics.js';
 import { apiRouter } from './routes/api.js';
 import { logger } from './utils/logger.js';
@@ -189,7 +189,7 @@ export function criarApp() {
 
   app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
   app.use((erro, req, res, next) => {
-    logger.error('Erro não tratado', { erro: erro.message });
+    logger.error('Erro não tratado', { erro: erro.message, [JA_ENVIADO_AO_SENTRY]: true });
     capturarErro(erro, {
       feature: 'http',
       userId: req.user?.id,
