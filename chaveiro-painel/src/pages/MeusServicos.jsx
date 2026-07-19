@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Calendar, MapPin, User, CheckCircle, Clock, XCircle } from 'lucide-react';
+import {
+  Plus,
+  Calendar,
+  MapPin,
+  User,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Play,
+  CheckCheck,
+  Loader,
+} from 'lucide-react';
 import api, { formatarMoeda, formatarData } from '../lib/api.js';
 import { SkeletonLista } from '../components/Skeleton.jsx';
 import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
+import { useToast } from '../components/Toast.jsx';
 
 // Badge por status do serviço próprio.
 const STATUS = {
@@ -12,6 +24,12 @@ const STATUS = {
     rotulo: 'Aprovado',
     icon: CheckCircle,
     classe: 'bg-success/10 text-success border-success/20',
+  },
+  // F9/M3: estado transitório "serviço atual" do funcionário (atrás da flag).
+  em_andamento: {
+    rotulo: 'Em andamento',
+    icon: Loader,
+    classe: 'bg-accent-400/10 text-accent-300 border-accent-400/20',
   },
   pendente: {
     rotulo: 'Aguardando aprovação',
@@ -43,7 +61,7 @@ function BadgeStatus({ status }) {
   );
 }
 
-function CardMeuServico({ servico }) {
+function CardMeuServico({ servico, acao }) {
   return (
     <div className="card animate-fade-in">
       <div className="flex items-start justify-between gap-2">
@@ -79,16 +97,23 @@ function CardMeuServico({ servico }) {
           </p>
         </div>
       </div>
+      {acao && <div className="mt-3">{acao}</div>}
     </div>
   );
 }
 
 export default function MeusServicos() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [servicos, setServicos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  // F9/M3 (flag SERVICO_ANDAMENTO_ENABLED): "serviço atual" do funcionário. Detectado por
+  // feature-probe — o endpoint responde 404 com a flag off, então a UI some por completo.
+  const [servicoAtual, setServicoAtual] = useState(null);
+  const [m3Disponivel, setM3Disponivel] = useState(false);
+  const [acaoId, setAcaoId] = useState(null);
 
   // Filtro inicial vindo do deep-link (ex.: MeuPainel → ?status=pendente).
   const statusUrl = searchParams.get('status');
@@ -117,9 +142,53 @@ export default function MeusServicos() {
     }
   }, []);
 
+  // Probe do M3: 200 → feature ligada (guarda o serviço atual); 404/403 → desligada (esconde).
+  const sincronizarAtual = useCallback(async () => {
+    try {
+      const { data } = await api.get('/me/servico-atual');
+      setM3Disponivel(true);
+      setServicoAtual(data?.servico ?? null);
+    } catch {
+      setM3Disponivel(false);
+      setServicoAtual(null);
+    }
+  }, []);
+
   useEffect(() => {
     buscar();
-  }, [buscar]);
+    sincronizarAtual();
+  }, [buscar, sincronizarAtual]);
+
+  async function iniciar(id) {
+    if (acaoId) return;
+    setAcaoId(id);
+    try {
+      const { data } = await api.post(`/servicos/${id}/iniciar`);
+      setServicoAtual(data?.servico ?? null);
+      await buscar();
+      toast('Serviço iniciado', 'success');
+    } catch (e) {
+      if (e.response?.status === 409) toast('Você já tem um serviço em andamento', 'warning');
+      else toast('Não foi possível iniciar o serviço', 'error');
+    } finally {
+      setAcaoId(null);
+    }
+  }
+
+  async function concluir(id) {
+    if (acaoId) return;
+    setAcaoId(id);
+    try {
+      await api.post(`/servicos/${id}/concluir`);
+      setServicoAtual(null);
+      await buscar();
+      toast('Serviço concluído', 'success');
+    } catch {
+      toast('Não foi possível concluir o serviço', 'error');
+    } finally {
+      setAcaoId(null);
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -148,6 +217,36 @@ export default function MeusServicos() {
       </div>
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
+
+      {/* Serviço atual em andamento (F9/M3) — some com a flag off (m3Disponivel=false) */}
+      {m3Disponivel && servicoAtual && (
+        <div className="px-4 mb-3">
+          <div className="card card-accent bg-gradient-to-br from-accent-400/10 to-dark-800">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="section-label mb-1">
+                  <span className="w-5 h-px bg-accent-400" /> SERVIÇO ATUAL
+                </p>
+                <p className="text-white font-semibold text-sm truncate">
+                  {servicoAtual.descricao}
+                </p>
+                <p className="text-muted text-xs mt-0.5 truncate">
+                  {servicoAtual.local}
+                  {servicoAtual.iniciadoEm &&
+                    ` · iniciado ${formatarData(servicoAtual.iniciadoEm)}`}
+                </p>
+              </div>
+              <button
+                onClick={() => concluir(servicoAtual.id)}
+                disabled={acaoId === servicoAtual.id}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-success text-dark-950 font-display font-semibold uppercase tracking-wider text-sm hover:bg-success/90 transition-colors disabled:opacity-60 shrink-0"
+              >
+                <CheckCheck size={18} /> Concluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filtro por status (só quando há registros) */}
       {!carregando && servicos.length > 0 && (
@@ -191,7 +290,21 @@ export default function MeusServicos() {
         ) : (
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {visiveis.map((s) => (
-              <CardMeuServico key={s.id} servico={s} />
+              <CardMeuServico
+                key={s.id}
+                servico={s}
+                acao={
+                  m3Disponivel && s.status === 'ativo' && !servicoAtual ? (
+                    <button
+                      onClick={() => iniciar(s.id)}
+                      disabled={acaoId === s.id}
+                      className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-md bg-accent-400/10 text-accent-300 border border-accent-400/20 font-display font-semibold uppercase tracking-wide text-xs hover:bg-accent-400/15 transition-colors disabled:opacity-60"
+                    >
+                      <Play size={14} /> Iniciar serviço
+                    </button>
+                  ) : null
+                }
+              />
             ))}
           </div>
         )}
