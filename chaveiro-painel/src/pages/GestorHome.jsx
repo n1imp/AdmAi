@@ -32,11 +32,32 @@ const PERIODOS = [
   { value: 'mes', label: 'Mês' },
 ];
 
+// F9/M2: presença do time HOJE (do endpoint /gestor/indicadores). Cada técnico tem um
+// status derivado do RegistroPonto do dia; aqui viram rótulo + cor.
+const STATUS_PRESENCA = {
+  trabalhando: {
+    label: 'Trabalhando',
+    cor: 'bg-success/10 text-success border-success/20',
+    dot: 'bg-success',
+  },
+  almoco: {
+    label: 'Almoço',
+    cor: 'bg-warning/10 text-warning border-warning/20',
+    dot: 'bg-warning',
+  },
+  encerrado: {
+    label: 'Encerrado',
+    cor: 'bg-sky-400/10 text-sky-300 border-sky-400/20',
+    dot: 'bg-sky-400',
+  },
+  ausente: { label: 'Ausente', cor: 'bg-dark-700 text-muted border-dark-600', dot: 'bg-dark-500' },
+};
+
 export default function GestorHome() {
   const [periodo, setPeriodo] = useState('mes');
   const [dados, setDados] = useState(null);
   const [carregandoKpis, setCarregandoKpis] = useState(true);
-  const [pendentes, setPendentes] = useState(null);
+  const [indicadores, setIndicadores] = useState(null);
   const [satisfacao, setSatisfacao] = useState(null);
   const [servicos, setServicos] = useState([]);
   const [total, setTotal] = useState(0);
@@ -70,16 +91,18 @@ export default function GestorHome() {
     setErro(false);
     (async () => {
       try {
-        const [rec, pend, aval] = await Promise.all([
+        // M2: /gestor/indicadores traz pendentes + presença do time num único round-trip
+        // (antes eram fetches separados). Satisfação segue no /avaliacoes (tem a distribuição,
+        // que o endpoint enxuto de indicadores não devolve). Ambos degradam sem derrubar a tela.
+        const [rec, ind, aval] = await Promise.all([
           api.get('/servicos?limit=5'),
-          api.get('/servicos/pendentes').catch(() => ({ data: [] })),
+          api.get('/gestor/indicadores').catch(() => ({ data: null })),
           api.get('/avaliacoes').catch(() => ({ data: null })),
         ]);
         if (!vivo) return;
         setServicos(rec.data.data ?? []);
         setTotal(rec.data.total ?? 0);
-        const listaPend = Array.isArray(pend.data) ? pend.data : (pend.data?.data ?? []);
-        setPendentes(listaPend.length);
+        setIndicadores(ind.data);
         setSatisfacao(aval.data?.resumo ?? null);
       } catch {
         if (vivo) setErro(true);
@@ -93,6 +116,8 @@ export default function GestorHome() {
   }, []);
 
   const comp = dados?.comparativo ?? {};
+  const pendentes = indicadores?.pendentes ?? null;
+  const presenca = indicadores?.presencaHoje ?? [];
 
   return (
     <div className="animate-fade-in pb-4">
@@ -181,6 +206,53 @@ export default function GestorHome() {
 
         <CardSatisfacao resumo={satisfacao} />
       </div>
+
+      {/* Presença do time hoje (F9/M2) */}
+      <section className="px-4 mb-4" aria-labelledby="presenca-titulo">
+        <div className="flex items-center justify-between mb-2">
+          <h2 id="presenca-titulo" className="section-label">
+            <span className="w-5 h-px bg-accent-400" /> PRESENÇA DO TIME
+          </h2>
+          {indicadores && (
+            <span className="text-xs text-muted tnum">
+              {indicadores.presentes} de {indicadores.totalTecnicos} presente
+              {indicadores.totalTecnicos !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {carregando ? (
+          <SkeletonLista qtd={3} />
+        ) : !indicadores ? (
+          <FeedbackState
+            state="error"
+            compact
+            title="Não foi possível carregar a presença do time."
+          />
+        ) : presenca.length === 0 ? (
+          <FeedbackState
+            state="empty"
+            compact
+            title="Nenhum técnico ativo"
+            description="Cadastre técnicos para acompanhar a presença."
+          />
+        ) : (
+          <Surface className="overflow-hidden">
+            {presenca.map((p) => {
+              const s = STATUS_PRESENCA[p.status] ?? STATUS_PRESENCA.ausente;
+              return (
+                <Row key={p.tecnicoId} className="last:!border-b-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} aria-hidden="true" />
+                    <p className="font-medium text-white text-sm truncate">{p.nome}</p>
+                  </div>
+                  <span className={`badge border shrink-0 ${s.cor}`}>{s.label}</span>
+                </Row>
+              );
+            })}
+          </Surface>
+        )}
+      </section>
 
       {/* Ações operacionais */}
       <nav aria-label="Ações operacionais" className="px-4 grid gap-3 sm:grid-cols-2">
