@@ -18,12 +18,24 @@ const servico = (id) => ({
   valorLiquido: 100,
 });
 
-// Roteia por URL: /dashboard, /servicos/pendentes, /avaliacoes e /servicos?limit=5 são
-// endpoints DISTINTOS já existentes (F7 é surfacing, sem endpoints novos).
+// F9/M2: o operacional (pendências + presença do time) vem num único /gestor/indicadores.
+// /dashboard (KPIs do período), /avaliacoes (satisfação c/ distribuição) e /servicos?limit=5
+// (fila recente) seguem como endpoints distintos.
+const INDICADORES = {
+  pendentes: 2,
+  presentes: 1,
+  totalTecnicos: 2,
+  presencaHoje: [
+    { tecnicoId: 1, nome: 'Ana', status: 'trabalhando' },
+    { tecnicoId: 2, nome: 'Bruno', status: 'ausente' },
+  ],
+  avaliacoes: { media: 4.6, total: 5 },
+};
+
 function rota(overrides = {}) {
   return (url) => {
-    if (url === '/servicos/pendentes')
-      return Promise.resolve(overrides.pendentes ?? { data: [servico(9), servico(10)] });
+    if (url === '/gestor/indicadores')
+      return Promise.resolve(overrides.indicadores ?? { data: INDICADORES });
     if (url.startsWith('/dashboard'))
       return Promise.resolve(
         overrides.dashboard ?? {
@@ -48,7 +60,7 @@ function rota(overrides = {}) {
 
 const setup = () => render(<GestorHome />, { wrapper: MemoryRouter });
 
-describe('GestorHome (F7 — indicadores + operacional)', () => {
+describe('GestorHome (F7 + F9/M2 — indicadores + presença)', () => {
   beforeEach(() => {
     mockGet.mockReset();
     mockGet.mockImplementation(rota());
@@ -59,7 +71,6 @@ describe('GestorHome (F7 — indicadores + operacional)', () => {
     setup();
 
     expect(screen.getByRole('heading', { name: /Operação de hoje/ })).toBeInTheDocument();
-    // Ações operacionais desambiguadas pelo subtítulo (o card "Aprovações pendentes" também é link).
     for (const nome of [
       /Revisar serviços pendentes/,
       /Fila e histórico completo/,
@@ -69,11 +80,9 @@ describe('GestorHome (F7 — indicadores + operacional)', () => {
       expect(screen.getByRole('link', { name: nome })).toBeInTheDocument();
     }
 
-    // KPIs do período (via /dashboard, que o gestor pode acessar)
     expect(await screen.findByText('Receita Líquida')).toBeInTheDocument();
     expect(screen.getByText('Ticket Médio')).toBeInTheDocument();
 
-    // Fila recente (via /servicos?limit=5)
     const linha = await screen.findByRole('link', { name: /Lucas 1/ });
     expect(linha.getAttribute('href')).toContain('/servicos?servico=1');
 
@@ -81,19 +90,40 @@ describe('GestorHome (F7 — indicadores + operacional)', () => {
     expect(mockGet).toHaveBeenCalledWith('/dashboard?periodo=mes');
   });
 
-  it('surfacing de aprovações pendentes usa /servicos/pendentes (contagem + CTA)', async () => {
+  it('surfacing de aprovações pendentes usa /gestor/indicadores (contagem + CTA)', async () => {
     setup();
     const card = (await screen.findByText('Aprovações pendentes')).closest('a');
     await waitFor(() => expect(card).toHaveTextContent('2'));
     expect(card.getAttribute('href')).toContain('/aprovacoes');
-    expect(mockGet).toHaveBeenCalledWith('/servicos/pendentes');
+    expect(mockGet).toHaveBeenCalledWith('/gestor/indicadores');
+  });
+
+  it('mostra a presença do time hoje a partir de /gestor/indicadores', async () => {
+    setup();
+    expect(await screen.findByText('PRESENÇA DO TIME')).toBeInTheDocument();
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+    expect(screen.getByText('Trabalhando')).toBeInTheDocument();
+    expect(screen.getByText('Bruno')).toBeInTheDocument();
+    expect(screen.getByText('Ausente')).toBeInTheDocument();
+    expect(screen.getByText(/1 de 2 presente/)).toBeInTheDocument();
+  });
+
+  it('presença degrada para estado vazio quando não há técnicos ativos', async () => {
+    mockGet.mockImplementation(
+      rota({
+        indicadores: {
+          data: { pendentes: 0, presentes: 0, totalTecnicos: 0, presencaHoje: [], avaliacoes: {} },
+        },
+      })
+    );
+    setup();
+    expect(await screen.findByText('Nenhum técnico ativo')).toBeInTheDocument();
   });
 
   it('estado vazio quando não há serviços recentes', async () => {
     mockGet.mockImplementation(
       rota({
         servicos: { data: { data: [], total: 0 } },
-        pendentes: { data: [] },
         avaliacoes: { data: null },
       })
     );
