@@ -17,6 +17,7 @@ import {
   Bell,
   HelpCircle,
   UserCog,
+  FileText,
 } from 'lucide-react';
 
 // Manifesto único de navegação (F2 / PR2 + PR4). Fonte única de verdade para
@@ -292,6 +293,16 @@ const FUNCIONARIO = {
       mobile: 'more',
       group: 'Meu trabalho',
       guard: { proprio: 'registrar_servico' },
+    },
+    {
+      to: '/meus-documentos',
+      label: 'Documentos',
+      descricao: 'Contrato, RG, CNH e comprovantes',
+      icon: FileText,
+      end: true,
+      mobile: 'more',
+      group: 'Conta',
+      guard: { proprio: 'documentos' },
     },
     {
       to: '/configuracao/seguranca',

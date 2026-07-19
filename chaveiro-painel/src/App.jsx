@@ -20,6 +20,7 @@ import Avaliacoes from './pages/Avaliacoes.jsx';
 import MeuPonto from './pages/MeuPonto.jsx';
 import MeuPainel from './pages/MeuPainel.jsx';
 import MeusServicos from './pages/MeusServicos.jsx';
+import Documentos from './pages/Documentos.jsx';
 import NovoServicoFuncionario from './pages/NovoServicoFuncionario.jsx';
 import Aprovacoes from './pages/Aprovacoes.jsx';
 import Mais from './pages/Mais.jsx';
@@ -228,6 +229,17 @@ function AppContent() {
               <RequireAuth>
                 <Layout>
                   <NovoServicoFuncionario />
+                </Layout>
+              </RequireAuth>
+            }
+          />
+          {/* F9/M4: documentos do próprio funcionário (a tela feature-detecta a flag) */}
+          <Route
+            path="/meus-documentos"
+            element={
+              <RequireAuth>
+                <Layout>
+                  <Documentos />
                 </Layout>
               </RequireAuth>
             }
