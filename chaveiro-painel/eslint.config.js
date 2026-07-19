@@ -36,4 +36,13 @@ export default [
     files: ['**/*.test.{js,jsx}', '**/__tests__/**', 'src/test/**'],
     languageOptions: { globals: { ...globals.browser, ...globals.node, ...vitestGlobals } },
   },
+  {
+    // Harness e2e (Node ESM puro, fora do bundle do painel) — globais do Node + WebSocket/fetch.
+    files: ['e2e/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node, WebSocket: 'readonly', fetch: 'readonly' },
+    },
+  },
 ];

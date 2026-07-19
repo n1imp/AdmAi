@@ -169,6 +169,14 @@ jobs:
       - name: Build de produção
         run: npm run build
 
+      # E2E (Chrome headless + CDP) dos fluxos F9 — NAO-bloqueante no inicio (sobe p/
+      # bloqueante por marco, como o axe fez). O harness (e2e/run.mjs) sobe um servidor
+      # que serve o build + mocka /api, entao o build precisa da API RELATIVA (VITE_API_URL=/api).
+      # O runner ubuntu ja traz o google-chrome-stable, detectado por acharChrome().
+      - name: E2E (Chrome/CDP) — nao-bloqueante
+        run: VITE_API_URL=/api npm run build && npm run e2e
+        continue-on-error: true
+
       - name: Auditoria de dependências (falha em High+)
         run: npm audit --audit-level=high --omit=dev
 
