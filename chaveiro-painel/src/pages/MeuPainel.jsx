@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import {
   Wallet,
   HandCoins,
@@ -11,10 +12,13 @@ import {
   AlertTriangle,
   RefreshCw,
   ChevronRight,
+  TrendingUp,
+  DollarSign,
 } from 'lucide-react';
-import api, { formatarMoeda } from '../lib/api.js';
+import api, { formatarMoeda, formatarDataCurta } from '../lib/api.js';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
+import EstadoVazio from '../components/EstadoVazio.jsx';
 
 // Cores semânticas dos KPIs (mesma paleta do Dashboard).
 const CORES_KPI = {
@@ -23,6 +27,25 @@ const CORES_KPI = {
   indigo: 'text-indigo-300 bg-indigo-400/10',
   blue: 'text-sky-300 bg-sky-400/10',
 };
+
+// F9/M1: período selecionável do desempenho pessoal (consome /me/metricas?periodo=).
+const PERIODOS = [
+  { value: 'hoje', label: 'Hoje' },
+  { value: 'semana', label: 'Semana' },
+  { value: 'mes', label: 'Mês' },
+];
+
+function GraficoTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-dark-800 border border-dark-500 rounded-md px-3 py-2 text-xs shadow-panel">
+      <p className="text-muted mb-1">{formatarDataCurta(label)}</p>
+      <p className="text-accent-300 font-semibold tnum">
+        Receita: {formatarMoeda(payload[0].value)}
+      </p>
+    </div>
+  );
+}
 
 function KpiCard({ label, valor, icon: Icon, cor = 'accent' }) {
   return (
@@ -81,23 +104,43 @@ export default function MeuPainel() {
   const navigate = useNavigate();
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [carregandoPeriodo, setCarregandoPeriodo] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState(null);
+  const [periodo, setPeriodo] = useState('mes');
+  // Só o primeiro fetch pinta a tela toda com skeleton; trocar de período faz um
+  // refetch "leve" (mantém os dados atuais e apenas esmaece a seção do período).
+  const primeiraCarga = useRef(true);
 
-  const buscar = useCallback(async () => {
-    setErro(null);
-    try {
-      const { data } = await api.get('/me/metricas');
-      setDados(data);
-    } catch {
-      setErro('Não foi possível carregar suas métricas.');
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
+  const buscar = useCallback(
+    async (guard) => {
+      const ativo = typeof guard === 'function' ? guard : () => true;
+      setErro(null);
+      if (primeiraCarga.current) setCarregando(true);
+      else setCarregandoPeriodo(true);
+      try {
+        const { data } = await api.get(`/me/metricas?periodo=${periodo}`);
+        if (!ativo()) return;
+        setDados(data);
+      } catch {
+        if (ativo()) setErro('Não foi possível carregar suas métricas.');
+      } finally {
+        if (ativo()) {
+          setCarregando(false);
+          setCarregandoPeriodo(false);
+          primeiraCarga.current = false;
+        }
+      }
+    },
+    [periodo]
+  );
 
   useEffect(() => {
-    buscar();
+    let ativo = true;
+    buscar(() => ativo);
+    return () => {
+      ativo = false;
+    };
   }, [buscar]);
 
   async function atualizarManual() {
@@ -115,6 +158,8 @@ export default function MeuPainel() {
   const pendentes = dados?.servicosPendentes ?? 0;
   const progresso = mes?.progressoMeta;
   const temMeta = mes?.meta != null;
+  const per = dados?.periodo;
+  const serie = dados?.serie ?? [];
 
   return (
     <div className="overflow-y-auto h-full animate-fade-in">
@@ -241,6 +286,124 @@ export default function MeuPainel() {
           </div>
         </div>
       )}
+
+      {/* Meu desempenho por período (F9/M1) */}
+      <div className="px-4 mb-5">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <p className="section-label">
+            <span className="w-5 h-px bg-accent-400" /> MEU DESEMPENHO
+          </p>
+          <div className="flex gap-1.5" role="group" aria-label="Período do desempenho">
+            {PERIODOS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriodo(p.value)}
+                aria-pressed={periodo === p.value}
+                className={`px-3 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
+                  periodo === p.value
+                    ? 'bg-accent-400 text-dark-950'
+                    : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {carregando ? (
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonKpi key={i} announce={i === 0} />
+            ))}
+          </div>
+        ) : per ? (
+          <div
+            className={`transition-opacity ${carregandoPeriodo ? 'opacity-50' : ''}`}
+            aria-busy={carregandoPeriodo}
+          >
+            {/* KPIs do período */}
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {[
+                { label: 'Serviços', valor: per.servicos, icon: ClipboardList, cor: 'blue' },
+                {
+                  label: 'Receita líquida',
+                  valor: formatarMoeda(per.receitaLiquida),
+                  icon: TrendingUp,
+                  cor: 'accent',
+                },
+                {
+                  label: 'Comissão',
+                  valor: formatarMoeda(per.comissao),
+                  icon: DollarSign,
+                  cor: 'green',
+                },
+              ].map(({ label, valor, icon: Icon, cor }) => (
+                <div key={label} className="card flex flex-col gap-1.5">
+                  <div
+                    className={`w-8 h-8 rounded-md flex items-center justify-center ${CORES_KPI[cor]}`}
+                  >
+                    <Icon size={16} strokeWidth={1.8} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="kpi-label text-[10px] truncate">{label}</p>
+                    <p className="font-display font-bold text-white text-base leading-tight tnum truncate">
+                      {valor}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Evolução diária: gráfico (decorativo, aria-hidden) + alternativa textual */}
+            {per.servicos === 0 ? (
+              <EstadoVazio
+                mensagem="Nenhum serviço neste período"
+                sub="Registre um atendimento para acompanhar seu desempenho."
+              />
+            ) : serie.length > 1 ? (
+              <div className="card">
+                <div aria-hidden="true">
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={serie} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke="#262B34" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="data"
+                        tick={{ fill: '#9AA3B2', fontSize: 9 }}
+                        tickFormatter={(v) => formatarDataCurta(v)}
+                        axisLine={false}
+                        tickLine={false}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        tick={{ fill: '#9AA3B2', fontSize: 9 }}
+                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                        axisLine={false}
+                        tickLine={false}
+                        width={30}
+                      />
+                      <Tooltip
+                        content={<GraficoTooltip />}
+                        cursor={{ fill: 'rgba(167,139,250,0.08)' }}
+                      />
+                      <Bar dataKey="receita" fill="#a78bfa" radius={[3, 3, 0, 0]} name="receita" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="sr-only">
+                  Receita líquida por dia no período:{' '}
+                  {serie
+                    .map((d) => `${formatarDataCurta(d.data)}: ${formatarMoeda(d.receita)}`)
+                    .join('; ')}
+                  .
+                </p>
+                <p className="text-center text-xs text-muted mt-2">Receita líquida por dia</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       {/* Atalhos */}
       <div className="px-4 pb-8 flex flex-col gap-3 lg:max-w-2xl">
