@@ -25,6 +25,35 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 | B7 | **P1** | `CodigoRecuperacaoTotp` sem migration → ativar 2FA quebra em prod | 🔧 `32db308` (migrate diff zerado) |
 | B8 | **P1** | `Material_nome_key` UNIQUE global → colisão de nome entre tenants | 🔧 `72e8ef6` (migrate diff zerado) |
 
+## Ciclo de segurança dedicado (2026-07-30) — pós-Fase 3
+
+Auditoria dedicada de segurança (não redundante com a Fase 0/3 acima), focada em gaps
+não cobertos pelo diagnóstico anterior: escalação de privilégio RBAC, validação de
+upload, step-up de confirmação em operações destrutivas e infra de rate limiting.
+Branch `fix/seguranca-ciclo1-critico-alto` (worktree `agent-environment`), 4 commits
+locais, nenhum push/merge/deploy. Escopo deste ciclo: crítico + alto (B9–B12). Médio/
+baixo (backlog abaixo) documentados e não bloqueantes.
+
+| ID | Sev. | Título | Status |
+|----|------|--------|--------|
+| B9 | **CRÍTICO** | `sanitizarPermissoes` sem teto de autoridade → `PATCH /usuarios/:id` permitia um ator conceder a si mesmo/outro permissão que não possuía, ou promover outro usuário a `dono` | 🔧 `6e6c14e` |
+| B10 | **CRÍTICO** | `POST /tecnicos` aceitava `fotoPerfil` sem validação de tamanho/MIME/magic-bytes (ao contrário de `documentos.js`/`estoque.js`) | 🔧 `3265555` |
+| B11 | ALTO | `DELETE /me/conta` sem nenhuma confirmação extra para contas social-only (sem senha) e sem 2FA — JWT vazado bastava para apagar a empresa em cascata | 🔧 `c1edc8e` |
+| B12 | ALTO | `authLimiter` duplicado — instância de `routes/auth.js` sem `RedisStore` (MemoryStore por instância) para recuperar-senha/redefinir-senha/magic-link | 🔧 `0c43e23` |
+
+Backlog não bloqueante desta frente (documentado, impacto limitado, com mitigação/
+justificativa — ver plano de segurança da sessão para detalhe arquivo:linha):
+- MÉDIO: ambiguidade cross-tenant em resposta de avaliação por telefone único (`avaliacao.js`); hardening defensivo de `movimentarEstoque`/`darBaixaPorServico` (`estoque.js`, não explorável hoje); CSP do painel em modo `Report-Only` apenas (`nginx.conf`); `android:allowBackup="true"` sem regras de exclusão no app Android.
+- BAIXO: `axios`/`stripe` desatualizados e `pino` como dependência morta no bot; CSP do backend sem `frame-ancestors`/`object-src` explícitos; zero cobertura de teste para `RequireAuth`/`RequirePermissao`/`AuthContext` no painel.
+
+Validação: unit `chaveiro-bot` 246/246 verde (baseline 236 + 10 novos), `npm run lint`
+0 erros (5 warnings pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK).
+PoC-first aplicado em B9/B10/B11 (teste falha contra o código revertido via `git stash`,
+passa com o fix — confirmado nesta sessão). **Limitação declarada**: testes de
+integração (Supertest+Postgres) não executados nesta sessão — Postgres/Redis locais
+indisponíveis e Docker Desktop sem daemon ativo; o teste de integração de B11 foi
+escrito seguindo o padrão de `autoexclusao_conta.test.js` mas não executado.
+
 ## Planejamento de arquitetura de banco
 - [`DB_ARCHITECTURE_PLAN.md`](./DB_ARCHITECTURE_PLAN.md) — roteiro de 12 seções (Principal Data Architect) para evoluir o banco a nível corporativo. **Planejamento** (sem SQL/tabelas), aterrado no `schema.prisma` real.
 - [`db/`](./db/) — **execução** do roteiro (F1–F9), entregáveis com evidência `arquivo:linha`:
