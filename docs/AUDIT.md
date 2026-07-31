@@ -48,10 +48,12 @@ justificativa — ver plano de segurança da sessão para detalhe arquivo:linha)
 
 Validação: unit `chaveiro-bot` 253/253 verde, `npm run lint` 0 erros (6 warnings
 pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK). PoC-first aplicado
-em B9/B10/B11 (teste falha contra o código revertido via `git stash`, passa com o fix).
-**Limitação declarada**: testes de integração (Supertest+Postgres) não executados nesta
-sessão — Postgres/Redis locais indisponíveis e Docker Desktop sem daemon ativo; os testes
-de integração de B9/B11 foram escritos seguindo o padrão existente mas não executados.
+em B9/B10/B11/B13 (teste falha contra o código revertido via `git stash`, passa com o
+fix). **Atualização**: Docker Desktop foi iniciado com sucesso nesta sessão (bloqueio de
+WSL2 do Pré-Fase-1 resolvido) — testes de integração (Supertest+Postgres+Redis efêmeros,
+mesma receita do `ci.yml`) foram executados: **21 arquivos, 85/85 testes verdes**,
+incluindo todos os novos (F1-BYPASS, F2, F3/F3-BYPASS, F4, B13). Containers efêmeros
+removidos ao final; nenhuma alteração no `docker-compose.yml` do projeto.
 
 ### Revisão independente (red-team, contexto mínimo) — 2 bypasses críticos achados e fechados
 
