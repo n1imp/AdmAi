@@ -27,7 +27,7 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # 1) Relatório COMPLETO: imprime TODOS os achados (INFO/WARNING/ERROR) no log do
       #    job para revisão humana. Não bloqueia — é visibilidade, não gate. Sem isso,
       #    achados de severidade WARNING do OWASP ficariam invisíveis (só veríamos ERROR).
@@ -54,7 +54,7 @@ jobs:
   gitleaks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
@@ -74,7 +74,7 @@ jobs:
       run:
         working-directory: ${{ matrix.proj }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
