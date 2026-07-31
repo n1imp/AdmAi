@@ -128,6 +128,9 @@ export default function Seguranca() {
   const navigate = useNavigate();
   const { login, logout, isAdmin } = useAuth();
   const [dados, setDados] = useState(null);
+  // Falha ao carregar /me precisa ser VISÍVEL: sem isso o switch de 2FA fica desabilitado
+  // sem explicação e o usuário não tem como saber que deve recarregar.
+  const [erroCarregar, setErroCarregar] = useState('');
 
   const [atual, setAtual] = useState('');
   const [nova, setNova] = useState('');
@@ -161,16 +164,23 @@ export default function Seguranca() {
   const [erroExclusao, setErroExclusao] = useState('');
 
   const buscar = useCallback(async () => {
-    try {
-      const [{ data: me }, { data: ss }] = await Promise.all([
-        api.get('/me'),
-        api.get('/me/sessoes'),
-      ]);
-      setDados(me);
-      setSessoes(ss);
-    } catch {
-      // silencioso — a tela de senha funciona sem isso
+    // Antes as duas chamadas iam num Promise.all e o catch era vazio: se /me/sessoes
+    // falhasse (404 num backend antigo, 500, rede), NENHUM dos dois setters rodava.
+    // Resultado: `dados` ficava null para sempre e o switch de 2FA — que tem
+    // `disabled={... || !dados}` — ficava PERMANENTEMENTE desabilitado, sem erro
+    // nenhum na tela. O usuário não conseguia mais ativar nem desativar 2FA.
+    // Agora cada recurso é independente e a falha aparece.
+    const [rMe, rSessoes] = await Promise.allSettled([api.get('/me'), api.get('/me/sessoes')]);
+
+    if (rMe.status === 'fulfilled') {
+      setDados(rMe.value.data);
+      setErroCarregar('');
+    } else {
+      setErroCarregar('Não foi possível carregar seus dados de segurança. Tente recarregar.');
     }
+
+    // Sessões são acessórias: falhar aqui não pode bloquear o resto da tela.
+    setSessoes(rSessoes.status === 'fulfilled' ? rSessoes.value.data : []);
   }, []);
 
   useEffect(() => {
@@ -337,6 +347,15 @@ export default function Seguranca() {
       <BackHeader titulo="Segurança" />
 
       <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8 flex flex-col gap-6 lg:max-w-xl">
+        {erroCarregar && (
+          <div
+            role="alert"
+            className="card border border-red-500/40 bg-red-500/10 text-sm text-red-200"
+          >
+            {erroCarregar}
+          </div>
+        )}
+
         {/* Trocar senha */}
         <section>
           <p className="section-label mb-2 px-1">Senha</p>

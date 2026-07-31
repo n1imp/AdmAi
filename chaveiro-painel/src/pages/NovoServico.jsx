@@ -106,11 +106,33 @@ export default function NovoServico() {
       return;
     }
 
+    // Material selecionado sem quantidade válida era silenciosamente REMOVIDO do POST:
+    // o serviço era criado, o toast dizia sucesso, e o estoque nunca era baixado — a
+    // divergência só aparecia num inventário. Melhor barrar e dizer o que falta.
+    const incompletos = materiaisSelecionados.filter(
+      (m) => !m.materialId || !(Number(String(m.quantidade).replace(',', '.')) > 0)
+    );
+    if (incompletos.length > 0) {
+      const nomes = incompletos
+        .map((m) => m.nome)
+        .filter(Boolean)
+        .join(', ');
+      toast(
+        nomes
+          ? `Informe a quantidade de: ${nomes}`
+          : 'Informe a quantidade dos materiais selecionados',
+        'error'
+      );
+      setPasso(1);
+      return;
+    }
+
     setEnviando(true);
     try {
-      const materiais = materiaisSelecionados
-        .filter((m) => m.materialId && Number(m.quantidade) > 0)
-        .map((m) => ({ materialId: Number(m.materialId), quantidade: Number(m.quantidade) }));
+      const materiais = materiaisSelecionados.map((m) => ({
+        materialId: Number(m.materialId),
+        quantidade: Number(String(m.quantidade).replace(',', '.')),
+      }));
 
       await api.post('/servicos', {
         tecnico: form.tecnico,
