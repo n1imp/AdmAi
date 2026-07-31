@@ -51,14 +51,12 @@ export async function salvarCredenciaisCloud(empresaId, { phoneNumberId, wabaId,
       phoneNumberId,
       wabaId: wabaId ?? null,
       accessTokenEnc: encrypt(accessToken),
-      estadoConexao: 'conectado',
     },
     update: {
       provider: 'cloud',
       phoneNumberId,
       ...(wabaId !== undefined ? { wabaId } : {}),
       ...(accessToken ? { accessTokenEnc: encrypt(accessToken) } : {}),
-      estadoConexao: 'conectado',
     },
   });
   return { ok: true };

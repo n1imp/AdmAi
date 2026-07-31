@@ -15,6 +15,7 @@ import {
   CAPACIDADES_PROPRIO,
 } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
+import { variantesTelefone } from '../services/parser.js';
 import { requireAuth, adminOnly, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { registrar as registrarAudit } from '../services/auditoria.js';
 import { enviarEmailConvite } from '../services/email.js';
@@ -420,9 +421,14 @@ router.post('/lgpd/anonimizar-cliente', adminOnly, async (req, res) => {
       .object({ telefone: z.string().trim().min(8, 'Telefone inválido') })
       .safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Informe o telefone do cliente.' });
+    // O banco guarda o telefone canônico ('55DDDNUMERO'), então comparar só com o texto
+    // cru e com os dígitos não casava nada: o endpoint respondia ok:true / 0 registros
+    // para um pedido de apagamento LGPD, dando aparência de sucesso sem apagar nada.
+    // `variantesTelefone` cobre as formas com e sem o 9º dígito, como o resto do código.
     const bruto = parse.data.telefone;
     const digitos = bruto.replace(/\D/g, '');
-    const alvo = { OR: [{ clienteTelefone: bruto }, { clienteTelefone: digitos }] };
+    const formas = [...new Set([bruto, digitos, ...variantesTelefone(bruto)].filter(Boolean))];
+    const alvo = { clienteTelefone: { in: formas } };
     const [servicos, avaliacoes] = await Promise.all([
       req.db.servico.updateMany({
         where: alvo,

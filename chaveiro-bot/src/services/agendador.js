@@ -45,7 +45,14 @@ export async function gerarResumoSemanal(agora = new Date(), empresaId = null) {
   }
 
   const servicos = await prisma.servico.findMany({
-    where: { ...(empresaId ? { empresaId } : {}), criadoEm: { gte: inicio, lte: fim } },
+    // `status: 'ativo'` estava faltando: o resumo somava serviços pendentes e rejeitados
+    // como receita, então o número enviado no WhatsApp de domingo não batia com o
+    // dashboard que o dono abria em seguida. Todas as outras agregações já filtram assim.
+    where: {
+      ...(empresaId ? { empresaId } : {}),
+      status: 'ativo',
+      criadoEm: { gte: inicio, lte: fim },
+    },
     include: { tecnico: { select: { nome: true } } },
   });
 
