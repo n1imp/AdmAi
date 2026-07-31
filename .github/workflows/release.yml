@@ -84,7 +84,7 @@ jobs:
         if: always()
         run: rm -f android/admai-upload.jks android/keystore.properties
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: admai-release-aab
           path: chaveiro-painel/android/app/build/outputs/bundle/release/app-release.aab
