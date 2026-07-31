@@ -138,7 +138,10 @@ describe('limitarPermissoesAoAtor (teto de autoridade — F1)', () => {
 
   it('não limita o dono (grant total, sem teto)', () => {
     const dono = { papel: 'dono', permissoesEfetivas: permissoesEfetivas({ papel: 'dono' }) };
-    const propostos = sanitizarPermissoes({ financeiro: { editar: true }, usuarios: { editar: true } });
+    const propostos = sanitizarPermissoes({
+      financeiro: { editar: true },
+      usuarios: { editar: true },
+    });
     const limitado = limitarPermissoesAoAtor(dono, propostos);
     expect(limitado).toEqual(propostos);
   });
