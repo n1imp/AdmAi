@@ -45,6 +45,14 @@ export function criarApp() {
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'"],
+          // F10: clickjacking — frame-ancestors é a proteção moderna equivalente ao
+          // X-Frame-Options (que o helmet já envia) e cobre navegadores que ignoram o header
+          // legado. object-src fecha plugins legados; upgrade-insecure-requests evita
+          // sub-recurso em http puro. styleSrc mantém 'unsafe-inline' de propósito:
+          // removê-lo exige auditar todo o CSS inline do painel (débito registrado).
+          frameAncestors: ["'none'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
         },
       },
       hsts: { maxAge: 31_536_000, includeSubDomains: true, preload: true },
