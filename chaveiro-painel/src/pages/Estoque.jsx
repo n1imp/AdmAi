@@ -122,7 +122,8 @@ export default function Estoque() {
         <div className="mx-4 mb-3 flex items-center gap-3 bg-warning/10 border border-warning/20 rounded-md px-4 py-3">
           <AlertTriangle size={18} className="text-warning shrink-0" />
           <p className="text-warning text-sm font-medium tnum">
-            {comAlerta.length} material{comAlerta.length > 1 ? 'is' : ''} com alerta de reposição
+            {/* Plural de "material" é "materiais" (troca -al por -ais), não "materialis". */}
+            {comAlerta.length} materia{comAlerta.length > 1 ? 'is' : 'l'} com alerta de reposição
           </p>
         </div>
       )}

@@ -8,7 +8,10 @@ import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 
 function hoje() {
-  return new Date().toISOString().split('T')[0];
+  // 'en-CA' devolve YYYY-MM-DD no fuso LOCAL, mesma convenção do Dashboard.
+  // Com toISOString() (UTC), depois das 21h em BRT o campo "Até" já vinha com a data de
+  // amanhã — o filtro default divergia do que o Dashboard mostrava na mesma hora.
+  return new Date().toLocaleDateString('en-CA');
 }
 
 function inicioMes() {

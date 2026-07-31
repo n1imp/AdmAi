@@ -45,8 +45,20 @@ export default function NovoServico() {
     track('servico_iniciado');
   }, []);
 
+  // Erro em ESTADO, não em toast: além de o toast sumir em 3,5s, usá-lo aqui exigiria
+  // `toast` nas dependências — e o efeito faz setState, então qualquer identidade
+  // instável de `toast` viraria laço infinito de render. Estado mantém o efeito
+  // mount-only e ainda deixa o aviso visível enquanto o problema durar.
+  const [erroTecnicos, setErroTecnicos] = useState(false);
+
   useEffect(() => {
-    api.get('/tecnicos').then(({ data }) => setTecnicos(data.filter((t) => t.ativo)));
+    api
+      .get('/tecnicos')
+      .then(({ data }) => setTecnicos(data.filter((t) => t.ativo)))
+      // Sem .catch isto virava unhandled rejection (ruído no Sentry) e o <select> de
+      // técnico degradava silenciosamente para campo de texto livre — deixando o usuário
+      // digitar um nome que não casa com nenhum cadastro.
+      .catch(() => setErroTecnicos(true));
   }, []);
 
   // Os campos de valor guardam a string mascarada (ex.: "1.234,56"); aqui convertemos
@@ -244,6 +256,12 @@ export default function NovoServico() {
                     error={erros.tecnico}
                     announceError
                   />
+                )}
+                {erroTecnicos && (
+                  <p role="alert" className="text-danger text-xs -mt-2">
+                    Não foi possível carregar a lista de técnicos — o nome digitado aqui pode não
+                    corresponder a um cadastro. Recarregue a página.
+                  </p>
                 )}
 
                 <Field

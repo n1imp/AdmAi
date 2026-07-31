@@ -258,7 +258,11 @@ export async function sincronizarAvaliacoesGoogle() {
       await renovarToken(empresaId);
       // Marca de água: a avaliação mais recente já sincronizada (sync incremental).
       const ultima = await prisma.avaliacaoGoogle.findFirst({
-        where: { empresaId },
+        // `criadoEmGoogle` é null quando o payload do Google não traz createTime, e o
+        // Postgres ordena NULLS FIRST no DESC — uma única linha assim fixava o watermark
+        // em null para sempre, degradando todo sync para completo. Excluir os nulos aqui
+        // faz a marca d'água voltar a ser a data real mais recente.
+        where: { empresaId, criadoEmGoogle: { not: null } },
         orderBy: { criadoEmGoogle: 'desc' },
         select: { criadoEmGoogle: true },
       });

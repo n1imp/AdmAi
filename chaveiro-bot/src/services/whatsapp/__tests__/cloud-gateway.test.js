@@ -49,10 +49,35 @@ describe('cloud-gateway: normalizarInboundCloud', () => {
     expect(eventos[0]).toEqual({
       event: 'MESSAGES_UPSERT',
       data: {
-        key: { remoteJid: '5511999998888@s.whatsapp.net', fromMe: false },
+        // O `id` da Meta PRECISA ser propagado: services/inbound.js só aplica a dedup
+        // (`marcarSeNovo`) quando ele existe. Sem isso, uma reentrega reprocessava a
+        // mensagem — avançando a conversa 2x ou duplicando o serviço. A fixture já trazia
+        // 'wamid.X'; o código é que descartava, e este teste afirmava o shape sem ele.
+        key: { id: 'wamid.X', remoteJid: '5511999998888@s.whatsapp.net', fromMe: false },
         message: { conversation: 'serviço' },
       },
     });
+  });
+
+  it('propaga o id da Meta para a dedup do inbound (regressão)', () => {
+    const body = {
+      entry: [
+        {
+          changes: [
+            {
+              field: 'messages',
+              value: {
+                messages: [
+                  { from: '5511999998888', id: 'wamid.DEDUP', type: 'text', text: { body: 'oi' } },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const [evento] = normalizarInboundCloud(body);
+    expect(evento.data.key.id).toBe('wamid.DEDUP');
   });
 
   it('extrai texto de respostas interativas (botão)', () => {

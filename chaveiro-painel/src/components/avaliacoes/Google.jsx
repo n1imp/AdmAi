@@ -581,7 +581,10 @@ function ReviewCard({ review, onResponder, validateOnly }) {
         <button
           onClick={() => {
             setAberto(true);
-            if (sugestao && !texto) setTexto('');
+            // Era `setTexto('')` — o guard exigia `!texto` (já vazio) e então gravava
+            // vazio de novo: um no-op. A intenção do botão é justamente preencher o
+            // campo com a sugestão da IA.
+            if (sugestao && !texto) setTexto(sugestao);
           }}
           className="mt-3 text-accent-300 text-xs font-medium flex items-center gap-1 hover:text-accent-400"
         >

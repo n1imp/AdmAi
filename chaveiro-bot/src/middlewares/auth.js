@@ -3,6 +3,7 @@ import { prismaParaEmpresa } from '../db/tenant.js';
 import { verificarJWT, tokenAindaValido } from '../services/auth.js';
 import { permissoesEfetivas, pode } from '../services/permissoes.js';
 import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 const VERIFICACAO_BYPASS = new Set([
   'GET /me',
@@ -68,8 +69,19 @@ export async function requireAuth(req, res, next) {
     }
 
     next();
-  } catch {
-    return res.status(401).json({ erro: 'Token inválido ou expirado' });
+  } catch (erro) {
+    // O catch cobria também `prisma.usuario.findUnique` e `prismaParaEmpresa`, não só a
+    // verificação do JWT — então uma instabilidade de banco devolvia 401 para TODA
+    // requisição autenticada, e o painel lia isso como "sessão expirada" e deslogava
+    // todo mundo. Erro de JWT continua 401; falha de infra vira 503 (retryable).
+    const ehErroDeToken =
+      erro?.name === 'JsonWebTokenError' ||
+      erro?.name === 'TokenExpiredError' ||
+      erro?.name === 'NotBeforeError';
+    if (ehErroDeToken) return res.status(401).json({ erro: 'Token inválido ou expirado' });
+
+    logger.error('Erro de infraestrutura em requireAuth', { erro: erro?.message });
+    return res.status(503).json({ erro: 'Serviço temporariamente indisponível' });
   }
 }
 

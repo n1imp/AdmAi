@@ -232,7 +232,15 @@ export default function BotoesSociais({ onResultado, onErro, onInfo, desabilitad
           <button
             type="button"
             onClick={() =>
-              onErro?.('Não foi possível carregar o login do Google. Recarregue a página.')
+              // Distingue os dois casos. Sem VITE_GOOGLE_CLIENT_ID (o padrão do
+              // .env.example) mandar "recarregue a página" é enganoso: recarregar nunca
+              // vai resolver, o provedor simplesmente não está configurado. Microsoft e
+              // Apple já diziam "em breve" nessa situação; só o Google destoava.
+              onErro?.(
+                GOOGLE_CLIENT_ID
+                  ? 'Não foi possível carregar o login do Google. Recarregue a página.'
+                  : 'Login com Google em breve.'
+              )
             }
             disabled={travado}
             className="btn-social"
