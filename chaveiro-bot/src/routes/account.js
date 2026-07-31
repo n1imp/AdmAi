@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import { prisma } from '../db/prisma.js';
+import { env } from '../config/env.js';
 import { gerarJWT } from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
 import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
@@ -15,7 +17,10 @@ import {
   decifrarSegredo,
 } from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
-import { enviarEmailCodigoExclusaoConta } from '../services/email.js';
+import {
+  enviarEmailCodigoExclusaoConta,
+  enviarEmailConfirmarMudancaEmail,
+} from '../services/email.js';
 import {
   gerarCodigoExclusaoConta,
   validarCodigoExclusaoConta,
@@ -243,10 +248,28 @@ router.patch('/me', async (req, res) => {
     const data = {};
     const atual = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (parse.data.nome !== undefined) data.nome = parse.data.nome;
+    let emailPendente = null;
     if (parse.data.email !== undefined) {
       const email = parse.data.email === '' ? null : parse.data.email;
-      data.email = email;
-      if (email !== atual.email) data.emailVerificado = false;
+      if (email !== atual.email) {
+        if (email && atual.email && atual.emailVerificado) {
+          // F-BYPASS (revisão independente): troca de e-mail com um endereço ATUAL já
+          // verificado não pode ser aplicada na hora — um atacante com JWT roubado
+          // redirecionaria recuperação de senha/exclusão de conta para um e-mail próprio.
+          // Exige confirmação enviada ao endereço ANTIGO antes de aplicar (não afrouxa
+          // nada: quem não tinha e-mail verificado ainda não tinha nada a proteger aqui).
+          const token = jwt.sign(
+            { sub: req.user.id, tipo: 'confirmar_email', novoEmail: email },
+            env.JWT_SECRET,
+            { algorithm: 'HS256', expiresIn: '1h' }
+          );
+          enviarEmailConfirmarMudancaEmail(atual, email, token).catch(() => {});
+          emailPendente = email;
+        } else {
+          data.email = email;
+          data.emailVerificado = false;
+        }
+      }
     }
     if (parse.data.telefone !== undefined) {
       const telefone = parse.data.telefone === '' ? null : parse.data.telefone;
@@ -258,7 +281,7 @@ router.patch('/me', async (req, res) => {
       data,
       select: SELECT_ME,
     });
-    res.json(usuario);
+    res.json(emailPendente ? { ...usuario, emailPendente } : usuario);
   } catch (erro) {
     if (erro.code === 'P2002')
       return res.status(409).json({ erro: 'E-mail já em uso por outra conta' });
@@ -305,7 +328,12 @@ router.post('/me/conta/codigo-exclusao', exclusaoContaLimiter, async (req, res) 
   try {
     const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
-    if (!usuario.email) return res.status(400).json({ erro: 'Conta sem e-mail cadastrado' });
+    // Defesa em profundidade: exige e-mail VERIFICADO, não só presente. Com o fix de
+    // PATCH /me (confirmação no endereço antigo), um e-mail não-verificado só existe logo
+    // após uma troca legítima ainda pendente de prova de posse do novo endereço.
+    if (!usuario.email || !usuario.emailVerificado) {
+      return res.status(400).json({ erro: 'Conta sem e-mail verificado cadastrado' });
+    }
     const codigo = gerarCodigoExclusaoConta(usuario.id);
     await enviarEmailCodigoExclusaoConta(usuario, codigo);
     res.json({ enviado: true });

@@ -89,6 +89,34 @@ export async function enviarEmailVerificacao(usuario, token) {
   });
 }
 
+/**
+ * F-BYPASS (revisão independente): troca de e-mail via PATCH /me aplicava a mudança
+ * imediatamente, sem confirmar com o endereço ANTIGO — um atacante com JWT roubado podia
+ * redirecionar recuperação de senha (tomada de conta permanente) ou o código de exclusão
+ * de conta para um e-mail próprio. Este e-mail vai para o endereço ANTIGO (ainda
+ * cadastrado), exigindo consentimento de quem já tinha acesso a ele antes de aplicar.
+ */
+export async function enviarEmailConfirmarMudancaEmail(usuarioAntigo, novoEmail, token) {
+  const link = `${baseUrl()}/confirmar-mudanca-email?token=${token}`;
+  await enviar({
+    to: usuarioAntigo.email,
+    subject: 'Confirme a alteração do seu e-mail — AdmAi',
+    html: layout(
+      'Alteração de e-mail solicitada',
+      `
+      <p>Olá, <strong>${usuarioAntigo.nome}</strong>!</p>
+      <p>Recebemos uma solicitação para alterar o e-mail da sua conta para <strong>${novoEmail}</strong>.</p>
+      <a href="${link}" class="btn">Confirmar alteração</a>
+      <p style="margin-top:24px;font-size:13px;color:#94a3b8">
+        Link válido por 1 hora. Se não foi você, ignore este e-mail — seu endereço atual
+        permanece inalterado e sua conta continua segura.
+      </p>
+    `
+    ),
+    text: `Confirme a alteração do seu e-mail para ${novoEmail}: ${link}\n\nVálido por 1 hora. Se não foi você, ignore este e-mail.`,
+  });
+}
+
 export async function enviarEmailBoasVindas(usuario) {
   await enviar({
     to: usuario.email,
