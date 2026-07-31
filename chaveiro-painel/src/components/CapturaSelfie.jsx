@@ -85,6 +85,10 @@ export default function CapturaSelfie({ aberto, onConfirmar, onCancelar }) {
 
   function aoSelecionarArquivo(e) {
     const arquivo = e.target.files?.[0];
+    // Zera o input SEMPRE: sem isso, escolher o mesmo arquivo de novo não dispara
+    // `change` (o value não mudou) e o botão "Enviar foto" parece quebrado. Acontecia
+    // em todo retry — que é o caso comum em aparelho sem permissão de câmera.
+    e.target.value = '';
     if (!arquivo) return;
     const leitor = new FileReader();
     leitor.onload = () => {

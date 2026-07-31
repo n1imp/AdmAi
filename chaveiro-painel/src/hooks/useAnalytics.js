@@ -6,14 +6,30 @@ const isDev = import.meta.env.DEV;
 
 let _ph = null;
 
+/**
+ * O consentimento é um GATE, não só uma escolha de persistência.
+ *
+ * Antes, escolher "Apenas necessários" ainda inicializava o PostHog e enviava eventos —
+ * só mudava onde o id era guardado (memória em vez de cookie). A política de cookies
+ * publicada promete analytics "somente com seu consentimento", e a LGPD trata envio de
+ * dados comportamentais a terceiro como tratamento — persistir em memória não muda isso.
+ */
+function consentiuAnalytics() {
+  try {
+    return localStorage.getItem('admai_cookies_consent') === 'all';
+  } catch {
+    return false; // storage bloqueado → trata como não consentido
+  }
+}
+
 async function getPostHog() {
   if (!KEY) return null;
+  if (!consentiuAnalytics()) return null;
   if (_ph) return _ph;
   const { default: posthog } = await import('posthog-js');
-  const consent = localStorage.getItem('admai_cookies_consent');
   posthog.init(KEY, {
     api_host: HOST,
-    persistence: consent === 'all' ? 'localStorage+cookie' : 'memory',
+    persistence: 'localStorage+cookie',
     autocapture: false,
     capture_pageview: false,
     loaded: (ph) => {

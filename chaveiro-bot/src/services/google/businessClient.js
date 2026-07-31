@@ -176,6 +176,11 @@ export async function listarReviews(empresaId, { desde = null } = {}) {
   let pageToken = null;
   const url = `${API_BASE}/${conta.accountId}/${conta.locationId}/reviews`;
   try {
+    // `alcancouWatermark` existe porque o `pageToken = null` de antes era imediatamente
+    // sobrescrito pela linha que lê o nextPageToken: o early-stop nunca teve efeito e o
+    // sync "incremental" repaginava o histórico inteiro a cada 6h (quota + job longo),
+    // recontando cada review reprocessada como nova.
+    let alcancouWatermark = false;
     do {
       const resp = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -186,12 +191,12 @@ export async function listarReviews(empresaId, { desde = null } = {}) {
         const criado = r.createTime ? new Date(r.createTime) : null;
         // Para sync incremental: para na primeira mais antiga que `desde`.
         if (desde && criado && criado <= desde) {
-          pageToken = null;
+          alcancouWatermark = true;
           break;
         }
         reviews.push(normalizarReview(r));
       }
-      pageToken = resp.data?.nextPageToken ?? null;
+      pageToken = alcancouWatermark ? null : (resp.data?.nextPageToken ?? null);
     } while (pageToken);
     return { reviews, mock: false, verificacaoPendente: false };
   } catch (erro) {

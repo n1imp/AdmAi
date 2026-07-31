@@ -303,7 +303,14 @@ router.post(
         where: { id, status: 'pendente' },
         data: { status: 'rejeitado', aprovadoPor: req.user.id, aprovadoEm: new Date() },
       });
-      if (r.count === 0) return res.status(404).json({ erro: 'Serviço pendente não encontrado' });
+      // Distingue "não existe" de "não está pendente", como /aprovar já fazia: com 404
+      // para os dois casos o painel não conseguia diferenciar id errado de serviço já
+      // aprovado/rejeitado por outra pessoa.
+      if (r.count === 0) {
+        const existe = await req.db.servico.findUnique({ where: { id }, select: { status: true } });
+        if (!existe) return res.status(404).json({ erro: 'Serviço não encontrado' });
+        return res.status(409).json({ erro: 'Serviço não está pendente' });
+      }
       logger.info('servico_rejeitado', { id, por: req.user.id });
       res.json({ mensagem: 'Serviço rejeitado', id, status: 'rejeitado' });
     } catch (erro) {

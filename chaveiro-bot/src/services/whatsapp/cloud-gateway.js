@@ -147,7 +147,11 @@ export function normalizarInboundCloud(body) {
         eventos.push({
           event: 'MESSAGES_UPSERT',
           data: {
-            key: { remoteJid: `${from}@s.whatsapp.net`, fromMe: false },
+            // `id` vem do payload da Meta e é ESSENCIAL: services/inbound.js só aplica a
+            // dedup (`marcarSeNovo`) quando há id. Sem ele, uma reentrega da Meta
+            // reprocessava a mensagem — avançando a conversa duas vezes ou registrando o
+            // serviço em duplicidade. O caminho Evolution já era protegido; só o Cloud não.
+            key: { id: m.id ?? null, remoteJid: `${from}@s.whatsapp.net`, fromMe: false },
             message: { conversation: texto },
           },
         });

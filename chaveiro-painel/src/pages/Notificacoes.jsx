@@ -197,12 +197,21 @@ function AbaPreferencias() {
   const [prefs, setPrefs] = useState(null);
   const [salvando, setSalvando] = useState(null);
 
-  useEffect(() => {
+  const [erroPrefs, setErroPrefs] = useState(false);
+
+  const carregarPrefs = useCallback(() => {
+    setErroPrefs(false);
     api
       .get('/me/notificacoes')
       .then(({ data }) => setPrefs(data))
-      .catch(() => toast('Erro ao carregar preferências', 'error'));
-  }, [toast]);
+      // Antes só disparava um toast (some em 3,5s) e `prefs` ficava null para sempre:
+      // a aba virava um skeleton permanente, sem erro visível nem forma de tentar de novo.
+      .catch(() => setErroPrefs(true));
+  }, []);
+
+  useEffect(() => {
+    carregarPrefs();
+  }, [carregarPrefs]);
 
   async function alternar(chave) {
     const novo = { ...prefs, [chave]: !prefs[chave] };
@@ -217,6 +226,18 @@ function AbaPreferencias() {
       setSalvando(null);
     }
   }
+
+  if (erroPrefs)
+    return (
+      <div className="px-4">
+        <div role="alert" className="card border border-red-500/40 bg-red-500/10 text-sm">
+          <p className="text-red-200">Não foi possível carregar suas preferências.</p>
+          <button type="button" onClick={carregarPrefs} className="btn-secondary mt-3">
+            Tentar de novo
+          </button>
+        </div>
+      </div>
+    );
 
   if (!prefs)
     return (

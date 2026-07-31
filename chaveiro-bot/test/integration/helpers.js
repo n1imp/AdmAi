@@ -7,16 +7,48 @@
  */
 import { prisma } from '../../src/db/prisma.js';
 
-/** Apaga todos os dados das tabelas de negócio entre testes (ordem respeita FKs). */
+/**
+ * Apaga TODOS os dados entre testes, descobrindo as tabelas no catálogo do Postgres.
+ *
+ * Era uma lista fixa de 13 nomes para um schema com 26 modelos. Os que têm FK eram
+ * alcançados pelo CASCADE, mas 6 sem FK nenhuma (AuditLog, ConviteUsuario,
+ * AnaliseAvaliacoes, AvaliacaoGoogle, GoogleConta, ConexaoBot) sobreviviam a todo
+ * `limparBanco` e acumulavam durante a suíte inteira e entre execuções locais. Uma lista
+ * escrita à mão sempre volta a divergir do schema — por isso ela é a causa raiz, e não os
+ * nomes que faltavam. Ler do catálogo mantém isto correto sozinho quando um modelo nasce.
+ */
+let _tabelas = null;
+
 export async function limparBanco() {
-  // TRUNCATE ... CASCADE zera tudo e reseta identidades de uma vez.
-  await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE
-      "ServicoMaterial","MovimentacaoEstoque","Pagamento","Avaliacao",
-      "SessaoConversa","Notificacao","DocumentoTecnico","Servico","Material","Tecnico",
-      "Usuario","EmpresaWhatsapp","Empresa"
-    CASCADE;
-  `);
+  if (!_tabelas) {
+    const linhas = await prisma.$queryRawUnsafe(`
+      SELECT tablename FROM pg_tables
+      WHERE schemaname = 'public' AND tablename NOT LIKE '\\_prisma%'
+    `);
+    _tabelas = linhas.map((l) => `"${l.tablename}"`);
+  }
+  if (_tabelas.length === 0) return;
+  // CASCADE resolve a ordem das FKs. SEM `RESTART IDENTITY` de propósito: zerar as
+  // sequences faz todo teste recriar o usuário com id 1, e os rate limiters com chave
+  // por usuário (exclusaoContaLimiter) passam a somar no mesmo balde entre testes,
+  // devolvendo 429 em cascata. Ids sempre crescentes mantêm cada teste isolado.
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${_tabelas.join(',')} CASCADE;`);
+
+  // Zera o estado dos rate limiters junto com o banco. Sem isto o balde do authLimiter
+  // (janela de 15 min, chave = username) sobrevive à execução inteira e ao processo:
+  // rodar a suíte duas vezes em menos de 15 min fazia o teste de login válido receber
+  // 429 e falhar, e o teste de 429 passava por gordura acumulada, não pelo próprio laço.
+  await limparRateLimiters();
+}
+
+/** Limpa as chaves de rate limit no Redis compartilhado pela app sob teste. */
+async function limparRateLimiters() {
+  try {
+    const { redisClient } = await import('../../src/middlewares/rateLimiters.js');
+    await redisClient.flushdb();
+  } catch {
+    // Sem Redis acessível o limiter já degrada sozinho; não é motivo para derrubar o setup.
+  }
 }
 
 /**

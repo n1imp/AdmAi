@@ -59,6 +59,12 @@ export async function agendarAvaliacao({ empresaId, servicoId, clienteTelefone, 
 export async function dispararAvaliacoesPendentes(agora = new Date()) {
   const pendentes = await prisma.avaliacao.findMany({
     where: { status: 'pendente', agendadoPara: { lte: agora } },
+    // `orderBy` explícito: sem ele o Postgres devolvia um conjunto estável de 50 linhas,
+    // e como falhas deixam a linha `pendente` de propósito ("tenta no próximo ciclo"),
+    // 50 avaliações permanentemente falhas (telefone inválido, bot desconectado) faziam
+    // head-of-line blocking — nenhuma avaliação nova era enviada de novo, para sempre,
+    // com o único sintoma sendo um warn repetido. Pelas mais antigas primeiro a fila anda.
+    orderBy: { agendadoPara: 'asc' },
     take: 50,
   });
   let enviadas = 0;
@@ -90,7 +96,20 @@ export async function dispararAvaliacoesPendentes(agora = new Date()) {
       enviadas++;
     } catch (erro) {
       logger.warn('Falha ao enviar avaliação', { avaliacaoId: aval.id, erro: erro.message });
-      // permanece "pendente" para nova tentativa no próximo ciclo
+      // Continua "pendente" para nova tentativa, MAS empurra o agendamento para o fim da
+      // fila. Sem isto, com `orderBy agendadoPara asc`, 50 linhas permanentemente falhas
+      // (telefone inválido, bot desconectado) seriam relidas a cada ciclo e nenhuma
+      // avaliação nova sairia — falha silenciosa e indefinida do recurso inteiro.
+      // Backoff fixo de 1h; uma política de desistência definitiva exigiria uma coluna
+      // de tentativas (migration) e é decisão de produto — registrado, não inventado.
+      await prisma.avaliacao
+        .update({
+          where: { id: aval.id },
+          data: { agendadoPara: new Date(Date.now() + 60 * 60 * 1000) },
+        })
+        .catch((e) =>
+          logger.warn('Falha ao reagendar avaliação', { avaliacaoId: aval.id, erro: e.message })
+        );
     }
   }
   if (enviadas > 0)

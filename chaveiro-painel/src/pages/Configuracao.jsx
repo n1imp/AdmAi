@@ -134,12 +134,19 @@ function AprovacaoServico() {
   const [ativo, setAtivo] = useState(null); // null = carregando
   const [salvando, setSalvando] = useState(false);
 
+  const [erroCarregar, setErroCarregar] = useState(false);
+
   useEffect(() => {
     api
       .get('/config/empresa')
-      .then(({ data }) => setAtivo(Boolean(data.aprovacaoServico)))
-      .catch(() => toast('Erro ao carregar configuração', 'error'));
-  }, [toast]);
+      .then(({ data }) => {
+        setAtivo(Boolean(data.aprovacaoServico));
+        setErroCarregar(false);
+      })
+      // Antes só um toast: `ativo` ficava null, o switch ficava `disabled` para sempre E
+      // renderizava visualmente como DESLIGADO — mentindo sobre o estado real da empresa.
+      .catch(() => setErroCarregar(true));
+  }, []);
 
   async function alternar() {
     const novo = !ativo;
@@ -165,7 +172,9 @@ function AprovacaoServico() {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-white">Exigir aprovação dos serviços dos funcionários</p>
           <p className="text-muted text-xs mt-0.5">
-            Serviços lançados por funcionários ficam pendentes até um gestor aprovar.
+            {erroCarregar
+              ? 'Não foi possível carregar esta configuração — recarregue a página.'
+              : 'Serviços lançados por funcionários ficam pendentes até um gestor aprovar.'}
           </p>
         </div>
         <Toggle ativo={!!ativo} onChange={alternar} disabled={ativo === null || salvando} />

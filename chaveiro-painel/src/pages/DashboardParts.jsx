@@ -79,7 +79,9 @@ export function CardSatisfacao({ resumo }) {
           )}
           {total > 0 && (
             <p className="text-muted text-xs mt-1">
-              {total} avaliação{total !== 1 ? 'ões' : ''} respondida{total !== 1 ? 's' : ''}
+              {/* O sufixo 'ões' substitui 'ão', não se soma a ele: antes saía
+                  "5 avaliaçãoões respondidas" para qualquer contagem diferente de 1. */}
+              {total} avaliaç{total !== 1 ? 'ões' : 'ão'} respondida{total !== 1 ? 's' : ''}
             </p>
           )}
         </div>
