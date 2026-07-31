@@ -9,11 +9,23 @@
  * ninguém precisar manter host hardcoded.
  *
  * O caminho nginx/Docker usa `nginx.conf` (mesma política, mas lá `/api` é same-origin).
+ *
+ * IMPORTANTE — lê o env com `loadEnv` do Vite, NÃO com `process.env`: o Vite carrega
+ * `.env*` para `import.meta.env` do bundle, mas não exporta nada para o `process.env` de
+ * um processo Node irmão. Com `process.env` o bundle recebia a URL absoluta do `.env`
+ * enquanto o `_headers` saía sem ela no `connect-src` — CSP bloqueando 100% das chamadas
+ * de API. Só não quebrou antes porque o `deploy.yml` passa a variável como `env:` do step.
  */
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { loadEnv } from 'vite';
 
 const DIST = path.resolve(process.cwd(), 'dist');
+const RAIZ = process.cwd();
+const MODO = process.env.NODE_ENV ?? 'production';
+
+// Mesma resolução do bundle: .env, .env.local, .env.[modo], .env.[modo].local + process.env.
+const env = { ...loadEnv(MODO, RAIZ, 'VITE_'), ...process.env };
 
 /** Extrai só a origem (scheme://host[:porta]) de uma URL; ignora path/barra final. */
 function origem(url) {
@@ -25,8 +37,18 @@ function origem(url) {
   }
 }
 
-const apiOrigem = origem(process.env.VITE_API_URL);
-const posthog = origem(process.env.VITE_POSTHOG_HOST) ?? 'https://*.posthog.com';
+const apiUrlBruta = env.VITE_API_URL;
+const apiOrigem = origem(apiUrlBruta);
+const posthog = origem(env.VITE_POSTHOG_HOST) ?? 'https://*.posthog.com';
+
+// Falhar alto: uma URL absoluta que não resolve em origem viraria um _headers sem a API no
+// connect-src — painel inteiro quebrado em produção, e silenciosamente. Melhor quebrar o build.
+if (apiUrlBruta && !apiUrlBruta.startsWith('/') && !apiOrigem) {
+  throw new Error(
+    `VITE_API_URL="${apiUrlBruta}" não é uma URL válida nem um caminho relativo — ` +
+      'não dá para montar o connect-src do CSP.'
+  );
+}
 
 // Hosts de terceiros efetivamente carregados pelo painel (auditado no código, não presumido):
 //  - accounts.google.com/apis.google.com: SDK GSI (BotoesSociais.jsx)
