@@ -17,9 +17,12 @@ import { limparBanco, criarEmpresaComAdmin, prisma } from './helpers.js';
 let codigoEmailCapturado = null;
 vi.mock('../../src/services/email.js', async (orig) => ({
   ...(await orig()),
+  // Devolve `true` porque é o contrato real: a função resolve com o booleano de "saiu ou
+  // foi pulado". Um mock resolvendo undefined faria a rota responder 503 e mascararia
+  // que o caminho feliz está correto.
   enviarEmailCodigoExclusaoConta: vi.fn((_usuario, codigo) => {
     codigoEmailCapturado = codigo;
-    return Promise.resolve();
+    return Promise.resolve(true);
   }),
 }));
 

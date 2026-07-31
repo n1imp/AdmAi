@@ -9,6 +9,10 @@ import { gerarRelatorioPonto, gerarCsvPonto } from '../services/relatorio.js';
 import { resumoMes, registrarPonto, diaLocal, ROTULO_BATIDA } from '../services/ponto.js';
 import { criarAcessoTecnico, resetarPin } from '../services/credenciais.js';
 import { pode, podeProprio } from '../services/permissoes.js';
+// Antes este arquivo tinha uma cópia byte-a-byte de construirFiltroPeriodo/dataValida,
+// que ficou para trás quando o helper foi extraído para services/periodo.js — e por isso
+// carregava o mesmo bug de fuso corrigido lá. Importar mantém uma fonte só.
+import { construirFiltroPeriodo } from '../services/periodo.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { conferirMagicBytes } from '../utils/upload.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
@@ -72,10 +76,6 @@ const schemaNovoTecnico = z
       });
   });
 
-function dataValida(d) {
-  return d instanceof Date && !Number.isNaN(d.getTime());
-}
-
 // fotoPerfil vem do painel como data URI base64 (F2 — antes aceitava string livre sem
 // nenhuma validação de tamanho/MIME/conteúdo). Mesmo padrão de documentos.js: regex de
 // forma + limite de tamanho + magic-bytes reais batendo o MIME declarado.
@@ -91,35 +91,6 @@ export function validarFotoPerfil(fotoPerfil) {
   if (buffer.length === 0 || buffer.length > FOTO_PERFIL_MAX_BYTES) return { ok: false };
   if (!conferirMagicBytes(buffer, mime)) return { ok: false };
   return { ok: true, valor: fotoPerfil };
-}
-
-function construirFiltroPeriodo(periodo, inicio, fim) {
-  const agora = new Date();
-  const hoje = new Date(agora);
-  hoje.setHours(0, 0, 0, 0);
-  if (periodo === 'hoje') {
-    const fimHoje = new Date(hoje);
-    fimHoje.setHours(23, 59, 59, 999);
-    return { gte: hoje, lte: fimHoje };
-  }
-  if (periodo === 'semana') {
-    const ini = new Date(hoje);
-    ini.setDate(hoje.getDate() - hoje.getDay());
-    return { gte: ini, lte: agora };
-  }
-  if (periodo === 'mes') {
-    return { gte: new Date(hoje.getFullYear(), hoje.getMonth(), 1), lte: agora };
-  }
-  const dInicio = inicio ? new Date(inicio) : null;
-  const dFim = fim ? new Date(fim + 'T23:59:59.999Z') : null;
-  const inicioOk = dataValida(dInicio);
-  const fimOk = dataValida(dFim);
-  if (inicioOk && fimOk) return { gte: dInicio, lte: dFim };
-  if (inicioOk) return { gte: dInicio, lte: agora };
-  if (fimOk) return { gte: new Date('2000-01-01'), lte: dFim };
-  const umMesAtras = new Date(hoje);
-  umMesAtras.setMonth(hoje.getMonth() - 1);
-  return { gte: umMesAtras, lte: agora };
 }
 
 function intervaloMes(mes) {
@@ -511,7 +482,18 @@ router.patch('/tecnicos/:id', requirePermissao('tecnicos', 'editar'), async (req
     });
     const parse = schema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-    const r = await req.db.tecnico.updateMany({ where: { id }, data: parse.data });
+    // O POST canoniza o telefone e guarda o formatado em telefoneDisplay; o PATCH gravava
+    // o valor cru direto em `telefone`. Como resolverRemetente casa por dígitos, editar o
+    // número pelo painel fazia o bot deixar de reconhecer o técnico (ponto e serviço via
+    // WhatsApp passavam a cair em "número não reconhecido").
+    const dados = { ...parse.data };
+    if (dados.telefone !== undefined && dados.telefone !== null) {
+      const canonico = canonizarTelefone(dados.telefone);
+      if (!canonico) return res.status(400).json({ erro: 'Telefone inválido' });
+      dados.telefoneDisplay = dados.telefoneDisplay ?? dados.telefone;
+      dados.telefone = canonico;
+    }
+    const r = await req.db.tecnico.updateMany({ where: { id }, data: dados });
     if (r.count === 0) return res.status(404).json({ erro: 'Técnico não encontrado' });
     const tecnico = await req.db.tecnico.findUnique({ where: { id } });
     res.json(tecnico);

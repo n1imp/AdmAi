@@ -16,11 +16,27 @@ async function getResend() {
   return _resend;
 }
 
+/**
+ * Envia um e-mail.
+ *
+ * @returns {Promise<boolean>} `true` se saiu, `false` se foi PULADO por falta de
+ *   RESEND_API_KEY (normal em dev/teste).
+ * @throws quando o envio foi tentado e falhou (Resend fora, timeout, breaker aberto).
+ *
+ * Antes esta função engolia toda falha num `logger.warn` e retornava normalmente, então
+ * quem dava `await` não tinha como distinguir sucesso de fracasso. O caso ruim era
+ * `POST /me/conta/codigo-exclusao`, que respondia `{enviado:true}` sem e-mail nenhum ter
+ * saído — e aí `DELETE /me/conta` exigia para sempre um código que nunca chegou,
+ * deixando a conta indeletável sem nenhum sinal diagnosticável.
+ *
+ * Os chamadores best-effort (onboarding, verificação, recibo…) já usam `.catch(() => {})`
+ * de propósito e seguem inalterados.
+ */
 async function enviar({ to, subject, html, text }) {
   const resend = await getResend();
   if (!resend) {
     logger.warn('email_skip', { to, subject, motivo: 'RESEND_API_KEY não configurado' });
-    return;
+    return false;
   }
   try {
     await breakerEmail(() =>
@@ -31,8 +47,10 @@ async function enviar({ to, subject, html, text }) {
       )
     );
     logger.info('email_enviado', { to, subject });
+    return true;
   } catch (e) {
     logger.warn('email_falha', { to, subject, erro: e.message });
+    throw e;
   }
 }
 
@@ -282,8 +300,10 @@ export async function enviarEmailMagicLink(usuario, token) {
  * confirmação para excluir a empresa em cascata. Código de confirmação por e-mail,
  * aditivo — não substitui a checagem de senha/2FA quando existem.
  */
+// Devolve o booleano de `enviar` (e propaga a exceção) porque este fluxo NÃO é
+// best-effort: sem o e-mail, o usuário fica sem como confirmar a exclusão da conta.
 export async function enviarEmailCodigoExclusaoConta(usuario, codigo) {
-  await enviar({
+  return enviar({
     to: usuario.email,
     subject: 'Código de confirmação para excluir sua conta — AdmAi',
     html: layout(

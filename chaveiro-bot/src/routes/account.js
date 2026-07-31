@@ -81,6 +81,11 @@ async function gerarEEnviarOtp(userId, telefone) {
 async function apagarEmpresaEmCascata(empresaId) {
   const where = { empresaId };
   await prisma.$transaction([
+    // Assinatura tem FK obrigatória para Empresa e sem onDelete (= RESTRICT). Sem apagá-la
+    // aqui, o delete final viola a FK e a transação inteira faz rollback — ou seja, a
+    // exclusão de conta (LGPD/Play Store) falhava com 500 para todo cliente que já tivesse
+    // iniciado um checkout no Stripe, justamente a base pagante.
+    prisma.assinatura.deleteMany({ where }),
     prisma.registroPonto.deleteMany({ where }),
     prisma.avaliacao.deleteMany({ where }),
     prisma.avaliacaoGoogle.deleteMany({ where }),
@@ -335,7 +340,27 @@ router.post('/me/conta/codigo-exclusao', exclusaoContaLimiter, async (req, res) 
       return res.status(400).json({ erro: 'Conta sem e-mail verificado cadastrado' });
     }
     const codigo = gerarCodigoExclusaoConta(usuario.id);
-    await enviarEmailCodigoExclusaoConta(usuario, codigo);
+    // Não responder `{enviado:true}` sem o e-mail ter saído: quem confia nessa resposta
+    // fica esperando um código que nunca chega e a conta vira indeletável (o DELETE exige
+    // o código). `enviar` agora lança em falha real e devolve false quando não há provedor
+    // configurado. O try/catch é estreito de propósito — só o envio vira 503; falha de
+    // banco continua caindo no 500 genérico lá embaixo.
+    let enviado = false;
+    try {
+      enviado = await enviarEmailCodigoExclusaoConta(usuario, codigo);
+    } catch (erroEnvio) {
+      logger.error('codigo_exclusao_falha_envio', {
+        userId: usuario.id,
+        erro: erroEnvio.message,
+      });
+      enviado = false;
+    }
+    if (!enviado) {
+      return res.status(503).json({
+        erro: 'Não foi possível enviar o código agora. Tente novamente em alguns minutos.',
+        codigo: 'email_indisponivel',
+      });
+    }
     res.json({ enviado: true });
   } catch (erro) {
     logger.error('Erro POST /me/conta/codigo-exclusao', { erro: erro.message });

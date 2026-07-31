@@ -49,9 +49,15 @@ export async function movimentarEstoque(
     const saldoApos = Math.max(0, material.quantidadeAtual + delta);
     const quantidadeReal = Math.abs(saldoApos - material.quantidadeAtual);
 
+    // Decremento ATÔMICO no banco em vez de gravar o valor lido. Antes era
+    // read-modify-write: dois técnicos concluindo serviços com o mesmo material liam 10,
+    // ambos escreviam 7, e o estoque ficava 7 em vez de 4 — com as duas linhas do
+    // histórico registrando o mesmo saldoApos, tornando o ledger inconsistente consigo.
+    // `increment` com valor negativo aplica a diferença sobre o valor atual da linha.
+    const ajuste = saldoApos - material.quantidadeAtual;
     await client.material.update({
       where: { id: materialId },
-      data: { quantidadeAtual: saldoApos },
+      data: { quantidadeAtual: { increment: ajuste } },
     });
 
     const mov = await client.movimentacaoEstoque.create({

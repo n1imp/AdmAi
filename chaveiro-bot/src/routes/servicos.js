@@ -66,8 +66,13 @@ function decodeCursor(raw) {
 router.get('/servicos', requirePermissao('servicos', 'ver'), async (req, res) => {
   try {
     const { tecnico, local, endereco, inicio, fim, page = '1', limit = '20', cursor } = req.query;
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    // `Math.max(1, NaN)` é NaN, não 1 — com ?limit=abc isso ia como take/skip NaN para o
+    // Prisma e estourava 500, além de serializar totalPages:null. Mesmo padrão defensivo
+    // já usado em routes/estoque.js.
+    const pageBruto = parseInt(page, 10);
+    const limitBruto = parseInt(limit, 10);
+    const pageNum = Number.isNaN(pageBruto) ? 1 : Math.max(1, pageBruto);
+    const limitNum = Number.isNaN(limitBruto) ? 20 : Math.min(100, Math.max(1, limitBruto));
     const where = { status: req.query.status ? String(req.query.status) : 'ativo' };
     if (tecnico) where.tecnico = { nome: contemInsensivel(tecnico) };
     if (local) where.local = contemInsensivel(local);
@@ -163,6 +168,16 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
         return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
       tecnico = await prisma.tecnico.findUnique({ where: { id: req.user.tecnicoId } });
       if (!tecnico) return res.status(400).json({ erro: 'Técnico não encontrado' });
+      // Funcionário não movimenta estoque (a baixa acontece só na aprovação). Antes os
+      // materiais eram zerados em SILÊNCIO: o app respondia 201, o técnico via sucesso, e
+      // os itens simplesmente não existiam — sem vínculo, sem baixa, com o estoque
+      // divergindo do real sem nenhum sinal. Melhor recusar explicitamente.
+      if (Array.isArray(materiais) && materiais.length > 0) {
+        return res.status(400).json({
+          erro: 'Materiais não podem ser informados neste fluxo; registre-os na aprovação.',
+          codigo: 'materiais_nao_permitidos',
+        });
+      }
       materiais = [];
     } else {
       if (!dados.tecnico) return res.status(400).json({ erro: 'Informe o técnico' });

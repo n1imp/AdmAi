@@ -175,7 +175,10 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
 
   const valorCobrado = Number(dados.valorCobrado);
   const valorLiquido = valorCobrado - valorMaterial;
-  const comissaoGerada = valorLiquido * ((tecnico?.comissao ?? 0) / 100);
+  // Arredondado em 2 casas como routes/servicos.js já fazia. Sem isto, o mesmo serviço
+  // gravava 33 pelo painel e 33.000000000000004 pelo WhatsApp; somando milhares de linhas,
+  // o saldo do técnico divergia em centavos do somatório exibido na mesma tela.
+  const comissaoGerada = parseFloat((valorLiquido * ((tecnico?.comissao ?? 0) / 100)).toFixed(2));
   const materialTexto =
     itens.length > 0 ? itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ') : null;
 

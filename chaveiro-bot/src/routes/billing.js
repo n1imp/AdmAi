@@ -44,15 +44,23 @@ billingRouter.post('/billing/portal', requireAuth, adminOnly, async (req, res) =
 });
 
 billingRouter.get('/billing/status', requireAuth, async (req, res) => {
-  const assinatura = await prisma.assinatura.findUnique({
-    where: { empresaId: req.user.empresaId },
-  });
-  res.json({
-    status: assinatura?.status ?? 'sem_plano',
-    trialFimEm: assinatura?.trialFimEm ?? null,
-    periodoFimEm: assinatura?.periodoFimEm ?? null,
-    canceladoEm: assinatura?.canceladoEm ?? null,
-  });
+  // Era a única rota do projeto sem try/catch. O Express 4 não captura rejeição de
+  // handler async: uma falha no banco virava unhandled rejection (que no Node 20 derruba
+  // o processo por padrão) e o cliente ficava sem resposta nenhuma.
+  try {
+    const assinatura = await prisma.assinatura.findUnique({
+      where: { empresaId: req.user.empresaId },
+    });
+    res.json({
+      status: assinatura?.status ?? 'sem_plano',
+      trialFimEm: assinatura?.trialFimEm ?? null,
+      periodoFimEm: assinatura?.periodoFimEm ?? null,
+      canceladoEm: assinatura?.canceladoEm ?? null,
+    });
+  } catch (erro) {
+    logger.error('Erro GET /billing/status', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
 });
 
 // ── /webhook/stripe ───────────────────────────────────────────────────────────

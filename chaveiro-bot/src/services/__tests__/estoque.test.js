@@ -60,11 +60,41 @@ describe('movimentarEstoque — isolamento por empresaId (F6)', () => {
       { materialId: 5, empresaId: 7, tipo: 'saida', quantidade: 4 },
       client
     );
+    // B7: a gravação precisa ser um DELTA atômico, não o valor lido. Com
+    // `quantidadeAtual: 6` (read-modify-write), duas baixas simultâneas de 4 sobre 10
+    // liam ambas 10 e escreviam ambas 6 — saldo 6 em vez de 2, com as duas linhas do
+    // histórico afirmando o mesmo saldoApos. Asserir o `increment` é o que trava a
+    // regressão; asserir o número final voltaria a aceitar a versão sujeita a lost update.
     expect(client.material.update).toHaveBeenCalledWith({
       where: { id: 5 },
-      data: { quantidadeAtual: 6 },
+      data: { quantidadeAtual: { increment: -4 } },
     });
     expect(r.material.quantidadeAtual).toBe(6);
+  });
+
+  it('limita a baixa ao disponível com delta atômico (não zera o que outro gravou)', async () => {
+    const client = clienteFake({ material: { id: 5, quantidadeAtual: 2, empresaId: 7 } });
+    await movimentarEstoque(
+      { materialId: 5, empresaId: 7, tipo: 'saida', quantidade: 100 },
+      client
+    );
+    // Saldo 2 e pedido de 100 → desconta só os 2 disponíveis, ainda como delta.
+    expect(client.material.update).toHaveBeenCalledWith({
+      where: { id: 5 },
+      data: { quantidadeAtual: { increment: -2 } },
+    });
+  });
+
+  it('entrada usa delta positivo', async () => {
+    const client = clienteFake({ material: { id: 5, quantidadeAtual: 10, empresaId: 7 } });
+    await movimentarEstoque(
+      { materialId: 5, empresaId: 7, tipo: 'entrada', quantidade: 3 },
+      client
+    );
+    expect(client.material.update).toHaveBeenCalledWith({
+      where: { id: 5 },
+      data: { quantidadeAtual: { increment: 3 } },
+    });
   });
 
   it('nunca deixa o saldo negativo (limita a baixa ao disponível)', async () => {
