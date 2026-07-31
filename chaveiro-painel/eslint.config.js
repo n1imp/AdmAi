@@ -45,8 +45,9 @@ export default [
     languageOptions: { globals: { ...globals.browser, ...globals.node, ...vitestGlobals } },
   },
   {
-    // Harness e2e (Node ESM puro, fora do bundle do painel) — globais do Node + WebSocket/fetch.
-    files: ['e2e/**/*.mjs'],
+    // Scripts Node ESM puros, fora do bundle do painel — globais do Node + WebSocket/fetch.
+    // Cobre o harness e2e e os scripts de build (ex.: scripts/gerar-headers.mjs).
+    files: ['e2e/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

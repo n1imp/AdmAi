@@ -23,7 +23,13 @@
     <script>
       (function(){
         var id = '%VITE_CRISP_ID%';
-        if (!id || id === '%VITE_CRISP_ID%') return;
+        // A sentinela é montada em tempo de execução ('%'+'VITE_...') porque o Vite
+        // substitui TODA ocorrência literal de %VITE_CRISP_ID% neste arquivo. Escrita
+        // literal, a comparação virava `id === id` com a variável definida (e
+        // literal-vs-literal sem ela) — retornando sempre, em qualquer ambiente, o que
+        // manteve o chat morto desde que foi adicionado.
+        var naoSubstituido = '%' + 'VITE_CRISP_ID' + '%';
+        if (!id || id === naoSubstituido) return;
         window.$crisp=[];window.CRISP_WEBSITE_ID=id;
         var d=document,s=d.createElement('script');
         s.src='https://client.crisp.chat/l.js';s.async=1;d.head.appendChild(s);
