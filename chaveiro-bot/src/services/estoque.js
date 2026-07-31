@@ -8,8 +8,14 @@ import { alertarEstoqueBaixo } from './notificacao.js';
  *
  * O saldo nunca fica negativo — saídas são limitadas ao saldo disponível.
  *
+ * `empresaId` é OBRIGATÓRIO e filtra a leitura do material: o parâmetro `tx` cai no
+ * `prisma` cru (sem escopo de tenant) quando omitido, então sem esse filtro a função
+ * dependeria apenas da validação de posse feita pelo chamador. Hoje todos os call sites
+ * pré-validam, mas isso é frágil a regressão — aqui a checagem passa a ser local.
+ *
  * @param {object} params
  * @param {number} params.materialId
+ * @param {number} params.empresaId   Tenant dono do material (obrigatório).
  * @param {'entrada'|'saida'|'ajuste'} params.tipo
  * @param {number} params.quantidade  Sempre positiva.
  * @param {string} [params.origem]    "manual" | "servico" | "ajuste"
@@ -18,13 +24,24 @@ import { alertarEstoqueBaixo } from './notificacao.js';
  * @param {object} [tx]               Cliente Prisma transacional (opcional).
  */
 export async function movimentarEstoque(
-  { materialId, tipo, quantidade, origem = 'manual', servicoId = null, observacao = null },
+  {
+    materialId,
+    empresaId,
+    tipo,
+    quantidade,
+    origem = 'manual',
+    servicoId = null,
+    observacao = null,
+  },
   tx = prisma
 ) {
   if (quantidade <= 0) throw new Error('Quantidade deve ser positiva');
+  if (!empresaId) throw new Error('empresaId obrigatório para movimentar estoque');
 
   const executar = async (client) => {
-    const material = await client.material.findUnique({ where: { id: materialId } });
+    // findFirst (não findUnique) para poder filtrar por empresaId: material de outro
+    // tenant é indistinguível de material inexistente.
+    const material = await client.material.findFirst({ where: { id: materialId, empresaId } });
     if (!material) throw new Error('Material não encontrado');
 
     const delta = tipo === 'saida' ? -quantidade : quantidade;
@@ -62,14 +79,17 @@ export async function movimentarEstoque(
  *
  * @param {number} servicoId
  * @param {Array<{materialId:number, quantidade:number}>} itens
+ * @param {number} empresaId Tenant dono dos materiais (obrigatório, repassado ao movimentarEstoque).
  * @param {object} [tx] Cliente transacional.
  */
-export async function darBaixaPorServico(servicoId, itens, tx = prisma) {
+export async function darBaixaPorServico(servicoId, itens, empresaId, tx = prisma) {
+  if (!empresaId) throw new Error('empresaId obrigatório para dar baixa de estoque');
   for (const item of itens) {
     try {
       const { material } = await movimentarEstoque(
         {
           materialId: item.materialId,
+          empresaId,
           tipo: 'saida',
           quantidade: item.quantidade,
           origem: 'servico',

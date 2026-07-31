@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/Toast.jsx';
 import PanelScope from './components/ui/PanelScope.jsx';
-import { AuthProvider, useAuth, tokenExpirado } from './contexts/AuthContext.jsx';
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
+import { RequireAuth, RequirePermissao } from './components/Guards.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import { useOffline } from './hooks/useOffline.js';
@@ -43,30 +43,6 @@ import Cookies from './pages/Cookies.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
 import ConviteAceitar from './pages/ConviteAceitar.jsx';
 import MagicLink from './pages/MagicLink.jsx';
-
-function RequireAuth({ children }) {
-  const { user, logout, senhaProvisoria } = useAuth();
-  // Se o token já expirou, derruba a sessão (efeito) e manda pro login.
-  const expirado = tokenExpirado();
-  useEffect(() => {
-    if (expirado && user) logout();
-  }, [expirado, user, logout]);
-  if (!user || expirado) return <Navigate to="/login" replace />;
-  // Usuário com PIN provisório fica preso na troca de senha até definir uma definitiva.
-  if (senhaProvisoria && window.location.pathname !== '/trocar-senha') {
-    return <Navigate to="/trocar-senha" replace />;
-  }
-  return children;
-}
-
-// Protege uma rota por permissão de módulo (RBAC). O dono passa direto; demais esperam
-// as permissões carregarem (evita redirect prematuro durante o fetch de /me/permissoes).
-function RequirePermissao({ modulo, acao = 'ver', children }) {
-  const { user, pode, permissoes } = useAuth();
-  if (user?.papel !== 'dono' && permissoes === null) return null; // carregando
-  if (!pode(modulo, acao)) return <Navigate to="/configuracao" replace />;
-  return children;
-}
 
 // Raiz por papel (PR2 + PR4): visitante vê a landing; funcionário cai no painel
 // próprio; gestor recebe a home operacional; dono/admin recebem o dashboard da empresa.

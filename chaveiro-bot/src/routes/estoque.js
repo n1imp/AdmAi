@@ -219,6 +219,7 @@ router.post(
       if (!dono) return res.status(404).json({ erro: 'Material não encontrado' });
       const { material, movimentacao } = await movimentarEstoque({
         materialId: id,
+        empresaId: req.user.empresaId,
         tipo: parse.data.tipo,
         quantidade: parse.data.quantidade,
         origem: parse.data.tipo === 'ajuste' ? 'ajuste' : 'manual',
