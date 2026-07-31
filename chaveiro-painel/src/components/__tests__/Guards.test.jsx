@@ -69,7 +69,11 @@ describe('<RequireAuth>', () => {
   });
 
   it('prende o usuário em /trocar-senha enquanto a senha for provisória', () => {
-    mockAuth.mockReturnValue({ user: { id: 1, papel: 'funcionario' }, logout: vi.fn(), senhaProvisoria: true });
+    mockAuth.mockReturnValue({
+      user: { id: 1, papel: 'funcionario' },
+      logout: vi.fn(),
+      senhaProvisoria: true,
+    });
     renderizarComRota(
       <RequireAuth>
         <Protegido />
@@ -80,7 +84,11 @@ describe('<RequireAuth>', () => {
   });
 
   it('libera o conteúdo para sessão válida sem senha provisória', () => {
-    mockAuth.mockReturnValue({ user: { id: 1, papel: 'dono' }, logout: vi.fn(), senhaProvisoria: false });
+    mockAuth.mockReturnValue({
+      user: { id: 1, papel: 'dono' },
+      logout: vi.fn(),
+      senhaProvisoria: false,
+    });
     renderizarComRota(
       <RequireAuth>
         <Protegido />
@@ -121,7 +129,11 @@ describe('<RequirePermissao>', () => {
   });
 
   it('dono passa mesmo com permissoes ainda não carregadas (null)', () => {
-    mockAuth.mockReturnValue({ user: { id: 1, papel: 'dono' }, permissoes: null, pode: () => true });
+    mockAuth.mockReturnValue({
+      user: { id: 1, papel: 'dono' },
+      permissoes: null,
+      pode: () => true,
+    });
     renderizarComRota(
       <RequirePermissao modulo="usuarios" acao="ver">
         <Protegido />
@@ -131,7 +143,11 @@ describe('<RequirePermissao>', () => {
   });
 
   it('não redireciona prematuramente enquanto as permissões carregam (evita flash)', () => {
-    mockAuth.mockReturnValue({ user: { id: 2, papel: 'gestor' }, permissoes: null, pode: () => false });
+    mockAuth.mockReturnValue({
+      user: { id: 2, papel: 'gestor' },
+      permissoes: null,
+      pode: () => false,
+    });
     renderizarComRota(
       <RequirePermissao modulo="usuarios" acao="ver">
         <Protegido />
