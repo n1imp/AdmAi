@@ -26,6 +26,7 @@ import { agendarSequencia } from '../services/onboarding.js';
 import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { authLimiter } from '../middlewares/rateLimiters.js';
 
 const router = Router();
 
@@ -402,22 +403,6 @@ router.post('/auth/register', async (req, res) => {
     return res.status(500).json({ erro: 'Erro interno' });
   }
 });
-
-const authLimiter = (() => {
-  let _limiter = null;
-  return async (req, res, next) => {
-    if (!_limiter) {
-      const { rateLimit } = await import('express-rate-limit');
-      _limiter = rateLimit({
-        windowMs: 15 * 60_000,
-        limit: 5,
-        standardHeaders: true,
-        legacyHeaders: false,
-      });
-    }
-    return _limiter(req, res, next);
-  };
-})();
 
 router.post('/auth/recuperar-senha', authLimiter, async (req, res) => {
   const parse = z.object({ email: z.string().email() }).safeParse(req.body);
