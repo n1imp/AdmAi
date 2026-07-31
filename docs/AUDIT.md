@@ -41,10 +41,29 @@ baixo (backlog abaixo) documentados e não bloqueantes.
 | B11 | ALTO | `DELETE /me/conta` sem nenhuma confirmação extra para contas social-only (sem senha) e sem 2FA — JWT vazado bastava para apagar a empresa em cascata | 🔧 `c1edc8e` |
 | B12 | ALTO | `authLimiter` duplicado — instância de `routes/auth.js` sem `RedisStore` (MemoryStore por instância) para recuperar-senha/redefinir-senha/magic-link | 🔧 `0c43e23` |
 
-Backlog não bloqueante desta frente (documentado, impacto limitado, com mitigação/
-justificativa — ver plano de segurança da sessão para detalhe arquivo:linha):
-- MÉDIO: ambiguidade cross-tenant em resposta de avaliação por telefone único (`avaliacao.js`); hardening defensivo de `movimentarEstoque`/`darBaixaPorServico` (`estoque.js`, não explorável hoje); CSP do painel em modo `Report-Only` apenas (`nginx.conf`); `android:allowBackup="true"` sem regras de exclusão no app Android.
-- BAIXO: `axios`/`stripe` desatualizados e `pino` como dependência morta no bot; CSP do backend sem `frame-ancestors`/`object-src` explícitos; zero cobertura de teste para `RequireAuth`/`RequirePermissao`/`AuthContext` no painel.
+### Ciclo 2 — médio/baixo (PR #93, empilhado sobre o #91)
+
+| ID | Sev. | Título | Status |
+|----|------|--------|--------|
+| B14 | MÉDIO | `movimentarEstoque`/`darBaixaPorServico` liam `Material` sem filtro de `empresaId`, com `tx` caindo no prisma cru — não explorável (call sites pré-validam), mas a checagem dependia do chamador | 🔧 `ca9dc5f` |
+| B15 | BAIXO | CSP do backend sem `frame-ancestors`/`object-src`/`upgrade-insecure-requests` | 🔧 `b3df738` |
+| B16 | BAIXO | `pino` declarado no bot com zero uso (logger real é winston) — superfície de supply-chain desnecessária | 🔧 `b3df738` |
+| B17 | BAIXO | Zero cobertura de teste para `RequireAuth`/`RequirePermissao` no painel | 🔧 `93221c2` |
+
+Validação do ciclo 2: bot 267/267 unit + 85/85 integração + `npm audit` 0; painel
+125/125 unit + build OK; lint 0 erros nos dois.
+
+### Backlog remanescente (não bloqueante, com justificativa)
+
+| ID | Sev. | Item | Por que não foi feito |
+|----|------|------|------------------------|
+| F5 | MÉDIO | Ambiguidade cross-tenant em resposta de avaliação por telefone único (`avaliacao.js`, `tentarCapturarResposta`) | Decisão de produto sobre o critério de desambiguação; exposição limitada a colisão de telefone entre 2 empresas com avaliação pendente simultânea |
+| F7 | MÉDIO | CSP do painel só em `Content-Security-Policy-Report-Only` (`nginx.conf`) | Exige validação em staging antes de aplicar: a allow-list atual pode não cobrir PostHog/Sentry e quebraria silenciosamente em produção |
+| F8 | MÉDIO | `android:allowBackup="true"` sem `dataExtractionRules`/`fullBackupContent` | Verificação exige device físico/`adb backup`; aplicar sem poder validar seria fé cega |
+| F9 | BAIXO | `stripe` várias majors atrás | Risco de breaking em billing; merece PR isolado com leitura do changelog |
+
+`axios` (era F9/BAIXO) foi **reclassificado para ALTO** e resolvido no PR #92 — o npm
+classifica como HIGH e o CI travava nele. A classificação inicial estava errada.
 
 Validação: unit `chaveiro-bot` 253/253 verde, `npm run lint` 0 erros (6 warnings
 pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK). PoC-first aplicado
