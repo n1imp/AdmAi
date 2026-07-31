@@ -88,11 +88,25 @@ export default function MaterialPicker({ value = [], onChange }) {
   }
 
   function alterarQtd(materialId, qtdRaw) {
-    // Mantém o texto enquanto digita; normaliza para número >= 0 (vírgula vira ponto).
-    const num = parseFloat(String(qtdRaw).replace(',', '.'));
-    const quantidade = Number.isFinite(num) && num > 0 ? num : '';
-    onChange(value.map((v) => (v.materialId === materialId ? { ...v, quantidade } : v)));
+    // Preserva o TEXTO digitado em vez de normalizar a cada tecla. Antes, `num > 0`
+    // zerava o campo no primeiro caractere de "0,5" (o `0` sozinho não passa no >0),
+    // tornando impossível informar qualquer fração. Pior: NovoServico filtra itens sem
+    // quantidade antes do POST, então o material era DESCARTADO em silêncio — sem baixa
+    // de estoque, com toast de sucesso.
+    const texto = String(qtdRaw).replace(',', '.');
+    // Aceita vazio (usuário apagando) e qualquer número decimal em construção ("0.", "0.5").
+    if (texto !== '' && !/^\d*\.?\d*$/.test(texto)) return;
+    onChange(value.map((v) => (v.materialId === materialId ? { ...v, quantidade: texto } : v)));
   }
+
+  /** Item pronto para envio: quantidade preenchida e maior que zero. */
+  function quantidadeValida(v) {
+    const num = parseFloat(String(v.quantidade).replace(',', '.'));
+    return Number.isFinite(num) && num > 0;
+  }
+
+  // Exposto para o formulário poder bloquear o submit em vez de descartar o item.
+  const itensIncompletos = value.filter((v) => !quantidadeValida(v));
 
   function onBuscaChange(e) {
     setBusca(e.target.value);
@@ -245,10 +259,13 @@ export default function MaterialPicker({ value = [], onChange }) {
             >
               <Package size={15} className="text-accent-300 shrink-0" />
               <span className="flex-1 min-w-0 truncate text-sm text-white">{item.nome}</span>
+              {/* type="text" + inputMode="decimal": mantém o teclado numérico no celular,
+                  mas aceita a VÍRGULA que o teclado pt-BR oferece. Com type="number" o
+                  navegador descartava a vírgula antes de chegar no handler, então em
+                  português não havia como digitar "0,5" — a mesma fração que o bug do
+                  campo já impedia. A validação de formato fica em alterarQtd. */}
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 inputMode="decimal"
                 value={item.quantidade}
                 onChange={(e) => alterarQtd(item.materialId, e.target.value)}
