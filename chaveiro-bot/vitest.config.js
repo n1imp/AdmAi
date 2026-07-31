@@ -35,7 +35,13 @@ if (!process.env.ADMIN_USERNAME || !/^[a-zA-Z0-9_]{3,}$/.test(process.env.ADMIN_
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['**/*.test.js'],
+    // Globs EXPLÍCITOS em vez de depender de `--dir src` na linha de comando. Com o
+    // `--dir`, os testes de `scripts/` (incluindo o de path traversal do backfill) não
+    // eram coletados por script nenhum: `npm test` restringia a raiz a `src/` e o config
+    // de integração só casa `test/integration/**`. O arquivo passava lint e Prettier,
+    // parecia mantido, e nunca tinha sido executado. Declarar aqui também evita que um
+    // `npx vitest run` cru colete `test/integration/**` (que exige banco) sem querer.
+    include: ['src/**/*.test.js', 'scripts/**/*.test.js'],
     // globals desligado: importamos describe/it/expect explicitamente.
     // Timeouts folgados: o cold-import de módulos (ex.: client Prisma sob resetModules)
     // pode ser lento em disco/OneDrive — evita falhas espúrias por timeout de hook.
