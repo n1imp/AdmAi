@@ -80,6 +80,30 @@ mesma revisão. Isso demonstra o valor de uma segunda revisão com contexto mín
 primeiro fix de B9/B11, embora corretamente testado e validado no escopo em que foi
 escrito, tinha um escopo de endpoints incompleto.
 
+### Segunda rodada de revisão independente — 1 achado crítico adicional (B13)
+
+Uma segunda revisão adversarial (agente separado, verificando especificamente os fixes
+de B9/B11) confirmou RBAC e rate-limiting sólidos, mas achou que o fix de B11 tinha uma
+variante não fechada: `PATCH /me` aplicava troca de e-mail **imediatamente**, sem
+reverificação. Um atacante com JWT roubado podia trocar o e-mail para um endereço
+próprio e então disparar `/auth/recuperar-senha` (tomada de conta **permanente** — pior
+que a exclusão) ou o código de exclusão do B11, ambos indo para o e-mail recém-definido
+pelo próprio atacante.
+
+| ID | Sev. | Título | Status |
+|----|------|--------|--------|
+| B13 | **CRÍTICO** | `PATCH /me` trocava e-mail sem reverificação → redireciona recuperação de senha/exclusão de conta para e-mail do atacante | 🔧 `b906206` |
+
+Fix: troca de e-mail com um endereço atual já verificado fica **pendente** até
+confirmação via link enviado ao endereço ANTIGO (`GET /auth/email/confirmar-mudanca`,
+token assinado no mesmo padrão de `password_reset`/`email_verify`); depois de aplicada,
+exige prova de posse do NOVO endereço reusando o fluxo padrão de verificação existente.
+Contas sem e-mail atual (primeira definição) continuam aplicando direto — nada a
+proteger nesse caso. `POST /me/conta/codigo-exclusao` também passou a exigir
+`emailVerificado` (defesa em profundidade). Telefone não foi alterado neste ciclo — a
+troca de telefone não abre o mesmo vetor (login por 2FA-telefone exige senha correta
+antes, e o F3 já não depende mais do OTP de telefone).
+
 ## Planejamento de arquitetura de banco
 - [`DB_ARCHITECTURE_PLAN.md`](./DB_ARCHITECTURE_PLAN.md) — roteiro de 12 seções (Principal Data Architect) para evoluir o banco a nível corporativo. **Planejamento** (sem SQL/tabelas), aterrado no `schema.prisma` real.
 - [`db/`](./db/) — **execução** do roteiro (F1–F9), entregáveis com evidência `arquivo:linha`:
