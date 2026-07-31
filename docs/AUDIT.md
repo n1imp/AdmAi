@@ -46,13 +46,39 @@ justificativa — ver plano de segurança da sessão para detalhe arquivo:linha)
 - MÉDIO: ambiguidade cross-tenant em resposta de avaliação por telefone único (`avaliacao.js`); hardening defensivo de `movimentarEstoque`/`darBaixaPorServico` (`estoque.js`, não explorável hoje); CSP do painel em modo `Report-Only` apenas (`nginx.conf`); `android:allowBackup="true"` sem regras de exclusão no app Android.
 - BAIXO: `axios`/`stripe` desatualizados e `pino` como dependência morta no bot; CSP do backend sem `frame-ancestors`/`object-src` explícitos; zero cobertura de teste para `RequireAuth`/`RequirePermissao`/`AuthContext` no painel.
 
-Validação: unit `chaveiro-bot` 246/246 verde (baseline 236 + 10 novos), `npm run lint`
-0 erros (5 warnings pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK).
-PoC-first aplicado em B9/B10/B11 (teste falha contra o código revertido via `git stash`,
-passa com o fix — confirmado nesta sessão). **Limitação declarada**: testes de
-integração (Supertest+Postgres) não executados nesta sessão — Postgres/Redis locais
-indisponíveis e Docker Desktop sem daemon ativo; o teste de integração de B11 foi
-escrito seguindo o padrão de `autoexclusao_conta.test.js` mas não executado.
+Validação: unit `chaveiro-bot` 253/253 verde, `npm run lint` 0 erros (6 warnings
+pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK). PoC-first aplicado
+em B9/B10/B11 (teste falha contra o código revertido via `git stash`, passa com o fix).
+**Limitação declarada**: testes de integração (Supertest+Postgres) não executados nesta
+sessão — Postgres/Redis locais indisponíveis e Docker Desktop sem daemon ativo; os testes
+de integração de B9/B11 foram escritos seguindo o padrão existente mas não executados.
+
+### Revisão independente (red-team, contexto mínimo) — 2 bypasses críticos achados e fechados
+
+Uma revisão adversarial independente (agente separado, sem o raciocínio da sessão que
+implementou os fixes) encontrou que os fixes de B9 e B11, como implementados
+inicialmente, tinham bypasses completos:
+
+- **B9-BYPASS**: o teto de autoridade (`limitarPermissoesAoAtor`) e o bloqueio de
+  promoção a `dono` valiam só em `PATCH /usuarios/:id`. `POST /usuarios` (criação) e
+  `POST /usuarios/convidar` (+ aceite em `auth.js`) escapavam intactos — um gestor com
+  override de `usuarios.editar` podia criar diretamente uma conta `dono`, ou convidar
+  alguém como `dono`, contornando o fix inteiro. Fechado no commit `daba274`.
+- **B11-BYPASS**: o código de confirmação de exclusão reusava
+  `telefoneOtpHash`/`telefoneOtpExpira` (services/otp.js) — o mesmo canal do OTP de
+  telefone via WhatsApp. Um atacante com JWT roubado podia trocar o próprio telefone via
+  `PATCH /me` (sem nenhuma confirmação), receber o OTP de telefone no próprio número, e
+  usá-lo para satisfazer a exigência de "e-mail" em `DELETE /me/conta` — invertendo o
+  objetivo do fix. Fechado no commit `80da4e3` com um código stateless (HMAC) dedicado,
+  sem nenhum campo compartilhado com o OTP de telefone.
+- **Achado ALTO adicional**: nenhum limite dedicado nas rotas de exclusão de conta
+  (só o genérico de `/api`, 120/min por IP) — brute-forceável no espaço de 6 dígitos.
+  Fechado no mesmo commit `80da4e3` com `exclusaoContaLimiter` (5/15min por usuário).
+
+B10 e B12 (upload de foto, dedup do rate limiter) foram confirmados **sem bypass** pela
+mesma revisão. Isso demonstra o valor de uma segunda revisão com contexto mínimo — o
+primeiro fix de B9/B11, embora corretamente testado e validado no escopo em que foi
+escrito, tinha um escopo de endpoints incompleto.
 
 ## Planejamento de arquitetura de banco
 - [`DB_ARCHITECTURE_PLAN.md`](./DB_ARCHITECTURE_PLAN.md) — roteiro de 12 seções (Principal Data Architect) para evoluir o banco a nível corporativo. **Planejamento** (sem SQL/tabelas), aterrado no `schema.prisma` real.
