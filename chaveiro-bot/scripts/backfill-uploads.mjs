@@ -27,44 +27,56 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const MIME_POR_EXT = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
+// Helpers puros vivem num módulo sem shebang para poderem ser importados pelos testes
+// (ver scripts/backfill-uploads-helpers.mjs). Reexportados para não quebrar quem importa daqui.
+import { tipoConteudo, nomeObjeto } from './backfill-uploads-helpers.mjs';
+export { tipoConteudo, nomeObjeto };
 
 // Diretórios do volume — batem com os que a app usa (routes/estoque.js, services/inbound.js,
 // routes/tecnicos.js). Sobrescrevíveis por env caso o mount do volume mude de caminho.
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.resolve('./uploads');
 const PONTO_SELFIES_DIR = process.env.PONTO_SELFIES_DIR || path.resolve('./uploads-ponto');
 
-/** content-type a partir da extensão do nome do objeto (fallback binário genérico). */
-export function tipoConteudo(nome) {
-  const ext = path.extname(nome).slice(1).toLowerCase();
-  return MIME_POR_EXT[ext] ?? 'application/octet-stream';
-}
-
-/**
- * Extrai o nome do objeto a partir da URL legada, validando o prefixo e barrando path
- * traversal — o nome vem do banco e nunca deve conter separador de caminho ou `..`.
- * @returns {string|null} basename seguro, ou null se a URL não casa/é suspeita.
- */
-export function nomeObjeto(url, prefixo) {
-  if (typeof url !== 'string' || !url.startsWith(prefixo)) return null;
-  const nome = url.slice(prefixo.length);
-  if (!nome || nome.includes('/') || nome.includes('\\') || nome.includes('..')) return null;
-  return nome;
-}
-
 /**
  * Migra uma superfície (coluna com URL de disco). `subir(nome, buffer)` sobe o arquivo e
  * devolve a nova URL (ou null p/ privado); `reescrever(id, url)` persiste a nova URL (ou null
  * quando a URL não muda). Em dry-run só contabiliza — nada é lido/enviado/reescrito.
  */
-async function migrarSuperficie({ rotulo, registros, prefixo, dir, subir, reescrever, aplicar, log }) {
-  const r = { rotulo, encontrados: registros.length, migrados: 0, semArquivo: 0, invalidos: 0, erros: 0 };
+async function migrarSuperficie({
+  rotulo,
+  registros,
+  prefixo,
+  dir,
+  subir,
+  reescrever,
+  aplicar,
+  log,
+}) {
+  const r = {
+    rotulo,
+    encontrados: registros.length,
+    migrados: 0,
+    semArquivo: 0,
+    invalidos: 0,
+    erros: 0,
+  };
   for (const reg of registros) {
     const nome = nomeObjeto(reg.url, prefixo);
-    if (!nome) { r.invalidos++; log.warn('URL legada inválida — pulando', { rotulo, id: reg.id, url: reg.url }); continue; }
+    if (!nome) {
+      r.invalidos++;
+      log.warn('URL legada inválida — pulando', { rotulo, id: reg.id, url: reg.url });
+      continue;
+    }
     const caminho = path.join(dir, nome);
-    if (!existsSync(caminho)) { r.semArquivo++; log.warn('Arquivo ausente no disco — pulando', { rotulo, id: reg.id, caminho }); continue; }
-    if (!aplicar) { r.migrados++; continue; } // dry-run: contaria como migrado
+    if (!existsSync(caminho)) {
+      r.semArquivo++;
+      log.warn('Arquivo ausente no disco — pulando', { rotulo, id: reg.id, caminho });
+      continue;
+    }
+    if (!aplicar) {
+      r.migrados++;
+      continue;
+    } // dry-run: contaria como migrado
     try {
       const buffer = await readFile(caminho);
       const novaUrl = await subir(nome, buffer);
@@ -87,40 +99,67 @@ async function migrarSuperficie({ rotulo, registros, prefixo, dir, subir, reescr
  */
 export async function executar({ aplicar }) {
   const { prisma } = await import('../src/db/prisma.js');
-  const { storageHabilitado, uploadImagem, uploadPrivado } = await import('../src/services/storage.js');
+  const { storageHabilitado, uploadImagem, uploadPrivado } =
+    await import('../src/services/storage.js');
   const { logger: log } = await import('../src/utils/logger.js');
 
   if (!storageHabilitado()) {
-    throw new Error('Object storage não configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY). Nada a migrar.');
+    throw new Error(
+      'Object storage não configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY). Nada a migrar.'
+    );
   }
 
   const [materiais, servicos, batidas] = await Promise.all([
-    prisma.material.findMany({ where: { imagemUrl: { startsWith: '/uploads/' } }, select: { id: true, imagemUrl: true } }),
-    prisma.servico.findMany({ where: { fotoEvidencia: { startsWith: '/uploads/' } }, select: { id: true, fotoEvidencia: true } }),
-    prisma.batidaPonto.findMany({ where: { selfieUrl: { startsWith: '/uploads-ponto/' } }, select: { id: true, selfieUrl: true } }),
+    prisma.material.findMany({
+      where: { imagemUrl: { startsWith: '/uploads/' } },
+      select: { id: true, imagemUrl: true },
+    }),
+    prisma.servico.findMany({
+      where: { fotoEvidencia: { startsWith: '/uploads/' } },
+      select: { id: true, fotoEvidencia: true },
+    }),
+    prisma.batidaPonto.findMany({
+      where: { selfieUrl: { startsWith: '/uploads-ponto/' } },
+      select: { id: true, selfieUrl: true },
+    }),
   ]);
 
   return [
     await migrarSuperficie({
-      rotulo: 'estoque (Material.imagemUrl)', aplicar, log,
+      rotulo: 'estoque (Material.imagemUrl)',
+      aplicar,
+      log,
       registros: materiais.map((m) => ({ id: m.id, url: m.imagemUrl })),
-      prefixo: '/uploads/', dir: UPLOADS_DIR,
-      subir: (nome, buffer) => uploadImagem('estoque', nome, buffer, tipoConteudo(nome), { upsert: true }),
+      prefixo: '/uploads/',
+      dir: UPLOADS_DIR,
+      subir: (nome, buffer) =>
+        uploadImagem('estoque', nome, buffer, tipoConteudo(nome), { upsert: true }),
       reescrever: (id, url) => prisma.material.update({ where: { id }, data: { imagemUrl: url } }),
     }),
     await migrarSuperficie({
-      rotulo: 'inbound (Servico.fotoEvidencia)', aplicar, log,
+      rotulo: 'inbound (Servico.fotoEvidencia)',
+      aplicar,
+      log,
       registros: servicos.map((s) => ({ id: s.id, url: s.fotoEvidencia })),
-      prefixo: '/uploads/', dir: UPLOADS_DIR,
-      subir: (nome, buffer) => uploadImagem('inbound', nome, buffer, tipoConteudo(nome), { upsert: true }),
-      reescrever: (id, url) => prisma.servico.update({ where: { id }, data: { fotoEvidencia: url } }),
+      prefixo: '/uploads/',
+      dir: UPLOADS_DIR,
+      subir: (nome, buffer) =>
+        uploadImagem('inbound', nome, buffer, tipoConteudo(nome), { upsert: true }),
+      reescrever: (id, url) =>
+        prisma.servico.update({ where: { id }, data: { fotoEvidencia: url } }),
     }),
     await migrarSuperficie({
-      rotulo: 'selfies-ponto (BatidaPonto.selfieUrl)', aplicar, log,
+      rotulo: 'selfies-ponto (BatidaPonto.selfieUrl)',
+      aplicar,
+      log,
       registros: batidas.map((b) => ({ id: b.id, url: b.selfieUrl })),
-      prefixo: '/uploads-ponto/', dir: PONTO_SELFIES_DIR,
+      prefixo: '/uploads-ponto/',
+      dir: PONTO_SELFIES_DIR,
       // Bucket privado: só garante o objeto no storage; a URL no banco permanece /uploads-ponto/<n>.
-      subir: async (nome, buffer) => { await uploadPrivado('selfies-ponto', nome, buffer, tipoConteudo(nome), { upsert: true }); return null; },
+      subir: async (nome, buffer) => {
+        await uploadPrivado('selfies-ponto', nome, buffer, tipoConteudo(nome), { upsert: true });
+        return null;
+      },
       reescrever: null,
     }),
   ];
@@ -128,12 +167,16 @@ export async function executar({ aplicar }) {
 
 /** Imprime o sumário e devolve o total de erros (exit code). */
 export function relatar(resultados, aplicar) {
-  console.log(`\n=== Backfill de mídia (${aplicar ? 'APLICADO' : 'DRY-RUN — nada foi alterado'}) ===`);
+  console.log(
+    `\n=== Backfill de mídia (${aplicar ? 'APLICADO' : 'DRY-RUN — nada foi alterado'}) ===`
+  );
   let erros = 0;
   for (const r of resultados) {
     console.log(`\n${r.rotulo}`);
-    console.log(`  encontrados: ${r.encontrados} | ${aplicar ? 'migrados' : 'migraria'}: ${r.migrados}` +
-      ` | sem arquivo: ${r.semArquivo} | invalidos: ${r.invalidos} | erros: ${r.erros}`);
+    console.log(
+      `  encontrados: ${r.encontrados} | ${aplicar ? 'migrados' : 'migraria'}: ${r.migrados}` +
+        ` | sem arquivo: ${r.semArquivo} | invalidos: ${r.invalidos} | erros: ${r.erros}`
+    );
     erros += r.erros;
   }
   console.log(`\nTotal de erros: ${erros}`);
@@ -145,9 +188,22 @@ export function relatar(resultados, aplicar) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const aplicar = process.argv.includes('--apply');
   const desconectar = async () => {
-    try { const { prisma } = await import('../src/db/prisma.js'); await prisma.$disconnect(); } catch { /* noop */ }
+    try {
+      const { prisma } = await import('../src/db/prisma.js');
+      await prisma.$disconnect();
+    } catch {
+      /* noop */
+    }
   };
   executar({ aplicar })
-    .then(async (res) => { const erros = relatar(res, aplicar); await desconectar(); process.exit(erros > 0 ? 1 : 0); })
-    .catch(async (e) => { console.error('ERRO no backfill:', e.message); await desconectar(); process.exit(1); });
+    .then(async (res) => {
+      const erros = relatar(res, aplicar);
+      await desconectar();
+      process.exit(erros > 0 ? 1 : 0);
+    })
+    .catch(async (e) => {
+      console.error('ERRO no backfill:', e.message);
+      await desconectar();
+      process.exit(1);
+    });
 }

@@ -18,13 +18,25 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 const BACKEND = dirname(dirname(fileURLToPath(import.meta.url)));
 const ENV_PATH = join(BACKEND, '.env.staging');
-if (!existsSync(ENV_PATH)) { console.error('❌ Falta .env.staging'); process.exit(1); }
+if (!existsSync(ENV_PATH)) {
+  console.error('❌ Falta .env.staging');
+  process.exit(1);
+}
 const cfg = dotenv.parse(readFileSync(ENV_PATH));
 
 const { DATABASE_URL, STAGING_REF } = cfg;
-if (!DATABASE_URL || /SUA_SENHA/.test(DATABASE_URL)) { console.error('❌ DATABASE_URL sem senha real'); process.exit(1); }
-if (!STAGING_REF || !DATABASE_URL.includes(STAGING_REF)) { console.error('❌ DATABASE_URL não bate com STAGING_REF (alvo suspeito)'); process.exit(1); }
-try { if (new URL(DATABASE_URL).port !== '6543') console.warn('⚠️  DATABASE_URL não é 6543 — não está testando o pooler transaction.'); } catch {}
+if (!DATABASE_URL || /SUA_SENHA/.test(DATABASE_URL)) {
+  console.error('❌ DATABASE_URL sem senha real');
+  process.exit(1);
+}
+if (!STAGING_REF || !DATABASE_URL.includes(STAGING_REF)) {
+  console.error('❌ DATABASE_URL não bate com STAGING_REF (alvo suspeito)');
+  process.exit(1);
+}
+try {
+  if (new URL(DATABASE_URL).port !== '6543')
+    console.warn('⚠️  DATABASE_URL não é 6543 — não está testando o pooler transaction.');
+} catch {}
 
 // Mesma construção do runtime real (src/db/prisma.js): adapter pg apontando pro pooler.
 const adapter = new PrismaPg({ connectionString: DATABASE_URL });
@@ -32,8 +44,13 @@ const prisma = new PrismaClient({ adapter });
 
 let ok = true;
 async function passo(nome, fn) {
-  try { const r = await fn(); console.log(`✅ ${nome}`, r === undefined ? '' : `→ ${r}`); }
-  catch (e) { ok = false; console.error(`❌ ${nome}: ${e.code || ''} ${e.message}`); }
+  try {
+    const r = await fn();
+    console.log(`✅ ${nome}`, r === undefined ? '' : `→ ${r}`);
+  } catch (e) {
+    ok = false;
+    console.error(`❌ ${nome}: ${e.code || ''} ${e.message}`);
+  }
 }
 
 console.log(`Alvo: pooler transaction do ${STAGING_REF} (6543)\n`);
@@ -63,5 +80,7 @@ await passo('transação interativa (create/read/delete)', async () => {
 });
 
 await prisma.$disconnect();
-console.log(`\n${ok ? '✅ SMOKE POOLER: PASSOU — Prisma 7 OK no transaction pooler (6543)' : '❌ SMOKE POOLER: FALHOU — ver erros acima'}`);
+console.log(
+  `\n${ok ? '✅ SMOKE POOLER: PASSOU — Prisma 7 OK no transaction pooler (6543)' : '❌ SMOKE POOLER: FALHOU — ver erros acima'}`
+);
 process.exit(ok ? 0 : 1);

@@ -15,12 +15,16 @@
 import { Client } from 'pg';
 
 const url = process.env.DATABASE_URL; // pooler 6543 (transaction mode) — o do runtime
-if (!url) { console.error('DATABASE_URL ausente (use node --env-file=.env.staging).'); process.exit(1); }
+if (!url) {
+  console.error('DATABASE_URL ausente (use node --env-file=.env.staging).');
+  process.exit(1);
+}
 
 const pg = new Client({ connectionString: url });
 await pg.connect();
 
-const leGuc = async () => (await pg.query(`SELECT current_setting('app.empresa_id', true) AS g`)).rows[0].g;
+const leGuc = async () =>
+  (await pg.query(`SELECT current_setting('app.empresa_id', true) AS g`)).rows[0].g;
 
 let ok = false;
 try {
@@ -37,13 +41,19 @@ try {
   const depoisTx = await leGuc();
 
   console.log(`1) sem GUC (baseline):        "${base ?? ''}"  (esperado vazio)`);
-  console.log(`2) dentro do tx (set local):  "${dentroTx ?? ''}"  (esperado 42 — GUC carrega no tx pelo pooler)`);
-  console.log(`3) apos COMMIT (nova conexao): "${depoisTx ?? ''}"  (esperado vazio — nao vaza entre requests)`);
+  console.log(
+    `2) dentro do tx (set local):  "${dentroTx ?? ''}"  (esperado 42 — GUC carrega no tx pelo pooler)`
+  );
+  console.log(
+    `3) apos COMMIT (nova conexao): "${depoisTx ?? ''}"  (esperado vazio — nao vaza entre requests)`
+  );
 
   ok = (base ?? '') === '' && dentroTx === '42' && (depoisTx ?? '') === '';
-  console.log(ok
-    ? 'STAGING RLS-GUC OK — o mecanismo do set_config(local) carrega no tx e NAO vaza, atraves do pooler Supabase.'
-    : 'STAGING RLS-GUC FALHOU — o pooler nao preserva/limpa o GUC como esperado.');
+  console.log(
+    ok
+      ? 'STAGING RLS-GUC OK — o mecanismo do set_config(local) carrega no tx e NAO vaza, atraves do pooler Supabase.'
+      : 'STAGING RLS-GUC FALHOU — o pooler nao preserva/limpa o GUC como esperado.'
+  );
 } catch (e) {
   console.error('ERRO na validacao:', e.message);
 } finally {

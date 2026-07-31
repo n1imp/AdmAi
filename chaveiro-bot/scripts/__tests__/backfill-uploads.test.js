@@ -4,7 +4,10 @@
  * guarda contra path traversal (o nome vem do banco e alimenta um path.join no disco).
  */
 import { describe, it, expect } from 'vitest';
-import { tipoConteudo, nomeObjeto } from '../backfill-uploads.mjs';
+// Importa do módulo de helpers (sem shebang): o CLI `backfill-uploads.mjs` começa com
+// `#!/usr/bin/env node`, que o transform do Vitest rejeita — era por isso que este
+// arquivo falhava com SyntaxError antes mesmo de rodar qualquer caso.
+import { tipoConteudo, nomeObjeto } from '../backfill-uploads-helpers.mjs';
 
 describe('tipoConteudo', () => {
   it('mapeia extensões conhecidas (case-insensitive)', () => {

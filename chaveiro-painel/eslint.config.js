@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
+import react from 'eslint-plugin-react';
 
 const vitestGlobals = {
   describe: 'readonly', it: 'readonly', test: 'readonly', expect: 'readonly',
@@ -22,9 +23,16 @@ export default [
       globals: { ...globals.browser, ...globals.node },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    plugins: { 'react-hooks': reactHooks },
+    plugins: { 'react-hooks': reactHooks, react },
+    settings: { react: { version: 'detect' } },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Sem estas duas, o ESLint não enxerga que um identificador é usado DENTRO do JSX:
+      // `no-unused-vars` acusava praticamente todo componente e ícone importado, gerando
+      // ~597 falsos positivos. O ruído enterrava o sinal real — inclusive imports mortos
+      // de verdade, que é exatamente o tipo de pista que revelou bugs no backend.
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'error',
       // Lenient: warnings não quebram o CI; rules-of-hooks segue como erro (bug real).
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'react-hooks/exhaustive-deps': 'warn',
