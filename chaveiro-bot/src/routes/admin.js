@@ -7,6 +7,7 @@ import { resolverPreferencias } from '../services/notificacao.js';
 import {
   permissoesEfetivas,
   sanitizarPermissoes,
+  limitarPermissoesAoAtor,
   presetDoPapel,
   PAPEIS,
   MODULOS,
@@ -268,13 +269,17 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       if (parse.data.ativo === false)
         return res.status(400).json({ erro: 'Você não pode desativar a própria conta' });
     }
+    if (parse.data.papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
+      return res.status(403).json({ erro: 'Somente o dono pode promover outro usuário a dono' });
+    }
     const { senha, permissoes, papel, ...resto } = parse.data;
     const data = { ...resto };
     if (papel !== undefined) {
       data.papel = papel;
       data.admin = papel === 'dono';
     }
-    if (permissoes !== undefined) data.permissoes = sanitizarPermissoes(permissoes);
+    if (permissoes !== undefined)
+      data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
     if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
     const auditarRbac = papel !== undefined || permissoes !== undefined;
     const antes = auditarRbac

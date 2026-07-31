@@ -142,6 +142,43 @@ export function podeProprio(usuario, capacidade) {
   return Boolean(ef?.proprio?.[capacidade]);
 }
 
+/**
+ * Reduz overrides propostos por um ator ao teto de sua PRÓPRIA autoridade efetiva:
+ * nunca permite conceder (a si mesmo ou a outro usuário) uma permissão de módulo/ação
+ * ou capacidade "proprio" que o ator não possui. Revogar (valor false) é sempre permitido.
+ * Dono não tem teto (grant total, ver permissoesEfetivas). Use em rotas que gravam
+ * `Usuario.permissoes` a partir de input do cliente (ex.: PATCH /usuarios/:id).
+ * @param {{papel?:string, admin?:boolean, permissoesEfetivas?:object}} ator
+ * @param {object|null} overridesPropostos já processado por sanitizarPermissoes()
+ */
+export function limitarPermissoesAoAtor(ator, overridesPropostos) {
+  if (!overridesPropostos) return overridesPropostos;
+  const papelAtor = ator?.papel ?? (ator?.admin ? 'dono' : null);
+  if (papelAtor === 'dono') return overridesPropostos;
+  const efetivasAtor = ator?.permissoesEfetivas ?? permissoesEfetivas(ator);
+  const out = {};
+  for (const m of MODULOS) {
+    if (!overridesPropostos[m]) continue;
+    const acoes = {};
+    for (const a of Object.keys(overridesPropostos[m])) {
+      const valor = overridesPropostos[m][a];
+      if (valor === true && !efetivasAtor?.[m]?.[a]) continue; // acima do teto do ator: descarta
+      acoes[a] = valor;
+    }
+    if (Object.keys(acoes).length) out[m] = acoes;
+  }
+  if (overridesPropostos.proprio) {
+    const proprio = {};
+    for (const c of Object.keys(overridesPropostos.proprio)) {
+      const valor = overridesPropostos.proprio[c];
+      if (valor === true && !efetivasAtor?.proprio?.[c]) continue;
+      proprio[c] = valor;
+    }
+    if (Object.keys(proprio).length) out.proprio = proprio;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 /** Sanitiza um objeto de overrides vindo do cliente: mantém só módulos/ações conhecidos. */
 export function sanitizarPermissoes(input) {
   if (!input || typeof input !== 'object') return null;

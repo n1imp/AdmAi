@@ -5,6 +5,7 @@ import {
   pode,
   podeProprio,
   sanitizarPermissoes,
+  limitarPermissoesAoAtor,
   PAPEIS,
   MODULOS,
 } from '../permissoes.js';
@@ -96,6 +97,70 @@ describe('sanitizarPermissoes', () => {
   it('devolve null para entrada inválida', () => {
     expect(sanitizarPermissoes(null)).toBeNull();
     expect(sanitizarPermissoes('x')).toBeNull();
+  });
+});
+
+describe('limitarPermissoesAoAtor (teto de autoridade — F1)', () => {
+  it('CVE-like: gestor com override customizado de usuarios.editar NÃO consegue conceder financeiro.editar (que não possui)', () => {
+    // Reproduz o cenário real: dono cria um gestor com override { usuarios: { editar: true } }.
+    const gestorComOverrideUsuarios = {
+      papel: 'gestor',
+      permissoes: { usuarios: { editar: true } },
+    };
+    gestorComOverrideUsuarios.permissoesEfetivas = permissoesEfetivas(gestorComOverrideUsuarios);
+    // presets de gestor: financeiro.editar é false — o ator não possui essa permissão.
+    expect(gestorComOverrideUsuarios.permissoesEfetivas.financeiro.editar).toBe(false);
+
+    const propostos = sanitizarPermissoes({ financeiro: { editar: true } });
+    const limitado = limitarPermissoesAoAtor(gestorComOverrideUsuarios, propostos);
+
+    // Sem o teto, `limitado` seria { financeiro: { editar: true } } — a escalação.
+    expect(limitado?.financeiro?.editar).not.toBe(true);
+  });
+
+  it('permite conceder uma permissão que o ator JÁ possui (não bloqueia uso legítimo)', () => {
+    const gestor = { papel: 'gestor', permissoes: null };
+    gestor.permissoesEfetivas = permissoesEfetivas(gestor);
+    expect(gestor.permissoesEfetivas.servicos.deletar).toBe(true);
+
+    const propostos = sanitizarPermissoes({ servicos: { deletar: true } });
+    const limitado = limitarPermissoesAoAtor(gestor, propostos);
+    expect(limitado?.servicos?.deletar).toBe(true);
+  });
+
+  it('permite sempre REVOGAR (valor false), mesmo que o ator não possua a permissão', () => {
+    const gestor = { papel: 'gestor', permissoes: null };
+    gestor.permissoesEfetivas = permissoesEfetivas(gestor);
+    const propostos = sanitizarPermissoes({ financeiro: { editar: false } });
+    const limitado = limitarPermissoesAoAtor(gestor, propostos);
+    expect(limitado?.financeiro?.editar).toBe(false);
+  });
+
+  it('não limita o dono (grant total, sem teto)', () => {
+    const dono = { papel: 'dono', permissoesEfetivas: permissoesEfetivas({ papel: 'dono' }) };
+    const propostos = sanitizarPermissoes({ financeiro: { editar: true }, usuarios: { editar: true } });
+    const limitado = limitarPermissoesAoAtor(dono, propostos);
+    expect(limitado).toEqual(propostos);
+  });
+
+  it('também limita capacidades "proprio" acima do teto do ator', () => {
+    const funcSemDocumentos = {
+      papel: 'funcionario',
+      permissoes: { proprio: { documentos: false } },
+    };
+    funcSemDocumentos.permissoesEfetivas = permissoesEfetivas(funcSemDocumentos);
+    expect(funcSemDocumentos.permissoesEfetivas.proprio.documentos).toBe(false);
+
+    // Um funcionário sem 'documentos' tentando conceder essa capacidade a OUTRO usuário
+    // (via um PATCH em que ele não deveria nem ter usuarios.editar, mas testamos a função isolada).
+    const propostos = sanitizarPermissoes({ proprio: { documentos: true } });
+    const limitado = limitarPermissoesAoAtor(funcSemDocumentos, propostos);
+    expect(limitado?.proprio?.documentos).not.toBe(true);
+  });
+
+  it('devolve null/undefined intacto quando não há overrides propostos', () => {
+    const gestor = { papel: 'gestor', permissoesEfetivas: permissoesEfetivas({ papel: 'gestor' }) };
+    expect(limitarPermissoesAoAtor(gestor, null)).toBeNull();
   });
 });
 
