@@ -214,7 +214,7 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
         include: { tecnico: true },
       });
       if (status === 'ativo' && materiais.length > 0)
-        await darBaixaPorServico(criado.id, materiais, tx);
+        await darBaixaPorServico(criado.id, materiais, empresaId, tx);
       return criado;
     });
     if (status === 'ativo' && dados.clienteTelefone) {
@@ -255,6 +255,7 @@ router.post(
           await darBaixaPorServico(
             id,
             servico.materiais.map((m) => ({ materialId: m.materialId, quantidade: m.quantidade })),
+            req.user.empresaId,
             tx
           );
         }

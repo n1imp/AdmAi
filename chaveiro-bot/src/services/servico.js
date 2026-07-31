@@ -56,7 +56,7 @@ export async function registrarServico(dados) {
     });
     // Baixa automática de estoque dos materiais consumidos
     if (itensCatalogo.length > 0) {
-      await darBaixaPorServico(servico.id, itensCatalogo, tx);
+      await darBaixaPorServico(servico.id, itensCatalogo, dados.empresaId, tx);
     }
     return servico;
   };
