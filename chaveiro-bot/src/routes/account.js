@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import { prisma } from '../db/prisma.js';
+import { env } from '../config/env.js';
 import { gerarJWT } from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
 import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
@@ -15,6 +17,15 @@ import {
   decifrarSegredo,
 } from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
+import {
+  enviarEmailCodigoExclusaoConta,
+  enviarEmailConfirmarMudancaEmail,
+} from '../services/email.js';
+import {
+  gerarCodigoExclusaoConta,
+  validarCodigoExclusaoConta,
+} from '../services/confirmacaoExclusaoConta.js';
+import { exclusaoContaLimiter } from '../middlewares/rateLimiters.js';
 import {
   gerarCodigos,
   verificarCodigo as verificarCodigoRecuperacao,
@@ -237,10 +248,28 @@ router.patch('/me', async (req, res) => {
     const data = {};
     const atual = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (parse.data.nome !== undefined) data.nome = parse.data.nome;
+    let emailPendente = null;
     if (parse.data.email !== undefined) {
       const email = parse.data.email === '' ? null : parse.data.email;
-      data.email = email;
-      if (email !== atual.email) data.emailVerificado = false;
+      if (email !== atual.email) {
+        if (email && atual.email && atual.emailVerificado) {
+          // F-BYPASS (revisão independente): troca de e-mail com um endereço ATUAL já
+          // verificado não pode ser aplicada na hora — um atacante com JWT roubado
+          // redirecionaria recuperação de senha/exclusão de conta para um e-mail próprio.
+          // Exige confirmação enviada ao endereço ANTIGO antes de aplicar (não afrouxa
+          // nada: quem não tinha e-mail verificado ainda não tinha nada a proteger aqui).
+          const token = jwt.sign(
+            { sub: req.user.id, tipo: 'confirmar_email', novoEmail: email },
+            env.JWT_SECRET,
+            { algorithm: 'HS256', expiresIn: '1h' }
+          );
+          enviarEmailConfirmarMudancaEmail(atual, email, token).catch(() => {});
+          emailPendente = email;
+        } else {
+          data.email = email;
+          data.emailVerificado = false;
+        }
+      }
     }
     if (parse.data.telefone !== undefined) {
       const telefone = parse.data.telefone === '' ? null : parse.data.telefone;
@@ -252,7 +281,7 @@ router.patch('/me', async (req, res) => {
       data,
       select: SELECT_ME,
     });
-    res.json(usuario);
+    res.json(emailPendente ? { ...usuario, emailPendente } : usuario);
   } catch (erro) {
     if (erro.code === 'P2002')
       return res.status(409).json({ erro: 'E-mail já em uso por outra conta' });
@@ -292,7 +321,29 @@ router.patch('/me/senha', async (req, res) => {
   }
 });
 
-router.delete('/me/conta', async (req, res) => {
+// F3: solicita o código de confirmação por e-mail para excluir a conta — usado como
+// segunda camada para contas social-only (sem senha) e sem 2FA, que hoje não tinham
+// NENHUMA confirmação além de um JWT de sessão válido (session hijack = perda de dados).
+router.post('/me/conta/codigo-exclusao', exclusaoContaLimiter, async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    // Defesa em profundidade: exige e-mail VERIFICADO, não só presente. Com o fix de
+    // PATCH /me (confirmação no endereço antigo), um e-mail não-verificado só existe logo
+    // após uma troca legítima ainda pendente de prova de posse do novo endereço.
+    if (!usuario.email || !usuario.emailVerificado) {
+      return res.status(400).json({ erro: 'Conta sem e-mail verificado cadastrado' });
+    }
+    const codigo = gerarCodigoExclusaoConta(usuario.id);
+    await enviarEmailCodigoExclusaoConta(usuario, codigo);
+    res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /me/conta/codigo-exclusao', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
   try {
     const parse = z
       .object({ senha: z.string().optional(), codigo: z.string().optional() })
@@ -308,6 +359,21 @@ router.delete('/me/conta', async (req, res) => {
       const segredo = decifrarSegredo(usuario.totpSecret);
       const ok = segredo && (await verificarCodigo(segredo, parse.data.codigo ?? ''));
       if (!ok) return res.status(403).json({ erro: 'Código 2FA inválido' });
+    }
+    if (!usuario.senhaHash && !usuario.twoFactorAtivo) {
+      // Sem senha e sem 2FA: exige o código de e-mail solicitado via
+      // POST /me/conta/codigo-exclusao (aditivo — não afrouxa os dois casos acima).
+      // Código stateless próprio (confirmacaoExclusaoConta.js), NUNCA o OTP de telefone
+      // (services/otp.js) — reusar aquele permitiria a um atacante com JWT roubado trocar
+      // o próprio telefone via PATCH /me e satisfazer esta exigência sem tocar o e-mail
+      // da vítima (achado da revisão independente).
+      const ok = validarCodigoExclusaoConta(usuario.id, parse.data.codigo ?? '');
+      if (!ok) {
+        return res.status(403).json({
+          erro: 'Confirmação necessária: solicite um código por e-mail (POST /me/conta/codigo-exclusao) antes de excluir a conta.',
+          codigo: 'confirmacao_necessaria',
+        });
+      }
     }
     const { empresaId } = usuario;
     const adminsAtivos = await prisma.usuario.count({

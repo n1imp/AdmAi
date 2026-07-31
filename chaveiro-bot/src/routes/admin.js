@@ -7,6 +7,7 @@ import { resolverPreferencias } from '../services/notificacao.js';
 import {
   permissoesEfetivas,
   sanitizarPermissoes,
+  limitarPermissoesAoAtor,
   presetDoPapel,
   PAPEIS,
   MODULOS,
@@ -213,6 +214,11 @@ router.post('/usuarios', requirePermissao('usuarios', 'editar'), async (req, res
     if (!parse.success)
       return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const { nome, username, senha, papel } = parse.data;
+    // F1-BYPASS (revisão independente): o teto de autoridade e o bloqueio de promoção a
+    // dono valiam só para PATCH /usuarios/:id — POST /usuarios (criação) escapava dos dois.
+    if (papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
+      return res.status(403).json({ erro: 'Somente o dono pode criar outro usuário como dono' });
+    }
     const senhaHash = await bcrypt.hash(senha, 12);
     const usuario = await prisma.usuario.create({
       data: {
@@ -221,7 +227,7 @@ router.post('/usuarios', requirePermissao('usuarios', 'editar'), async (req, res
         senhaHash,
         papel,
         admin: papel === 'dono',
-        permissoes: sanitizarPermissoes(parse.data.permissoes),
+        permissoes: limitarPermissoesAoAtor(req.user, sanitizarPermissoes(parse.data.permissoes)),
         empresaId: req.user.empresaId,
       },
       select: SELECT_USUARIO,
@@ -268,13 +274,17 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       if (parse.data.ativo === false)
         return res.status(400).json({ erro: 'Você não pode desativar a própria conta' });
     }
+    if (parse.data.papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
+      return res.status(403).json({ erro: 'Somente o dono pode promover outro usuário a dono' });
+    }
     const { senha, permissoes, papel, ...resto } = parse.data;
     const data = { ...resto };
     if (papel !== undefined) {
       data.papel = papel;
       data.admin = papel === 'dono';
     }
-    if (permissoes !== undefined) data.permissoes = sanitizarPermissoes(permissoes);
+    if (permissoes !== undefined)
+      data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
     if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
     const auditarRbac = papel !== undefined || permissoes !== undefined;
     const antes = auditarRbac
@@ -363,6 +373,12 @@ router.post('/usuarios/convidar', requirePermissao('usuarios', 'editar'), async 
     .object({ email: z.string().email(), papel: z.enum(PAPEIS).default('funcionario') })
     .safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  // F1-BYPASS (revisão independente): o convite decide o papel do futuro usuário no
+  // momento da CRIAÇÃO do convite — quem aceita não é o ator da escalação, então o
+  // bloqueio de promoção a dono precisa valer aqui, não em /convite/:token/aceitar.
+  if (parse.data.papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
+    return res.status(403).json({ erro: 'Somente o dono pode convidar alguém como dono' });
+  }
   try {
     const token = randomBytes(32).toString('hex');
     const tokenHash = createHash('sha256').update(token).digest('hex');

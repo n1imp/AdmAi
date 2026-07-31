@@ -76,6 +76,23 @@ function dataValida(d) {
   return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
+// fotoPerfil vem do painel como data URI base64 (F2 — antes aceitava string livre sem
+// nenhuma validação de tamanho/MIME/conteúdo). Mesmo padrão de documentos.js: regex de
+// forma + limite de tamanho + magic-bytes reais batendo o MIME declarado.
+const FOTO_PERFIL_DATA_URI_RE = /^data:(image\/jpeg|image\/png|image\/webp);base64,(.+)$/s;
+const FOTO_PERFIL_MAX_BYTES = 2 * 1024 * 1024;
+
+export function validarFotoPerfil(fotoPerfil) {
+  if (fotoPerfil == null) return { ok: true, valor: null };
+  const m = FOTO_PERFIL_DATA_URI_RE.exec(fotoPerfil);
+  if (!m) return { ok: false };
+  const mime = m[1];
+  const buffer = Buffer.from(m[2], 'base64');
+  if (buffer.length === 0 || buffer.length > FOTO_PERFIL_MAX_BYTES) return { ok: false };
+  if (!conferirMagicBytes(buffer, mime)) return { ok: false };
+  return { ok: true, valor: fotoPerfil };
+}
+
 function construirFiltroPeriodo(periodo, inicio, fim) {
   const agora = new Date();
   const hoje = new Date(agora);
@@ -240,6 +257,12 @@ router.post('/tecnicos', requirePermissao('tecnicos', 'editar'), async (req, res
     if (!parse.success)
       return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const d = parse.data;
+    const fotoValidada = validarFotoPerfil(d.fotoPerfil);
+    if (!fotoValidada.ok) {
+      return res
+        .status(400)
+        .json({ erro: 'Foto de perfil inválida (use JPEG/PNG/WEBP em data URI base64, até 2MB)' });
+    }
     const canonico = d.telefone ? canonizarTelefone(d.telefone) : null;
     const tecnico = await req.db.tecnico.create({
       data: {
@@ -261,7 +284,7 @@ router.post('/tecnicos', requirePermissao('tecnicos', 'editar'), async (req, res
         valorHora: d.valorHora ?? null,
         jornadaDiariaMin: d.jornadaDiariaMin ?? null,
         jornadaSemanalMin: d.jornadaSemanalMin ?? null,
-        fotoPerfil: d.fotoPerfil ?? null,
+        fotoPerfil: fotoValidada.valor,
       },
     });
     let acesso = null;

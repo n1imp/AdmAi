@@ -9,6 +9,7 @@ const VERIFICACAO_BYPASS = new Set([
   'POST /me/email/reenviar',
   'GET /auth/email/verificar',
   'DELETE /me/conta',
+  'POST /me/conta/codigo-exclusao',
   'GET /me/permissoes',
 ]);
 

@@ -8,9 +8,9 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import Redis from 'ioredis';
 import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
+import { redisClient, authLimiter } from './middlewares/rateLimiters.js';
 import { env } from './config/env.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from './config/sentry.js';
 import { metricsMiddleware, metricsHandler } from './config/metrics.js';
@@ -20,10 +20,6 @@ import { prisma } from './db/prisma.js';
 import { whatsappRouter } from './routes/whatsapp.js';
 import { stripeWebhookRouter } from './routes/billing.js';
 import { googleRouter } from './routes/google.js';
-
-const redisClient = new Redis(env.REDIS_URL);
-// ioredis emite 'error' em falha de conexão; sem handler, o processo crasha.
-redisClient.on('error', (err) => logger.warn('Redis connection error', { error: err.message }));
 
 /**
  * Monta o app. `estado.isShuttingDown` é lido pelo /health para responder 503
@@ -110,17 +106,9 @@ export function criarApp() {
   });
   app.use('/webhook', webhookLimiter);
 
-  // Rate limit AGRESSIVO contra brute force em login/registro (guia §3.2).
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60_000,
-    limit: 5,
-    skipSuccessfulRequests: true,
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req, res) => req.body?.username || ipKeyGenerator(req, res),
-    message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
-    store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
-  });
+  // Rate limit AGRESSIVO contra brute force (guia §3.2). Instância ÚNICA e compartilhada
+  // (middlewares/rateLimiters.js) com recuperar-senha/redefinir-senha/magic-link em
+  // routes/auth.js — antes duplicado com uma segunda instância sem Redis (F4).
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
 

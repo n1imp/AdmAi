@@ -25,6 +25,87 @@ Legenda: ⬜ pendente · 🔄 em andamento · ✅ concluído.
 | B7 | **P1** | `CodigoRecuperacaoTotp` sem migration → ativar 2FA quebra em prod | 🔧 `32db308` (migrate diff zerado) |
 | B8 | **P1** | `Material_nome_key` UNIQUE global → colisão de nome entre tenants | 🔧 `72e8ef6` (migrate diff zerado) |
 
+## Ciclo de segurança dedicado (2026-07-30) — pós-Fase 3
+
+Auditoria dedicada de segurança (não redundante com a Fase 0/3 acima), focada em gaps
+não cobertos pelo diagnóstico anterior: escalação de privilégio RBAC, validação de
+upload, step-up de confirmação em operações destrutivas e infra de rate limiting.
+Branch `fix/seguranca-ciclo1-critico-alto` (worktree `agent-environment`), 4 commits
+locais, nenhum push/merge/deploy. Escopo deste ciclo: crítico + alto (B9–B12). Médio/
+baixo (backlog abaixo) documentados e não bloqueantes.
+
+| ID | Sev. | Título | Status |
+|----|------|--------|--------|
+| B9 | **CRÍTICO** | `sanitizarPermissoes` sem teto de autoridade → `PATCH /usuarios/:id` permitia um ator conceder a si mesmo/outro permissão que não possuía, ou promover outro usuário a `dono` | 🔧 `6e6c14e` |
+| B10 | **CRÍTICO** | `POST /tecnicos` aceitava `fotoPerfil` sem validação de tamanho/MIME/magic-bytes (ao contrário de `documentos.js`/`estoque.js`) | 🔧 `3265555` |
+| B11 | ALTO | `DELETE /me/conta` sem nenhuma confirmação extra para contas social-only (sem senha) e sem 2FA — JWT vazado bastava para apagar a empresa em cascata | 🔧 `c1edc8e` |
+| B12 | ALTO | `authLimiter` duplicado — instância de `routes/auth.js` sem `RedisStore` (MemoryStore por instância) para recuperar-senha/redefinir-senha/magic-link | 🔧 `0c43e23` |
+
+Backlog não bloqueante desta frente (documentado, impacto limitado, com mitigação/
+justificativa — ver plano de segurança da sessão para detalhe arquivo:linha):
+- MÉDIO: ambiguidade cross-tenant em resposta de avaliação por telefone único (`avaliacao.js`); hardening defensivo de `movimentarEstoque`/`darBaixaPorServico` (`estoque.js`, não explorável hoje); CSP do painel em modo `Report-Only` apenas (`nginx.conf`); `android:allowBackup="true"` sem regras de exclusão no app Android.
+- BAIXO: `axios`/`stripe` desatualizados e `pino` como dependência morta no bot; CSP do backend sem `frame-ancestors`/`object-src` explícitos; zero cobertura de teste para `RequireAuth`/`RequirePermissao`/`AuthContext` no painel.
+
+Validação: unit `chaveiro-bot` 253/253 verde, `npm run lint` 0 erros (6 warnings
+pré-existentes, nenhum novo), `criarApp()` smoke-testado (boot OK). PoC-first aplicado
+em B9/B10/B11/B13 (teste falha contra o código revertido via `git stash`, passa com o
+fix). **Atualização**: Docker Desktop foi iniciado com sucesso nesta sessão (bloqueio de
+WSL2 do Pré-Fase-1 resolvido) — testes de integração (Supertest+Postgres+Redis efêmeros,
+mesma receita do `ci.yml`) foram executados: **21 arquivos, 85/85 testes verdes**,
+incluindo todos os novos (F1-BYPASS, F2, F3/F3-BYPASS, F4, B13). Containers efêmeros
+removidos ao final; nenhuma alteração no `docker-compose.yml` do projeto.
+
+### Revisão independente (red-team, contexto mínimo) — 2 bypasses críticos achados e fechados
+
+Uma revisão adversarial independente (agente separado, sem o raciocínio da sessão que
+implementou os fixes) encontrou que os fixes de B9 e B11, como implementados
+inicialmente, tinham bypasses completos:
+
+- **B9-BYPASS**: o teto de autoridade (`limitarPermissoesAoAtor`) e o bloqueio de
+  promoção a `dono` valiam só em `PATCH /usuarios/:id`. `POST /usuarios` (criação) e
+  `POST /usuarios/convidar` (+ aceite em `auth.js`) escapavam intactos — um gestor com
+  override de `usuarios.editar` podia criar diretamente uma conta `dono`, ou convidar
+  alguém como `dono`, contornando o fix inteiro. Fechado no commit `daba274`.
+- **B11-BYPASS**: o código de confirmação de exclusão reusava
+  `telefoneOtpHash`/`telefoneOtpExpira` (services/otp.js) — o mesmo canal do OTP de
+  telefone via WhatsApp. Um atacante com JWT roubado podia trocar o próprio telefone via
+  `PATCH /me` (sem nenhuma confirmação), receber o OTP de telefone no próprio número, e
+  usá-lo para satisfazer a exigência de "e-mail" em `DELETE /me/conta` — invertendo o
+  objetivo do fix. Fechado no commit `80da4e3` com um código stateless (HMAC) dedicado,
+  sem nenhum campo compartilhado com o OTP de telefone.
+- **Achado ALTO adicional**: nenhum limite dedicado nas rotas de exclusão de conta
+  (só o genérico de `/api`, 120/min por IP) — brute-forceável no espaço de 6 dígitos.
+  Fechado no mesmo commit `80da4e3` com `exclusaoContaLimiter` (5/15min por usuário).
+
+B10 e B12 (upload de foto, dedup do rate limiter) foram confirmados **sem bypass** pela
+mesma revisão. Isso demonstra o valor de uma segunda revisão com contexto mínimo — o
+primeiro fix de B9/B11, embora corretamente testado e validado no escopo em que foi
+escrito, tinha um escopo de endpoints incompleto.
+
+### Segunda rodada de revisão independente — 1 achado crítico adicional (B13)
+
+Uma segunda revisão adversarial (agente separado, verificando especificamente os fixes
+de B9/B11) confirmou RBAC e rate-limiting sólidos, mas achou que o fix de B11 tinha uma
+variante não fechada: `PATCH /me` aplicava troca de e-mail **imediatamente**, sem
+reverificação. Um atacante com JWT roubado podia trocar o e-mail para um endereço
+próprio e então disparar `/auth/recuperar-senha` (tomada de conta **permanente** — pior
+que a exclusão) ou o código de exclusão do B11, ambos indo para o e-mail recém-definido
+pelo próprio atacante.
+
+| ID | Sev. | Título | Status |
+|----|------|--------|--------|
+| B13 | **CRÍTICO** | `PATCH /me` trocava e-mail sem reverificação → redireciona recuperação de senha/exclusão de conta para e-mail do atacante | 🔧 `b906206` |
+
+Fix: troca de e-mail com um endereço atual já verificado fica **pendente** até
+confirmação via link enviado ao endereço ANTIGO (`GET /auth/email/confirmar-mudanca`,
+token assinado no mesmo padrão de `password_reset`/`email_verify`); depois de aplicada,
+exige prova de posse do NOVO endereço reusando o fluxo padrão de verificação existente.
+Contas sem e-mail atual (primeira definição) continuam aplicando direto — nada a
+proteger nesse caso. `POST /me/conta/codigo-exclusao` também passou a exigir
+`emailVerificado` (defesa em profundidade). Telefone não foi alterado neste ciclo — a
+troca de telefone não abre o mesmo vetor (login por 2FA-telefone exige senha correta
+antes, e o F3 já não depende mais do OTP de telefone).
+
 ## Planejamento de arquitetura de banco
 - [`DB_ARCHITECTURE_PLAN.md`](./DB_ARCHITECTURE_PLAN.md) — roteiro de 12 seções (Principal Data Architect) para evoluir o banco a nível corporativo. **Planejamento** (sem SQL/tabelas), aterrado no `schema.prisma` real.
 - [`db/`](./db/) — **execução** do roteiro (F1–F9), entregáveis com evidência `arquivo:linha`:

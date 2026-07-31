@@ -89,6 +89,34 @@ export async function enviarEmailVerificacao(usuario, token) {
   });
 }
 
+/**
+ * F-BYPASS (revisão independente): troca de e-mail via PATCH /me aplicava a mudança
+ * imediatamente, sem confirmar com o endereço ANTIGO — um atacante com JWT roubado podia
+ * redirecionar recuperação de senha (tomada de conta permanente) ou o código de exclusão
+ * de conta para um e-mail próprio. Este e-mail vai para o endereço ANTIGO (ainda
+ * cadastrado), exigindo consentimento de quem já tinha acesso a ele antes de aplicar.
+ */
+export async function enviarEmailConfirmarMudancaEmail(usuarioAntigo, novoEmail, token) {
+  const link = `${baseUrl()}/confirmar-mudanca-email?token=${token}`;
+  await enviar({
+    to: usuarioAntigo.email,
+    subject: 'Confirme a alteração do seu e-mail — AdmAi',
+    html: layout(
+      'Alteração de e-mail solicitada',
+      `
+      <p>Olá, <strong>${usuarioAntigo.nome}</strong>!</p>
+      <p>Recebemos uma solicitação para alterar o e-mail da sua conta para <strong>${novoEmail}</strong>.</p>
+      <a href="${link}" class="btn">Confirmar alteração</a>
+      <p style="margin-top:24px;font-size:13px;color:#94a3b8">
+        Link válido por 1 hora. Se não foi você, ignore este e-mail — seu endereço atual
+        permanece inalterado e sua conta continua segura.
+      </p>
+    `
+    ),
+    text: `Confirme a alteração do seu e-mail para ${novoEmail}: ${link}\n\nVálido por 1 hora. Se não foi você, ignore este e-mail.`,
+  });
+}
+
 export async function enviarEmailBoasVindas(usuario) {
   await enviar({
     to: usuario.email,
@@ -246,6 +274,31 @@ export async function enviarEmailMagicLink(usuario, token) {
     `
     ),
     text: `Acesse AdmAi: ${link}\n\nVálido por 15 minutos.`,
+  });
+}
+
+/**
+ * F3: contas sem senha (social-only) e sem 2FA não tinham nenhuma segunda camada de
+ * confirmação para excluir a empresa em cascata. Código de confirmação por e-mail,
+ * aditivo — não substitui a checagem de senha/2FA quando existem.
+ */
+export async function enviarEmailCodigoExclusaoConta(usuario, codigo) {
+  await enviar({
+    to: usuario.email,
+    subject: 'Código de confirmação para excluir sua conta — AdmAi',
+    html: layout(
+      'Confirmar exclusão de conta',
+      `
+      <p>Olá, <strong>${usuario.nome}</strong>!</p>
+      <p>Recebemos uma solicitação para excluir permanentemente sua conta e os dados da empresa.</p>
+      <p style="font-size:28px;font-weight:700;letter-spacing:4px;text-align:center;margin:24px 0">${codigo}</p>
+      <p style="margin-top:8px;font-size:13px;color:#94a3b8">
+        Use este código para confirmar a exclusão. Válido por 10 minutos. Se não foi você, ignore
+        este e-mail — sua conta permanece segura.
+      </p>
+    `
+    ),
+    text: `Código de confirmação de exclusão de conta AdmAi: ${codigo}\n\nVálido por 10 minutos. Se não foi você, ignore este e-mail.`,
   });
 }
 

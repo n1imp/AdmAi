@@ -26,6 +26,7 @@ import { agendarSequencia } from '../services/onboarding.js';
 import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { authLimiter } from '../middlewares/rateLimiters.js';
 
 const router = Router();
 
@@ -403,22 +404,6 @@ router.post('/auth/register', async (req, res) => {
   }
 });
 
-const authLimiter = (() => {
-  let _limiter = null;
-  return async (req, res, next) => {
-    if (!_limiter) {
-      const { rateLimit } = await import('express-rate-limit');
-      _limiter = rateLimit({
-        windowMs: 15 * 60_000,
-        limit: 5,
-        standardHeaders: true,
-        legacyHeaders: false,
-      });
-    }
-    return _limiter(req, res, next);
-  };
-})();
-
 router.post('/auth/recuperar-senha', authLimiter, async (req, res) => {
   const parse = z.object({ email: z.string().email() }).safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
@@ -503,6 +488,45 @@ router.get('/auth/email/verificar', async (req, res) => {
     return res.json({ verificado: true });
   } catch (erro) {
     logger.error('Erro GET /auth/email/verificar', { erro: erro.message });
+    return res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// F-BYPASS (revisão independente): confirma uma troca de e-mail solicitada via PATCH /me
+// — o link foi enviado ao endereço ANTIGO (services/email.js:enviarEmailConfirmarMudancaEmail),
+// então só quem já tinha acesso a ele pode aplicar a mudança. Depois, exige prova de posse
+// do NOVO endereço reusando o fluxo padrão de verificação (emailVerificado volta a false).
+router.get('/auth/email/confirmar-mudanca', async (req, res) => {
+  const token = String(req.query.token ?? '');
+  if (!token) return res.status(400).json({ erro: 'Token ausente' });
+  try {
+    let payload;
+    try {
+      payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (payload?.tipo !== 'confirmar_email' || !payload?.sub || !payload?.novoEmail) {
+        throw new Error('Token inválido');
+      }
+    } catch {
+      return res.status(400).json({ erro: 'Link inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    const atualizado = await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { email: payload.novoEmail, emailVerificado: false },
+    });
+    const tokenVerificacao = jwt.sign(
+      { sub: atualizado.id, tipo: 'email_verify', email: atualizado.email },
+      env.JWT_SECRET,
+      { algorithm: 'HS256', expiresIn: '24h' }
+    );
+    enviarEmailVerificacao(atualizado, tokenVerificacao).catch(() => {});
+    logger.info('email_mudanca_confirmada', { userId: usuario.id });
+    return res.json({ confirmado: true, novoEmail: payload.novoEmail });
+  } catch (erro) {
+    if (erro.code === 'P2002')
+      return res.status(409).json({ erro: 'E-mail já em uso por outra conta' });
+    logger.error('Erro GET /auth/email/confirmar-mudanca', { erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });
   }
 });
