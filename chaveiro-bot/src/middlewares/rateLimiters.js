@@ -39,4 +39,17 @@ export const authLimiter = criarLimiterRedis({
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 
+// F3 (achado da revisão independente): o código de confirmação de exclusão de conta não
+// tinha nenhum limite dedicado, caindo só no limiter genérico de /api (120/min por IP) —
+// insuficiente contra brute force de um espaço de 6 dígitos. Chave por usuário autenticado
+// (req.user.id), não por IP, no mesmo espírito do twoFactorLimiter (chave no desafio).
+export const exclusaoContaLimiter = criarLimiterRedis({
+  windowMs: 15 * 60_000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => (req.user?.id ? `exclusao:${req.user.id}` : ipKeyGenerator(req, res)),
+  message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+});
+
 export { ipKeyGenerator };

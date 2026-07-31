@@ -17,6 +17,11 @@ import {
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
 import { enviarEmailCodigoExclusaoConta } from '../services/email.js';
 import {
+  gerarCodigoExclusaoConta,
+  validarCodigoExclusaoConta,
+} from '../services/confirmacaoExclusaoConta.js';
+import { exclusaoContaLimiter } from '../middlewares/rateLimiters.js';
+import {
   gerarCodigos,
   verificarCodigo as verificarCodigoRecuperacao,
 } from '../services/codigosRecuperacao.js';
@@ -296,12 +301,12 @@ router.patch('/me/senha', async (req, res) => {
 // F3: solicita o código de confirmação por e-mail para excluir a conta — usado como
 // segunda camada para contas social-only (sem senha) e sem 2FA, que hoje não tinham
 // NENHUMA confirmação além de um JWT de sessão válido (session hijack = perda de dados).
-router.post('/me/conta/codigo-exclusao', async (req, res) => {
+router.post('/me/conta/codigo-exclusao', exclusaoContaLimiter, async (req, res) => {
   try {
     const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
     if (!usuario.email) return res.status(400).json({ erro: 'Conta sem e-mail cadastrado' });
-    const codigo = await definirOtpTelefone(usuario.id);
+    const codigo = gerarCodigoExclusaoConta(usuario.id);
     await enviarEmailCodigoExclusaoConta(usuario, codigo);
     res.json({ enviado: true });
   } catch (erro) {
@@ -310,7 +315,7 @@ router.post('/me/conta/codigo-exclusao', async (req, res) => {
   }
 });
 
-router.delete('/me/conta', async (req, res) => {
+router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
   try {
     const parse = z
       .object({ senha: z.string().optional(), codigo: z.string().optional() })
@@ -330,14 +335,17 @@ router.delete('/me/conta', async (req, res) => {
     if (!usuario.senhaHash && !usuario.twoFactorAtivo) {
       // Sem senha e sem 2FA: exige o código de e-mail solicitado via
       // POST /me/conta/codigo-exclusao (aditivo — não afrouxa os dois casos acima).
-      const ok = validarOtpTelefone(usuario, parse.data.codigo ?? '');
+      // Código stateless próprio (confirmacaoExclusaoConta.js), NUNCA o OTP de telefone
+      // (services/otp.js) — reusar aquele permitiria a um atacante com JWT roubado trocar
+      // o próprio telefone via PATCH /me e satisfazer esta exigência sem tocar o e-mail
+      // da vítima (achado da revisão independente).
+      const ok = validarCodigoExclusaoConta(usuario.id, parse.data.codigo ?? '');
       if (!ok) {
         return res.status(403).json({
           erro: 'Confirmação necessária: solicite um código por e-mail (POST /me/conta/codigo-exclusao) antes de excluir a conta.',
           codigo: 'confirmacao_necessaria',
         });
       }
-      await limparOtpTelefone(usuario.id);
     }
     const { empresaId } = usuario;
     const adminsAtivos = await prisma.usuario.count({
