@@ -15,6 +15,7 @@ import {
   decifrarSegredo,
 } from '../services/totp.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
+import { enviarEmailCodigoExclusaoConta } from '../services/email.js';
 import {
   gerarCodigos,
   verificarCodigo as verificarCodigoRecuperacao,
@@ -292,6 +293,23 @@ router.patch('/me/senha', async (req, res) => {
   }
 });
 
+// F3: solicita o código de confirmação por e-mail para excluir a conta — usado como
+// segunda camada para contas social-only (sem senha) e sem 2FA, que hoje não tinham
+// NENHUMA confirmação além de um JWT de sessão válido (session hijack = perda de dados).
+router.post('/me/conta/codigo-exclusao', async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    if (!usuario.email) return res.status(400).json({ erro: 'Conta sem e-mail cadastrado' });
+    const codigo = await definirOtpTelefone(usuario.id);
+    await enviarEmailCodigoExclusaoConta(usuario, codigo);
+    res.json({ enviado: true });
+  } catch (erro) {
+    logger.error('Erro POST /me/conta/codigo-exclusao', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 router.delete('/me/conta', async (req, res) => {
   try {
     const parse = z
@@ -308,6 +326,18 @@ router.delete('/me/conta', async (req, res) => {
       const segredo = decifrarSegredo(usuario.totpSecret);
       const ok = segredo && (await verificarCodigo(segredo, parse.data.codigo ?? ''));
       if (!ok) return res.status(403).json({ erro: 'Código 2FA inválido' });
+    }
+    if (!usuario.senhaHash && !usuario.twoFactorAtivo) {
+      // Sem senha e sem 2FA: exige o código de e-mail solicitado via
+      // POST /me/conta/codigo-exclusao (aditivo — não afrouxa os dois casos acima).
+      const ok = validarOtpTelefone(usuario, parse.data.codigo ?? '');
+      if (!ok) {
+        return res.status(403).json({
+          erro: 'Confirmação necessária: solicite um código por e-mail (POST /me/conta/codigo-exclusao) antes de excluir a conta.',
+          codigo: 'confirmacao_necessaria',
+        });
+      }
+      await limparOtpTelefone(usuario.id);
     }
     const { empresaId } = usuario;
     const adminsAtivos = await prisma.usuario.count({

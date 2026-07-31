@@ -249,6 +249,31 @@ export async function enviarEmailMagicLink(usuario, token) {
   });
 }
 
+/**
+ * F3: contas sem senha (social-only) e sem 2FA não tinham nenhuma segunda camada de
+ * confirmação para excluir a empresa em cascata. Código de confirmação por e-mail,
+ * aditivo — não substitui a checagem de senha/2FA quando existem.
+ */
+export async function enviarEmailCodigoExclusaoConta(usuario, codigo) {
+  await enviar({
+    to: usuario.email,
+    subject: 'Código de confirmação para excluir sua conta — AdmAi',
+    html: layout(
+      'Confirmar exclusão de conta',
+      `
+      <p>Olá, <strong>${usuario.nome}</strong>!</p>
+      <p>Recebemos uma solicitação para excluir permanentemente sua conta e os dados da empresa.</p>
+      <p style="font-size:28px;font-weight:700;letter-spacing:4px;text-align:center;margin:24px 0">${codigo}</p>
+      <p style="margin-top:8px;font-size:13px;color:#94a3b8">
+        Use este código para confirmar a exclusão. Válido por 10 minutos. Se não foi você, ignore
+        este e-mail — sua conta permanece segura.
+      </p>
+    `
+    ),
+    text: `Código de confirmação de exclusão de conta AdmAi: ${codigo}\n\nVálido por 10 minutos. Se não foi você, ignore este e-mail.`,
+  });
+}
+
 export async function enviarEmailFalhaPagamento(usuario) {
   await enviar({
     to: usuario.email,
