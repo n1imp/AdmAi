@@ -9,6 +9,12 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.test.{js,jsx}'],
+    // O wizard de NovoServico gasta ~4,1s isolado no default de 5s, e passa de
+    // 5,2s sob carga (instrumentação de cobertura + suítes em paralelo) —
+    // falhava por timeout, não por regressão. O backend usa 30s pelo mesmo
+    // motivo. Não é máscara de bug: o teste percorre etapas reais com userEvent.
+    testTimeout: 15000,
+    hookTimeout: 15000,
     coverage: {
       provider: 'v8',
       // Sem `include` explícito, o provider v8 só reporta arquivos que algum

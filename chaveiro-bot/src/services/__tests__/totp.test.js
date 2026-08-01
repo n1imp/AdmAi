@@ -92,7 +92,11 @@ describe('cifra do segredo em repouso', () => {
   it('o segredo cifrado ainda valida um código (não corrompe)', async () => {
     const segredo = gerarSegredoTotp();
     const recuperado = decifrarSegredo(cifrarSegredo(segredo));
-    expect(await verificarCodigo(recuperado, await codigoValido(recuperado))).toBe(true);
+    // Sem esta asserção o teste seria tautológico: gerar o código a partir de
+    // `recuperado` e validar contra `recuperado` passa mesmo que a cifra
+    // descarte a entrada e devolva outro segredo qualquer.
+    expect(recuperado).toBe(segredo);
+    expect(await verificarCodigo(recuperado, await codigoValido(segredo))).toBe(true);
   });
 
   it('trata vazio/nulo sem quebrar', () => {

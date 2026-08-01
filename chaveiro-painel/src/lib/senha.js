@@ -1,6 +1,13 @@
+// @ts-check
 // Avaliação de força de senha no cliente — espelha src/services/senha.js do backend.
 // Mantém a UI consistente com a validação do servidor.
 
+/**
+ * @param {string} [senha]
+ * @returns {{score:number, nivel:'fraca'|'media'|'forte', valida:boolean,
+ *            requisitos:{tamanho:boolean, maiuscula:boolean, minuscula:boolean,
+ *                        numero:boolean, especial:boolean}}}
+ */
 export function avaliarForcaSenha(senha = '') {
   const requisitos = {
     tamanho: senha.length >= 8,

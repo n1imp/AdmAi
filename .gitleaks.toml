@@ -2,12 +2,19 @@
 #
 # Lida por `gitleaks/gitleaks-action@v3` em `.github/workflows/security.yml`.
 #
-# Regra de ouro desta allowlist: só entra aqui valor que foi CONFERIDO e é
-# comprovadamente inerte (placeholder, valor de teste de CI, hash de build).
+# Regra de ouro: só entra aqui valor CONFERIDO e comprovadamente inerte.
 # Nunca use esta lista para silenciar um segredo real — segredo real se
 # **rotaciona** e se remove; não se adiciona exceção.
 #
-# Ao adicionar uma entrada, diga onde ela ocorre e por que é inerte.
+# NÃO libere arquivo inteiro por path quando ele for versionado e servir de
+# molde para credencial. Uma primeira versão desta config liberava
+# `.env.*.example`; uma revisão adversarial mostrou que isso apagava 10 de 10
+# segredos reais plantados nesses arquivos — que são exatamente onde vazamento
+# acidental acontece (o `.gitignore` os des-ignora de propósito).
+#
+# Pelo mesmo motivo, allowlist por regex casa contra o SEGREDO detectado, não
+# contra a linha: um padrão como `SEU_[A-Z_]+` silencia qualquer chave real que
+# apenas contenha esse trecho. Prefira o valor literal completo.
 
 [extend]
 useDefault = true
@@ -18,28 +25,25 @@ description = "Falsos positivos conferidos do AdmAi"
 paths = [
   # Hashes de engine do Prisma e integridade de pacotes — não são credenciais.
   '''(^|/)package-lock\.json$''',
-
-  # Arquivos de exemplo: por definição só contêm placeholders. Os valores atuais
-  # são cíclicos (10 caracteres únicos) e cada um traz o comando de geração
-  # (`openssl rand -hex 32`) na linha acima. O `.env` real nunca é versionado.
-  '''(^|/)\.env\.[a-z]+\.example$''',
-  '''(^|/)\.env\.example$''',
 ]
 
 regexes = [
   # Valores de teste do job de integração em `.github/workflows/ci.yml`.
   # Rodam contra um Postgres efêmero do runner; não existem fora do CI.
-  '''ci-api-token''',
-  '''ci-jwt-secret-0123456789-0123456789-0123456789''',
-  '''ci-encryption-key-for-testing-only-32ch''',
+  '''^ci-api-token$''',
+  '''^ci-jwt-secret-0123456789-0123456789-0123456789$''',
+  '''^ci-encryption-key-for-testing-only-32ch$''',
+  '''^test-api-token$''',
+  '''^staging-api-token$''',
 
   # Banco local de teste (docker compose / integração local).
-  '''postgresql://chaveiro:chaveiro123@localhost:5432/\w+''',
-  '''postgresql://postgres:postgres@localhost:5432/\w+''',
+  '''^postgresql://chaveiro:chaveiro123@localhost:5432/\w+$''',
+  '''^postgresql://postgres:postgres@localhost:5432/\w+$''',
 
-  # Placeholders explícitos em documentação e checklists.
-  '''<[A-Z_]+>''',
-  '''SEU_[A-Z_]+''',
-  '''SUA_[A-Z_]+''',
-  '''COLE_AQUI_[A-Z_]+''',
+  # docs/LAUNCH_CHECKLIST.md:254 — duas chaves VAZIAS consecutivas
+  # (`JWT_SECRET=` / `ENCRYPTION_KEY=`). A regra generic-api-key casa através
+  # da quebra de linha e toma o nome da segunda chave como valor da primeira.
+  # Ancorado no literal exato: só silencia um "segredo" que seja precisamente
+  # a string `ENCRYPTION_KEY=` — nome de chave, não valor.
+  '''^ENCRYPTION_KEY=$''',
 ]

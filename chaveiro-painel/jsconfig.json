@@ -3,7 +3,7 @@
     "Tipagem verificável sem migrar para TypeScript.",
     "checkJs fica FALSE de propósito: o baseline nasce verde e cada arquivo entra",
     "na verificação ao ganhar `// @ts-check` no topo, com JSDoc onde precisar.",
-    "Dívida medida em 2026-07: 1516 erros, ~80% mecânicos — implicit-any e a",
+    "Dívida real: `tsc --checkJs` acusa 1515 erros, ~80% mecânicos — implicit-any e a",
     "cascata de useState sem inicializador tipado (`useState([])` vira never[]).",
     "Anotar o useState com JSDoc colapsa esses erros em bloco."
   ],

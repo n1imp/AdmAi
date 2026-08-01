@@ -3,8 +3,9 @@
     "Tipagem verificável sem migrar para TypeScript.",
     "checkJs fica FALSE de propósito: o baseline nasce verde e cada arquivo entra",
     "na verificação ao ganhar `// @ts-check` no topo, com JSDoc onde precisar.",
-    "Assim `npm run typecheck` pode bloquear o CI desde já, sem carregar a dívida",
-    "pré-existente (medida em 2026-07: 1097 erros, 84% deles implicit-any).",
+    "Assim `npm run typecheck` bloqueia o CI desde já (ci.yml, job backend) sem",
+    "carregar a dívida pré-existente: `tsc --checkJs` acusa 4115 erros neste",
+    "config, a maioria implicit-any resolvível com JSDoc.",
     "Prisma gera tipos em .prisma/client e Zod expõe z.infer — o retorno por",
     "arquivo anotado é alto sem reescrever lógica."
   ],

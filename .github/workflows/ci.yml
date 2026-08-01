@@ -104,6 +104,12 @@ jobs:
       - name: Lint (ESLint)
         run: npm run lint
 
+      # Gate de tipos. `checkJs` é false: só entram os arquivos com `// @ts-check`,
+      # então o gate bloqueia de verdade sem carregar a dívida pré-existente.
+      # Cada arquivo anotado passa a ser verificado a partir daqui.
+      - name: Tipos (tsc --noEmit)
+        run: npm run typecheck
+
       # Gate de formatação (Prettier). O backend foi normalizado globalmente (F9/M6);
       # cobre src/ e test/. O job frontend ainda não tem este gate (normalização própria).
       - name: Formatação (Prettier)
@@ -150,6 +156,10 @@ jobs:
 
       - name: Lint (ESLint)
         run: npm run lint
+
+      # Gate de tipos. Ver nota no job do backend: só arquivos com `// @ts-check`.
+      - name: Tipos (tsc --noEmit)
+        run: npm run typecheck
 
       # Gate de formatação (Prettier) do painel. O frontend foi normalizado globalmente
       # (commit style(painel), registrado em .git-blame-ignore-revs) → o gate agora é seguro.

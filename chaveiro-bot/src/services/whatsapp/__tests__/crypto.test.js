@@ -68,8 +68,11 @@ describe('resistência a adulteração', () => {
   });
 
   it('rejeita auth tag TRUNCADA (mitigação de CWE-310)', () => {
-    // Sem authTagLength fixo em 16 bytes, o GCM aceitaria uma tag mais curta e
-    // um atacante poderia forjar ciphertext com força de autenticação reduzida.
+    // Quem rejeita aqui é o guard explícito `tag.length !== TAG_BYTES` em
+    // crypto.js. O `authTagLength` passado ao decipher é defesa em profundidade
+    // e NÃO é observável por fora enquanto o guard existir — um teste de
+    // mutação confirma que remover só o authTagLength não faz este teste falhar.
+    // Portanto: este caso protege o guard, não o parâmetro.
     const [iv, tag, ct] = encrypt('segredo-real').split(':');
     const bruta = Buffer.from(tag, 'base64');
     for (const tamanho of [4, 8, 12, 15]) {
@@ -78,6 +81,9 @@ describe('resistência a adulteração', () => {
     }
   });
 
+  // Nota honesta: o Node já rejeita tag > 16 bytes por conta própria, então
+  // este caso não distingue implementações com e sem o guard. Fica porque
+  // pegaria uma regressão que trocasse o guard por `tag.length < TAG_BYTES`.
   it('rejeita auth tag mais longa que 16 bytes', () => {
     const [iv, tag, ct] = encrypt('segredo-real').split(':');
     const longa = Buffer.concat([Buffer.from(tag, 'base64'), Buffer.alloc(4)]).toString('base64');
