@@ -6,6 +6,9 @@ import {
   podeProprio,
   sanitizarPermissoes,
   limitarPermissoesAoAtor,
+  nivelDoPapel,
+  podeGerenciarUsuario,
+  podeAtribuirPapel,
   PAPEIS,
   MODULOS,
 } from '../permissoes.js';
@@ -170,5 +173,80 @@ describe('limitarPermissoesAoAtor (teto de autoridade — F1)', () => {
 describe('PAPEIS', () => {
   it('expõe exatamente os três papéis', () => {
     expect(PAPEIS).toEqual(['dono', 'gestor', 'funcionario']);
+  });
+});
+
+describe('hierarquia de papéis', () => {
+  it('ordena do mais para o menos privilegiado', () => {
+    expect(nivelDoPapel('dono')).toBeLessThan(nivelDoPapel('gestor'));
+    expect(nivelDoPapel('gestor')).toBeLessThan(nivelDoPapel('funcionario'));
+  });
+
+  it('trata papel desconhecido como o menos privilegiado (fail-closed)', () => {
+    expect(nivelDoPapel('superadmin')).toBeGreaterThanOrEqual(nivelDoPapel('funcionario'));
+    expect(nivelDoPapel(null)).toBeGreaterThanOrEqual(nivelDoPapel('funcionario'));
+    expect(nivelDoPapel(undefined)).toBeGreaterThanOrEqual(nivelDoPapel('funcionario'));
+  });
+});
+
+describe('podeGerenciarUsuario', () => {
+  const dono = { id: 1, papel: 'dono' };
+  const gestor = { id: 2, papel: 'gestor' };
+  const funcionario = { id: 3, papel: 'funcionario' };
+
+  it('nega gestor sobre a conta do dono — a cadeia do achado de auditoria', () => {
+    // Era exatamente isto: o dono ganha um Tecnico ao verificar o telefone, e o
+    // reset de PIN só exigia `tecnicos.editar`. O PIN voltava em claro.
+    expect(podeGerenciarUsuario(gestor, dono)).toBe(false);
+  });
+
+  it('nega papel igual (lateral), inclusive dono sobre dono', () => {
+    expect(podeGerenciarUsuario(gestor, { id: 9, papel: 'gestor' })).toBe(false);
+    expect(podeGerenciarUsuario(dono, { id: 9, papel: 'dono' })).toBe(false);
+    expect(podeGerenciarUsuario(funcionario, { id: 9, papel: 'funcionario' })).toBe(false);
+  });
+
+  it('permite apenas quem supera estritamente o alvo', () => {
+    expect(podeGerenciarUsuario(dono, gestor)).toBe(true);
+    expect(podeGerenciarUsuario(dono, funcionario)).toBe(true);
+    expect(podeGerenciarUsuario(gestor, funcionario)).toBe(true);
+  });
+
+  it('nega o ator sobre a própria conta', () => {
+    expect(podeGerenciarUsuario(dono, { id: 1, papel: 'funcionario' })).toBe(false);
+    expect(podeGerenciarUsuario(gestor, { id: 2, papel: 'funcionario' })).toBe(false);
+  });
+
+  it('deriva papel do campo legado `admin` quando `papel` falta', () => {
+    expect(podeGerenciarUsuario({ id: 1, admin: true }, { id: 2, papel: 'gestor' })).toBe(true);
+    expect(podeGerenciarUsuario({ id: 2, papel: 'gestor' }, { id: 1, admin: true })).toBe(false);
+  });
+
+  it('nega quando falta ator ou alvo', () => {
+    expect(podeGerenciarUsuario(null, dono)).toBe(false);
+    expect(podeGerenciarUsuario(dono, null)).toBe(false);
+  });
+
+  it('nega papel desconhecido no ATOR, mesmo contra funcionário', () => {
+    expect(podeGerenciarUsuario({ id: 7, papel: 'superadmin' }, funcionario)).toBe(false);
+  });
+});
+
+describe('podeAtribuirPapel', () => {
+  it('nega atribuir papel igual ou acima do próprio', () => {
+    expect(podeAtribuirPapel({ papel: 'gestor' }, 'gestor')).toBe(false);
+    expect(podeAtribuirPapel({ papel: 'gestor' }, 'dono')).toBe(false);
+    expect(podeAtribuirPapel({ papel: 'funcionario' }, 'funcionario')).toBe(false);
+    expect(podeAtribuirPapel({ papel: 'dono' }, 'dono')).toBe(false);
+  });
+
+  it('permite atribuir papel estritamente abaixo', () => {
+    expect(podeAtribuirPapel({ papel: 'dono' }, 'gestor')).toBe(true);
+    expect(podeAtribuirPapel({ papel: 'dono' }, 'funcionario')).toBe(true);
+    expect(podeAtribuirPapel({ papel: 'gestor' }, 'funcionario')).toBe(true);
+  });
+
+  it('nega ator ausente', () => {
+    expect(podeAtribuirPapel(null, 'funcionario')).toBe(false);
   });
 });

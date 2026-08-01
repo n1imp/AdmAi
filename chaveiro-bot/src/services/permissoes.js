@@ -179,6 +179,59 @@ export function limitarPermissoesAoAtor(ator, overridesPropostos) {
   return Object.keys(out).length ? out : null;
 }
 
+/**
+ * Nível do papel na hierarquia. `PAPEIS` já está ordenado do mais para o menos
+ * privilegiado, então o índice serve de nível: menor = mais poder. Papel
+ * desconhecido cai para o fim (menos privilegiado possível) — fail-closed.
+ * @param {string|null|undefined} papel
+ * @returns {number}
+ */
+export function nivelDoPapel(papel) {
+  const i = PAPEIS.indexOf(String(papel ?? ''));
+  return i === -1 ? PAPEIS.length : i;
+}
+
+/**
+ * O ator pode administrar a CREDENCIAL ou o PAPEL de um usuário-alvo?
+ *
+ * Regra: o ator precisa superar ESTRITAMENTE o alvo na hierarquia, e nunca
+ * pode agir sobre a própria conta por essas rotas.
+ *
+ * Motivação (achado de auditoria): `POST /tecnicos/:id/acesso/reset` exigia
+ * apenas `tecnicos.editar` — que o preset de gestor possui — e não olhava o
+ * papel do alvo. Como a conta do dono ganha um `Tecnico` vinculado ao verificar
+ * o telefone, um gestor resetava o PIN do dono e recebia o PIN em claro na
+ * resposta, tomando a conta.
+ *
+ * Dono→dono também é negado: com dois donos, cada um tem recuperação por
+ * e-mail; permitir o reset lateral só abriria caminho de tomada entre pares.
+ *
+ * @param {{id?:number, papel?:string, admin?:boolean}} ator
+ * @param {{id?:number, papel?:string, admin?:boolean}} alvo
+ * @returns {boolean}
+ */
+export function podeGerenciarUsuario(ator, alvo) {
+  if (!ator || !alvo) return false;
+  if (ator.id != null && alvo.id != null && ator.id === alvo.id) return false;
+  const papelAtor = ator.papel ?? (ator.admin ? 'dono' : 'funcionario');
+  const papelAlvo = alvo.papel ?? (alvo.admin ? 'dono' : 'funcionario');
+  return nivelDoPapel(papelAtor) < nivelDoPapel(papelAlvo);
+}
+
+/**
+ * O ator pode ATRIBUIR este papel a alguém? Mesmo critério: só papel
+ * estritamente abaixo do seu. Fecha a escalada em que um ator com
+ * `usuarios.editar` cria uma conta de papel igual ou superior ao dele.
+ * @param {{papel?:string, admin?:boolean}} ator
+ * @param {string} papelPretendido
+ * @returns {boolean}
+ */
+export function podeAtribuirPapel(ator, papelPretendido) {
+  if (!ator) return false;
+  const papelAtor = ator.papel ?? (ator.admin ? 'dono' : 'funcionario');
+  return nivelDoPapel(papelAtor) < nivelDoPapel(papelPretendido);
+}
+
 /** Sanitiza um objeto de overrides vindo do cliente: mantém só módulos/ações conhecidos. */
 export function sanitizarPermissoes(input) {
   if (!input || typeof input !== 'object') return null;

@@ -8,7 +8,7 @@ import { prisma } from '../db/prisma.js';
 import { gerarRelatorioPonto, gerarCsvPonto } from '../services/relatorio.js';
 import { resumoMes, registrarPonto, diaLocal, ROTULO_BATIDA } from '../services/ponto.js';
 import { criarAcessoTecnico, resetarPin } from '../services/credenciais.js';
-import { pode, podeProprio } from '../services/permissoes.js';
+import { pode, podeProprio, podeGerenciarUsuario, podeAtribuirPapel } from '../services/permissoes.js';
 // Antes este arquivo tinha uma cópia byte-a-byte de construirFiltroPeriodo/dataValida,
 // que ficou para trás quando o helper foi extraído para services/periodo.js — e por isso
 // carregava o mesmo bug de fuso corrigido lá. Importar mantém uma fonte só.
@@ -295,6 +295,13 @@ router.post('/tecnicos/:id/acesso', requirePermissao('tecnicos', 'editar'), asyn
     if (tecnico.usuarioId) return res.status(409).json({ erro: 'Técnico já tem acesso ao painel' });
     const papel =
       req.user.papel === 'dono' && req.body?.papel === 'gestor' ? 'gestor' : 'funcionario';
+    // Mesmo teto do reset: ninguém cria acesso com papel igual ou acima do seu.
+    // Sem isto, um ator `funcionario` que tenha ganho `tecnicos.editar` por
+    // override criaria contas `funcionario` — pares seus — com PIN que ele lê.
+    if (!podeAtribuirPapel(req.user, papel)) {
+      logger.warn('acesso_tecnico_criacao_negada', { atorId: req.user.id, papel });
+      return res.status(403).json({ erro: 'Sem permissão para criar acesso com este papel' });
+    }
     try {
       const r = await criarAcessoTecnico({ tecnico, empresaId: req.user.empresaId, papel });
       logger.info('acesso_tecnico_criado', { tecnicoId: id, usuarioId: r.usuario.id, papel });
@@ -329,6 +336,28 @@ router.post(
       if (!tecnico) return res.status(404).json({ erro: 'Técnico não encontrado' });
       if (!tecnico.usuarioId)
         return res.status(409).json({ erro: 'Técnico ainda não tem acesso ao painel' });
+      // Teto de autoridade sobre a CREDENCIAL do alvo. Sem isto, `tecnicos.editar`
+      // (que o preset de gestor possui) bastava para resetar o PIN de QUALQUER
+      // conta vinculada a um técnico — inclusive a do dono, que ganha um Tecnico
+      // ao verificar o telefone. O PIN volta em claro na resposta: era tomada de
+      // conta em um passo.
+      //
+      // `empresaId` é explícito de propósito: `Usuario` NÃO está em
+      // MODELOS_ESCOPADOS (db/tenant.js), então `req.db.usuario` passa direto,
+      // sem filtro de tenant. `findFirst` + filtro explícito não depende disso.
+      const alvo = await req.db.usuario.findFirst({
+        where: { id: tecnico.usuarioId, empresaId: req.user.empresaId },
+        select: { id: true, papel: true, admin: true },
+      });
+      if (!alvo) return res.status(404).json({ erro: 'Técnico não encontrado' });
+      if (!podeGerenciarUsuario(req.user, alvo)) {
+        logger.warn('acesso_tecnico_reset_negado', {
+          atorId: req.user.id,
+          alvoId: alvo.id,
+          motivo: 'papel_do_alvo',
+        });
+        return res.status(403).json({ erro: 'Sem permissão para redefinir o acesso deste usuário' });
+      }
       const pin = await resetarPin(tecnico.usuarioId);
       logger.info('acesso_tecnico_reset', { tecnicoId: id, usuarioId: tecnico.usuarioId });
       res.json({ usuarioId: tecnico.usuarioId, pin });
