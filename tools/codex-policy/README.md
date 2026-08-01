@@ -102,8 +102,44 @@ passa o que está listado; o resto é negado.
 
 ## Regras em vigor
 
+### Envoltório de shell — descoberto em execução real
+
+No Windows o Codex **nunca** envia o comando cru. A forma real, capturada de um
+pedido de aprovação de verdade:
+
+```json
+{
+  "codex_command":    ["C:\\...\\powershell.exe", "-Command", "node --test tools/..."],
+  "codex_parsed_cmd": [{ "type": "unknown", "cmd": "node --test tools/..." }],
+  "codex_cwd":        "C:\\Users\\...\\agent-environment"
+}
+```
+
+A primeira versão da allowlist analisava o token 0 — o envoltório — cujo caminho
+fica fora da worktree. Resultado: **negava tudo**, inclusive `npm test`. Os
+testes unitários não pegaram porque usavam comandos idealizados (`"npm test"`);
+só a validação operacional expôs a diferença.
+
+Hoje `desembrulharShell` reconhece `powershell`, `pwsh`, `cmd`, `bash` e `sh`,
+extrai o comando de dentro do `-Command` / `/c` / `-c`, e aplica a allowlist a
+ele. `-enc` / `-EncodedCommand` são negados: base64 esconde o comando de
+qualquer análise. A detecção de metacaractere roda sobre o texto que contém o
+comando interno, então encadeamento dentro do envoltório também é pego.
+
+`codex_parsed_cmd` chega como `[{type, cmd}]`; a detecção de metacaractere usa
+`textoParaAnalise`, que extrai o `cmd` em vez de serializar o objeto — o JSON
+traria `{` e `}` e negaria todo comando nessa forma por falso positivo.
+
+### Regras de comando
+
 **Comandos** — `git` (só subcomandos de leitura), `npm test`, `npm run <script da
-lista>`, e verificadores locais (`prettier`, `eslint`, `vitest`, `tsc`).
+lista>`, e verificadores locais (`prettier`, `eslint`, `vitest`, `tsc`, `node`).
+
+`node` entrou porque rodar arquivo de teste da worktree é trabalho legítimo e
+não amplia o risco: aplicar patch já foi aprovado antes, e `vitest` executa
+código do repositório do mesmo jeito. Quem contém isso é o sandbox
+(`workspace-only`, rede desligada), não a lista. Execução inline (`-e`,
+`--eval`, `-p`, `--print`) segue negada.
 
 - metacaractere de shell (`;`, `&&`, `|`, `>`, `` ` ``, `$(`, quebra de linha) → nega;
   testado sobre o texto **original**, porque separar por espaço em branco

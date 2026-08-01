@@ -350,3 +350,14 @@ test("patch fora da worktree é negado no nível de protocolo", () => {
   );
   assert.deepEqual(aoServidor, [{ jsonrpc: "2.0", id: 11, result: { decision: "denied" } }]);
 });
+
+test("comando analisado é usado quando codex_command está ausente", () => {
+  // O app-server pode enviar apenas o argv já analisado em codex_parsed_cmd.
+  aprova({ codex_parsed_cmd: ["npm", "test"] }, "comando analisado permitido");
+  aprova({ parsedCmd: ["git", "status"] }, "comando analisado do app-server permitido");
+  nega({ codex_parsed_cmd: ["curl", "http://x"] }, "executável analisado fora da allowlist");
+  aprova(
+    { codex_command: ["npm", "test"], codex_parsed_cmd: ["curl", "http://x"] },
+    "codex_command tem precedência sobre comando analisado",
+  );
+});

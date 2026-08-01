@@ -54,8 +54,9 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      # Glob explícito: passar o diretório faz o runner tratá-lo como módulo.
       - name: Testes da política de aprovação
-        run: node --test tools/codex-policy/approval-policy.test.mjs
+        run: node --test tools/codex-policy/*.test.mjs
 
   # ── Backend: lint + testes unitários + integração (Postgres) + audit ───────
   backend:

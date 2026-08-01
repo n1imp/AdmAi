@@ -69,11 +69,38 @@ export const SCRIPTS_NPM_PERMITIDOS = new Set([
   "build",
 ]);
 
-/** Executáveis que rodam sem subcomando. */
-export const EXECUTAVEIS_SIMPLES = new Set(["prettier", "eslint", "vitest", "tsc"]);
+/**
+ * Executáveis que rodam sem subcomando.
+ *
+ * `node` está aqui porque rodar arquivo de teste da worktree é trabalho
+ * legítimo, e não amplia o risco: aplicar patch já foi aprovado antes, e
+ * `vitest` executa código do repositório do mesmo jeito. O que contém isso é o
+ * sandbox (`workspace-only`, rede desligada), não a lista de comandos. As
+ * formas de execução arbitrária inline (`-e`, `--eval`, `-p`, `--print`) seguem
+ * negadas por FLAGS_PROIBIDAS.
+ */
+export const EXECUTAVEIS_SIMPLES = new Set(["prettier", "eslint", "vitest", "tsc", "node"]);
 
-/** Flags que redirecionam diretório/config e escapariam das checagens de caminho. */
-export const FLAGS_PROIBIDAS = /^(-C|--cwd|--prefix|--config|-c|-e|--eval|--exec|--global|-g)$/i;
+/** Flags que redirecionam diretório/config ou executam código inline. */
+export const FLAGS_PROIBIDAS = /^(-C|--cwd|--prefix|--config|-c|-e|--eval|-p|--print|--exec|--global|-g)$/i;
+
+/**
+ * Shells que o Codex usa como ENVOLTÓRIO. No Windows ele envia sempre
+ * `["C:\\...\\powershell.exe", "-Command", "<comando real>"]` — analisar o
+ * token 0 avaliaria o envoltório, não o comando, e negaria tudo (foi o que
+ * aconteceu na primeira validação operacional). O caminho absoluto de sistema
+ * é esperado aqui e não deve reprovar por "fora da worktree".
+ */
+export const SHELLS_ENVOLTORIO = new Map([
+  ["powershell", new Set(["-command"])],
+  ["pwsh", new Set(["-command"])],
+  ["cmd", new Set(["/c", "/k"])],
+  ["bash", new Set(["-c"])],
+  ["sh", new Set(["-c"])],
+]);
+
+/** Execução ofuscada: base64 esconde o comando de qualquer análise. */
+export const FLAGS_SHELL_PROIBIDAS = /^(-enc|-e|-ec|-encodedcommand)$/i;
 
 export const textoDoComando = (params) => {
   const bruto = params.codex_command ?? params.command ?? params.codex_parsed_cmd ?? params.parsedCmd;
@@ -85,9 +112,55 @@ export const textoDoComando = (params) => {
 /** Tokens do comando. Prefere o argv já separado; só cai para split em string. */
 export const tokensDoComando = (params) => {
   const bruto = params.codex_command ?? params.command ?? params.codex_parsed_cmd ?? params.parsedCmd;
-  if (Array.isArray(bruto) && bruto.every((p) => typeof p === "string")) return bruto.filter(Boolean);
+  if (Array.isArray(bruto)) {
+    if (bruto.every((p) => typeof p === "string")) return bruto.filter(Boolean);
+    // `codex_parsed_cmd` chega como [{ type, cmd }] — usa o comando de dentro.
+    const internos = bruto
+      .map((p) => (p && typeof p === "object" && typeof p.cmd === "string" ? p.cmd : null))
+      .filter(Boolean);
+    if (internos.length) return internos.join(" ").trim().split(/\s+/).filter(Boolean);
+    return [];
+  }
   if (typeof bruto === "string") return bruto.trim().split(/\s+/).filter(Boolean);
   return [];
+};
+
+/**
+ * Texto usado na detecção de metacaractere. Difere de `textoDoComando` porque
+ * NÃO serializa objeto em JSON: `codex_parsed_cmd` chega como `[{type, cmd}]`,
+ * e o JSON traria `{`, `}` e `"`, disparando falso positivo de encadeamento.
+ * Preserva `\n`, que o split por espaço em branco destruiria.
+ */
+export const textoParaAnalise = (params) => {
+  const bruto = params.codex_command ?? params.command ?? params.codex_parsed_cmd ?? params.parsedCmd;
+  if (typeof bruto === "string") return bruto;
+  if (Array.isArray(bruto)) {
+    if (bruto.every((p) => typeof p === "string")) return bruto.join(" ");
+    return bruto.map((p) => (p && typeof p === "object" && typeof p.cmd === "string" ? p.cmd : "")).join(" ");
+  }
+  return "";
+};
+
+/**
+ * Se os tokens forem `<shell> <flag> <comando>`, devolve o comando de dentro.
+ * O envoltório em si não é decidido — quem decide é a allowlist aplicada ao
+ * comando interno.
+ */
+export const desembrulharShell = (tokens) => {
+  if (!tokens.length) return {};
+  const exe = basename(String(tokens[0]))
+    .toLowerCase()
+    .replace(/\.(exe|cmd|bat|ps1)$/, "");
+  const flags = SHELLS_ENVOLTORIO.get(exe);
+  if (!flags) return {};
+  const resto = tokens.slice(1);
+  const ofuscada = resto.find((t) => FLAGS_SHELL_PROIBIDAS.test(t));
+  if (ofuscada) return { erro: `execução ofuscada em ${exe}: ${ofuscada}` };
+  const indice = resto.findIndex((t) => flags.has(t.toLowerCase()));
+  if (indice === -1) return { erro: `${exe} sem comando explícito` };
+  const interno = resto.slice(indice + 1).join(" ").trim();
+  if (!interno) return { erro: `${exe} com comando vazio` };
+  return { texto: interno, tokens: interno.split(/\s+/).filter(Boolean) };
 };
 
 export const caminhosDaMudanca = (mudancas) => {
@@ -169,13 +242,19 @@ export const criarPolitica = (root) => {
   };
 
   const decidirComando = (params) => {
-    const tokens = tokensDoComando(params);
-    if (!tokens.length) return { aprovado: false, motivo: "comando vazio" };
+    const brutos = tokensDoComando(params);
+    if (!brutos.length) return { aprovado: false, motivo: "comando vazio" };
     // Testa o texto ORIGINAL, não os tokens re-unidos: o split por espaço em
     // branco consome `\n`, e `npm test\ncurl …` viraria um comando inofensivo.
-    if (METACARACTERES.test(textoDoComando(params))) {
+    // O texto original já contém o comando interno do envoltório, então o
+    // encadeamento é pego antes de desembrulhar.
+    if (METACARACTERES.test(textoParaAnalise(params))) {
       return { aprovado: false, motivo: "metacaractere de shell (encadeamento possível)" };
     }
+    const desembrulhado = desembrulharShell(brutos);
+    if (desembrulhado.erro) return { aprovado: false, motivo: desembrulhado.erro };
+    const tokens = desembrulhado.tokens ?? brutos;
+    if (!tokens.length) return { aprovado: false, motivo: "comando vazio" };
 
     const cwd = params.codex_cwd ?? params.cwd;
     if (cwd !== undefined && cwd !== null && !dentroDaRaiz(String(cwd))) {
