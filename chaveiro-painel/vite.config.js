@@ -9,6 +9,24 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.test.{js,jsx}'],
+    coverage: {
+      provider: 'v8',
+      // Sem `include` explícito, o provider v8 só reporta arquivos que algum
+      // teste carregou. Aqui isso era grave: a cobertura aparentava ~77% porque
+      // media apenas 35 dos 86 arquivos-fonte — 63% do frontend, incluindo
+      // AuthContext, App e as telas principais, ficava fora do denominador.
+      include: ['src/**/*.{js,jsx}'],
+      exclude: ['src/**/*.test.{js,jsx}', 'src/test/**', 'src/main.jsx'],
+      reporter: ['text', 'json-summary', 'html'],
+      // Limiares fixados no valor medido; sobem a cada PR que adiciona teste.
+      // Queda reprova o CI.
+      thresholds: {
+        statements: 30,
+        branches: 31,
+        functions: 29,
+        lines: 29,
+      },
+    },
   },
   build: {
     rollupOptions: {

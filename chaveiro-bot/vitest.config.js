@@ -16,6 +16,9 @@ const envPadrao = {
   DATABASE_URL: 'postgresql://chaveiro:chaveiro123@localhost:5432/chaveirobot_test',
   API_TOKEN: 'test-api-token',
   JWT_SECRET: '0123456789012345678901234567890123456789',
+  // Necessária para exercitar a cifra em repouso (whatsapp/crypto.js) nos
+  // testes unitários. Valor inerte de teste — a chave real vive só no .env.
+  ENCRYPTION_KEY: 'chave-de-teste-para-vitest-nao-usar',
 };
 for (const [k, v] of Object.entries(envPadrao)) {
   if (!process.env[k]) process.env[k] = v;
@@ -47,5 +50,23 @@ export default defineConfig({
     // pode ser lento em disco/OneDrive — evita falhas espúrias por timeout de hook.
     hookTimeout: 30000,
     testTimeout: 30000,
+    coverage: {
+      provider: 'v8',
+      // `include` EXPLÍCITO é o ponto central: sem ele o provider v8 só reporta
+      // arquivos que algum teste carregou, então código nunca importado fica
+      // fora do denominador e a porcentagem sai inflada. Com o include, os
+      // arquivos nunca exercitados entram como 0% — que é a verdade.
+      include: ['src/**/*.js'],
+      exclude: ['src/**/*.test.js', 'src/**/__tests__/**'],
+      reporter: ['text', 'json-summary', 'html'],
+      // Limiares fixados no valor medido; sobem a cada PR que adiciona teste.
+      // Queda reprova o CI.
+      thresholds: {
+        statements: 27,
+        branches: 22,
+        functions: 28,
+        lines: 27,
+      },
+    },
   },
 });
