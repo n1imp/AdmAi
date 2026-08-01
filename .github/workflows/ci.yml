@@ -25,6 +25,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      codexpolicy: ${{ steps.filter.outputs.codexpolicy }}
     steps:
       - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v4
@@ -37,6 +38,24 @@ jobs:
             frontend:
               - 'chaveiro-painel/**'
               - '.github/workflows/ci.yml'
+            codexpolicy:
+              - 'tools/codex-policy/**'
+              - '.github/workflows/ci.yml'
+
+  # ── Política de aprovação do Codex (MCP). Sem dependências: node --test puro. ──
+  #    O shim que a consome vive em `.claude/` (fora do versionamento, específico
+  #    da máquina); a DECISÃO é versionada aqui e precisa de gate próprio.
+  codex-policy:
+    needs: changes
+    if: needs.changes.outputs.codexpolicy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Testes da política de aprovação
+        run: node --test tools/codex-policy/approval-policy.test.mjs
 
   # ── Backend: lint + testes unitários + integração (Postgres) + audit ───────
   backend:
@@ -194,7 +213,7 @@ jobs:
   #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
   ci-ok:
     if: always()
-    needs: [changes, backend, docker-build, frontend]
+    needs: [changes, backend, docker-build, frontend, codex-policy]
     runs-on: ubuntu-latest
     steps:
       - name: Verifica resultado dos jobs
@@ -205,7 +224,7 @@ jobs:
             echo "::error::Job 'changes' nao teve sucesso (${{ needs.changes.result }}) — os testes podem ter sido pulados. Gate reprovado."
             exit 1
           fi
-          results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }}"
+          results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }} ${{ needs.codex-policy.result }}"
           echo "Resultados: $results"
           for r in $results; do
             if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then
