@@ -11,6 +11,14 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { criarPolitica, criarTratadorDoServidor } from "./approval-policy.mjs";
 
+// Falha ALTO fora do Windows, em vez de validar falsamente: em POSIX,
+// `C:\Windows\...` não é caminho absoluto — é relativo — e resolveria DENTRO da
+// raiz, fazendo os casos de "fora da worktree" afirmarem o oposto do que
+// pretendem. Pular silenciosamente seria pior: o CI ficaria verde sem testar.
+if (process.platform !== "win32") {
+  throw new Error("Esta suíte assume semântica de caminho do Windows; rode em win32.");
+}
+
 const RAIZ = "C:\\Users\\x\\proj";
 const { decidir, dentroDaRaiz } = criarPolitica(RAIZ);
 

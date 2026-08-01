@@ -13,6 +13,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { criarPolitica, desembrulharShell, textoParaAnalise } from "./approval-policy.mjs";
 
+// Ver nota em approval-policy.test.mjs: semântica de caminho do Windows.
+if (process.platform !== "win32") {
+  throw new Error("Esta suíte assume semântica de caminho do Windows; rode em win32.");
+}
+
 const RAIZ = "C:\\Users\\x\\proj";
 const { decidir } = criarPolitica(RAIZ);
 const PS = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";

@@ -48,7 +48,12 @@ jobs:
   codex-policy:
     needs: changes
     if: needs.changes.outputs.codexpolicy == 'true'
-    runs-on: ubuntu-latest
+    # windows-latest de propósito: as asserções de caminho usam semântica do
+    # Windows (letra de unidade, separador `\`, nome curto 8.3), que é a
+    # plataforma onde o Codex MCP roda. Em Linux, `C:\Windows\...` seria lido
+    # como caminho RELATIVO e cairia DENTRO da raiz — os testes de "fora da
+    # worktree" passariam a afirmar o contrário do que pretendem.
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
