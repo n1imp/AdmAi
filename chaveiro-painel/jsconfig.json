@@ -1,0 +1,26 @@
+{
+  "// sobre": [
+    "Tipagem verificável sem migrar para TypeScript.",
+    "checkJs fica FALSE de propósito: o baseline nasce verde e cada arquivo entra",
+    "na verificação ao ganhar `// @ts-check` no topo, com JSDoc onde precisar.",
+    "Dívida medida em 2026-07: 1516 erros, ~80% mecânicos — implicit-any e a",
+    "cascata de useState sem inicializador tipado (`useState([])` vira never[]).",
+    "Anotar o useState com JSDoc colapsa esses erros em bloco."
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.js", "src/**/*.jsx", "vite.config.js"],
+  "exclude": ["node_modules", "dist", "coverage", "android", "e2e"]
+}
