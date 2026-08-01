@@ -149,8 +149,51 @@ código do repositório do mesmo jeito. Quem contém isso é o sandbox
   `prisma:migrate`, `validate:staging` e `bucket:provision`;
 - flags que redirecionam diretório/execução (`-C`, `--prefix`, `--config`, `-e`) → nega.
 
+### Flag com valor colado — a classe que virou RCE
+
+Uma segunda revisão adversarial conseguiu **execução de código fora da
+worktree**, provada ponta-a-ponta com o Codex real:
+
+```
+npm test --prefix=C:\Users\Public\rce_probe   →  approved  →  código executou fora
+```
+
+A causa: `FLAGS_PROIBIDAS` comparava o **token inteiro**. `--prefix` casava,
+mas `--prefix=<valor>` é um token único e não casava nada — passava como
+argumento comum. A mesma classe abria `--cwd=`, `--config=`, `--output=`,
+`--outputFile=`, `--outDir=`, `--output-file=`.
+
+Hoje todo argumento passa por `nomeDaFlag` (compara `--prefix`, não
+`--prefix=X`) e por `candidatosDeCaminho`, que extrai:
+
+| Forma | Candidato a caminho |
+|---|---|
+| `--output=saida.txt` | `saida.txt` |
+| `git show HEAD:.env` | `.env` (o trecho após `:`) |
+| `arquivo.js` | ele próprio |
+
+O `:` só conta quando não é letra de unidade — `C:\x` não vira candidato.
+
+Consequências fechadas na mesma rodada:
+
+- `git diff --output=<path>` escrevia arquivo arbitrário, inclusive
+  `.git/hooks/pre-commit`. Argumentos começados com `-` pulavam a checagem de
+  caminho protegido;
+- `node --require=`, `--import=`, `--experimental-loader`, `--env-file`,
+  `--input-type`, `--conditions` carregavam código externo — `--env-file` ainda
+  lia `.env` driblando a proteção;
+- `git show HEAD:.env` exfiltrava segredo, porque `caminhoProtegido` exigia
+  início ou separador antes de `.env` e o `:` não contava;
+- `git --exec-path=<dir> status` executava `git-*` plantado.
+
 **Caminhos** — precisam estar sob a raiz da worktree e fora das áreas protegidas
 (`.env*`, `.envrc`, `.git/`, `.claude/`, `.codex/`).
+
+Escrita tem proteção **adicional**: `tools/codex-policy/` não pode ser alterado
+por patch. A política aprovava reescrever a si mesma e aos próprios testes; o
+pin de hash só reavalia no próximo start, então um Codex comprometido poderia
+enfraquecer os testes para esconder uma mudança futura. Leitura e execução
+continuam livres — `node --test tools/codex-policy/...` é trabalho legítimo.
 
 Duas armadilhas específicas do Windows, ambas com teste dedicado:
 

@@ -42,9 +42,26 @@ export const METACARACTERES = /[;&|<>`$(){}\n\r]/;
  */
 export const NOME_CURTO_8_3 = /~\d/;
 
-/** Protegidos mesmo dentro da worktree: segredos, histórico e a própria política. */
+/**
+ * Protegidos contra LEITURA/uso em comando: segredos, histórico e configuração
+ * do ambiente. `cat .env` e `git show HEAD:.env` são exfiltração.
+ */
 export const caminhoProtegido =
   /(^|[\\/])\.env($|[.\\/])|(^|[\\/])\.envrc($|[\\/])|(^|[\\/])\.git([\\/]|$)|(^|[\\/])\.claude([\\/]|$)|(^|[\\/])\.codex([\\/]|$)/i;
+
+/**
+ * Protegidos contra ESCRITA (patch). Além dos acima, inclui a própria política:
+ * ela aprovava reescrever a si mesma e aos próprios testes, e o pin de hash só
+ * reavalia no próximo start — um Codex comprometido poderia enfraquecer os
+ * testes para esconder uma mudança futura.
+ *
+ * Separado da leitura de propósito: rodar `node --test tools/codex-policy/...`
+ * é trabalho legítimo e precisa continuar passando.
+ */
+export const caminhoProtegidoParaEscrita = new RegExp(
+  `${caminhoProtegido.source}|(^|[\\\\/])tools[\\\\/]codex-policy([\\\\/]|$)`,
+  "i",
+);
 
 /**
  * Subcomandos permitidos por executável. Só leitura e verificação — nada que
@@ -81,8 +98,50 @@ export const SCRIPTS_NPM_PERMITIDOS = new Set([
  */
 export const EXECUTAVEIS_SIMPLES = new Set(["prettier", "eslint", "vitest", "tsc", "node"]);
 
-/** Flags que redirecionam diretório/config ou executam código inline. */
-export const FLAGS_PROIBIDAS = /^(-C|--cwd|--prefix|--config|-c|-e|--eval|-p|--print|--exec|--global|-g)$/i;
+/**
+ * Flags que redirecionam diretório/config, escrevem arquivo ou executam código.
+ *
+ * Cobre também os carregadores do Node (`--require`, `--import`,
+ * `--experimental-loader`, `--env-file`…): sem isso, `node` na allowlist
+ * permitia carregar um módulo arbitrário — inclusive de fora da worktree — e
+ * `--env-file` lia `.env` driblando a proteção de caminho.
+ *
+ * E as flags de SAÍDA (`--output`, `--outputFile`, `--outDir`): `git diff` é
+ * leitura, mas `git diff --output=<path>` escreve arquivo arbitrário. Uma
+ * revisão adversarial usou isso para escrever dentro de `.git/hooks/`.
+ */
+export const FLAGS_PROIBIDAS =
+  /^(-C|--cwd|--prefix|--config|-c|-e|--eval|-p|--print|--exec|--exec-path|--global|-g|--require|-r|--import|--loader|--experimental-loader|--env-file|--input-type|--conditions|--output|-O|--output-file|--outputFile|--outDir|--out-dir|--git-dir|--work-tree)$/i;
+
+/** Nome da flag sem o valor: `--prefix=X` -> `--prefix`. */
+export const nomeDaFlag = (argumento) => {
+  if (!argumento.startsWith("-")) return argumento;
+  const igual = argumento.indexOf("=");
+  return igual === -1 ? argumento : argumento.slice(0, igual);
+};
+
+/**
+ * Trechos de um argumento que devem ser tratados como caminho.
+ *
+ * - `--output=<path>`  -> o valor depois do `=`;
+ * - `git show HEAD:.env` -> o trecho depois do `:` (o `caminhoProtegido` exige
+ *   início ou separador antes de `.env`, então `HEAD:.env` escapava);
+ * - argumento simples -> ele próprio.
+ *
+ * O `:` só é considerado quando não for letra de unidade (`C:\...`).
+ */
+export const candidatosDeCaminho = (argumento) => {
+  const saida = [];
+  if (argumento.startsWith("-")) {
+    const igual = argumento.indexOf("=");
+    if (igual !== -1) saida.push(argumento.slice(igual + 1));
+  } else {
+    saida.push(argumento);
+    const doisPontos = argumento.indexOf(":");
+    if (doisPontos > 1) saida.push(argumento.slice(doisPontos + 1));
+  }
+  return saida.filter((c) => c.length > 0);
+};
 
 /**
  * Shells que o Codex usa como ENVOLTÓRIO. No Windows ele envia sempre
@@ -216,12 +275,13 @@ export const criarPolitica = (root) => {
   /** Relativo à raiz REAL — é sobre esta forma que `caminhoProtegido` decide. */
   const relativoReal = (real) => real.slice(raizReal.length).replace(/^[\\/]+/, "");
 
-  const avaliarCaminho = (alvo) => {
+  const avaliarCaminho = (alvo, paraEscrita = false) => {
     const real = resolverDentro(alvo);
     if (real === null) return { ok: false, motivo: `fora da worktree ou nome curto 8.3: ${alvo}` };
+    const protegido = paraEscrita ? caminhoProtegidoParaEscrita : caminhoProtegido;
     // Checa as duas formas: a informada e a real (junction pode apontar para
     // dentro da raiz mas em área protegida).
-    if (caminhoProtegido.test(alvo) || caminhoProtegido.test(relativoReal(real.toLowerCase()))) {
+    if (protegido.test(alvo) || protegido.test(relativoReal(real.toLowerCase()))) {
       return { ok: false, motivo: `caminho protegido: ${alvo}` };
     }
     return { ok: true };
@@ -231,7 +291,7 @@ export const criarPolitica = (root) => {
     const caminhos = caminhosDaMudanca(mudancas);
     if (!caminhos.length) return { aprovado: false, motivo: "patch sem caminhos identificáveis" };
     for (const caminho of caminhos) {
-      const r = avaliarCaminho(caminho);
+      const r = avaliarCaminho(caminho, true);
       if (!r.ok) return { aprovado: false, motivo: r.motivo };
     }
     const raizPedida = params.codex_grant_root ?? params.grantRoot;
@@ -269,20 +329,26 @@ export const criarPolitica = (root) => {
 
     const argumentos = tokens.slice(1);
     for (const argumento of argumentos) {
-      if (FLAGS_PROIBIDAS.test(argumento)) {
+      // `--prefix=<dir>` é UM token: comparar o token inteiro com a lista de
+      // flags proibidas não casava, e `npm test --prefix=C:\...` executava o
+      // package.json daquele diretório. Foi RCE fora da worktree, comprovada
+      // com o Codex real. Compara-se sempre o NOME da flag.
+      if (FLAGS_PROIBIDAS.test(nomeDaFlag(argumento))) {
         return { aprovado: false, motivo: `flag que redireciona diretório/execução: ${argumento}` };
-      }
-      // Nome protegido conta mesmo sem separador: `prettier --check .env`.
-      if (caminhoProtegido.test(argumento)) {
-        return { aprovado: false, motivo: `caminho protegido no argumento: ${argumento}` };
-      }
-      // Qualquer token com separador é tratado como caminho.
-      if (/[\\/]/.test(argumento) && !argumento.startsWith("-")) {
-        const r = avaliarCaminho(argumento);
-        if (!r.ok) return { aprovado: false, motivo: r.motivo };
       }
       if (NOME_CURTO_8_3.test(argumento)) {
         return { aprovado: false, motivo: `nome curto 8.3 no argumento: ${argumento}` };
+      }
+      // O VALOR de uma flag também é caminho (`--output=<path>`), e o alvo de
+      // `git show <rev>:<path>` vem depois do `:`.
+      for (const candidato of candidatosDeCaminho(argumento)) {
+        if (caminhoProtegido.test(candidato)) {
+          return { aprovado: false, motivo: `caminho protegido no argumento: ${candidato}` };
+        }
+        if (/[\\/]/.test(candidato)) {
+          const r = avaliarCaminho(candidato);
+          if (!r.ok) return { aprovado: false, motivo: r.motivo };
+        }
       }
     }
 
