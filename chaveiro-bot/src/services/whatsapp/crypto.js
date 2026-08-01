@@ -1,3 +1,4 @@
+// @ts-check
 import crypto from 'node:crypto';
 import { env } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
@@ -25,7 +26,11 @@ function chave() {
   return crypto.createHash('sha256').update(env.ENCRYPTION_KEY).digest();
 }
 
-/** Cifra um texto. Retorna null se a entrada for vazia/null. */
+/**
+ * Cifra um texto. Retorna null se a entrada for vazia/null.
+ * @param {string|null|undefined} texto
+ * @returns {string|null}
+ */
 export function encrypt(texto) {
   if (texto == null || texto === '') return null;
   const iv = crypto.randomBytes(12);
@@ -39,6 +44,8 @@ export function encrypt(texto) {
  * Decifra um texto produzido por encrypt(). Retorna null se entrada vazia, mal
  * formada, ou se a decifragem falhar (chave rotacionada/tampering) — em vez de
  * lançar, para que o chamador trate graciosamente sem derrubar a requisição (500).
+ * @param {string|null|undefined} blob
+ * @returns {string|null}
  */
 export function decrypt(blob) {
   if (blob == null || blob === '') return null;
@@ -60,7 +67,7 @@ export function decrypt(blob) {
   } catch (erro) {
     // Falha real de decifragem (auth tag/chave rotacionada/tampering): observabilidade
     // sem derrubar a requisição. Não loga o blob (poderia conter ciphertext sensível).
-    logger.warn('decrypt_falhou', { motivo: erro.message });
+    logger.warn('decrypt_falhou', { motivo: erro instanceof Error ? erro.message : String(erro) });
     return null;
   }
 }

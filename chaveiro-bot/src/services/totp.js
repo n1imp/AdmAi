@@ -1,3 +1,4 @@
+// @ts-check
 import { generateSecret, generateURI, verify } from 'otplib';
 import { encrypt, decrypt } from './whatsapp/crypto.js';
 
@@ -21,7 +22,12 @@ export function gerarSegredoTotp() {
   return generateSecret();
 }
 
-/** Monta a URI otpauth:// para o QR (emissor "AdmAi", label = username). */
+/**
+ * Monta a URI otpauth:// para o QR (emissor "AdmAi", label = username).
+ * @param {string} secret Segredo TOTP em Base32 (em claro).
+ * @param {string} label  Identificação exibida no app autenticador.
+ * @returns {string}
+ */
 export function montarOtpauthUrl(secret, label) {
   return generateURI({ issuer: EMISSOR, label, secret });
 }
@@ -45,12 +51,20 @@ export async function verificarCodigo(secret, codigo) {
   }
 }
 
-/** Cifra um segredo TOTP para gravar em coluna de texto. */
+/**
+ * Cifra um segredo TOTP para gravar em coluna de texto.
+ * @param {string|null|undefined} secret
+ * @returns {string|null}
+ */
 export function cifrarSegredo(secret) {
   return encrypt(secret);
 }
 
-/** Decifra um segredo TOTP gravado (null se vazio/corrompido). */
+/**
+ * Decifra um segredo TOTP gravado (null se vazio/corrompido).
+ * @param {string|null|undefined} blob
+ * @returns {string|null}
+ */
 export function decifrarSegredo(blob) {
   return decrypt(blob);
 }

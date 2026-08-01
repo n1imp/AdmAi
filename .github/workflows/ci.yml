@@ -25,6 +25,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      codexpolicy: ${{ steps.filter.outputs.codexpolicy }}
     steps:
       - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v4
@@ -37,6 +38,30 @@ jobs:
             frontend:
               - 'chaveiro-painel/**'
               - '.github/workflows/ci.yml'
+            codexpolicy:
+              - 'tools/codex-policy/**'
+              - '.github/workflows/ci.yml'
+
+  # ── Política de aprovação do Codex (MCP). Sem dependências: node --test puro. ──
+  #    O shim que a consome vive em `.claude/` (fora do versionamento, específico
+  #    da máquina); a DECISÃO é versionada aqui e precisa de gate próprio.
+  codex-policy:
+    needs: changes
+    if: needs.changes.outputs.codexpolicy == 'true'
+    # windows-latest de propósito: as asserções de caminho usam semântica do
+    # Windows (letra de unidade, separador `\`, nome curto 8.3), que é a
+    # plataforma onde o Codex MCP roda. Em Linux, `C:\Windows\...` seria lido
+    # como caminho RELATIVO e cairia DENTRO da raiz — os testes de "fora da
+    # worktree" passariam a afirmar o contrário do que pretendem.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      # Glob explícito: passar o diretório faz o runner tratá-lo como módulo.
+      - name: Testes da política de aprovação
+        run: node --test tools/codex-policy/*.test.mjs
 
   # ── Backend: lint + testes unitários + integração (Postgres) + audit ───────
   backend:
@@ -104,6 +129,12 @@ jobs:
       - name: Lint (ESLint)
         run: npm run lint
 
+      # Gate de tipos. `checkJs` é false: só entram os arquivos com `// @ts-check`,
+      # então o gate bloqueia de verdade sem carregar a dívida pré-existente.
+      # Cada arquivo anotado passa a ser verificado a partir daqui.
+      - name: Tipos (tsc --noEmit)
+        run: npm run typecheck
+
       # Gate de formatação (Prettier). O backend foi normalizado globalmente (F9/M6);
       # cobre src/ e test/. O job frontend ainda não tem este gate (normalização própria).
       - name: Formatação (Prettier)
@@ -151,6 +182,10 @@ jobs:
       - name: Lint (ESLint)
         run: npm run lint
 
+      # Gate de tipos. Ver nota no job do backend: só arquivos com `// @ts-check`.
+      - name: Tipos (tsc --noEmit)
+        run: npm run typecheck
+
       # Gate de formatação (Prettier) do painel. O frontend foi normalizado globalmente
       # (commit style(painel), registrado em .git-blame-ignore-revs) → o gate agora é seguro.
       - name: Formatação (Prettier)
@@ -184,7 +219,7 @@ jobs:
   #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
   ci-ok:
     if: always()
-    needs: [changes, backend, docker-build, frontend]
+    needs: [changes, backend, docker-build, frontend, codex-policy]
     runs-on: ubuntu-latest
     steps:
       - name: Verifica resultado dos jobs
@@ -195,7 +230,7 @@ jobs:
             echo "::error::Job 'changes' nao teve sucesso (${{ needs.changes.result }}) — os testes podem ter sido pulados. Gate reprovado."
             exit 1
           fi
-          results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }}"
+          results="${{ needs.backend.result }} ${{ needs.docker-build.result }} ${{ needs.frontend.result }} ${{ needs.codex-policy.result }}"
           echo "Resultados: $results"
           for r in $results; do
             if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then

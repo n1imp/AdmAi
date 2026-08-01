@@ -9,6 +9,30 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.test.{js,jsx}'],
+    // O wizard de NovoServico gasta ~4,1s isolado no default de 5s, e passa de
+    // 5,2s sob carga (instrumentação de cobertura + suítes em paralelo) —
+    // falhava por timeout, não por regressão. O backend usa 30s pelo mesmo
+    // motivo. Não é máscara de bug: o teste percorre etapas reais com userEvent.
+    testTimeout: 15000,
+    hookTimeout: 15000,
+    coverage: {
+      provider: 'v8',
+      // Sem `include` explícito, o provider v8 só reporta arquivos que algum
+      // teste carregou. Aqui isso era grave: a cobertura aparentava ~77% porque
+      // media apenas 35 dos 86 arquivos-fonte — 63% do frontend, incluindo
+      // AuthContext, App e as telas principais, ficava fora do denominador.
+      include: ['src/**/*.{js,jsx}'],
+      exclude: ['src/**/*.test.{js,jsx}', 'src/test/**', 'src/main.jsx'],
+      reporter: ['text', 'json-summary', 'html'],
+      // Limiares fixados no valor medido; sobem a cada PR que adiciona teste.
+      // Queda reprova o CI.
+      thresholds: {
+        statements: 30,
+        branches: 31,
+        functions: 29,
+        lines: 29,
+      },
+    },
   },
   build: {
     rollupOptions: {

@@ -1,3 +1,4 @@
+// @ts-check
 // Helpers de máscara de moeda BRL — sem dependências externas.
 //
 // A ideia: o usuário digita apenas dígitos e tratamos o número inteiro
@@ -8,6 +9,10 @@
 // Recebe o valor cru do input (qualquer texto) e devolve a string mascarada
 // no formato pt-BR (sem o símbolo R$, para casar com o label "(R$)" do form).
 // Tratamento: extrai os dígitos, interpreta como centavos e formata.
+/**
+ * @param {unknown} raw Valor cru do input.
+ * @returns {string} String mascarada em pt-BR, ou '' se não houver dígitos.
+ */
 export function formatarMoedaInput(raw) {
   const digitos = String(raw ?? '').replace(/\D/g, '');
   if (digitos === '') return '';
@@ -25,6 +30,10 @@ export function formatarMoedaInput(raw) {
 // Converte a string mascarada (ex.: "1.234,56") para Number (1234.56).
 // Aceita também entradas "soltas" (ex.: "1234.56" ou "12,5") de forma robusta:
 // remove os pontos de milhar e troca a vírgula decimal por ponto.
+/**
+ * @param {unknown} masked
+ * @returns {number} Valor numérico, ou 0 se não for interpretável.
+ */
 export function moedaParaNumero(masked) {
   if (masked == null || masked === '') return 0;
   const str = String(masked).trim();
