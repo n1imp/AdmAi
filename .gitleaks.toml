@@ -1,0 +1,45 @@
+# Configuração do gitleaks — AdmAi
+#
+# Lida por `gitleaks/gitleaks-action@v3` em `.github/workflows/security.yml`.
+#
+# Regra de ouro desta allowlist: só entra aqui valor que foi CONFERIDO e é
+# comprovadamente inerte (placeholder, valor de teste de CI, hash de build).
+# Nunca use esta lista para silenciar um segredo real — segredo real se
+# **rotaciona** e se remove; não se adiciona exceção.
+#
+# Ao adicionar uma entrada, diga onde ela ocorre e por que é inerte.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos positivos conferidos do AdmAi"
+
+paths = [
+  # Hashes de engine do Prisma e integridade de pacotes — não são credenciais.
+  '''(^|/)package-lock\.json$''',
+
+  # Arquivos de exemplo: por definição só contêm placeholders. Os valores atuais
+  # são cíclicos (10 caracteres únicos) e cada um traz o comando de geração
+  # (`openssl rand -hex 32`) na linha acima. O `.env` real nunca é versionado.
+  '''(^|/)\.env\.[a-z]+\.example$''',
+  '''(^|/)\.env\.example$''',
+]
+
+regexes = [
+  # Valores de teste do job de integração em `.github/workflows/ci.yml`.
+  # Rodam contra um Postgres efêmero do runner; não existem fora do CI.
+  '''ci-api-token''',
+  '''ci-jwt-secret-0123456789-0123456789-0123456789''',
+  '''ci-encryption-key-for-testing-only-32ch''',
+
+  # Banco local de teste (docker compose / integração local).
+  '''postgresql://chaveiro:chaveiro123@localhost:5432/\w+''',
+  '''postgresql://postgres:postgres@localhost:5432/\w+''',
+
+  # Placeholders explícitos em documentação e checklists.
+  '''<[A-Z_]+>''',
+  '''SEU_[A-Z_]+''',
+  '''SUA_[A-Z_]+''',
+  '''COLE_AQUI_[A-Z_]+''',
+]

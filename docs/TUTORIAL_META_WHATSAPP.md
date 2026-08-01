@@ -15,15 +15,20 @@ WhatsApp (Cloud API)**. Ao final você terá tudo que o código precisa.
 | Credencial | Onde aparece | Vai para |
 |---|---|---|
 | **App Secret** | App → Configurações → Básico | `.env` → `META_APP_SECRET` |
-| **Verify Token** | *você inventa* (já gerei um abaixo) | `.env` → `WHATSAPP_VERIFY_TOKEN` |
+| **Verify Token** | *você gera* (comando abaixo) | `.env` → `WHATSAPP_VERIFY_TOKEN` |
 | **Phone Number ID** | WhatsApp → Configuração da API | painel (tela de credenciais) |
 | **WhatsApp Business Account ID (WABA)** | WhatsApp → Configuração da API | painel |
 | **Access Token permanente** | Business Settings → Usuário do sistema | painel (cifrado no banco) |
 
-Verify token já gerado (pode usar este):
+**Gere o seu Verify Token** (é um segredo compartilhado entre a Meta e o seu backend —
+nunca reutilize um valor publicado, inclusive de tutoriais):
+
+```bash
+openssl rand -hex 24
 ```
-WHATSAPP_VERIFY_TOKEN=24e2f222c9f2c8e571d21712b359273103c79b1815014caf
-```
+
+Guarde a saída: ela vai para o `.env` (Parte 7) e para o campo *Token de verificação* no
+painel da Meta (Parte 5). Os dois lados precisam ter **exatamente** o mesmo valor.
 
 ---
 
@@ -94,7 +99,7 @@ O token de 24h não serve para produção. Gere um permanente:
 2. Preencha:
    - **URL de callback:** `https://api.SEU_DOMINIO/webhook/whatsapp/cloud/1`
      *(o `1` é o `empresaId`; ajuste por empresa quando tiver mais de uma)*
-   - **Token de verificação:** o `WHATSAPP_VERIFY_TOKEN` (o gerado acima).
+   - **Token de verificação:** o `WHATSAPP_VERIFY_TOKEN` que **você gerou** no início.
 3. Clique em **Verificar e salvar**. A Meta faz um **GET** de handshake — o backend responde
    automaticamente (rota já implementada). Se der erro, veja *Troubleshooting*.
 4. Em **Campos do webhook**, clique em **Gerenciar** e **assine** o campo **`messages`**.
@@ -120,7 +125,7 @@ Mensagens proativas (fora da janela de 24h) exigem **template aprovado**:
 ```dotenv
 WHATSAPP_PROVIDER=cloud
 META_APP_SECRET=<App Secret da Parte 3>
-WHATSAPP_VERIFY_TOKEN=24e2f222c9f2c8e571d21712b359273103c79b1815014caf
+WHATSAPP_VERIFY_TOKEN=<COLE_AQUI_O_TOKEN_QUE_VOCE_GEROU>
 WHATSAPP_API_VERSION=v21.0
 ENCRYPTION_KEY=<já gerado no deploy>
 PUBLIC_URL=https://api.SEU_DOMINIO
