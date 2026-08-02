@@ -5,10 +5,17 @@
  * vez que a empresa tocasse o Stripe (EV-032) — ficando "ausente" até lá, o que
  * o paywall (T-BILL-04) trata como estado indeterminado (503).
  *
- * Cobre os dois fluxos reais de criação de empresa self-service: POST
- * /auth/register (formulário) e POST /auth/oauth/:provedor (login social, 1º
- * acesso). NÃO cobre POST /setup — é o bootstrap único da plataforma antes de
- * existir qualquer usuário, um fluxo diferente, fora do escopo desta tarefa.
+ * Cobre os três fluxos que criam Empresa nesta API: POST /auth/register
+ * (formulário), POST /auth/oauth/:provedor (login social, 1º acesso) e POST
+ * /setup (bootstrap HTTP da 1ª instância). `services/bootstrap.js`
+ * (bootstrapAdmin, o bootstrap por variável de ambiente na subida do
+ * servidor) usa o MESMO padrão de transação e é coberto por teste unitário
+ * dedicado em `src/services/__tests__/bootstrap.test.js` — não por um teste
+ * de integração aqui, porque ele roda no boot do processo, não numa rota
+ * HTTP (correção pós-revisão: a exclusão original de /setup/bootstrap.js
+ * era um julgamento equivocado — os dois criam empresa pelo mesmo caminho
+ * que /auth/register e ficariam com a mesma lacuna "ausente=503" se não
+ * fossem cobertos).
  */
 import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 import request from 'supertest';
@@ -55,6 +62,27 @@ function esperaTrialFimEmProximoDe14Dias(trialFimEm, referencia) {
 }
 
 describe('Assinatura criada no cadastro (T-BILL-06)', () => {
+  it('POST /api/setup cria Assinatura(trialing, trialFimEm=+14d) junto com a empresa de bootstrap', async () => {
+    const antes = new Date();
+    const res = await request(app)
+      .post('/api/setup')
+      .send({
+        nome: 'Dono Bootstrap',
+        nomeEmpresa: 'Chaveiro Bootstrap Ltda',
+        username: `donoBootstrap${Date.now()}`,
+        senha: 'segredo123',
+      });
+    expect(res.status).toBe(201);
+
+    const assinatura = await prisma.assinatura.findUnique({
+      where: { empresaId: res.body.empresaId },
+    });
+
+    expect(assinatura).not.toBeNull();
+    expect(assinatura.status).toBe('trialing');
+    esperaTrialFimEmProximoDe14Dias(assinatura.trialFimEm, antes);
+  });
+
   it('POST /api/auth/register cria Assinatura(trialing, trialFimEm=+14d) junto com a empresa', async () => {
     const antes = new Date();
     const res = await request(app)

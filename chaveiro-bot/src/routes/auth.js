@@ -26,6 +26,7 @@ import {
   enviarEmailMagicLink,
 } from '../services/email.js';
 import { agendarSequencia } from '../services/onboarding.js';
+import { TRIAL_DIAS } from '../services/billing.js';
 import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
@@ -127,9 +128,6 @@ async function gerarEEnviarOtp(userId, telefone) {
     ).catch((e) => logger.warn('Falha ao enviar OTP por WhatsApp', { userId, erro: e.message }));
   }
 }
-
-// T-BILL-06 (D-09): duração fixa do trial concedido no cadastro — 14 dias.
-const TRIAL_DIAS = 14;
 
 const registerSchema = z.object({
   nome: z.string().min(2),
@@ -359,6 +357,17 @@ router.post('/setup', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06 (correção pós-revisão): /setup cria empresa pelo mesmo
+      // caminho de /auth/register — sem isto, a 1ª empresa da instância
+      // (a do próprio bootstrap) ficaria sem Assinatura, mesmo estado
+      // "indeterminado" (503) que T-BILL-06 existe pra fechar.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       return tx.usuario.create({
         data: { nome, username, senhaHash, admin: true, papel: 'dono', empresaId: empresa.id },
         select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true },

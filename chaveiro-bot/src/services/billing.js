@@ -1,6 +1,12 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
+// T-BILL-06 (D-09): duração fixa do trial concedido a toda empresa nova, em
+// QUALQUER caminho que crie uma Empresa (routes/auth.js: /auth/register,
+// /auth/oauth/:provedor, /setup; services/bootstrap.js: bootstrapAdmin) —
+// centralizado aqui (não redeclarado em cada arquivo) para não divergir.
+export const TRIAL_DIAS = 14;
+
 let _stripe = null;
 
 export async function getStripe() {
