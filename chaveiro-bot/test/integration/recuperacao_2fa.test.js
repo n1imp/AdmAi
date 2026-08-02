@@ -10,6 +10,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { generate } from 'otplib';
 import { criarApp } from '../../src/app.js';
+import { gerarDesafio2fa } from '../../src/services/auth.js';
 import { limparBanco, prisma } from './helpers.js';
 
 let app;
@@ -137,22 +138,33 @@ describe('POST /api/auth/login/2fa/recuperar', () => {
     expect(res.status).toBe(401);
   });
 
-  it('401 com desafio de usuário sem 2FA ativo (usuarioId aponta pra alguém, mas nao tem TOTP)', async () => {
+  it('400 com desafio válido de usuário que existe mas NÃO tem 2FA ativo', async () => {
     // Corrobora que a rota não vira um oráculo: mesmo com um desafio 2FA
-    // "genuíno" (assinado, tipo certo), se o usuário não tem 2FA ativo a
-    // rota não deve tratar isso como sucesso silencioso nem vazar detalhe.
-    await request(app).post('/api/setup').send({
+    // "genuíno" (assinado, tipo certo, sub de um usuário real e ativo), se
+    // esse usuário não tem 2FA ativo a rota não deve tratar isso como
+    // sucesso silencioso nem vazar detalhe além do que a implementação real
+    // já expõe. Login normal NUNCA gera um desafio pra esse usuário (só
+    // usuários com 2FA ativo recebem um) — por isso o desafio aqui é
+    // mintado diretamente com gerarDesafio2fa, a mesma função que a rota usa
+    // pra validar, não um mock da verificação em si.
+    const setup = await request(app).post('/api/setup').send({
       nome: 'Sem 2FA',
       nomeEmpresa: 'Empresa Sem 2FA',
       username: 'sem2fa',
       senha: 'SenhaForte1!',
     });
-    const login = await request(app)
-      .post('/api/auth/login')
-      .send({ username: 'sem2fa', password: 'SenhaForte1!' });
-    // Sem 2FA ativo, o login já devolve sessão completa — não há desafio.
-    expect(login.status).toBe(200);
-    expect(login.body.twoFactorRequerido).toBeUndefined();
+    expect(setup.status).toBe(201);
+
+    const desafio = gerarDesafio2fa(setup.body.id);
+    const res = await request(app)
+      .post('/api/auth/login/2fa/recuperar')
+      .send({ desafio, codigo: 'QUALQUERCODIGO' });
+
+    // Confere o status que a IMPLEMENTAÇÃO REAL define pra este caso
+    // (routes/auth.js: `if (!usuario.twoFactorAtivo) return res.status(400)`)
+    // — não um valor assumido a priori.
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toBe('2FA não está ativo');
   });
 
   it('não requer (e ignora) header Authorization — a rota funciona sem sessão completa', async () => {
