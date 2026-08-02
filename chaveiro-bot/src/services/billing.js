@@ -51,6 +51,11 @@ export async function criarCheckoutSession(empresaId, email, returnUrl) {
     line_items: [{ price: env.STRIPE_PRICE_ID_PRO, quantity: 1 }],
     success_url: `${returnUrl}?checkout=success`,
     cancel_url: `${returnUrl}?checkout=cancel`,
+    // T-BILL-01: fonte ÚNICA de verdade pro webhook (checkout.session.completed)
+    // saber a qual empresa a assinatura pertence. Antes só o Customer levava esse
+    // metadata — a Session não, então o evento nunca sincronizava a assinatura
+    // nova (Number(undefined) é NaN, o handler dava break silencioso).
+    metadata: { empresaId: String(empresaId) },
   });
 }
 
