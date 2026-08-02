@@ -46,3 +46,36 @@ export function tokenAindaValido(payload, tokenValidoApos) {
   if (!payload?.iat) return false;
   return payload.iat * 1000 >= new Date(tokenValidoApos).getTime();
 }
+
+/**
+ * Desafio 2FA: um JWT curto (5min) emitido em `/auth/login` quando a senha já
+ * foi validada mas falta o segundo fator — NÃO é uma sessão, só prova que o
+ * portador passou pela verificação de senha para este `userId` específico.
+ *
+ * T-REC-01: extraído de routes/auth.js (antes local/não-exportada) pra ser
+ * reaproveitado, com a MESMA lógica, também por `/auth/login/2fa/recuperar`
+ * (recuperação de conta via código de backup) — sem isso, cada rota que
+ * precisar validar um desafio reimplementaria `jwt.verify` por conta própria,
+ * como acontecia antes com uma cópia divergente em routes/account.js (EV-025).
+ */
+export function gerarDesafio2fa(userId) {
+  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: '5m',
+  });
+}
+
+/**
+ * Valida um desafio 2FA emitido por `gerarDesafio2fa`. Lança se a assinatura
+ * for inválida/expirada (`jwt.verify`) OU se o payload não for de fato um
+ * desafio 2FA (`tipo`/`sub` ausentes ou incorretos) — nunca aceita, por
+ * engano, um JWT de outro propósito (ex.: token de sessão comum, que tem
+ * `id`/`empresaId` mas não `tipo:'2fa'`).
+ *
+ * @returns {{ sub: number, tipo: '2fa', iat: number, exp: number }}
+ */
+export function verificarDesafio2fa(desafio) {
+  const payload = jwt.verify(desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
+  if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio 2FA inválido');
+  return payload;
+}

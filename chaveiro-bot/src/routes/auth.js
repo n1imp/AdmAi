@@ -8,10 +8,13 @@ import {
   gerarRefreshTokenRaw,
   hashRefreshToken,
   dataExpiracaoRefresh,
+  gerarDesafio2fa,
+  verificarDesafio2fa,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { verificarCodigo, decifrarSegredo } from '../services/totp.js';
+import { verificarCodigo as verificarCodigoRecuperacao } from '../services/codigosRecuperacao.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
 import { canonizarTelefone, variantesTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
@@ -101,18 +104,8 @@ async function responderSessao(res, usuario, via) {
   return res.json(payloadSessao(usuario, token));
 }
 
-function gerarDesafio2fa(userId) {
-  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, {
-    algorithm: 'HS256',
-    expiresIn: '5m',
-  });
-}
-
-function verificarDesafio2fa(desafio) {
-  const payload = jwt.verify(desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
-  if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio 2FA inválido');
-  return payload;
-}
+// T-REC-01: gerarDesafio2fa/verificarDesafio2fa agora vivem em services/auth.js
+// (compartilhadas com /auth/login/2fa/recuperar, abaixo) — ver import no topo.
 
 const ultimoOtpEnviado = new Map();
 const OTP_REENVIO_MS = 5 * 60_000;
@@ -300,6 +293,46 @@ router.post('/auth/login/2fa-telefone', async (req, res) => {
     res.json(payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa-telefone', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// T-REC-01: rota MOVIDA de routes/account.js (POST /me/2fa/recuperar), onde
+// vivia atrás de `router.use(requireAuth)` — inalcançável pelo fluxo real,
+// porque nesse ponto do login (desafio 2FA pendente) o usuário AINDA NÃO tem
+// sessão completa, só o `desafio` recebido de `/auth/login` (EV-022). Aqui,
+// como `/auth/login/2fa` e `/auth/login/2fa-telefone` acima, a própria
+// verificação do desafio (verificarDesafio2fa) É a autenticação da rota —
+// não uma dispensa dela.
+router.post('/auth/login/2fa/recuperar', async (req, res) => {
+  const parse = z
+    .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
+    .safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    let payload;
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo)
+      return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
+
+    const ok = await verificarCodigoRecuperacao(usuario.id, parse.data.codigo);
+    if (!ok) {
+      logger.info('recuperacao_2fa_falha', { userId: usuario.id });
+      return res.status(400).json({ erro: 'Código de recuperação inválido ou já utilizado' });
+    }
+
+    await emitirRefreshCookie(res, usuario.id);
+    const token = gerarJWT(usuario);
+    logger.info('login_success', { userId: usuario.id, via: '2fa-recuperacao' });
+    res.json(payloadSessao(usuario, token));
+  } catch (erro) {
+    logger.error('Erro POST /auth/login/2fa/recuperar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

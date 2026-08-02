@@ -26,10 +26,7 @@ import {
   validarCodigoExclusaoConta,
 } from '../services/confirmacaoExclusaoConta.js';
 import { exclusaoContaLimiter } from '../middlewares/rateLimiters.js';
-import {
-  gerarCodigos,
-  verificarCodigo as verificarCodigoRecuperacao,
-} from '../services/codigosRecuperacao.js';
+import { gerarCodigos } from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
@@ -473,48 +470,11 @@ router.post('/me/2fa/ativar', async (req, res) => {
   }
 });
 
-router.post('/me/2fa/recuperar', async (req, res) => {
-  try {
-    const parse = z
-      .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
-      .safeParse(req.body);
-    if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-
-    let payload;
-    try {
-      const jwt = await import('jsonwebtoken');
-      const { env } = await import('../config/env.js');
-      payload = jwt.default.verify(parse.data.desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
-      if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio inválido');
-    } catch {
-      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
-    }
-
-    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
-    if (!usuario || !usuario.ativo) return res.status(401).json({ erro: 'Usuário não encontrado' });
-    if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
-
-    const ok = await verificarCodigoRecuperacao(usuario.id, parse.data.codigo);
-    if (!ok) {
-      logger.info('recuperacao_2fa_falha', { userId: usuario.id });
-      return res.status(400).json({ erro: 'Código de recuperação inválido ou já utilizado' });
-    }
-
-    const { gerarJWT } = await import('../services/auth.js');
-    const token = gerarJWT(usuario);
-    logger.info('recuperacao_2fa_sucesso', { userId: usuario.id });
-    res.json({
-      token,
-      nome: usuario.nome,
-      admin: usuario.admin,
-      papel: usuario.papel,
-      senhaProvisoria: usuario.senhaProvisoria,
-    });
-  } catch (erro) {
-    logger.error('Erro POST /me/2fa/recuperar', { erro: erro.message });
-    res.status(500).json({ erro: 'Erro interno' });
-  }
-});
+// T-REC-01: POST /me/2fa/recuperar MOVIDA pra routes/auth.js como
+// POST /auth/login/2fa/recuperar — aqui, atrás de `router.use(requireAuth)`
+// (topo deste arquivo), ela era inalcançável pelo fluxo real: o usuário no
+// meio do desafio 2FA ainda não tem sessão completa, só o `desafio` recebido
+// de `/auth/login` (EV-022). Ver routes/auth.js para a rota nova.
 
 router.post('/me/2fa/desativar', async (req, res) => {
   try {
