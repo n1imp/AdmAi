@@ -135,6 +135,9 @@ async function gerarEEnviarOtp(userId, telefone) {
   }
 }
 
+// T-BILL-06 (D-09): duração fixa do trial concedido no cadastro — 14 dias.
+const TRIAL_DIAS = 14;
+
 const registerSchema = z.object({
   nome: z.string().min(2),
   nomeEmpresa: z.string().min(2),
@@ -353,6 +356,16 @@ router.post('/auth/register', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06: sem isto, a empresa ficava SEM registro de Assinatura até
+      // tocar o Stripe pela 1ª vez (EV-032) — o paywall (T-BILL-04) trataria
+      // isso como estado indeterminado (503), bloqueando toda empresa nova.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       return tx.usuario.create({
         data: {
           nome,
@@ -775,6 +788,16 @@ router.post('/auth/oauth/:provedor', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06: mesmo cadastro-de-empresa que /auth/register, só que via
+      // login social — precisa do mesmo trial pra não cair em "indeterminado"
+      // (503) no paywall (T-BILL-04) assim que a empresa nascer.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       const novo = await tx.usuario.create({
         data: {
           nome,
