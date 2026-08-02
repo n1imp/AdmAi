@@ -1,21 +1,7 @@
-# SKILL — Fluxo de Desenvolvimento AdmAi
+# Governança de agentes
 
-## Fluxo Padrão: Clarificar → Planejar → Executar
-
-### 1. Clarificar
-- Antes de qualquer código: leia o arquivo relevante inteiro
-- Se a tarefa tocar 3+ arquivos: acione o swarm (`/swarm-orchestration`)
-- Confirme o escopo com o usuário se houver ambiguidade de domínio
-
-### 2. Planejar (TDD-First)
-- Escreva o teste antes da implementação (`vitest`)
-- Defina os contratos de entrada/saída no teste
-- Use `npx @claude-flow/cli@latest memory search --query "[tarefa]"` para buscar padrões anteriores
-
-### 3. Executar
-- Implemente o mínimo para o teste passar
-- Rode `npm run build && npm test` antes de qualquer commit
-- Após sucesso: `npx @claude-flow/cli@latest memory store --namespace patterns --key "[nome]" --value "[o que funcionou]"`
+As regras normativas estão em `AGENTS.md`; Claude carrega também `CLAUDE.md`. Este README
+documenta o produto e não concede autoridade adicional a nenhum agente.
 
 ---
 
@@ -33,11 +19,6 @@
 | M8 | Autenticação Incorreta | 2FA TOTP + OTP WhatsApp; `tokenValidoApos` invalida sessões antigas |
 | M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via Caddy headers |
 | M10 | Funcionalidade Excessiva | Endpoints de debug desabilitados em `NODE_ENV=production` |
-
-### Auditoria Automática do Ruflo
-```bash
-npx @claude-flow/cli@latest security scan
-npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
 
 # 🔑 AdmAi — Plataforma SaaS de Gestão para Chaveiros via WhatsApp
 
@@ -496,13 +477,10 @@ AdmAi/
 
 ## 🤖 Guia para IAs & Agentes
 
-> Esta seção é a referência completa pra qualquer agente (orquestrador ou subagente) que
-> for trabalhar neste projeto — tanto as regras específicas do AdmAi quanto a
-> política geral de como planejar, executar e reportar qualquer tarefa. Ela incorpora o
-> que antes vivia separado num `CLAUDE.md`, então este README passa a ser a referência
-> única — não é mais necessário consultar um arquivo separado de orquestração. Pra
-> infraestrutura de deploy (VPS, Supabase, Docker em produção), consultar também
-> `instrucoes-deploy.md`, que é um documento companheiro e específico de infra.
+> `AGENTS.md` é o contrato normativo dos agentes e `CLAUDE.md` define o roteamento do
+> orquestrador. Claude é o único writer; Codex delegado atua somente como Decisor,
+> Árbitro ou Revisor em leitura. Esta seção preserva apenas regras técnicas do AdmAi.
+> Para infraestrutura de deploy, consulte também `docs/DEPLOYMENT.md`.
 
 ### 13.1 Regras específicas deste projeto
 
@@ -591,22 +569,9 @@ código que a usa), dependências entre etapas, critérios de sucesso definidos 
 executar, e alternativas consideradas e descartadas (com o motivo, pra não reconsiderar a
 mesma alternativa rejeitada numa tarefa futura).
 
-**Recrutamento de agentes** — decidir quais agentes são necessários, nem mais nem menos.
-Para cada um: nome/função, responsabilidade específica (uma frase — se precisa de
-parágrafo, são dois agentes), objetivo, entradas, saídas esperadas, e critérios de
-validação **concretos e verificáveis** ("testes passam", "lint sem warnings", nunca "parece
-correto").
-
-```
-Agent: System Architect
-Objetivo: Definir arquitetura da solução.
-Entradas: especificação da feature, schema.prisma atual, docs/blueprint/ existente.
-Saídas: documento arquitetural + plano técnico.
-Critérios de validação: plano revisado por pelo menos 1 agente revisor antes da execução.
-```
-
-**Teto de paralelismo: 5 agentes simultâneos por tarefa.** Acima disso exige justificativa
-explícita no plano — caso contrário, recrutar o mínimo necessário.
+**Coordenação Claude–Codex** — os papéis, a autoridade e os protocolos obrigatórios estão
+em `AGENTS.md`. O fluxo orquestrado possui exatamente um writer; não usa swarm nem agentes
+paralelos para escrever a mesma tarefa.
 
 **Sugestões e alternativas** — quando houver mais de uma abordagem razoável, apresentar
 antes de escolher: prós, contras, custo computacional, consumo estimado de tokens
@@ -642,11 +607,10 @@ antes de qualquer cálculo de orçamento, já que mudam com o tempo.
 
 #### Fase 2 — Execução
 
-Começa automaticamente após o plano estar pronto. Seguir o plano rigorosamente, validar
-cada etapa antes de avançar, corrigir falhas imediatamente (não "ver no final").
+Começa somente quando o contrato ativo autorizar implementação. Seguir o plano
+rigorosamente, validar cada etapa antes de avançar e corrigir falhas imediatamente.
 
-**Paralelismo:** executar em paralelo tarefas sem dependência entre si, respeitando o teto
-de 5 agentes simultâneos.
+**Writer único:** Claude executa a implementação. Codex decide ou revisa sempre em leitura.
 
 **Falha de agente:**
 1. Primeira falha: uma única retentativa automática, corrigindo o que for possível (ex:
@@ -655,27 +619,17 @@ de 5 agentes simultâneos.
    bloqueio técnico real, reportado pra decisão humana.
 3. Falha de um agente nunca é silenciosamente contornada por outro sem registro.
 
-**Continuidade operacional:** ao concluir uma tarefa, identificar o próximo gargalo e
-seguir sem esperar instrução nova. Fontes válidas: testes falhando, erros de lint/build
-pendentes, itens do backlog/blueprint, dependências que acabaram de ser destravadas.
+**Continuidade operacional:** avance somente pela fila já autorizada no contrato ativo.
+Uma nova tarefa ou ampliação de escopo não nasce automaticamente de um gargalo encontrado.
 
 ### 13.3 Política de autonomia operacional
 
-Os agentes têm autonomia máxima pra executar o necessário, sem pedir confirmação
-intermediária quando a próxima ação é inferível com segurança a partir do contexto, do
-plano aprovado, da documentação existente ou de melhores práticas técnicas.
+Claude pode executar ações locais e reversíveis que já estejam autorizadas pelo contrato.
+Decisões técnicas materiais exigem consenso com o Codex Decisor; divergência persistente
+vai ao Codex Árbitro. Negócio, custos, risco aceito, escopo, dados pessoais e ações externas
+continuam reservados ao usuário. Nenhuma instrução deste README amplia permissões.
 
-**Por quê isso é a configuração certa na maioria dos casos:** a maior parte das ações de
-desenvolvimento (ler um arquivo, rodar um teste, corrigir um lint) é reversível sem custo —
-pedir confirmação nelas só desperdiça tempo sem reduzir risco real.
-
-**Autorizado sem confirmação:** ler, criar, modificar e reorganizar arquivos do projeto;
-executar comandos locais; instalar dependências (via gerenciador do projeto, respeitando o
-lockfile); corrigir erros; refatorar; criar e executar testes; atualizar documentação;
-criar scripts auxiliares; pesquisar o necessário; coordenar múltiplos agentes; tomar
-decisões técnicas compatíveis com os objetivos do projeto.
-
-**A execução continua sem intervenção até uma destas quatro condições:**
+**A tarefa autorizada pode continuar sem intervenção até uma destas quatro condições:**
 
 1. **Todos os objetivos concluídos**, pelos critérios de sucesso definidos na Fase 1 — não
    por impressão do agente.
@@ -709,11 +663,8 @@ decisões técnicas compatíveis com os objetivos do projeto.
    ponto pra um "ok" explícito antes de executar, sem isso interromper o resto do fluxo
    autônomo ao redor.
 
-**Critério de escolha entre alternativas válidas** (quando não é caso do item 4): qualidade,
-velocidade, custo computacional, consumo de tokens, facilidade de manutenção — com
-desempate pela mesma ordem das Diretrizes de Eficiência abaixo (precisão > confiabilidade >
-economia de tokens > velocidade > escalabilidade). Toda escolha feita assim é registrada no
-relatório, com a alternativa descartada.
+**Escolha entre alternativas válidas:** detalhes triviais seguem os padrões existentes;
+decisões materiais seguem o consenso e a arbitragem definidos em `AGENTS.md`.
 
 ### 13.4 Relatórios obrigatórios
 
@@ -735,10 +686,8 @@ incremental.
 Prioridades, em ordem, usadas pra resolver qualquer empate de decisão: **precisão >
 confiabilidade > economia de tokens > velocidade > escalabilidade.**
 
-Evitar, concretamente: execuções redundantes (re-validar algo que não mudou desde a última
-validação); leitura desnecessária de arquivo já no contexto ativo ou já resumido; reanálise
-de algo já registrado no log de decisões; criação de agentes além do teto sem justificativa
-explícita.
+Evitar, concretamente: execuções redundantes, leitura desnecessária de arquivo já no
+contexto ativo e reanálise de algo já registrado no log de decisões.
 
 ### 13.6 Critério de excelência
 
