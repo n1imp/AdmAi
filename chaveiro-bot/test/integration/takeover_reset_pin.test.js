@@ -73,11 +73,11 @@ async function vincularTecnico(usuarioId, empresaId, nome) {
 
 describe('C1 — reset de PIN contra conta de maior privilégio', () => {
   it('gestor NÃO reseta o PIN do dono, e o hash do dono fica intacto', async () => {
-    const { token: tokenDono, userId: donoId, empresaId } = await criarEmpresaComAdmin(
-      request,
-      app,
-      'c1a'
-    );
+    const {
+      token: tokenDono,
+      userId: donoId,
+      empresaId,
+    } = await criarEmpresaComAdmin(request, app, 'c1a');
     const gestor = await criarGestor(tokenDono, 'A');
     const tecnicoDoDono = await vincularTecnico(donoId, empresaId, 'Dono Tec');
 
@@ -104,11 +104,11 @@ describe('C1 — reset de PIN contra conta de maior privilégio', () => {
   });
 
   it('o token do dono continua válido depois da tentativa negada', async () => {
-    const { token: tokenDono, userId: donoId, empresaId } = await criarEmpresaComAdmin(
-      request,
-      app,
-      'c1b'
-    );
+    const {
+      token: tokenDono,
+      userId: donoId,
+      empresaId,
+    } = await criarEmpresaComAdmin(request, app, 'c1b');
     const gestor = await criarGestor(tokenDono, 'B');
     const tecnicoDoDono = await vincularTecnico(donoId, empresaId, 'Dono Tec');
 
@@ -151,7 +151,12 @@ describe('C1 — reset de PIN contra conta de maior privilégio', () => {
     const gestor = await criarGestor(tokenDono, 'E');
 
     const tecnico = await prisma.tecnico.create({
-      data: { nome: 'Func', telefone: '5598' + String(++_tel).padStart(9, '0'), empresaId, ativo: true },
+      data: {
+        nome: 'Func',
+        telefone: '5598' + String(++_tel).padStart(9, '0'),
+        empresaId,
+        ativo: true,
+      },
     });
     const acesso = await request(app)
       .post(`/api/tecnicos/${tecnico.id}/acesso`)
@@ -193,11 +198,11 @@ describe('C1 — reset de PIN contra conta de maior privilégio', () => {
   });
 
   it('dono NÃO reseta o PIN da própria conta por esta via', async () => {
-    const { token: tokenDono, userId: donoId, empresaId } = await criarEmpresaComAdmin(
-      request,
-      app,
-      'c1f'
-    );
+    const {
+      token: tokenDono,
+      userId: donoId,
+      empresaId,
+    } = await criarEmpresaComAdmin(request, app, 'c1f');
     const tecnicoDoDono = await vincularTecnico(donoId, empresaId, 'Dono');
 
     const res = await request(app)

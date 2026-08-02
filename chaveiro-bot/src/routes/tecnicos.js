@@ -8,7 +8,12 @@ import { prisma } from '../db/prisma.js';
 import { gerarRelatorioPonto, gerarCsvPonto } from '../services/relatorio.js';
 import { resumoMes, registrarPonto, diaLocal, ROTULO_BATIDA } from '../services/ponto.js';
 import { criarAcessoTecnico, resetarPin } from '../services/credenciais.js';
-import { pode, podeProprio, podeGerenciarUsuario, podeAtribuirPapel } from '../services/permissoes.js';
+import {
+  pode,
+  podeProprio,
+  podeGerenciarUsuario,
+  podeAtribuirPapel,
+} from '../services/permissoes.js';
 // Antes este arquivo tinha uma cópia byte-a-byte de construirFiltroPeriodo/dataValida,
 // que ficou para trás quando o helper foi extraído para services/periodo.js — e por isso
 // carregava o mesmo bug de fuso corrigido lá. Importar mantém uma fonte só.
@@ -356,7 +361,9 @@ router.post(
           alvoId: alvo.id,
           motivo: 'papel_do_alvo',
         });
-        return res.status(403).json({ erro: 'Sem permissão para redefinir o acesso deste usuário' });
+        return res
+          .status(403)
+          .json({ erro: 'Sem permissão para redefinir o acesso deste usuário' });
       }
       const pin = await resetarPin(tecnico.usuarioId);
       logger.info('acesso_tecnico_reset', { tecnicoId: id, usuarioId: tecnico.usuarioId });
