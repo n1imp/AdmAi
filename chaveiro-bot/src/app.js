@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
-import { redisClient, authLimiter } from './middlewares/rateLimiters.js';
+import { redisClient, authLimiter, authIpLimiter } from './middlewares/rateLimiters.js';
 import { env } from './config/env.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from './config/sentry.js';
 import { metricsMiddleware, metricsHandler } from './config/metrics.js';
@@ -117,8 +117,11 @@ export function criarApp() {
   // Rate limit AGRESSIVO contra brute force (guia §3.2). Instância ÚNICA e compartilhada
   // (middlewares/rateLimiters.js) com recuperar-senha/redefinir-senha/magic-link em
   // routes/auth.js — antes duplicado com uma segunda instância sem Redis (F4).
-  app.use('/api/auth/login', authLimiter);
-  app.use('/api/auth/register', authLimiter);
+  // Dois tetos compostos: por IDENTIDADE (5/15min, evita brute force de uma
+  // conta) e por ORIGEM (30/15min, evita varredura de muitas contas de um IP).
+  // O limitador por identidade sozinho é evadível variando o identificador.
+  app.use('/api/auth/login', authIpLimiter, authLimiter);
+  app.use('/api/auth/register', authIpLimiter, authLimiter);
 
   // Rate limit dedicado às etapas de 2FA, com a chave no DESAFIO (não no IP): cada
   // desafio de 5 min só admite poucas tentativas de código, fechando brute force do
