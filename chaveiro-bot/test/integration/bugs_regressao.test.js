@@ -74,8 +74,12 @@ describe('B2 — DELETE /me/conta com assinatura existente', () => {
   // exatamente a base pagante — e a mensagem não dava nenhuma pista da causa.
   it('apaga a empresa mesmo quando existe Assinatura vinculada', async () => {
     const A = await criarEmpresaComAdmin(request, app, 'B2');
-    await prisma.assinatura.create({
-      data: { empresaId: A.empresaId, status: 'ativa', stripeCustomerId: 'cus_teste_123' },
+    // T-BILL-06: o registro já cria a Assinatura(trialing) da empresa — upsert
+    // simula "assinatura ativa vinculada" sem colidir com a unique de empresaId.
+    await prisma.assinatura.upsert({
+      where: { empresaId: A.empresaId },
+      create: { empresaId: A.empresaId, status: 'ativa', stripeCustomerId: 'cus_teste_123' },
+      update: { status: 'ativa', stripeCustomerId: 'cus_teste_123' },
     });
 
     const res = await request(app)
