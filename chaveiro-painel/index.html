@@ -19,22 +19,6 @@
       href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <!-- Crisp.chat — suporte ao cliente (só inicializa se VITE_CRISP_ID estiver definido) -->
-    <script>
-      (function(){
-        var id = '%VITE_CRISP_ID%';
-        // A sentinela é montada em tempo de execução ('%'+'VITE_...') porque o Vite
-        // substitui TODA ocorrência literal de %VITE_CRISP_ID% neste arquivo. Escrita
-        // literal, a comparação virava `id === id` com a variável definida (e
-        // literal-vs-literal sem ela) — retornando sempre, em qualquer ambiente, o que
-        // manteve o chat morto desde que foi adicionado.
-        var naoSubstituido = '%' + 'VITE_CRISP_ID' + '%';
-        if (!id || id === naoSubstituido) return;
-        window.$crisp=[];window.CRISP_WEBSITE_ID=id;
-        var d=document,s=d.createElement('script');
-        s.src='https://client.crisp.chat/l.js';s.async=1;d.head.appendChild(s);
-      })();
-    </script>
   </head>
   <body class="bg-dark-900 text-white">
     <div id="root"></div>
