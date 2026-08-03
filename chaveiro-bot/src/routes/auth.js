@@ -10,6 +10,7 @@ import {
   dataExpiracaoRefresh,
   gerarDesafio2fa,
   verificarDesafio2fa,
+  autenticarCandidatos,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
@@ -161,49 +162,53 @@ router.post('/auth/login', async (req, res) => {
   const { username, telefone, usuarioId, password } = parse.data;
   const ref = username ?? telefone ?? `id:${usuarioId}`;
   try {
-    let usuario = null;
+    // EV-063: candidatos são só resolvidos aqui — NENHUMA informação (existe? está
+    // ativo? é conta social? quantas empresas?) é revelada antes de `autenticarCandidatos`
+    // provar a senha. O ramo de telefone não filtra `ativo` na query de propósito: o
+    // filtro de ativo acontece dentro de `autenticarCandidatos`, no mesmo lugar e do
+    // mesmo jeito que para username/usuarioId — antes, só o ramo de telefone filtrava
+    // ativo na query, o que por si só já era uma diferença observável de comportamento.
+    let candidatos;
     if (usuarioId) {
-      usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+      const u = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+      candidatos = u ? [u] : [];
     } else if (username) {
-      usuario = await prisma.usuario.findUnique({ where: { username } });
+      const u = await prisma.usuario.findUnique({ where: { username } });
+      candidatos = u ? [u] : [];
     } else {
       const variantes = variantesTelefone(telefone);
-      const candidatos = variantes.length
+      candidatos = variantes.length
         ? await prisma.usuario.findMany({
-            where: { telefone: { in: variantes }, ativo: true },
+            where: { telefone: { in: variantes } },
             include: { empresa: { select: { nome: true } } },
           })
         : [];
-      if (candidatos.length > 1) {
-        logger.info('login_desambiguacao', { telefone: '***', n: candidatos.length });
-        return res.json({
-          desambiguacao: candidatos.map((c) => ({
-            usuarioId: c.id,
-            empresa: c.empresa?.nome ?? '—',
-          })),
-        });
-      }
-      usuario = candidatos[0] ?? null;
     }
-    if (!usuario) {
-      logger.info('login_failure', { ref, motivo: 'user_not_found' });
+
+    const autenticados = await autenticarCandidatos(candidatos, password);
+
+    if (autenticados.length === 0) {
+      // Cobre, com a MESMA resposta: telefone/username/id inexistente, usuário
+      // inativo, conta social (sem senha) e senha incorreta — nenhum desses casos é
+      // distinguível de fora antes da autenticação (regra arquitetural do EV-063).
+      logger.info('login_failure', { ref, motivo: 'invalid_credentials' });
       return res.status(401).json({ erro: 'Credenciais inválidas' });
     }
-    if (!usuario.ativo) {
-      logger.info('login_failure', { ref, motivo: 'user_inactive' });
-      return res.status(401).json({ erro: 'Usuário inativo' });
+
+    if (autenticados.length > 1) {
+      // Só chega aqui DEPOIS de provar a senha em mais de uma conta — é o caso
+      // legítimo de uma pessoa com o mesmo telefone (e mesma senha) em empresas
+      // diferentes. Antes do EV-063, esta lista era revelada sem checar senha nenhuma.
+      logger.info('login_desambiguacao', { ref, n: autenticados.length });
+      return res.json({
+        desambiguacao: autenticados.map((c) => ({
+          usuarioId: c.id,
+          empresa: c.empresa?.nome ?? '—',
+        })),
+      });
     }
-    if (!usuario.senhaHash) {
-      logger.info('login_failure', { ref, motivo: 'sem_senha_social' });
-      return res
-        .status(401)
-        .json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
-    }
-    const senhaCorreta = await bcrypt.compare(password, usuario.senhaHash);
-    if (!senhaCorreta) {
-      logger.info('login_failure', { ref, motivo: 'invalid_password' });
-      return res.status(401).json({ erro: 'Credenciais inválidas' });
-    }
+
+    const usuario = autenticados[0];
     if (usuario.twoFactorAtivo && usuario.totpSecret) {
       logger.info('login_2fa_required', { userId: usuario.id, metodo: 'totp' });
       return res.json({

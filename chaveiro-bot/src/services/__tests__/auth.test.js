@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import bcrypt from 'bcryptjs';
 
 // auth.js importa env (config/env.js), que exige JWT_SECRET >= 32 chars.
 beforeAll(() => {
@@ -8,8 +9,14 @@ beforeAll(() => {
   process.env.NODE_ENV = 'test';
 });
 
-const { gerarJWT, verificarJWT, tokenAindaValido, gerarDesafio2fa, verificarDesafio2fa } =
-  await import('../auth.js');
+const {
+  gerarJWT,
+  verificarJWT,
+  tokenAindaValido,
+  gerarDesafio2fa,
+  verificarDesafio2fa,
+  autenticarCandidatos,
+} = await import('../auth.js');
 const jwt = (await import('jsonwebtoken')).default;
 const { env } = await import('../../config/env.js');
 
@@ -100,5 +107,89 @@ describe('gerarDesafio2fa / verificarDesafio2fa', () => {
 
   it('rejeita um desafio malformado (não é um JWT)', () => {
     expect(() => verificarDesafio2fa('isto-nao-e-um-jwt')).toThrow();
+  });
+});
+
+describe('autenticarCandidatos (EV-063)', () => {
+  // Candidatos construídos diretamente (sem Prisma/Postgres) — depois da migration
+  // de `Usuario.telefone @unique` (missão anterior), não é mais possível criar 2
+  // contas ATIVAS com o mesmo telefone via cadastro real; testar a lógica de N
+  // candidatos exige montar o array manualmente, exatamente como abaixo.
+  let hashSenhaA, hashSenhaB;
+  beforeAll(async () => {
+    hashSenhaA = await bcrypt.hash('SenhaDaContaA1!', 4); // rounds baixo só pra teste rápido
+    hashSenhaB = await bcrypt.hash('SenhaDaContaB1!', 4);
+  });
+
+  it('0 candidatos (telefone/username inexistente) → lista vazia, sem lançar', async () => {
+    const r = await autenticarCandidatos([], 'qualquercoisa');
+    expect(r).toEqual([]);
+  });
+
+  it('1 candidato, senha correta → autentica', async () => {
+    const candidato = { id: 1, senhaHash: hashSenhaA, ativo: true };
+    const r = await autenticarCandidatos([candidato], 'SenhaDaContaA1!');
+    expect(r).toEqual([candidato]);
+  });
+
+  it('1 candidato, senha incorreta → lista vazia', async () => {
+    const candidato = { id: 1, senhaHash: hashSenhaA, ativo: true };
+    const r = await autenticarCandidatos([candidato], 'SenhaErrada!');
+    expect(r).toEqual([]);
+  });
+
+  it('1 candidato INATIVO, senha correta → lista vazia (não distingue de senha errada)', async () => {
+    const candidato = { id: 1, senhaHash: hashSenhaA, ativo: false };
+    const r = await autenticarCandidatos([candidato], 'SenhaDaContaA1!');
+    expect(r).toEqual([]);
+  });
+
+  it('1 candidato SOCIAL (senhaHash null), qualquer senha → lista vazia, sem lançar', async () => {
+    const candidato = { id: 1, senhaHash: null, ativo: true };
+    const r = await autenticarCandidatos([candidato], 'qualquercoisa');
+    expect(r).toEqual([]);
+  });
+
+  it('N candidatos (telefone em 2 empresas), MESMA senha nos dois → autentica os 2 (desambiguação legítima)', async () => {
+    const senhaCompartilhada = 'SenhaCompartilhada1!';
+    const hashCompartilhado = await bcrypt.hash(senhaCompartilhada, 4);
+    const candidatoA = { id: 1, empresaId: 10, senhaHash: hashCompartilhado, ativo: true };
+    const candidatoB = { id: 2, empresaId: 20, senhaHash: hashCompartilhado, ativo: true };
+
+    const r = await autenticarCandidatos([candidatoA, candidatoB], senhaCompartilhada);
+
+    expect(r).toHaveLength(2);
+    expect(r.map((c) => c.id).sort()).toEqual([1, 2]);
+  });
+
+  it('N candidatos, senha bate em SÓ UM dos dois → autentica só esse (login direto, sem desambiguação)', async () => {
+    const candidatoA = { id: 1, senhaHash: hashSenhaA, ativo: true };
+    const candidatoB = { id: 2, senhaHash: hashSenhaB, ativo: true };
+
+    const r = await autenticarCandidatos([candidatoA, candidatoB], 'SenhaDaContaA1!');
+
+    expect(r).toEqual([candidatoA]);
+  });
+
+  it('N candidatos, senha não bate em nenhum → lista vazia (não vaza quantidade nem identidade)', async () => {
+    const candidatoA = { id: 1, senhaHash: hashSenhaA, ativo: true };
+    const candidatoB = { id: 2, senhaHash: hashSenhaB, ativo: true };
+
+    const r = await autenticarCandidatos([candidatoA, candidatoB], 'NenhumaBate!');
+
+    expect(r).toEqual([]);
+  });
+
+  it('N candidatos, senha bate em 1 ativo e 1 inativo com a MESMA senha → só o ativo autentica', async () => {
+    const hashCompartilhado = await bcrypt.hash('SenhaCompartilhada2!', 4);
+    const candidatoAtivo = { id: 1, senhaHash: hashCompartilhado, ativo: true };
+    const candidatoInativo = { id: 2, senhaHash: hashCompartilhado, ativo: false };
+
+    const r = await autenticarCandidatos(
+      [candidatoAtivo, candidatoInativo],
+      'SenhaCompartilhada2!'
+    );
+
+    expect(r).toEqual([candidatoAtivo]);
   });
 });

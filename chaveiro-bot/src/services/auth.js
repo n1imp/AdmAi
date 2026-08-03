@@ -1,6 +1,13 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'node:crypto';
 import { env } from '../config/env.js';
+
+// EV-063: hash fixo, gerado uma vez no boot — usado só para gastar o MESMO tempo de
+// bcrypt.compare quando não há candidato real (telefone/username inexistente) ou
+// quando um candidato não tem senhaHash (conta social), evitando que o tempo de
+// resposta de POST /auth/login revele essas condições antes da autenticação.
+const HASH_DUMMY_TIMING = bcrypt.hashSync('dummy-nao-corresponde-a-nenhuma-senha-real', 12);
 
 export function gerarJWT(usuario) {
   return jwt.sign(
@@ -78,4 +85,39 @@ export function verificarDesafio2fa(desafio) {
   const payload = jwt.verify(desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
   if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio 2FA inválido');
   return payload;
+}
+
+/**
+ * EV-063 — autentica `password` contra uma lista de candidatos (0, 1 ou N — N ocorre
+ * quando um telefone tem contas em mais de uma empresa), SEM revelar nada sobre a
+ * existência/estado dos candidatos antes de a senha bater. Regra arquitetural: nenhum
+ * endpoint de autenticação pode expor informação de identidade antes da autenticação
+ * ser concluída com sucesso.
+ *
+ * Sempre gasta pelo menos 1 `bcrypt.compare` (mesmo com 0 candidatos, contra um hash
+ * fixo) para que o tempo de resposta não vaze se o telefone/username existe. Só
+ * candidatos ATIVOS, com senha definida (contas sociais têm `senhaHash:null`) e cuja
+ * senha bateu entram no retorno — inativo/social/senha-errada/inexistente resultam,
+ * do ponto de vista do chamador, na MESMA lista vazia.
+ *
+ * @param {Array<{id:number, senhaHash:string|null, ativo:boolean}>} candidatos
+ * @param {string} password
+ * @returns {Promise<Array>} subconjunto de `candidatos` autenticado com sucesso
+ */
+export async function autenticarCandidatos(candidatos, password) {
+  if (candidatos.length === 0) {
+    await bcrypt.compare(password, HASH_DUMMY_TIMING);
+    return [];
+  }
+  const resultados = await Promise.all(
+    candidatos.map(async (c) => ({
+      candidato: c,
+      senhaOk: c.senhaHash
+        ? await bcrypt.compare(password, c.senhaHash)
+        : await bcrypt.compare(password, HASH_DUMMY_TIMING).then(() => false),
+    }))
+  );
+  return resultados
+    .filter((r) => r.senhaOk && r.candidato.ativo && r.candidato.senhaHash)
+    .map((r) => r.candidato);
 }
