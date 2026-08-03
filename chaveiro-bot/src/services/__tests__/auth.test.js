@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import bcrypt from 'bcryptjs';
 
 // auth.js importa env (config/env.js), que exige JWT_SECRET >= 32 chars.
@@ -191,5 +191,41 @@ describe('autenticarCandidatos (EV-063)', () => {
     );
 
     expect(r).toEqual([candidatoAtivo]);
+  });
+
+  // EV-063, Gate 7 (achado do red team): bcryptjs é JS puro, então N chamadas de
+  // bcrypt.compare em Promise.all ainda serializam no mesmo thread — o tempo de
+  // resposta escalava com N, vazando por TIMING a mesma cardinalidade que o corpo da
+  // resposta já não vaza mais. Corrigido rodando sempre exatamente 3 comparações
+  // (reais + dummy até completar o piso). Este teste conta as chamadas reais a
+  // `bcrypt.compare` (determinístico, não depende de wall-clock — instável em CI)
+  // em vez de medir tempo.
+  describe('tempo constante (EV-063, Gate 7)', () => {
+    it('N=0,1,2,3 candidatos → sempre exatamente 3 chamadas a bcrypt.compare', async () => {
+      const spy = vi.spyOn(bcrypt, 'compare');
+      for (const n of [0, 1, 2, 3]) {
+        spy.mockClear();
+        const candidatos = Array.from({ length: n }, (_, i) => ({
+          id: i,
+          senhaHash: hashSenhaA,
+          ativo: true,
+        }));
+        await autenticarCandidatos(candidatos, 'senha-nao-bate');
+        expect(spy).toHaveBeenCalledTimes(3);
+      }
+      spy.mockRestore();
+    });
+
+    it('N=5 candidatos (acima do piso) → 5 chamadas, todas reais (sem dummy extra)', async () => {
+      const spy = vi.spyOn(bcrypt, 'compare');
+      const candidatos = Array.from({ length: 5 }, (_, i) => ({
+        id: i,
+        senhaHash: hashSenhaA,
+        ativo: true,
+      }));
+      await autenticarCandidatos(candidatos, 'senha-nao-bate');
+      expect(spy).toHaveBeenCalledTimes(5);
+      spy.mockRestore();
+    });
   });
 });

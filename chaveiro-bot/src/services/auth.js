@@ -87,37 +87,54 @@ export function verificarDesafio2fa(desafio) {
   return payload;
 }
 
+// EV-063 (Gate 7 — achado do red team, corrigido no mesmo ciclo): `bcryptjs` é JS puro
+// — `bcrypt.compare` não roda em thread separada (ao contrário da lib nativa `bcrypt`),
+// então N chamadas em Promise.all ainda serializam no mesmo thread JS. Medido
+// empiricamente: N=1 ~370ms, N=2 ~745ms, N=3 ~1110ms — escala linear com N. Isso vazava
+// por TIMING exatamente a cardinalidade que o corpo da resposta já não vazava mais:
+// quantos candidatos um telefone tem. Corrigido rodando sempre exatamente
+// `MAX_CANDIDATOS_TEMPO_CONSTANTE` comparações bcrypt (reais + dummy até completar o
+// piso), então o tempo de resposta é o mesmo para N=0,1,2 ou 3. Acima de 3 candidatos
+// reais (telefone compartilhado por mais de 3 contas — não é o caso de uso legítimo
+// descrito, que é tipicamente 1-2 empresas por pessoa), o tempo volta a escalar com N;
+// esse resíduo só permite inferir "mais de 3", não a contagem exata — aceito como risco
+// residual de severidade muito baixa dado quão incomum é esse cenário.
+const MAX_CANDIDATOS_TEMPO_CONSTANTE = 3;
+
 /**
  * EV-063 — autentica `password` contra uma lista de candidatos (0, 1 ou N — N ocorre
  * quando um telefone tem contas em mais de uma empresa), SEM revelar nada sobre a
- * existência/estado dos candidatos antes de a senha bater. Regra arquitetural: nenhum
- * endpoint de autenticação pode expor informação de identidade antes da autenticação
- * ser concluída com sucesso.
+ * existência/estado dos candidatos antes de a senha bater — nem no corpo da resposta,
+ * nem no tempo de resposta (até `MAX_CANDIDATOS_TEMPO_CONSTANTE`). Regra arquitetural:
+ * nenhum endpoint de autenticação pode expor informação de identidade antes da
+ * autenticação ser concluída com sucesso.
  *
- * Sempre gasta pelo menos 1 `bcrypt.compare` (mesmo com 0 candidatos, contra um hash
- * fixo) para que o tempo de resposta não vaze se o telefone/username existe. Só
- * candidatos ATIVOS, com senha definida (contas sociais têm `senhaHash:null`) e cuja
- * senha bateu entram no retorno — inativo/social/senha-errada/inexistente resultam,
- * do ponto de vista do chamador, na MESMA lista vazia.
+ * Só candidatos ATIVOS, com senha definida (contas sociais têm `senhaHash:null`) e cuja
+ * senha bateu entram no retorno — inativo/social/senha-errada/inexistente resultam, do
+ * ponto de vista do chamador, na MESMA lista vazia.
  *
  * @param {Array<{id:number, senhaHash:string|null, ativo:boolean}>} candidatos
  * @param {string} password
  * @returns {Promise<Array>} subconjunto de `candidatos` autenticado com sucesso
  */
 export async function autenticarCandidatos(candidatos, password) {
-  if (candidatos.length === 0) {
-    await bcrypt.compare(password, HASH_DUMMY_TIMING);
-    return [];
-  }
-  const resultados = await Promise.all(
-    candidatos.map(async (c) => ({
-      candidato: c,
-      senhaOk: c.senhaHash
-        ? await bcrypt.compare(password, c.senhaHash)
-        : await bcrypt.compare(password, HASH_DUMMY_TIMING).then(() => false),
-    }))
-  );
-  return resultados
+  const totalDummy = Math.max(0, MAX_CANDIDATOS_TEMPO_CONSTANTE - candidatos.length);
+
+  const [resultadosReais] = await Promise.all([
+    Promise.all(
+      candidatos.map(async (c) => ({
+        candidato: c,
+        senhaOk: c.senhaHash
+          ? await bcrypt.compare(password, c.senhaHash)
+          : await bcrypt.compare(password, HASH_DUMMY_TIMING).then(() => false),
+      }))
+    ),
+    Promise.all(
+      Array.from({ length: totalDummy }, () => bcrypt.compare(password, HASH_DUMMY_TIMING))
+    ),
+  ]);
+
+  return resultadosReais
     .filter((r) => r.senhaOk && r.candidato.ativo && r.candidato.senhaHash)
     .map((r) => r.candidato);
 }
