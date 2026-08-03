@@ -81,3 +81,18 @@ Itens Categoria C da missão "Security Closure Final" — não bloqueiam o encer
 - **Impacto:** nenhum confirmado.
 - **Prioridade:** P4.
 - **Retorna ao escopo:** se alguma dessas dependências passar a ser invocada em um pipeline automatizado (hoje só rodam manualmente, sob demanda do desenvolvedor).
+
+### 11. Rate limit não conta respostas 200 não-finais em `POST /auth/login` (`skipSuccessfulRequests`)
+- **Componente:** `chaveiro-bot/src/middlewares/rateLimiters.js` (`authLimiter`/`authIpLimiter`), `chaveiro-bot/src/routes/auth.js`.
+- **Motivo:** achado da revisão adversarial da remediação do EV-063. Respostas `200` de `POST /auth/login` (`desambiguacao`, `twoFactorRequerido`) não contam para o teto de tentativas (`skipSuccessfulRequests:true`) — comportamento pré-existente, não introduzido pelo EV-063. Era o amplificador do canal de timing (item que motivou o achado do §7 do `EV063_REMEDIATION_REPORT.md`); com o canal de timing já fechado (tempo constante até N=3), o valor prático de martelar esse ramo caiu bastante, mas o rate limit em si continua permissivo para respostas não-finais.
+- **Impacto:** baixo hoje (o principal vetor que isso amplificava já foi fechado); resíduo é mais sobre robustez geral do rate limiting do que uma vulnerabilidade ativa.
+- **Prioridade:** P3.
+- **Correção sugerida:** considerar não aplicar `skipSuccessfulRequests` a respostas que não completam autenticação de fato (`desambiguacao`, `twoFactorRequerido` são intermediárias, não uma sessão completa).
+- **Retorna ao escopo:** se um novo canal lateral (timing, tamanho de resposta, etc.) for encontrado que dependa de repetição sem limite nesse endpoint.
+
+### 12. Enumeração de username/e-mail via `409` em `POST /auth/register`
+- **Componente:** `chaveiro-bot/src/routes/auth.js` (tratamento de erro `P2002`, "Username já em uso"/"E-mail já em uso").
+- **Motivo:** achado da revisão adversarial da remediação do EV-063 — endpoint diferente de `POST /auth/login`, fora do escopo do EV-063. Revela pré-autenticação que um username/e-mail já está cadastrado.
+- **Impacto:** baixo — é um trade-off de UX comum em fluxos de cadastro (o usuário precisa saber que o identificador está ocupado antes de tentar de novo). Não revela senha, papel, nem dado de outra empresa.
+- **Prioridade:** P4.
+- **Retorna ao escopo:** se uma decisão de produto futura priorizar UX de cadastro sem confirmação de disponibilidade (ex.: sempre aceitar e enviar e-mail de "conta já existe" em vez de erro imediato).
