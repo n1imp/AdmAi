@@ -78,9 +78,9 @@ describe('EV-063 Gate 1 — reprodução do estado atual de POST /auth/login', (
     expect(res.body).toEqual({ erro: 'Credenciais inválidas' });
   });
 
-  it('usuário DESATIVADO — hoje revela "Usuário inativo" (401), diferente de "Credenciais inválidas" — achado de enumeração adicional', async () => {
+  it('login por TELEFONE de usuário desativado → 401 "Credenciais inválidas" (a query já filtra ativo:true, sem vazar "Usuário inativo" neste ramo)', async () => {
     const telefone = '5511966665555';
-    const A = await criarEmpresaComAdmin(request, app, 'Gate1Inativo');
+    const A = await criarEmpresaComAdmin(request, app, 'Gate1InativoTelefone');
     await prisma.usuario.update({
       where: { id: A.userId },
       data: { telefone, ativo: false },
@@ -90,9 +90,42 @@ describe('EV-063 Gate 1 — reprodução do estado atual de POST /auth/login', (
       .post('/api/auth/login')
       .send({ telefone, password: 'SenhaForte1!' });
 
-    // Comportamento ATUAL (a corrigir): mensagem distinta revela que a conta existe.
+    // Achado do Gate 1: `findMany` do ramo telefone já filtra `ativo:true` na query
+    // (auth.js:173) — um usuário inativo cai em candidatos.length===0, mesma resposta
+    // genérica de telefone inexistente. Diferente do que a hipótese inicial supunha.
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ erro: 'Credenciais inválidas' });
+  });
+
+  it('login por USERNAME de usuário desativado — hoje revela "Usuário inativo" (401), diferente de "Credenciais inválidas" — achado de enumeração adicional', async () => {
+    const A = await criarEmpresaComAdmin(request, app, 'Gate1InativoUsername');
+    await prisma.usuario.update({ where: { id: A.userId }, data: { ativo: false } });
+    const usuarioAntes = await prisma.usuario.findUnique({ where: { id: A.userId } });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: usuarioAntes.username, password: 'SenhaForte1!' });
+
+    // Comportamento ATUAL (a corrigir): mensagem distinta revela que a conta existe —
+    // o ramo username/usuarioId usa findUnique sem filtrar ativo na query, então chega
+    // até a checagem explícita de `usuario.ativo` (auth.js:192-195).
     expect(res.status).toBe(401);
     expect(res.body.erro).toBe('Usuário inativo');
+  });
+
+  it('login por USERNAME de conta social (sem senha) — hoje revela "Esta conta usa login social" — achado de enumeração adicional', async () => {
+    const A = await criarEmpresaComAdmin(request, app, 'Gate1Social');
+    await prisma.usuario.update({ where: { id: A.userId }, data: { senhaHash: null } });
+    const usuarioAntes = await prisma.usuario.findUnique({ where: { id: A.userId } });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: usuarioAntes.username, password: 'qualquercoisa' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.erro).toBe(
+      'Esta conta usa login social. Entre com Google, Microsoft ou Apple.'
+    );
   });
 
   it('confirma empiricamente: Postgres agora BLOQUEIA 2 contas com o mesmo telefone (unique constraint da migration anterior)', async () => {
