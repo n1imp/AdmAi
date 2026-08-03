@@ -10,7 +10,12 @@ import helmet from 'helmet';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import path from 'node:path';
-import { redisClient, authLimiter, authIpLimiter } from './middlewares/rateLimiters.js';
+import {
+  redisClient,
+  authLimiter,
+  authIpLimiter,
+  cadastroLimiter,
+} from './middlewares/rateLimiters.js';
 import { env } from './config/env.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from './config/sentry.js';
 import { metricsMiddleware, metricsHandler } from './config/metrics.js';
@@ -121,7 +126,13 @@ export function criarApp() {
   // conta) e por ORIGEM (30/15min, evita varredura de muitas contas de um IP).
   // O limitador por identidade sozinho é evadível variando o identificador.
   app.use('/api/auth/login', authIpLimiter, authLimiter);
-  app.use('/api/auth/register', authIpLimiter, authLimiter);
+  // EV-057: cadastroLimiter conta TODA tentativa (sucesso incluso) — authLimiter/
+  // authIpLimiter usam skipSuccessfulRequests e nunca contavam um registro
+  // bem-sucedido, permitindo abuso de trial via criação ilimitada de empresas.
+  app.use('/api/auth/register', authIpLimiter, authLimiter, cadastroLimiter);
+  // /auth/oauth/:provedor (cadastro/login via provedor externo) não tinha
+  // nenhum limiter de auth dedicado antes do EV-057.
+  app.use('/api/auth/oauth', cadastroLimiter);
 
   // Rate limit dedicado às etapas de 2FA, com a chave no DESAFIO (não no IP): cada
   // desafio de 5 min só admite poucas tentativas de código, fechando brute force do

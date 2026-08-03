@@ -1,6 +1,40 @@
-import { describe, it, expect } from 'vitest';
-import { identidadeDaRequisicao, authLimiter } from '../rateLimiters.js';
-import authRouter from '../../routes/auth.js';
+import { describe, it, expect, vi } from 'vitest';
+import express from 'express';
+import request from 'supertest';
+
+/**
+ * EV-057 — testa a INSTANCIAÇÃO REAL de um limiter (este arquivo, antes,
+ * só testava a função pura `identidadeDaRequisicao`, nunca um limiter
+ * rodando de verdade). Substitui o `RedisStore` real por um store em
+ * memória com a MESMA interface (`init`/`increment`/`decrement`/
+ * `resetKey`) esperada por `express-rate-limit`, para não depender de um
+ * Redis real nesta suíte unitária — mesmo espírito do fake de `ioredis`
+ * usado em `src/services/__tests__/idempotencia.test.js`.
+ */
+const storeState = vi.hoisted(() => ({ hits: new Map() }));
+vi.mock('rate-limit-redis', () => {
+  class FakeRedisStore {
+    init(options) {
+      this.windowMs = options.windowMs;
+    }
+    async increment(key) {
+      const total = (storeState.hits.get(key) ?? 0) + 1;
+      storeState.hits.set(key, total);
+      return { totalHits: total, resetTime: new Date(Date.now() + (this.windowMs ?? 0)) };
+    }
+    async decrement(key) {
+      const total = Math.max(0, (storeState.hits.get(key) ?? 0) - 1);
+      storeState.hits.set(key, total);
+    }
+    async resetKey(key) {
+      storeState.hits.delete(key);
+    }
+  }
+  return { RedisStore: FakeRedisStore, default: FakeRedisStore };
+});
+
+const { identidadeDaRequisicao, authLimiter, cadastroLimiter } = await import('../rateLimiters.js');
+const { default: authRouter } = await import('../../routes/auth.js');
 
 /**
  * C2 — a chave do rate limit de login (+ achados da revisão de aprovação do
@@ -263,5 +297,41 @@ describe('rateLimiters (F4 — dedup do authLimiter)', () => {
     // referência-idêntica ao exportado por rateLimiters.js (mesma instância/estado Redis).
     const temAuthLimiter = camada.route.stack.some((s) => s.handle === authLimiter);
     expect(temAuthLimiter).toBe(true);
+  });
+});
+
+/**
+ * EV-057 — cadastroLimiter conta TODA tentativa, sucesso incluso. Diferente
+ * de authLimiter/authIpLimiter (skipSuccessfulRequests: true), que nunca
+ * contavam um cadastro bem-sucedido pro teto, permitindo abuso de trial via
+ * criação ilimitada de empresas. Monta um app Express mínimo, real, com
+ * cadastroLimiter e uma rota que SEMPRE responde 200, e prova que mesmo só
+ * com respostas de sucesso o teto de 30/15min é atingido (429).
+ */
+describe('cadastroLimiter (EV-057 — conta sucesso, não só falha)', () => {
+  it('estoura o limite (429) mesmo quando toda requisição responde 200', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.post('/cadastro-teste', cadastroLimiter, (req, res) => res.status(200).json({ ok: true }));
+
+    const respostas = [];
+    // Sequencial de propósito: cada requisição precisa observar o contador já
+    // incrementado pela anterior.
+    for (let i = 0; i < 31; i += 1) {
+      respostas.push(await request(app).post('/cadastro-teste'));
+    }
+
+    const sucessos = respostas.filter((r) => r.status === 200);
+    const bloqueadas = respostas.filter((r) => r.status === 429);
+
+    // As 30 primeiras (limit: 30) respondem 200 — todas de sucesso, provando
+    // que cadastroLimiter (ao contrário de authLimiter/authIpLimiter) NÃO
+    // ignora requisições bem-sucedidas na contagem.
+    expect(sucessos).toHaveLength(30);
+    expect(bloqueadas).toHaveLength(1);
+    expect(respostas[30].status).toBe(429);
+    expect(respostas[30].body).toEqual({
+      erro: 'Muitos cadastros a partir desta origem. Tente novamente em 15 minutos.',
+    });
   });
 });

@@ -154,6 +154,21 @@ export const authIpLimiter = criarLimiterRedis({
   message: { erro: 'Muitas tentativas a partir desta origem. Tente novamente em 15 minutos.' },
 });
 
+// EV-057: `authLimiter`/`authIpLimiter` usam `skipSuccessfulRequests: true` —
+// cadastros BEM-SUCEDIDOS nunca contavam pro teto, permitindo abuso de trial
+// via criação ilimitada de empresas/contas em `/api/auth/register`. Além
+// disso, `/api/auth/oauth/:provedor` (cadastro/login via provedor externo)
+// não tinha nenhum limiter de auth dedicado. Este limiter conta TODA
+// tentativa, sucesso incluso, sempre por IP.
+export const cadastroLimiter = criarLimiterRedis({
+  windowMs: 15 * 60_000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => `cadastro:${ipKeyGenerator(req, res)}`,
+  message: { erro: 'Muitos cadastros a partir desta origem. Tente novamente em 15 minutos.' },
+});
+
 // F3 (achado da revisão independente): o código de confirmação de exclusão de conta não
 // tinha nenhum limite dedicado, caindo só no limiter genérico de /api (120/min por IP) —
 // insuficiente contra brute force de um espaço de 6 dígitos. Chave por usuário autenticado
