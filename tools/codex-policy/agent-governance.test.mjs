@@ -88,7 +88,11 @@ test("controles operacionais e de aplicacao permanecem obrigatorios", () => {
   assert.match(agents, /`git diff --check` limpo/);
   assert.match(agents, /Atualize o plano ou contrato ativo com handoff, review, gates e limitacoes reais/);
   for (const path of [
-    ".claude/start-baseline.ps1",
+    // `.claude/start-baseline.ps1` NAO entra aqui: `.gitignore` exclui todo
+    // `.claude/` (tooling local, especifico de maquina — commit 85e53dd), entao
+    // esse arquivo nunca existe num checkout limpo de CI. A referencia textual a
+    // ele em CLAUDE.md/AGENTS.md continua checada abaixo (assert.match) — so a
+    // existencia em disco, que so faz sentido numa maquina de dev, foi removida.
     ".github/workflows/ci.yml",
     "docs/DEPLOYMENT.md",
     "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md",
