@@ -46,6 +46,31 @@ ataques de engenharia social, DoS volumétrico, e relatórios automatizados sem 
 - `helmet` (CSP/HSTS), CORS com allow-list, validação de input com Zod.
 - `npm audit --audit-level=high` no CI.
 
+## Riscos aceitos e documentados
+
+Nem toda escolha de design elimina um risco por completo — algumas são decisões conscientes,
+avaliadas e aceitas em troca de simplicidade ou compatibilidade. Registramos aqui as que
+afetam diretamente a segurança do usuário, para que sejam avaliadas por quem reporta uma
+vulnerabilidade relacionada, não descobertas como se fossem descuido.
+
+**Token de acesso em `localStorage` (painel web).** O JWT de sessão do painel
+(`chaveiro-painel`) é armazenado em `localStorage`, não em cookie `httpOnly`. Essa é uma
+decisão aceita nesta frente de segurança (não uma omissão): a alternativa (token só em
+memória + renovação via cookie `httpOnly`) exige uma reestruturação maior do cliente HTTP e
+foi tratada como iniciativa separada, fora do escopo já entregue.
+
+O que já mitiga esse risco hoje:
+- O **refresh token**, ao contrário do token de acesso, já usa cookie `httpOnly` (não é
+  acessível via JavaScript, mesmo sob XSS).
+- A Content-Security-Policy do painel reduz a superfície de um XSS que tentasse ler o
+  `localStorage` — **CSP reduz, não elimina** esse risco; nenhum vetor de XSS foi encontrado
+  no código atual do painel em auditoria, mas isso não é uma garantia permanente contra
+  vulnerabilidades futuras.
+
+Se você reportar um XSS real no painel, o impacto de exfiltração do token de acesso via
+`localStorage` já é um risco conhecido e assumido — reporte mesmo assim, o XSS em si
+continua sendo uma vulnerabilidade séria a corrigir.
+
 ## Versões suportadas
 
 | Versão | Suporte de segurança |
