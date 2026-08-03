@@ -391,7 +391,7 @@ decisão/tarefa concreta estão marcados `[RESOLVIDO]`.
 24. `[RESOLVIDO → T-REC-02]` Número do rate limiter de recuperação (D-14): 5 tentativas / 15 min / chave no desafio, fixo.
 25. `[RESOLVIDO → T-REC-03]` Comportamento de esgotamento dos 10 códigos de recuperação (D-15): `409 codigos_recuperacao_esgotados`, sem geração automática, sem revelar dado extra.
 26. `[RESOLVIDO → T-BILL-01]` Nível/conteúdo do log quando o webhook chega sem `metadata.empresaId` (D-16): `warn`, só `event.id`/`event.type`.
-27. `[NOVO — descoberto na revisão adversarial de encerramento do Gate 4]` Correção de entendimento sobre o item 5/EV-027: a rota `POST /auth/login/2fa/recuperar` **já está** coberta por `authIpLimiter`+`authLimiter` (`app.use('/api/auth/login', ...)`, `app.js:123`) e por `twoFactorLimiter` (`app.use('/api/auth/login/2fa', ...)`, `app.js:139`), ambos por *prefix match* do Express — o `req.body?.desafio` já é a chave do 2º limiter, exatamente o desenho que `D-14` já tinha fixado para `T-REC-02`. A alegação em contrário no commit `b0ba71f` ("hoje só o limiter genérico de `/api` se aplica") estava **incorreta** — ver EV-054. `T-REC-02` como tarefa dedicada (código novo) pode não ser mais necessária, mas isso não foi decidido nem travado por teste automatizado — comportamento emergente da ordem de mount, não uma garantia deliberada. Triagem para decisão do usuário/próxima missão: formalizar com um teste que trave esse comportamento (evita regressão se a ordem de mount mudar), ou cancelar `T-REC-02` como redundante.
+27. `[RESOLVIDO — protegido por twoFactorLimiter via prefix-match, travado por teste de regressão nesta execução]` Correção de entendimento sobre o item 5/EV-027: a rota `POST /auth/login/2fa/recuperar` **já está** coberta por `authIpLimiter`+`authLimiter` (`app.use('/api/auth/login', ...)`, `app.js:123`) e por `twoFactorLimiter` (`app.use('/api/auth/login/2fa', ...)`, `app.js:139`), ambos por *prefix match* do Express — o `req.body?.desafio` já é a chave do 2º limiter, exatamente o desenho que `D-14` já tinha fixado para `T-REC-02`. A alegação em contrário no commit `b0ba71f` ("hoje só o limiter genérico de `/api` se aplica") estava **incorreta** — ver EV-054. `T-REC-02` como tarefa dedicada (código novo) foi CANCELADA nesta execução por redundância: o comportamento emergente da ordem de mount agora está travado por teste automatizado (`chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js` — bate 6x na rota com o mesmo `desafio` e confirma que a 6ª tentativa recebe 429), então uma futura mudança na ordem de mount quebra o teste em vez de reabrir a lacuna silenciosamente.
 28. `[NOVO — descoberto na revisão adversarial de encerramento do Gate 4]` Race condition (TOCTOU) em `services/codigosRecuperacao.js:38-54` (`verificarCodigo`): `findMany({ usado:false })` seguido de `update` sem transação/condição atômica (`updateMany` com `where:{usado:false}` + checagem de `count`, ou `SELECT...FOR UPDATE`) permite que o MESMO código de backup autentique 2 requisições concorrentes antes que a 1ª escrita seja observada pela 2ª — violando a garantia declarada de "uso único". Código pré-existente, não tocado por nenhum commit do Gate 4; `T-REC-01` tornou esse caminho alcançável no fluxo real pela 1ª vez (antes, a rota que levava até ele estava atrás de `requireAuth`, inalcançável — EV-022). Exige que o atacante já possua um código de recuperação válido. Ver EV-055. Sem tarefa/gate atribuído — pendente de triagem/decisão do usuário.
 29. `[NOVO — descoberto na revisão adversarial de encerramento do Gate 4]` Abuso de trial via criação ilimitada de contas em `POST /auth/register`/`POST /auth/oauth/:provedor`: `authLimiter`/`authIpLimiter` têm `skipSuccessfulRequests:true` (só contam falhas), `Usuario.telefone` não é `@unique` globalmente (só `@@unique([empresaId, telefone])`), e não há CAPTCHA/verificação prévia — um cadastro automatizado em massa nunca esbarra no rate limiter e cada um garante 14 dias de trial (`T-BILL-06`, D-09) sem tocar Stripe. Não é regressão introduzida por `T-BILL-06` (o cadastro em massa já era possível antes; `T-BILL-06` fez exatamente o que foi decidido) — é um risco de negócio adjacente que passa a valer mais por causa dela. Ver EV-056. Sem tarefa/gate atribuído — pendente de triagem/decisão do usuário.
 
@@ -450,7 +450,7 @@ Nenhuma foi/será executada nesta missão; ficam prontas para a próxima missão
 | `T-CRED-01` | Cobertura unitária de `gerarPin`/`gerarUsernameTecnico`/`criarAcessoTecnico`/`resetarPin` | `services/credenciais.js` | Gate 2 |
 | `T-CRED-02` | `// @ts-check` em `services/credenciais.js` | `services/credenciais.js` | `T-CRED-01` |
 | `T-REC-01` | Mover `/me/2fa/recuperar` para `routes/auth.js`, com verificação de desafio compartilhada | `routes/auth.js`, `routes/account.js` | Gate 2 |
-| `T-REC-02` | Rate limiter dedicado (padrão `twoFactorLimiter`) na rota movida | `app.js`, `middlewares/rateLimiters.js` | `T-REC-01` |
+| `T-REC-02` | ~~Rate limiter dedicado (padrão `twoFactorLimiter`) na rota movida~~ **CANCELADA** — proteção já existe via prefix-match (`twoFactorLimiter` herdado, ver item 27 da Discovery Queue) e agora travada por teste de regressão (`recuperacao2faRateLimit.test.js`) | `app.js`, `middlewares/rateLimiters.js` | `T-REC-01` |
 | `T-REC-03` | Teste de integração ponta-a-ponta da recuperação por código de backup | `routes/auth.js`, `services/codigosRecuperacao.js` | `T-REC-01`, `T-REC-02` |
 | `T-API-01` | Documentar no `SECURITY.md` o risco aceito de token em `localStorage` | `SECURITY.md` | Gate 2 |
 | `T-API-02` | `// @ts-check` em `lib/api.js` | `lib/api.js` | `T-API-01`, `T-API-03` |
@@ -550,7 +550,7 @@ Prioridade final NÃO é só severidade — combina probabilidade, impacto, esfo
 | `T-BILL-02` | Médio | Alta | Médio (recibo/portal degradado) | S | Gate 2 | Médio-alto | **P2** |
 | `T-BILL-07` | Alto | Alta (100% das empresas existentes são afetadas) | Alto (sem isso, ativar o paywall deixa empresas antigas em estado indeterminado ou incorretamente bloqueadas/liberadas) | M (idempotência + dry-run + lotes + relatório) | `T-BILL-01`, `T-BILL-06` | Alto | **P1** |
 | `T-BILL-04` | Alto (requisito de produto confirmado, escopo e semântica fixos — D-10/D-12) | Alta (afeta toda conta inativa) | Alto (controla acesso real a recursos pagos — bug aqui pode bloquear pagante OU liberar inadimplente) | M-L (7 routers/arquivos + frontend) | `T-BILL-01` (dado confiável), `T-BILL-07` (dependência DURA de ativação, não recomendação) | Alto | **P1** (ativação sequenciada depois de `T-BILL-07`, não rebaixada em prioridade) |
-| `T-REC-02` | Médio | Média (só relevante após `T-REC-01`) | Médio | S | `T-REC-01` | Médio | **P2** |
+| `T-REC-02` | **CANCELADA** — proteção já existia via prefix-match de `twoFactorLimiter`, travada por teste de regressão nesta execução (ver item 27 da Discovery Queue) | — | — | — | `T-REC-01` | — | ~~**P2**~~ **CANCELADA** |
 | `T-CI-01` | Estrutural | N/A | Alto (mascara regressão futura) | M | `T-AUTH-01`,`T-CRED-01`,`T-BILL-03`,`T-REC-03` | Alto | **P2** |
 | `T-CI-02` | Estrutural | N/A | Médio (evita regressão silenciosa de tipos) | S | Todos os `@ts-check` | Médio | **P3** |
 | `T-BILL-03` | Estrutural | N/A | Alto | M | `T-BILL-01` | Alto | **P2** |
@@ -593,7 +593,7 @@ Prioridade final NÃO é só severidade — combina probabilidade, impacto, esfo
    zero pendências).
 6. `T-BILL-02` (e-mail no checkout) — paralela a `T-BILL-04`, arquivo compartilhado
    (`routes/billing.js`) mas seções distintas; coordenar para evitar conflito de merge.
-7. `T-REC-02` (rate limiter da rota de recuperação, 5/15min fixo) — só após `T-REC-01`.
+7. ~~`T-REC-02` (rate limiter da rota de recuperação, 5/15min fixo) — só após `T-REC-01`.~~ **CANCELADA** — proteção já existia via prefix-match de `twoFactorLimiter`, travada por teste de regressão nesta execução (ver item 27 da Discovery Queue).
 
 **Onda 4 — endurecimento estrutural + testes (P2), paralela entre si:**
 8. `T-API-03` (interceptor trata `assinatura_inativa` e `assinatura_indeterminada`) — só após `T-BILL-04` ativado.
@@ -1034,7 +1034,17 @@ omitida.
   achado aberto nesta rota especificamente; nenhuma duplicação de lógica de verificação de desafio
   remanescente no código.
 
-### `T-REC-02` — Rate limiter dedicado na rota de recuperação movida
+### `T-REC-02` — Rate limiter dedicado na rota de recuperação movida — **CANCELADA**
+> **CANCELADA nesta execução**: a proteção descrita abaixo já existe hoje, sem precisar de código
+> novo — `twoFactorLimiter` (`app.js:139`, `app.use('/api/auth/login/2fa', twoFactorLimiter)`) já
+> cobre `/api/auth/login/2fa/recuperar` por *prefix match* do Express (5 tentativas/15min, chave no
+> `desafio`, nunca só no IP — exatamente os 3 parâmetros de D-14 abaixo). Isso estava incorretamente
+> descrito como ausente no commit `b0ba71f` (ver EV-054/EV-055/item 27 da Discovery Queue). Esta
+> execução travou o comportamento com um teste de regressão dedicado
+> (`chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js`): 5 tentativas com o mesmo `desafio`
+> passam normalmente, a 6ª recebe `429`; um `desafio` diferente não compartilha o contador. Os
+> critérios originais abaixo ficam preservados só como referência histórica do que já é garantido.
+
 - **Entrada**: `app.js:126-140` (padrão `twoFactorLimiter`), rota resultante de `T-REC-01`.
 - **Objetivo**: fechar EV-027 — a rota de recuperação por código de backup passa a ter defesa em profundidade equivalente à de `/auth/login/2fa`.
 - **Dependências**: `T-REC-01` (a rota precisa existir no novo local antes de ganhar o limiter).
