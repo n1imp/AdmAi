@@ -62,17 +62,22 @@ const CAMPOS_POR_ROTA = [
   // fica de fora do mapa de propósito, então cai sempre na chave por IP.
 ];
 
-function camposPermitidosPara(req) {
-  // Express roteia sem diferenciar maiúsculas/minúsculas e trata "/rota" e
-  // "/rota/" como a MESMA rota (roteamento não-estrito, o padrão) — sem
-  // normalizar os dois aqui, uma requisição legítima em caixa diferente ou com
-  // barra final (ex.: "/API/AUTH/LOGIN", "/api/auth/login/") não bateria com
-  // nenhuma entrada de CAMPOS_POR_ROTA e cairia sempre na chave por IP, mais
-  // frouxa (achados da revisão de aprovação do Gate 2, thread Codex `019fbfe8`).
+// Express roteia sem diferenciar maiúsculas/minúsculas e trata "/rota" e "/rota/"
+// como a MESMA rota (roteamento não-estrito, o padrão) — qualquer chave de rate
+// limit derivada de `req.originalUrl`/`req.path` sem normalizar os dois vira
+// múltiplos baldes independentes pra mesma rota real (ex.: "/API/AUTH/LOGIN",
+// "/api/auth/login/"), multiplicando o teto de tentativas na prática (achados da
+// revisão de aprovação do Gate 2, thread Codex `019fbfe8`, e do EV-067).
+function normalizarCaminho(req) {
   let caminho = String(req.originalUrl ?? req.path ?? '')
     .split('?')[0]
     .toLowerCase();
   if (caminho.length > 1 && caminho.endsWith('/')) caminho = caminho.slice(0, -1);
+  return caminho;
+}
+
+function camposPermitidosPara(req) {
+  const caminho = normalizarCaminho(req);
   const match = CAMPOS_POR_ROTA.find(({ rota }) => caminho.endsWith(rota));
   return match ? match.campos : [];
 }
@@ -189,19 +194,20 @@ export const exclusaoContaLimiter = criarLimiterRedis({
 // limiter genérico e por IP. Chave por usuário autenticado (req.user.id), não por IP —
 // um atacante com sessão roubada não pode contornar isolando o teto por IP diferente,
 // e usuários legítimos por trás do mesmo IP (rede corporativa/NAT) não interferem entre si.
-// A chave inclui a rota (`req.originalUrl`): ativar e desativar são ações INDEPENDENTES
-// (ao contrário de exclusaoContaLimiter, onde as 2 rotas são passos sequenciais do MESMO
-// fluxo) — sem isso, ativar o 2FA com sucesso já gastaria 1 das 5 tentativas do teto de
-// desativar, e vice-versa, mesmo sem nenhuma tentativa errada em nenhuma das duas.
+// A chave inclui a rota (normalizada por `normalizarCaminho` — ver comentário acima
+// dela; usar `req.originalUrl` cru aqui reabriria a MESMA classe de bug que ele existe
+// pra evitar, permitindo multiplicar o teto por variação de caixa/barra final,
+// achado da revisão adversarial desta correção): ativar e desativar são ações
+// INDEPENDENTES (ao contrário de exclusaoContaLimiter, onde as 2 rotas são passos
+// sequenciais do MESMO fluxo) — sem separar por rota, ativar o 2FA com sucesso já
+// gastaria 1 das 5 tentativas do teto de desativar, e vice-versa.
 export const totpContaLimiter = criarLimiterRedis({
   windowMs: 15 * 60_000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>
-    req.user?.id
-      ? `totp-conta:${req.user.id}:${String(req.originalUrl ?? req.path ?? '').split('?')[0]}`
-      : ipKeyGenerator(req, res),
+    req.user?.id ? `totp-conta:${req.user.id}:${normalizarCaminho(req)}` : ipKeyGenerator(req, res),
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 

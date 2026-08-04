@@ -229,3 +229,37 @@ describe('EV-067 — regressão: rotas continuam exigindo autenticação', () =>
     expect(r.status).toBe(401);
   });
 });
+
+describe('EV-067 — chave do limiter não é contornável por variação de URL', () => {
+  // Achado da revisão adversarial da própria correção do EV-067: o Express roteia sem
+  // diferenciar maiúsculas/minúsculas e trata "/rota" e "/rota/" como a MESMA rota
+  // (roteamento não-estrito, o padrão — app.js não define nem `case sensitive routing`
+  // nem `strict routing`). Uma chave de rate limit derivada de `req.originalUrl` sem
+  // normalizar caixa/barra final vira baldes independentes pra mesma rota real,
+  // multiplicando o teto de 5 tentativas por variante textual.
+  it('tentativas em variantes de caixa/barra final da mesma rota somam no MESMO balde', async () => {
+    const { token } = await contaComTotpAtivo();
+    const variantes = [
+      '/api/me/2fa/desativar',
+      '/api/ME/2fa/desativar',
+      '/api/me/2FA/desativar',
+      '/api/me/2fa/Desativar',
+      '/api/me/2fa/desativar/',
+    ];
+    // 5 tentativas somadas entre as 5 variantes — se cada uma tivesse balde próprio,
+    // nenhuma bloquearia (mesmo padrão do teste "bloqueia com 429" acima, mas
+    // espalhando as tentativas entre grafias diferentes da MESMA rota real).
+    for (const variante of variantes) {
+      const r = await request(app)
+        .post(variante)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ codigo: '000000' });
+      expect(r.status).toBe(400);
+    }
+    const bloqueado = await request(app)
+      .post('/api/me/2fa/desativar')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ codigo: '000000' });
+    expect(bloqueado.status).toBe(429);
+  });
+});
