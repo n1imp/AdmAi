@@ -25,7 +25,7 @@ import {
   gerarCodigoExclusaoConta,
   validarCodigoExclusaoConta,
 } from '../services/confirmacaoExclusaoConta.js';
-import { exclusaoContaLimiter } from '../middlewares/rateLimiters.js';
+import { exclusaoContaLimiter, totpContaLimiter } from '../middlewares/rateLimiters.js';
 import { gerarCodigos } from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
@@ -440,7 +440,7 @@ router.post('/me/2fa/setup', async (req, res) => {
   }
 });
 
-router.post('/me/2fa/ativar', async (req, res) => {
+router.post('/me/2fa/ativar', totpContaLimiter, async (req, res) => {
   try {
     const parse = z.object({ codigo: z.string().min(1) }).safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
@@ -476,7 +476,7 @@ router.post('/me/2fa/ativar', async (req, res) => {
 // meio do desafio 2FA ainda não tem sessão completa, só o `desafio` recebido
 // de `/auth/login` (EV-022). Ver routes/auth.js para a rota nova.
 
-router.post('/me/2fa/desativar', async (req, res) => {
+router.post('/me/2fa/desativar', totpContaLimiter, async (req, res) => {
   try {
     const parse = z.object({ codigo: z.string().min(1) }).safeParse(req.body);
     if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });

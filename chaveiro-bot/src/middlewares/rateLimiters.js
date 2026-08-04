@@ -182,4 +182,21 @@ export const exclusaoContaLimiter = criarLimiterRedis({
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 
+// EV-067: POST /me/2fa/ativar e POST /me/2fa/desativar verificavam só um código TOTP
+// de 6 dígitos, sem nenhum limite dedicado — caíam só no limiter genérico de /api
+// (120/min por IP, compartilhado com toda a API). Mesma classe de ameaça do F3
+// (exclusaoContaLimiter): espaço de 6 dígitos insuficientemente protegido por um
+// limiter genérico e por IP. Chave por usuário autenticado (req.user.id), não por IP —
+// um atacante com sessão roubada não pode contornar isolando o teto por IP diferente,
+// e usuários legítimos por trás do mesmo IP (rede corporativa/NAT) não interferem entre si.
+export const totpContaLimiter = criarLimiterRedis({
+  windowMs: 15 * 60_000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) =>
+    req.user?.id ? `totp-conta:${req.user.id}` : ipKeyGenerator(req, res),
+  message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+});
+
 export { ipKeyGenerator };
