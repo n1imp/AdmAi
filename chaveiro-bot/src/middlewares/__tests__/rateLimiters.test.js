@@ -33,7 +33,8 @@ vi.mock('rate-limit-redis', () => {
   return { RedisStore: FakeRedisStore, default: FakeRedisStore };
 });
 
-const { identidadeDaRequisicao, authLimiter, cadastroLimiter } = await import('../rateLimiters.js');
+const { identidadeDaRequisicao, normalizarCaminho, authLimiter, cadastroLimiter } =
+  await import('../rateLimiters.js');
 const { default: authRouter } = await import('../../routes/auth.js');
 
 /**
@@ -271,6 +272,47 @@ describe('identidadeDaRequisicao', () => {
       expect(identidadeDaRequisicao({ body: { username: 'joao' } })).toBeNull();
       expect(identidadeDaRequisicao({})).toBeNull();
     });
+  });
+});
+
+// EV-067, Gate 6 (revisão adversarial da própria correção, 2 rodadas) — a chave de
+// `totpContaLimiter` usa `normalizarCaminho(req)`. A 1ª rodada achou que caixa/barra
+// final não eram normalizadas; corrigido. A 2ª rodada, sobre a correção já aplicada,
+// achou 2 vetores novos que a normalização original (só toLowerCase + barra final)
+// não cobria: barra dupla interna (`/api//me/2fa/desativar`, teto 2x) e fragmento de
+// URL cru preservado em `req.originalUrl` por clientes HTTP de baixo nível
+// (`/me/2fa/desativar#qualquercoisa`, teto ILIMITADO — cada fragmento distinto abria
+// um balde novo). Ambos fechados: `normalizarCaminho` agora também corta tudo a
+// partir de `#` e colapsa barras repetidas antes de comparar.
+describe('normalizarCaminho (EV-067, Gate 6 — 2 rodadas de revisão adversarial)', () => {
+  const BASE = '/api/me/2fa/desativar';
+
+  it('caixa e barra final (achado da 1ª rodada) normalizam para o mesmo caminho', () => {
+    expect(normalizarCaminho({ originalUrl: BASE })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: '/API/ME/2FA/DESATIVAR' })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: `${BASE}/` })).toBe(BASE);
+  });
+
+  it('barra dupla interna (achado da 2ª rodada, vetor A) normaliza para o mesmo caminho', () => {
+    expect(normalizarCaminho({ originalUrl: '/api//me/2fa/desativar' })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: '/api///me/2fa/desativar' })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: '//api//me//2fa//desativar//' })).toBe(BASE);
+  });
+
+  it('fragmento de URL cru (achado da 2ª rodada, vetor B) é descartado, não vira balde novo', () => {
+    expect(normalizarCaminho({ originalUrl: `${BASE}#a` })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: `${BASE}#b` })).toBe(BASE);
+    expect(normalizarCaminho({ originalUrl: `${BASE}#${Math.random()}` })).toBe(BASE);
+  });
+
+  it('combinação de todos os vetores ao mesmo tempo ainda normaliza igual', () => {
+    expect(normalizarCaminho({ originalUrl: '/API//ME/2fa//Desativar/#xyz?ignorado=1' })).toBe(
+      BASE
+    );
+  });
+
+  it('query string continua sendo removida (comportamento pré-existente, não regrediu)', () => {
+    expect(normalizarCaminho({ originalUrl: `${BASE}?codigo=123456` })).toBe(BASE);
   });
 });
 

@@ -62,15 +62,21 @@ const CAMPOS_POR_ROTA = [
   // fica de fora do mapa de propósito, então cai sempre na chave por IP.
 ];
 
-// Express roteia sem diferenciar maiúsculas/minúsculas e trata "/rota" e "/rota/"
-// como a MESMA rota (roteamento não-estrito, o padrão) — qualquer chave de rate
-// limit derivada de `req.originalUrl`/`req.path` sem normalizar os dois vira
-// múltiplos baldes independentes pra mesma rota real (ex.: "/API/AUTH/LOGIN",
-// "/api/auth/login/"), multiplicando o teto de tentativas na prática (achados da
-// revisão de aprovação do Gate 2, thread Codex `019fbfe8`, e do EV-067).
+// Express roteia sem diferenciar maiúsculas/minúsculas e trata "/rota", "/rota/" e
+// "/rota//" (barra dupla) como a MESMA rota (roteamento não-estrito, o padrão) —
+// qualquer chave de rate limit derivada de `req.originalUrl`/`req.path` sem
+// normalizar isso vira múltiplos baldes independentes pra mesma rota real (ex.:
+// "/API/AUTH/LOGIN", "/api/auth/login/", "/api//auth/login"), multiplicando o teto
+// de tentativas na prática. `req.originalUrl` também preserva um fragmento (`#...`)
+// cru se o cliente HTTP não descartar (curl/fetch/navegador descartam; clientes de
+// baixo nível como `http.request` não) — cada fragmento distinto vira um balde novo,
+// SEM LIMITE, mesmo sem repetir grafia nenhuma (achados da revisão de aprovação do
+// Gate 2, thread Codex `019fbfe8`, e da revisão adversarial do EV-067, 2 rodadas).
 function normalizarCaminho(req) {
   let caminho = String(req.originalUrl ?? req.path ?? '')
+    .split('#')[0]
     .split('?')[0]
+    .replace(/\/+/g, '/')
     .toLowerCase();
   if (caminho.length > 1 && caminho.endsWith('/')) caminho = caminho.slice(0, -1);
   return caminho;
@@ -211,4 +217,4 @@ export const totpContaLimiter = criarLimiterRedis({
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 
-export { ipKeyGenerator };
+export { ipKeyGenerator, normalizarCaminho };
