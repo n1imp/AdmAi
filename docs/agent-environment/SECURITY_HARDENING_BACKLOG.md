@@ -35,6 +35,7 @@ Itens Categoria C da missão "Security Closure Final" — não bloqueiam o encer
 - **Prioridade:** P2 (impacto de negócio, não de segurança).
 - **Correção sugerida (se decidido no futuro):** CAPTCHA, verificação de e-mail/telefone antes de conceder o trial, ou limiar mais agressivo.
 - **Retorna ao escopo:** decisão do usuário — já não é item de segurança, é de produto/negócio.
+- **Refinamento (missão "Missão Final — Encerramento", item 39 da Discovery Queue):** a constraint `Usuario.telefone @unique` bloqueia só a string canônica exata; `canonizarTelefone` (`services/parser.js`) não resolve a ambiguidade do 9º dígito no cadastro (só `variantesTelefone`, usada em login, conhece as 2 formas) — permite 2 contas/trials pro mesmo telefone real, uma por variante. Ainda bounded (2x, não ilimitado), ainda mesma classificação (risco de negócio aceito), mas registra que a garantia "1 telefone = 1 conta" não é absoluta como o texto original deste item sugeria.
 
 ### 5. `react-router`/`react-router-dom` desatualizado (`T-DEPS-01`)
 - **Componente:** `chaveiro-painel/package.json` (`react-router-dom@^6.22.3`, resolvido em `6.30.4`).
@@ -96,3 +97,11 @@ Itens Categoria C da missão "Security Closure Final" — não bloqueiam o encer
 - **Impacto:** baixo — é um trade-off de UX comum em fluxos de cadastro (o usuário precisa saber que o identificador está ocupado antes de tentar de novo). Não revela senha, papel, nem dado de outra empresa.
 - **Prioridade:** P4.
 - **Retorna ao escopo:** se uma decisão de produto futura priorizar UX de cadastro sem confirmação de disponibilidade (ex.: sempre aceitar e enviar e-mail de "conta já existe" em vez de erro imediato).
+
+### 13. `app.set('trust proxy', 2)` desalinhado com a topologia real do Railway
+- **Componente:** `chaveiro-bot/src/app.js:37-41`.
+- **Motivo:** achado da missão "EV-065" — o comentário do código descreve uma topologia (Caddy → nginx → backend, 2 hops) que corresponde ao guia de deploy self-hosted (`docs/DEPLOYMENT.md`), não à arquitetura real em produção (Railway + Cloudflare Pages + Supabase, confirmada por `README.md:402-405`, `docs/CI_CD.md` e teste direto contra `https://admai-production.up.railway.app`). Testado ao vivo (6 variações de `X-Forwarded-For`/`X-Real-IP` forjados, ver `EV065_VALIDATION_REPORT.md`): a borda do Railway sanitiza esses headers, então o desalinhamento numérico é **hoje inofensivo por comportamento da plataforma, não por configuração correta da aplicação**.
+- **Impacto:** nenhum hoje (bypass de `req.ip` refutado por teste direto em produção). Risco latente: se a borda gerenciada mudar de comportamento, ou se o app migrar para uma borda que não sanitize (ex.: o próprio deploy VPS/Caddy de `docs/DEPLOYMENT.md`), o mecanismo do EV-065 volta a ser explorável exatamente como descrito.
+- **Prioridade:** P3 (melhoria preventiva, não vulnerabilidade ativa).
+- **Correção sugerida:** alinhar `trust proxy` à topologia real (ex.: `1` para uma borda gerenciada de hop único, com validação adicional se possível) ou documentar explicitamente por que `2` é intencional; revisar sempre que a infraestrutura de deploy mudar.
+- **Retorna ao escopo:** automaticamente, **antes de qualquer deploy** que migre a arquitetura de produção para um modelo self-hosted (VPS + Caddy/nginx) ou qualquer topologia com número de hops diferente do atual — condição de retorno obrigatória, não opcional.
