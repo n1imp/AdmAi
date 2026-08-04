@@ -37,18 +37,30 @@ async function codigoTotp(secret) {
   return typeof r === 'string' ? r : (r?.token ?? r?.otp);
 }
 
-/** Cria uma conta nova (username único) e devolve o token de sessão. */
+/**
+ * Cria uma conta nova (empresa própria, username único) e devolve o token de sessão.
+ * Usa `/api/auth/register`, não `/api/setup` — `/api/setup` só funciona 1x por banco
+ * (`prisma.usuario.count() > 0` → 409), e alguns testes aqui precisam de 2+ contas
+ * independentes na mesma execução (isolamento do limiter por usuário).
+ */
 async function contaNova() {
   _seq += 1;
-  const setup = await request(app)
-    .post('/api/setup')
+  const registro = await request(app)
+    .post('/api/auth/register')
     .send({
       nome: `Dono ${_seq}`,
       nomeEmpresa: `Empresa 2FA ${_seq}`,
       username: `dono2fa${_seq}`,
+      email: `dono2fa${_seq}@example.com`,
+      telefone: `1199999${String(_seq).padStart(4, '0')}`,
       senha: 'SenhaForte1!',
     });
-  return setup.body.token;
+  if (registro.status !== 201) {
+    throw new Error(
+      `POST /auth/register falhou: ${registro.status} ${JSON.stringify(registro.body)}`
+    );
+  }
+  return registro.body.token;
 }
 
 /** Inicia `/me/2fa/setup` (segredo pendente) sem ativar — para testar `/me/2fa/ativar`. */
