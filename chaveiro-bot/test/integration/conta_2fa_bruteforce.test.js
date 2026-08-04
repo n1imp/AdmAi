@@ -58,6 +58,11 @@ async function contaComSetupPendente() {
     .post('/api/me/2fa/setup')
     .set('Authorization', `Bearer ${token}`)
     .send({});
+  if (totpSetup.status !== 200) {
+    throw new Error(
+      `POST /me/2fa/setup falhou: ${totpSetup.status} ${JSON.stringify(totpSetup.body)}`
+    );
+  }
   return { token, secret: totpSetup.body.secret };
 }
 
