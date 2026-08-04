@@ -33,8 +33,14 @@ vi.mock('rate-limit-redis', () => {
   return { RedisStore: FakeRedisStore, default: FakeRedisStore };
 });
 
-const { identidadeDaRequisicao, normalizarCaminho, authLimiter, cadastroLimiter } =
-  await import('../rateLimiters.js');
+const {
+  identidadeDaRequisicao,
+  normalizarCaminho,
+  authLimiter,
+  cadastroLimiter,
+  totpAtivarLimiter,
+  totpDesativarLimiter,
+} = await import('../rateLimiters.js');
 const { default: authRouter } = await import('../../routes/auth.js');
 
 /**
@@ -375,5 +381,84 @@ describe('cadastroLimiter (EV-057 — conta sucesso, não só falha)', () => {
     expect(respostas[30].body).toEqual({
       erro: 'Muitos cadastros a partir desta origem. Tente novamente em 15 minutos.',
     });
+  });
+});
+
+/**
+ * EV-067, Gate 6 (3ª rodada de revisão adversarial) — as 2 primeiras rodadas fecharam
+ * caixa/barra final/barra dupla/fragmento normalizando `req.originalUrl`. A 3ª achou
+ * que isso ainda era insuficiente: um request-target em FORMA ABSOLUTA do HTTP/1.1
+ * (`POST http://<host arbitrário>/api/me/2fa/ativar HTTP/1.1`, legal pela RFC 7230) faz
+ * o Express rotear certo (`req.path` limpo) mas `req.originalUrl` preserva o prefixo
+ * `scheme://host` inteiro, escolhido livremente pelo atacante — nenhuma normalização de
+ * string cobre um prefixo arbitrário. A correção final abandona `req.originalUrl` por
+ * completo nesta chave: `criarTotpContaLimiter` usa um RÓTULO FIXO por rota, decidido em
+ * tempo de definição, não em nenhuma leitura da requisição. Este teste simula o ataque
+ * diretamente — um middleware antes do limiter reescreve `req.originalUrl` a cada
+ * tentativa, como um request-target absoluto com host diferente faria — e prova que o
+ * bloqueio de 429 acontece do mesmo jeito, porque a chave não lê mais esse campo.
+ */
+describe('totpAtivarLimiter / totpDesativarLimiter (EV-067, Gate 6 — 3ª rodada)', () => {
+  it('bloqueia com 429 mesmo variando req.originalUrl a cada tentativa (simula request-target absoluto)', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.use((req, res, next) => {
+      req.user = { id: 777 };
+      next();
+    });
+    app.post(
+      '/me/2fa/desativar',
+      (req, res, next) => {
+        // Simula o que um request-target HTTP/1.1 em forma absoluta produziria em
+        // req.originalUrl (prefixo scheme://host arbitrário, escolhido pelo atacante) —
+        // sem tocar req.path, que é o que o Express usa pra rotear de verdade.
+        req.originalUrl = `http://attacker-${Math.random()}.example${req.originalUrl}`;
+        next();
+      },
+      totpDesativarLimiter,
+      (req, res) => res.status(200).json({ ok: true })
+    );
+
+    const respostas = [];
+    for (let i = 0; i < 6; i += 1) {
+      respostas.push(await request(app).post('/me/2fa/desativar'));
+    }
+
+    const sucessos = respostas.filter((r) => r.status === 200);
+    const bloqueadas = respostas.filter((r) => r.status === 429);
+    expect(sucessos).toHaveLength(5);
+    expect(bloqueadas).toHaveLength(1);
+    expect(respostas[5].status).toBe(429);
+  });
+
+  it('ativar e desativar continuam com teto independente mesmo com req.originalUrl variando', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.use((req, res, next) => {
+      req.user = { id: 888 };
+      next();
+    });
+    const reescreverUrl = (req, res, next) => {
+      req.originalUrl = `http://attacker-${Math.random()}.example${req.originalUrl}`;
+      next();
+    };
+    app.post('/me/2fa/ativar', reescreverUrl, totpAtivarLimiter, (req, res) =>
+      res.status(200).json({ ok: true })
+    );
+    app.post('/me/2fa/desativar', reescreverUrl, totpDesativarLimiter, (req, res) =>
+      res.status(200).json({ ok: true })
+    );
+
+    // Esgota o teto de ativar (5).
+    for (let i = 0; i < 5; i += 1) {
+      const r = await request(app).post('/me/2fa/ativar');
+      expect(r.status).toBe(200);
+    }
+    const ativarBloqueado = await request(app).post('/me/2fa/ativar');
+    expect(ativarBloqueado.status).toBe(429);
+
+    // Desativar, mesmo usuário, continua com balde próprio intacto.
+    const desativarOk = await request(app).post('/me/2fa/desativar');
+    expect(desativarOk.status).toBe(200);
   });
 });

@@ -200,21 +200,35 @@ export const exclusaoContaLimiter = criarLimiterRedis({
 // limiter genérico e por IP. Chave por usuário autenticado (req.user.id), não por IP —
 // um atacante com sessão roubada não pode contornar isolando o teto por IP diferente,
 // e usuários legítimos por trás do mesmo IP (rede corporativa/NAT) não interferem entre si.
-// A chave inclui a rota (normalizada por `normalizarCaminho` — ver comentário acima
-// dela; usar `req.originalUrl` cru aqui reabriria a MESMA classe de bug que ele existe
-// pra evitar, permitindo multiplicar o teto por variação de caixa/barra final,
-// achado da revisão adversarial desta correção): ativar e desativar são ações
-// INDEPENDENTES (ao contrário de exclusaoContaLimiter, onde as 2 rotas são passos
-// sequenciais do MESMO fluxo) — sem separar por rota, ativar o 2FA com sucesso já
-// gastaria 1 das 5 tentativas do teto de desativar, e vice-versa.
-export const totpContaLimiter = criarLimiterRedis({
-  windowMs: 15 * 60_000,
-  limit: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req, res) =>
-    req.user?.id ? `totp-conta:${req.user.id}:${normalizarCaminho(req)}` : ipKeyGenerator(req, res),
-  message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
-});
+//
+// 3 rodadas de revisão adversarial nesta correção mostraram que QUALQUER parte da chave
+// derivada de `req.originalUrl`/`req.path` é uma superfície de bypass — não é só
+// caixa/barra final/barra dupla/fragmento (tudo já coberto por `normalizarCaminho`),
+// mas também o request-target em forma absoluta do HTTP/1.1 (`POST http://<host
+// arbitrário>/api/me/2fa/ativar HTTP/1.1`, legal pela RFC 7230): o Express roteia
+// certo (`req.path` fica limpo), mas `req.originalUrl` preserva o prefixo
+// `scheme://host` inteiro, e host é escolhido livremente pelo atacante — nenhuma
+// normalização de string cobre um prefixo arbitrário. Em vez de continuar tentando
+// enumerar toda forma de `req.originalUrl` divergir textualmente pra mesma rota real,
+// a chave usa um RÓTULO FIXO por rota, decidido em tempo de definição — não em
+// nenhuma leitura da requisição. `criarTotpContaLimiter` é uma fábrica (não uma
+// constante única, ao contrário de exclusaoContaLimiter): ativar e desativar são
+// ações INDEPENDENTES (diferente de exclusaoContaLimiter, onde as 2 rotas são passos
+// sequenciais do MESMO fluxo) — cada instância abaixo tem seu próprio rótulo, então
+// ativar o 2FA com sucesso não gasta tentativas do teto de desativar, e vice-versa.
+function criarTotpContaLimiter(rotulo) {
+  return criarLimiterRedis({
+    windowMs: 15 * 60_000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) =>
+      req.user?.id ? `totp-conta:${req.user.id}:${rotulo}` : ipKeyGenerator(req, res),
+    message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+  });
+}
+
+export const totpAtivarLimiter = criarTotpContaLimiter('ativar');
+export const totpDesativarLimiter = criarTotpContaLimiter('desativar');
 
 export { ipKeyGenerator, normalizarCaminho };
