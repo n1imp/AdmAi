@@ -172,3 +172,41 @@ Isso é uma descoberta nova, sem relação com o EV-069 em si (é um bug de uso 
 - **Tarefa objetiva necessária:** investigação dedicada (Gate 1-4 do mesmo rigor EDE) para confirmar o comportamento exato em cada limiter, classificar Categoria A/B/C, e corrigir se confirmado — ex.: trocar todos os call sites para `ipKeyGenerator(req.ip, ...)` ou remover o `keyGenerator` customizado onde o default da biblioteca já basta.
 
 Não abro uma nova frente automaticamente. Recomendo uma missão dedicada "EV-070 Validação e Remediação", mesmo rigor EDE, mediante autorização explícita do usuário.
+
+---
+
+## Addendum de Encerramento 4 — Missão "EV-070" (2026-08-04)
+
+A missão dedicada recomendada acima foi executada com EDE completo (Gates 1-9), sem reaproveitar a suspeita da missão anterior como fato.
+
+### Parecer: EV-070 CONFIRMADO E REMEDIADO
+
+- **Gate 2 (contrato oficial)**: `node_modules/express-rate-limit/dist/index.d.cts:9,20`, fonte primária do próprio pacote instalado, documenta `ipKeyGenerator(ip: string, ipv6Subnet?)` e recomenda explicitamente `ipKeyGenerator(req.ip)`.
+- **Gate 4 (aplicação real — o gate que faltava na suspeita original)**: `criarApp()` real + `authIpLimiter`/`cadastroLimiter` reais + requisições HTTP reais (`supertest`), com `FakeRedisStore` (mesmo padrão já usado pela suíte oficial). Confirmado: `authip:[object Object]`/`cadastro:[object Object]` eram chaves **únicas** para 2 IPs diferentes, enquanto o limiter geral de `/api` (keyGenerator padrão da própria biblioteca, nunca afetado pelo bug) produzia 2 chaves distintas no **mesmo teste**.
+- **Gate 6 (exploitabilidade quantificada, não deduzida)**: IP-A esgota o teto de 30 do `cadastroLimiter`; IP-B — um usuário legítimo que nunca fez nenhuma requisição — recebe `429` na primeira tentativa de cadastro. DoS real e medido entre usuários sem nenhuma relação.
+- **Gate 7: Categoria A** — explorável na arquitetura atual, sem necessidade de mudança arquitetural.
+- **Gate 8 (remediação mínima)**: `ipKeyGenerator(req, res)` → `ipKeyGenerator(req.ip)` nos 6 call sites (`chaveiro-bot/src/middlewares/rateLimiters.js` ×5, `chaveiro-bot/src/app.js` ×1) — API oficial documentada, sem wrapper novo, sem mudança de comportamento não relacionada.
+- **Efeito colateral esperado e corrigido**: `authLimiter`/`authIpLimiter` são herdados por prefix-match em `/api/auth/login/2fa/recuperar` (mesmo mecanismo que já herda `twoFactorLimiter`, documentado no próprio teste existente) — antes inertes pelo próprio bug do EV-070 (o fallback por IP nunca colidia de verdade), agora corretamente ativos. `chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js` foi atualizado para isolar cada limiter (IP simulado variado quando o teste testa `twoFactorLimiter` por `desafio`; mesmo IP quando testa o novo comportamento correto de `authLimiter`) — nenhuma proteção foi enfraquecida, só corretamente isoladas.
+- **CI real** (commit `84632d5`): 41/41 arquivos de teste unitários (390 testes), 28/28 de integração, zero regressão. Único step vermelho é a auditoria de dependências, por causa do EV-069 (já refutado, Categoria C).
+- **Gate 9 (revisão adversarial)**: tentou re-explorar `req.ip`/trust proxy (sem superfície nova além do já refutado em EV-065/066), rotação de endereço IPv6 dentro/fora do `/56` (achado real, mas comportamento pré-existente e já aceito da própria biblioteca — idêntico ao que o limiter geral de `/api` sempre teve, não é regressão desta correção), colisão entre usuários legítimos atrás do mesmo IP em `/auth/login` (não conseguiu — `identidadeDaRequisicao` mantém precedência correta sobre o fallback), disponibilidade em `/auth/login/2fa/recuperar` (confirmado — efeito colateral intencional da correção, não um bypass), e código morto nos fallbacks de `exclusaoContaLimiter`/`totpAtivarLimiter`/`totpDesativarLimiter` (confirmado sem caminho real). **Conclusão do Gate 9: a correção está genuinamente fechada — nenhum vetor novo reabre o bug original.**
+
+Os 2 achados adjacentes da revisão adversarial (rotação IPv6 `/56`; disponibilidade de `authLimiter` em `/auth/login/2fa/recuperar`) foram registrados como Categoria C no `SECURITY_HARDENING_BACKLOG.md`, itens 15 e 16 — nenhum bloqueia o encerramento.
+
+### Critério de Encerramento Final
+
+**Existe algum item Categoria A ou B restante?** **Não.**
+
+- EV-056: corrigido (missões anteriores).
+- EV-057: documentado como risco residual aceito, conforme decisão do usuário.
+- EV-060: corrigido e validado por CI e revisão adversarial.
+- EV-063: corrigido e validado por dupla revisão adversarial.
+- EV-065: refutado por teste direto contra a arquitetura real de produção.
+- EV-067: corrigido e validado por 4 rodadas de revisão adversarial.
+- EV-069: refutado com EDE completo (Gates 1-7), reprodução direta em cada etapa da cadeia de exploração.
+- EV-070: confirmado (Categoria A), corrigido, e validado por revisão adversarial (Gate 9) sem achado que reabra o bug.
+
+Todos os riscos remanescentes (16 itens) pertencem exclusivamente ao Security Hardening Backlog, cada um com condição explícita de retorno ao escopo. CI e Security verdes no commit de referência de código (`84632d5`) — o único item vermelho no relatório de dependências é o EV-069, já refutado como Categoria C, não uma pendência ativa.
+
+# A Frente de Segurança está oficialmente ENCERRADA para a arquitetura atualmente implantada.
+
+Qualquer trabalho futuro deve ocorrer por meio de uma missão independente de Security Hardening (para os 16 itens do backlog) ou de uma nova Frente de Segurança, caso a superfície de ataque mude (nova feature, nova rota, nova integração, reativação do WhatsApp, migração de arquitetura de deploy para VPS/Caddy).

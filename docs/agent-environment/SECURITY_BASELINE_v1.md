@@ -1,14 +1,14 @@
 # Security Baseline v1 — AdmAi / chaveiro-bot
 
-**Status da Frente de Segurança: ATIVA — NÃO ENCERRADA.** Este documento consolida toda a Frente de Segurança executada nesta sessão (missões EV-060, Security Closure Final, EV-063, Missão Final de Encerramento, EV-065 Validation, Missão Final de Consolidação, EV-067 Remediação, e esta — "EV-069"). **EV-067 e EV-069 estão ambos resolvidos** (EV-067 corrigido, EV-069 refutado com EDE completo — ver Gate 6ter abaixo) — mas a investigação do EV-069 revelou, como efeito colateral do Gate 3 (análise de exploitabilidade), um achado novo e ainda não classificado: **EV-070**, `ipKeyGenerator(req, res)` chamado com assinatura errada em todos os 6 call sites deste projeto, fazendo `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057) operarem com um balde global em vez de por-IP. É esse o único motivo pelo qual este documento não declara encerramento. Ver parecer formal em `SECURITY_CLOSURE_FINAL_REPORT.md`.
+**Status da Frente de Segurança: OFICIALMENTE ENCERRADA para a arquitetura atualmente implantada.** Este documento consolida toda a Frente de Segurança executada nesta sessão (missões EV-060, Security Closure Final, EV-063, Missão Final de Encerramento, EV-065 Validation, Missão Final de Consolidação, EV-067 Remediação, EV-069, e esta — "EV-070"). **EV-067, EV-069 e EV-070 estão todos resolvidos** (EV-067 e EV-070 corrigidos com EDE completo e revisão adversarial; EV-069 refutado). Nenhuma pendência Categoria A ou Categoria B resta. Ver parecer formal em `SECURITY_CLOSURE_FINAL_REPORT.md`.
 
 ## Referência
 
-- **Commit de referência (código):** `fda01cc188b8f943a836353c8d3920193944802b` (correção final do EV-067)
+- **Commit de referência (código):** `84632d53f8cc3a74f23ecd2c9447d494d0999d69` (correção final do EV-070)
 - **Branch:** `fix/seguranca-criticos`
 - **Data desta atualização:** 2026-08-04
 - **Arquitetura de produção real (confirmada, não presumida):** Railway (backend, `admai-production.up.railway.app`) + Cloudflare Pages (painel, `admai-painel.pages.dev`) + Supabase (Postgres) — sem domínio customizado propagado, sem Caddy/nginx na frente da API. Confirmado por `README.md:402-405`, `docs/CI_CD.md` e teste HTTP direto contra a instância real (`EV065_VALIDATION_REPORT.md`).
-- **CI/Security da remediação do EV-067:** todos os 5 commits da correção (`9dad8d5`→`fda01cc`) com `backend` verde (41/41 arquivos de teste unitários, 28/28 de integração, zero regressão); único step vermelho em todos eles é "Auditoria de dependências", por causa do EV-069 (sem relação com o código desta missão).
+- **CI/Security da remediação do EV-070:** commit `84632d5` com `backend` verde (41/41 arquivos de teste unitários — 390 testes —, 28/28 de integração, zero regressão); único step vermelho é "Auditoria de dependências", por causa do EV-069 (refutado, Categoria C — o próprio `npm audit` não distingue "Categoria C confirmada" de "não corrigido", mas nenhuma dependência precisa ser atualizada por não haver exploração possível).
 
 ## Gate 1 — Reauditoria Final do Estado
 
@@ -28,11 +28,11 @@
 | EV-065 | Bypass de rate-limit por IP via `trust proxy` desalinhado | **Refutado na arquitetura real** | Teste direto contra `https://admai-production.up.railway.app`: 7 requisições, 6 variações de header forjado, decremento monotônico do bucket em todas — borda do Railway sanitiza `X-Forwarded-For`/`X-Real-IP` | `EV065_VALIDATION_REPORT.md` |
 | EV-067 | Ausência de rate limiter dedicado em `POST /me/2fa/ativar`/`POST /me/2fa/desativar` | **Corrigido** | `totpAtivarLimiter`/`totpDesativarLimiter` (rótulo fixo por rota); 4 rodadas de revisão adversarial (3 vetores achados e fechados, 4ª sem achado); 41/41+28/28 testes, zero regressão | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-067/EV-068) |
 | EV-069 | CVE de severidade alta em `ip-address` (dependência transitiva de `express-rate-limit`) | **Refutado — Categoria C** | EDE completo: 2 das 3 CVEs afetam funções nunca chamadas por `ipKeyGenerator`; a 3ª (`Address4.correctForm()`) é bloqueada por 2 camadas reproduzidas diretamente (`net.isIPv6` rejeita, `Address6.parse4in6` lança `AddressError`) antes do parsing malicioso | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-069); `SECURITY_HARDENING_BACKLOG.md` item 14 |
-| EV-070 | `ipKeyGenerator(req, res)` chamado com assinatura errada nos 6 call sites do projeto | **Aberto — não classificado, bloqueia o encerramento** | Reproduzido com Express real: retorna o objeto `req`, não o IP; `authIpLimiter`/`cadastroLimiter` (mitigação do EV-057) sempre afetados — balde global, não por-IP | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-070); `SECURITY_CLOSURE_FINAL_REPORT.md` (parecer) |
+| EV-070 | `ipKeyGenerator(req, res)` chamado com assinatura errada nos 6 call sites do projeto | **Corrigido** | EDE completo (Gates 1-9): Gate 4 confirmou com app real que `authIpLimiter`/`cadastroLimiter` produziam balde global; Gate 6 quantificou DoS real (usuário legítimo bloqueado por IP alheio); Categoria A; corrigido trocando por `ipKeyGenerator(req.ip)` nos 6 call sites; Gate 9 (revisão adversarial) sem achado que reabra o bug; CI real 41/41+28/28, zero regressão | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-070/EV-071) |
 
-## Gate 3 — Revisão do Security Hardening Backlog (14 itens, todos Categoria C)
+## Gate 3 — Revisão do Security Hardening Backlog (16 itens, todos Categoria C)
 
-Todos os 14 itens (12 já existentes + item 13 `trust proxy` + item 14 `ip-address`/EV-069) foram reconfirmados como Categoria C — nenhuma implementação de correção realizada, nenhuma promoção a A/B sem evidência objetiva:
+Todos os 16 itens (12 já existentes + item 13 `trust proxy` + item 14 `ip-address`/EV-069 + itens 15-16, achados adjacentes da revisão adversarial do EV-070) foram reconfirmados como Categoria C — nenhuma implementação de correção realizada, nenhuma promoção a A/B sem evidência objetiva:
 
 | # | Item | Categoria | Explorável hoje? | Depende de mudança arquitetural? | Depende de decisão de produto? |
 |---|---|---|---|---|---|
@@ -49,6 +49,9 @@ Todos os 14 itens (12 já existentes + item 13 `trust proxy` + item 14 `ip-addre
 | 11 | Rate limit `skipSuccessfulRequests` em respostas não-finais | C | Não (vetor de amplificação — canal de timing — já fechado no EV-063) | Não | Não |
 | 12 | Enumeração via `409` em `/auth/register` | C | Sim, mas trade-off de UX comum, sem vazamento de senha/papel/dado de outra empresa | Não | **Sim** — é decisão de UX de cadastro |
 | 13 | `trust proxy=2` desalinhado com topologia real (Railway) | C | Não (borda do Railway sanitiza, testado ao vivo) | **Sim** — retorna ao escopo automaticamente antes de migração para VPS/Caddy | Não |
+| 14 | CVE em `ip-address` (transitiva de `express-rate-limit`) | C | Não (`ipKeyGenerator` nunca chama as funções vulneráveis; a alcançável é bloqueada por 2 camadas de validação) | Não | Não |
+| 15 | Rotação IPv6 `/56` multiplica baldes | C | Teórico (exige bloco IPv6 maior que `/56`); comportamento pré-existente da biblioteca, já presente no limiter geral antes do EV-070 | Não | Não |
+| 16 | `authLimiter` (5/15min IP) ativo em `/auth/login/2fa/recuperar` pode afetar NAT compartilhado | C | Disponibilidade, não segurança — efeito colateral intencional da correção do EV-070 | Não | Não |
 
 Nenhum item promovido a Categoria A/B — todos permanecem no backlog com condição explícita de retorno ao escopo.
 
@@ -75,7 +78,7 @@ Respondido individualmente, com evidência — não genérico:
 | Enumeração crítica | **Não** | EV-063 fechou a enumeração pré-autenticação em `/auth/login` (corpo/status/timing); único resíduo conhecido é UX de cadastro (`409` em `/auth/register`, item 12 do backlog, Categoria C, decisão de produto) |
 | Vazamento de credenciais | **Não** | Gitleaks "no leaks found" em todos os runs de CI desta sessão; regra de código "nunca logue senhas/tokens/segredos TOTP/apikeys" (`README.md`); Sentry sem captura de payload sensível |
 | Vulnerabilidade Categoria A | **Não** | Última pendência conhecida (EV-065) refutada por teste direto contra produção real nesta sessão |
-| Vulnerabilidade Categoria B | **SIM — EV-070 (não classificado)** | *(Atualizado após a missão "EV-069": o CVE em si foi refutado (Categoria C, ver Gate 6ter abaixo), mas a investigação do Gate 3 revelou **EV-070** — `ipKeyGenerator(req, res)` chamado com assinatura errada em todos os 6 call sites do projeto, afetando `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057). Ainda não classificado em A/B/C. Ver `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070.)* |
+| Vulnerabilidade Categoria B | **Não** | *(Atualizado após a missão "EV-070": o achado (`ipKeyGenerator(req, res)`, afetando `authIpLimiter`/`cadastroLimiter`) foi confirmado Categoria A — DoS real e quantificado — e corrigido, com revisão adversarial (Gate 9) sem achado que reabra o bug. Ver `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070/EV-071.)* |
 
 ## Riscos aceitos
 
@@ -90,7 +93,7 @@ Respondido individualmente, com evidência — não genérico:
 
 ## Security Hardening Backlog
 
-14 itens Categoria C — ver `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` para o detalhamento completo. Nenhum bloqueia o encerramento.
+16 itens Categoria C — ver `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` para o detalhamento completo. Nenhum bloqueia o encerramento.
 
 ## Gate 6bis — Remediação do EV-067 (missão "EV-067 Remediação")
 
@@ -112,24 +115,22 @@ EDE completo (Gates 1-7 do CVE). Cadeia única: `express-rate-limit@8.6.0 → ip
 
 **Classificação: Categoria C.** Nenhuma dependência atualizada (correto para C). Movido para `SECURITY_HARDENING_BACKLOG.md`, item 14.
 
-## Achado Colateral Não Classificado — EV-070
+## Gate 6quater — Remediação do EV-070 (missão "EV-070")
 
-| ID | Descrição | Categoria | Impacto |
-|---|---|---|---|
-| EV-070 | `ipKeyGenerator(req, res)` chamado com assinatura errada nos 6 call sites do projeto (`rateLimiters.js:145,164,179,192,226`, `app.js:146`) — deveria ser `ipKeyGenerator(req.ip, subnet)` | **Não classificado** | `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057) sempre afetados — reproduzido com Express real que a função retorna o objeto `req` inteiro, coagido para a string constante `"[object Object]"`: o balde deixa de ser por-IP e vira um único balde global compartilhado por toda a aplicação |
+EDE completo (Gates 1-9), sem reaproveitar a suspeita da missão anterior como fato. Gate 2 (contrato oficial, fonte primária): `node_modules/express-rate-limit/dist/index.d.cts:9,20` documenta `ipKeyGenerator(ip: string, ipv6Subnet?)` e recomenda explicitamente `ipKeyGenerator(req.ip)`. Gate 3 (reprodução isolada fresca): confirmado com Express real que `ipKeyGenerator(req,res)` retorna o objeto `req` (`typeof 'object'`). **Gate 4 (aplicação real — o gate que faltava)**: `criarApp()` real + `authIpLimiter`/`cadastroLimiter` reais + requisições HTTP reais (`supertest` + `FakeRedisStore`, mesmo padrão da suíte oficial): confirmado que `authip:[object Object]`/`cadastro:[object Object]` eram chaves ÚNICAS para 2 IPs diferentes, enquanto o limiter geral de `/api` (keyGenerator padrão da própria biblioteca) produzia 2 chaves distintas no MESMO teste. **Gate 6 (exploitabilidade quantificada)**: IP-A esgota o teto de 30 do `cadastroLimiter`; IP-B, um usuário legítimo que NUNCA fez nenhuma requisição, recebe `429` na primeira tentativa — DoS real e medido entre usuários sem nenhuma relação. **Gate 7: Categoria A.** Gate 8 (remediação mínima): `ipKeyGenerator(req, res)` → `ipKeyGenerator(req.ip)` nos 6 call sites — API oficial, sem wrapper novo. Efeito colateral esperado e corrigido: `authLimiter`/`authIpLimiter` herdados por prefix-match em `/api/auth/login/2fa/recuperar` (antes inertes pelo próprio bug, agora corretamente ativos) — testes ajustados para isolar cada limiter, nenhuma proteção enfraquecida. CI real: 41/41 arquivos de teste unitários (390 testes), 28/28 de integração, zero regressão. **Gate 9 (revisão adversarial)**: tentou re-explorar `req.ip`/trust proxy (sem superfície nova além do já refutado em EV-065/066), rotação IPv6 `/56` (achado real, mas comportamento pré-existente da própria biblioteca, idêntico ao já aceito pelo limiter geral — não é regressão, backlog item 15), colisão entre usuários legítimos atrás do mesmo IP (não conseguiu — `identidadeDaRequisicao` mantém precedência correta), disponibilidade em `/auth/login/2fa/recuperar` (confirmado, efeito colateral intencional, não bypass — backlog item 16), código morto nos fallbacks de `exclusaoContaLimiter`/`totpAtivarLimiter`/`totpDesativarLimiter` (confirmado sem caminho real). **Conclusão: correção genuinamente fechada, nenhum vetor novo que reabre o bug original.**
 
-Detalhamento completo: `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070. Descoberto como efeito colateral do Gate 3 (análise de exploitabilidade) do EV-069 — não relacionado à CVE em si. Não investigado a fundo nem corrigido nesta missão (fora do mandato) — requer missão dedicada mediante autorização do usuário.
+Detalhamento técnico completo: `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-071.
 
 ## Critérios de encerramento — status final
 
-- Nenhuma vulnerabilidade Categoria A permanece aberta — **satisfeito** (EV-065 refutado por teste real contra produção).
-- Nenhuma pendência Categoria B permanece sem resolução — **NÃO satisfeito** — EV-067 corrigido e EV-069 refutado, mas **EV-070** (achado colateral, não classificado) permanece aberto.
-- Toda correção tem reprodução prévia, causa raiz, teste dedicado, execução real em CI — **satisfeito para EV-056/060/063/067**; EV-069 refutado com reprodução completa (não é correção de código); EV-070 não investigado a fundo (fora do mandato desta missão).
-- Revisão adversarial dedicada tenta e não consegue reabrir vulnerabilidades corrigidas — **satisfeito**: 4 rodadas sobre o EV-067, a última sem achado; nenhuma das correções anteriores (EV-056/060/063) foi reaberta.
-- CI e Security verdes no commit de referência de código — **NÃO satisfeito**: todos os testes passam (zero regressão); a auditoria de dependências ainda mostra o achado do EV-069 no relatório do `npm audit` (a ferramenta não distingue "Categoria C confirmada" de "não corrigido") — nenhuma dependência foi atualizada, por ser a decisão correta para Categoria C.
-- Itens Categoria C ficam exclusivamente no backlog, cada um com condição de retorno — **satisfeito** (14 itens; EV-067 já corrigido e EV-069 já refutado não entram; EV-070, não classificado, também não entra — só itens C confirmados vão para o backlog).
+- Nenhuma vulnerabilidade Categoria A permanece aberta — **satisfeito** (EV-065 refutado por teste real; EV-070 corrigido e validado por revisão adversarial).
+- Nenhuma pendência Categoria B permanece sem resolução — **satisfeito** (EV-067, EV-069, EV-070 todos resolvidos; billing/google validados desde "Security Closure Final").
+- Toda correção tem reprodução prévia, causa raiz, teste dedicado, execução real em CI — **satisfeito** para EV-056/060/063/067/070; EV-065/069 refutados com reprodução completa (não são correções de código).
+- Revisão adversarial dedicada tenta e não consegue reabrir vulnerabilidades corrigidas — **satisfeito**: 4 rodadas sobre o EV-067 e mais uma sobre o EV-070 (Gate 9), todas sem achado que reabra as correções.
+- CI e Security verdes no commit de referência de código (`84632d5`) — **satisfeito**: 41/41 unitários + 28/28 integração, zero regressão. A auditoria de dependências mostra o achado do EV-069, mas ele é Categoria C refutada (não uma pendência ativa) — não é uma correção de código pendente.
+- Itens Categoria C ficam exclusivamente no backlog, cada um com condição de retorno — **satisfeito** (16 itens).
 
-**Por causa de EV-070 (não mais EV-067 nem EV-069, ambos resolvidos), esta missão não pode concluir Opção A.** Ver parecer final em `SECURITY_CLOSURE_FINAL_REPORT.md`.
+Nenhum item Categoria A ou Categoria B resta. **A Frente de Segurança está oficialmente ENCERRADA para a arquitetura atualmente implantada.** Ver parecer final em `SECURITY_CLOSURE_FINAL_REPORT.md`.
 
 ## Revisão Adversarial Final (Gate 7)
 
@@ -148,6 +149,8 @@ Um agente `red-team-attacker` fresco recebeu mandato estrito: encontrar um bloqu
 
 **Conclusão do Gate 7: a revisão adversarial final NÃO conseguiu reabrir nenhuma das vulnerabilidades já corrigidas (EV-056/060/063) nem o EV-057 (fora o EV-065, já refutado), mas encontrou 1 bloqueador Categoria B genuíno e independente, não relacionado a nenhum dos alvos anteriores.** Isso muda o parecer desta missão de consolidação — ver "Critérios de encerramento" abaixo e `SECURITY_CLOSURE_FINAL_REPORT.md` para o parecer formal.
 
-## Data desta atualização — frente ainda não encerrada
+## Data de Encerramento
 
-**2026-08-04**, commit de código de referência `fda01cc` (correção final do EV-067; nenhum código alterado na missão EV-069, que é só investigação/documentação). CI verde em todos os testes (41/41+28/28), sem regressão. A Frente de Segurança permanece **ATIVA** exclusivamente por causa do EV-070 (achado colateral não classificado); este baseline será atualizado (ou sucedido por uma v2) quando EV-070 for investigado, classificado e — se necessário — corrigido e revalidado.
+**2026-08-04**, commit de código de referência `84632d5` (correção final do EV-070). CI verde em todos os testes (41/41 arquivos unitários — 390 testes —, 28/28 de integração), zero regressão. Nenhuma pendência Categoria A ou B resta — EV-065 refutado, EV-067/EV-070 corrigidos e validados por revisão adversarial, EV-069 refutado com EDE completo. Todos os riscos remanescentes (16 itens) pertencem exclusivamente ao Security Hardening Backlog, cada um com condição explícita de retorno ao escopo.
+
+**A Frente de Segurança está oficialmente ENCERRADA para a arquitetura atualmente implantada.** Qualquer trabalho futuro deve ocorrer por meio de uma missão independente de Security Hardening (para os itens do backlog) ou de uma nova Frente de Segurança, caso a superfície de ataque mude (nova feature, nova rota, nova integração, reativação do WhatsApp, migração de arquitetura de deploy).

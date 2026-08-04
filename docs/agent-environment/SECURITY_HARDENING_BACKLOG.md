@@ -113,3 +113,19 @@ Itens Categoria C da missão "Security Closure Final" — não bloqueiam o encer
 - **Prioridade:** P4 (nenhuma exploração possível confirmada; atualização é só housekeeping).
 - **Correção sugerida (não implementada, sem urgência):** bump mecânico de `ip-address` 10.2.0→10.4.0 via lockfile — já dentro do range `^10.2.0` declarado por `express-rate-limit@8.6.0`/`8.6.2`, sem mudança em `package.json`.
 - **Retorna ao escopo:** se `ipKeyGenerator` (ou qualquer código futuro) passar a chamar algum dos métodos de classificação (`isPrivate`/`isLoopback`/etc.) para uma decisão de segurança/acesso, ou se uma versão futura da biblioteca reduzir as camadas de validação que hoje bloqueiam o padrão de ataque.
+
+### 15. Rotação de endereço IPv6 dentro/fora do `/56` ainda multiplica baldes de rate-limit
+- **Componente:** `ipKeyGenerator` (`express-rate-limit`), usado por todos os limiters de `chaveiro-bot/src/middlewares/rateLimiters.js` e pelo limiter geral de `/api` (`app.js`).
+- **Motivo:** achado da revisão adversarial (Gate 9) da missão "EV-070". Reproduzido: um atacante que controle um bloco IPv6 maior que `/56` (ex.: `/48`, comum em alocações residenciais/ISP) pode rotacionar entre sub-redes `/56` distintas e obter um balde de rate-limit novo a cada rotação — o `ipv6Subnet=56` (default da biblioteca) só agrupa DENTRO da mesma sub-rede.
+- **Impacto:** baixo/aceito — é o comportamento padrão e já presente da própria biblioteca desde antes do EV-070 (o limiter geral de `/api`, que nunca teve o bug do EV-070, já usa exatamente o mesmo mecanismo). Não é uma regressão introduzida por nenhuma correção desta sessão.
+- **Prioridade:** P3.
+- **Correção sugerida:** avaliar um `ipv6Subnet` mais amplo (ex. `48`) se o perfil de ameaça justificar, ciente do trade-off de agrupar mais usuários legítimos no mesmo balde.
+- **Retorna ao escopo:** se houver evidência de abuso real via rotação de bloco IPv6.
+
+### 16. `authLimiter` (5/15min por IP) agora ativo em `/api/auth/login/2fa/recuperar` pode afetar múltiplos usuários legítimos atrás do mesmo NAT
+- **Componente:** `chaveiro-bot/src/middlewares/rateLimiters.js` (`authLimiter`), herdado por prefix-match de `app.use('/api/auth/login', authIpLimiter, authLimiter)` (`app.js:128`) na rota `/api/auth/login/2fa/recuperar`.
+- **Motivo:** efeito colateral intencional da correção do EV-070 — antes, o fallback por IP de `authLimiter` nunca colidia de verdade (bug do EV-070), então esse limiter estava efetivamente inerte nesta rota; agora funciona corretamente. Como a rota não está mapeada em `CAMPOS_POR_ROTA`, `identidadeDaRequisicao` sempre retorna `null` aqui, e o teto aplicado é sempre o de IP (5/15min, mais apertado que o de `authIpLimiter`, 30/15min).
+- **Impacto:** disponibilidade — vários usuários legítimos recuperando 2FA atrás do mesmo IP corporativo/NAT na mesma janela de 15 min podem se bloquear mutuamente, mesmo usando desafios diferentes. Não é um bypass de segurança (é a proteção funcionando), mas o teto pode ser mais apertado do que o desejável para este cenário específico.
+- **Prioridade:** P3.
+- **Correção sugerida:** considerar uma extração de identidade própria para `/api/auth/login/2fa/recuperar` (ex.: hash do `desafio`) em vez de cair sempre no fallback por IP, ou avaliar se o teto de 5/15min é apropriado para essa rota especificamente.
+- **Retorna ao escopo:** se houver relato real de usuários legítimos bloqueados nesse cenário.
