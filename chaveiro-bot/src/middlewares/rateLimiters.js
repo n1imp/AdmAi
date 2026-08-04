@@ -142,7 +142,7 @@ export const authLimiter = criarLimiterRedis({
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, res) => identidadeDaRequisicao(req) ?? ipKeyGenerator(req, res),
+  keyGenerator: (req, _res) => identidadeDaRequisicao(req) ?? ipKeyGenerator(req.ip),
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 
@@ -161,7 +161,7 @@ export const authIpLimiter = criarLimiterRedis({
   skipSuccessfulRequests: true,
   standardHeaders: false,
   legacyHeaders: false,
-  keyGenerator: (req, res) => `authip:${ipKeyGenerator(req, res)}`,
+  keyGenerator: (req) => `authip:${ipKeyGenerator(req.ip)}`,
   message: { erro: 'Muitas tentativas a partir desta origem. Tente novamente em 15 minutos.' },
 });
 
@@ -176,7 +176,7 @@ export const cadastroLimiter = criarLimiterRedis({
   limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, res) => `cadastro:${ipKeyGenerator(req, res)}`,
+  keyGenerator: (req) => `cadastro:${ipKeyGenerator(req.ip)}`,
   message: { erro: 'Muitos cadastros a partir desta origem. Tente novamente em 15 minutos.' },
 });
 
@@ -189,7 +189,7 @@ export const exclusaoContaLimiter = criarLimiterRedis({
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, res) => (req.user?.id ? `exclusao:${req.user.id}` : ipKeyGenerator(req, res)),
+  keyGenerator: (req) => (req.user?.id ? `exclusao:${req.user.id}` : ipKeyGenerator(req.ip)),
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 
@@ -222,8 +222,8 @@ function criarTotpContaLimiter(rotulo) {
     limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) =>
-      req.user?.id ? `totp-conta:${req.user.id}:${rotulo}` : ipKeyGenerator(req, res),
+    keyGenerator: (req) =>
+      req.user?.id ? `totp-conta:${req.user.id}:${rotulo}` : ipKeyGenerator(req.ip),
     message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
   });
 }

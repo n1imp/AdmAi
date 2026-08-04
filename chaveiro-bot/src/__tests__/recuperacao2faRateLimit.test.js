@@ -25,6 +25,20 @@ import request from 'supertest';
  * Redis real nesta suíte unitária. Um `desafio` inválido nunca chega a tocar
  * o Prisma (o handler responde 401 assim que `verificarDesafio2fa` lança),
  * então também não depende de Postgres.
+ *
+ * EV-070: o MESMO prefix-match que herda `twoFactorLimiter` (`/api/auth/login/2fa`,
+ * linha acima) também herda `authIpLimiter`+`authLimiter` (`app.use('/api/auth/login',
+ * authIpLimiter, authLimiter)`, mais cedo em `app.js`, ANTES de `twoFactorLimiter` na
+ * cadeia) — `/api/auth/login/2fa/recuperar` começa com `/api/auth/login`. Antes da
+ * correção do EV-070, `authLimiter` tinha um bug que fazia sua chave de fallback (por
+ * IP) nunca colidir de verdade entre requisições (usava o objeto `req` inteiro como
+ * chave, então cada requisição virava uma chave "nova" por identidade de objeto) — na
+ * prática, `authLimiter` NUNCA bloqueava nada nesta rota, mesmo estando montado. Depois
+ * da correção, a chave é o IP de verdade, e `authLimiter` (teto 5/15min, ANTES de
+ * `twoFactorLimiter` na cadeia) passa a bloquear primeiro quando as requisições vêm do
+ * MESMO IP — os testes abaixo variam o IP simulado (`X-Forwarded-For`) entre tentativas
+ * quando o objetivo é isolar o comportamento de `twoFactorLimiter` (por `desafio`, não
+ * por IP) do de `authLimiter` (por IP, agora corretamente ativo nesta rota também).
  */
 const storeState = vi.hoisted(() => ({ hits: new Map() }));
 vi.mock('rate-limit-redis', () => {
@@ -59,11 +73,14 @@ describe('POST /api/auth/login/2fa/recuperar herda twoFactorLimiter (5/15min) vi
     const respostas = [];
     // Sequencial de propósito: cada requisição precisa observar o contador já
     // incrementado pela anterior (mesma chave: o próprio `desafio`, ver
-    // `keyGenerator` de `twoFactorLimiter` em src/app.js).
+    // `keyGenerator` de `twoFactorLimiter` em src/app.js). IP simulado DIFERENTE a
+    // cada tentativa (EV-070) — isola o teto de `twoFactorLimiter` (por `desafio`)
+    // do de `authLimiter` (por IP, herdado pelo mesmo prefix-match, teto também 5).
     for (let i = 0; i < 6; i += 1) {
       respostas.push(
         await request(app)
           .post('/api/auth/login/2fa/recuperar')
+          .set('X-Forwarded-For', `203.0.113.${i}, 10.0.0.1`)
           .send({ desafio: desafioFixo, codigo: 'QUALQUERCODIGO' })
       );
     }
@@ -85,17 +102,49 @@ describe('POST /api/auth/login/2fa/recuperar herda twoFactorLimiter (5/15min) vi
     storeState.hits.clear();
     const { app } = criarApp();
 
-    // Sequencial de propósito (ver comentário do teste anterior).
+    // Sequencial de propósito (ver comentário do teste anterior); IP simulado
+    // DIFERENTE a cada tentativa pelo mesmo motivo (isolar de `authLimiter`, EV-070).
     for (let i = 0; i < 5; i += 1) {
       await request(app)
         .post('/api/auth/login/2fa/recuperar')
+        .set('X-Forwarded-For', `198.51.100.${i}, 10.0.0.1`)
         .send({ desafio: 'desafio-A-esgotado', codigo: 'X' });
     }
 
     const outroDesafio = await request(app)
       .post('/api/auth/login/2fa/recuperar')
+      .set('X-Forwarded-For', '198.51.100.99, 10.0.0.1')
       .send({ desafio: 'desafio-B-nunca-usado', codigo: 'X' });
 
     expect(outroDesafio.status).toBe(401);
+  });
+
+  it('EV-070: authLimiter (herdado pelo mesmo prefix-match) agora bloqueia por IP de verdade nesta rota', async () => {
+    // Antes da correção do EV-070, authLimiter estava montado aqui (mesmo prefix-match
+    // de /api/auth/login) mas sua chave de fallback por IP nunca colidia de verdade —
+    // na prática nunca bloqueava nada. Este teste tranca o comportamento CORRIGIDO:
+    // do MESMO IP, variando o desafio a cada tentativa (twoFactorLimiter não deveria
+    // bloquear, chave diferente a cada vez), authLimiter (teto 5/15min por IP) bloqueia
+    // mesmo assim, porque agora conta o IP de verdade.
+    storeState.hits.clear();
+    const { app } = criarApp();
+
+    const respostas = [];
+    for (let i = 0; i < 6; i += 1) {
+      respostas.push(
+        await request(app)
+          .post('/api/auth/login/2fa/recuperar')
+          .set('X-Forwarded-For', '203.0.113.55, 10.0.0.1')
+          .send({ desafio: `desafio-diferente-${i}`, codigo: 'X' })
+      );
+    }
+
+    for (let i = 0; i < 5; i += 1) {
+      expect(respostas[i].status, `tentativa ${i + 1}`).toBe(401);
+    }
+    expect(respostas[5].status).toBe(429);
+    expect(respostas[5].body).toEqual({
+      erro: 'Muitas tentativas. Tente novamente em 15 minutos.',
+    });
   });
 });

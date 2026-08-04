@@ -143,7 +143,7 @@ export function criarApp() {
     limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => req.body?.desafio || ipKeyGenerator(req, res),
+    keyGenerator: (req) => req.body?.desafio || ipKeyGenerator(req.ip),
     message: { erro: 'Muitas tentativas de verificação. Reinicie o login e tente de novo.' },
     store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
   });

@@ -37,6 +37,7 @@ const {
   identidadeDaRequisicao,
   normalizarCaminho,
   authLimiter,
+  authIpLimiter,
   cadastroLimiter,
   totpAtivarLimiter,
   totpDesativarLimiter,
@@ -460,5 +461,83 @@ describe('totpAtivarLimiter / totpDesativarLimiter (EV-067, Gate 6 — 3ª rodad
     // Desativar, mesmo usuário, continua com balde próprio intacto.
     const desativarOk = await request(app).post('/me/2fa/desativar');
     expect(desativarOk.status).toBe(200);
+  });
+});
+
+/**
+ * EV-070 — descoberto como efeito colateral da missão "EV-069" (investigação de um CVE
+ * em `ip-address`, dependência de `express-rate-limit`): `ipKeyGenerator`, exportado por
+ * `express-rate-limit`, tem assinatura `ipKeyGenerator(ip: string, ipv6Subnet?)` — espera
+ * uma STRING de IP, normalmente `req.ip` (documentado no próprio `.d.ts` do pacote,
+ * `node_modules/express-rate-limit/dist/index.d.cts:9`: "return ipKeyGenerator(req.ip)
+ * rather than just req.ip"). Mas `authIpLimiter` e `cadastroLimiter` chamavam
+ * `ipKeyGenerator(req, res)` — passando o objeto `req` INTEIRO. Como `net.isIPv6(req)` é
+ * sempre `false` pra um objeto, a função cai direto em `return ip` (o próprio `req`), que
+ * vira a string constante `"[object Object]"` quando interpolada — MESMA chave pra
+ * QUALQUER IP. Confirmado com a aplicação real, rotas reais, requisições HTTP reais
+ * (`criarApp()` + `supertest`, ver `EV070_VALIDATION_AND_REMEDIATION_REPORT.md`, Gate 4):
+ * `authIpLimiter`/`cadastroLimiter` produziam 1 única chave compartilhada por TODOS os
+ * IPs, enquanto o limiter geral de `/api` (que usa o `keyGenerator` padrão da própria
+ * biblioteca, `ipKeyGenerator(request.ip, subnet)`, correto) produzia uma chave por IP no
+ * MESMO teste. Gate 6 quantificou o impacto: um usuário legítimo que nunca fez nenhuma
+ * requisição recebia `429` na primeira tentativa de cadastro, só porque outro IP não
+ * relacionado tinha esgotado o teto — nega serviço entre usuários sem nenhuma relação,
+ * e reduz a eficácia do EV-057 (`cadastroLimiter`) de "30 tentativas por IP" pra "30
+ * tentativas para a aplicação inteira, compartilhadas por todos os usuários".
+ */
+describe('authIpLimiter / cadastroLimiter (EV-070 — chave precisa ser por IP, não constante)', () => {
+  it('authIpLimiter: 2 IPs diferentes usam baldes DIFERENTES (não colidem em "[object Object]")', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.set('trust proxy', true);
+    app.post('/auth-ip-teste', authIpLimiter, (req, res) => res.status(200).json({ ip: req.ip }));
+
+    await request(app).post('/auth-ip-teste').set('X-Forwarded-For', '203.0.113.9');
+    await request(app).post('/auth-ip-teste').set('X-Forwarded-For', '198.51.100.42');
+
+    const chaves = [...storeState.hits.keys()];
+    expect(chaves.some((k) => k.includes('[object Object]'))).toBe(false);
+    expect(chaves).toHaveLength(2);
+    expect(chaves.some((k) => k.includes('203.0.113.9'))).toBe(true);
+    expect(chaves.some((k) => k.includes('198.51.100.42'))).toBe(true);
+  });
+
+  it('cadastroLimiter: 2 IPs diferentes usam baldes DIFERENTES (não colidem em "[object Object]")', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.set('trust proxy', true);
+    app.post('/cadastro-ip-teste', cadastroLimiter, (req, res) =>
+      res.status(200).json({ ip: req.ip })
+    );
+
+    await request(app).post('/cadastro-ip-teste').set('X-Forwarded-For', '203.0.113.9');
+    await request(app).post('/cadastro-ip-teste').set('X-Forwarded-For', '198.51.100.42');
+
+    const chaves = [...storeState.hits.keys()];
+    expect(chaves.some((k) => k.includes('[object Object]'))).toBe(false);
+    expect(chaves).toHaveLength(2);
+  });
+
+  it('cadastroLimiter: esgotar o teto num IP NÃO bloqueia um IP diferente (fecha o DoS entre usuários)', async () => {
+    storeState.hits.clear();
+    const app = express();
+    app.set('trust proxy', true);
+    app.post('/cadastro-dos-teste', cadastroLimiter, (req, res) =>
+      res.status(200).json({ ok: true })
+    );
+
+    for (let i = 0; i < 30; i += 1) {
+      await request(app).post('/cadastro-dos-teste').set('X-Forwarded-For', '203.0.113.9');
+    }
+    const bloqueadoMesmoIp = await request(app)
+      .post('/cadastro-dos-teste')
+      .set('X-Forwarded-For', '203.0.113.9');
+    expect(bloqueadoMesmoIp.status).toBe(429);
+
+    // Usuário legítimo, IP totalmente diferente, primeira requisição — não pode ser afetado.
+    const legitimoOutroIp = await request(app)
+      .post('/cadastro-dos-teste')
+      .set('X-Forwarded-For', '198.51.100.42');
+    expect(legitimoOutroIp.status).toBe(200);
   });
 });
