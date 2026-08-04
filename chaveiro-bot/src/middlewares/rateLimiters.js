@@ -189,13 +189,19 @@ export const exclusaoContaLimiter = criarLimiterRedis({
 // limiter genérico e por IP. Chave por usuário autenticado (req.user.id), não por IP —
 // um atacante com sessão roubada não pode contornar isolando o teto por IP diferente,
 // e usuários legítimos por trás do mesmo IP (rede corporativa/NAT) não interferem entre si.
+// A chave inclui a rota (`req.originalUrl`): ativar e desativar são ações INDEPENDENTES
+// (ao contrário de exclusaoContaLimiter, onde as 2 rotas são passos sequenciais do MESMO
+// fluxo) — sem isso, ativar o 2FA com sucesso já gastaria 1 das 5 tentativas do teto de
+// desativar, e vice-versa, mesmo sem nenhuma tentativa errada em nenhuma das duas.
 export const totpContaLimiter = criarLimiterRedis({
   windowMs: 15 * 60_000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>
-    req.user?.id ? `totp-conta:${req.user.id}` : ipKeyGenerator(req, res),
+    req.user?.id
+      ? `totp-conta:${req.user.id}:${String(req.originalUrl ?? req.path ?? '').split('?')[0]}`
+      : ipKeyGenerator(req, res),
   message: { erro: 'Muitas tentativas. Tente novamente em 15 minutos.' },
 });
 

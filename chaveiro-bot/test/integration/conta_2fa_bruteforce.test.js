@@ -151,6 +151,28 @@ describe('EV-067 — POST /me/2fa/desativar: rate limit dedicado', () => {
   });
 });
 
+describe('EV-067 — ativar e desativar têm teto independente (mesmo usuário)', () => {
+  it('esgotar o teto de /me/2fa/desativar não é afetado por uma ativação bem-sucedida anterior', async () => {
+    // contaComTotpAtivo() já faz 1 chamada bem-sucedida a /me/2fa/ativar como setup.
+    // Se ativar/desativar compartilhassem o mesmo balde, essa 1ª chamada já teria
+    // gasto 1 das 5 tentativas de desativar — as 5 tentativas erradas abaixo bloqueariam
+    // 1 chamada cedo demais (na 5ª, não na 6ª).
+    const { token } = await contaComTotpAtivo();
+    for (let i = 0; i < 5; i++) {
+      const r = await request(app)
+        .post('/api/me/2fa/desativar')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ codigo: '000000' });
+      expect(r.status).toBe(400);
+    }
+    const bloqueado = await request(app)
+      .post('/api/me/2fa/desativar')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ codigo: '000000' });
+    expect(bloqueado.status).toBe(429);
+  });
+});
+
 describe('EV-067 — chave do limiter é por usuário, não por IP', () => {
   it('usuário B não é afetado pelo bloqueio do usuário A (mesmo IP de teste)', async () => {
     const { token: tokenA } = await contaComTotpAtivo();
