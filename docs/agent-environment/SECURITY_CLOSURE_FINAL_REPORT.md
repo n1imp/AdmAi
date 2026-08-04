@@ -141,3 +141,34 @@ Corrigido, testado (falha antes/passa depois), sem regressão, com 4 rodadas de 
 ## 2. Frente de Segurança — NÃO ENCERRADA, pendente exclusivamente por causa do EV-069
 
 Nenhuma pendência Categoria A. Nenhuma pendência Categoria B relacionada a qualquer correção anterior (EV-056/057/060/063/065/067 todos fechados ou refutados). A única razão pela qual esta missão não declara "Frente de Segurança OFICIALMENTE ENCERRADA" é o **EV-069** — um CVE novo, de origem externa (disclosure de terceiros), sem relação causal com nenhum código alterado nesta sessão, detectado como efeito colateral dos próprios runs de CI desta remediação. Recomendo uma missão dedicada de tratamento de dependências de segurança (EV-069 e qualquer outro achado correlato), preservando o modelo de Evidence Driven Execution, mediante autorização explícita do usuário.
+
+---
+
+## Addendum de Encerramento 3 — Missão "EV-069" (2026-08-04)
+
+A missão dedicada recomendada acima foi executada com EDE completo (Gates 1-7 do CVE + Gate 3 revelando um achado colateral). Resultado:
+
+### Parecer 1 — EV-069: **REFUTADO**
+
+Investigação completa (não leitura de advisory, reprodução real em cada etapa):
+- **Cadeia**: caminho único `express-rate-limit@8.6.0 → ip-address@10.2.0`, consumido só por `ipKeyGenerator`.
+- **2 das 3 CVEs (moderadas)**: as funções que descrevem como vulneráveis (`isPrivate`/`isLoopback`/`isLinkLocal`/`isCGNAT`/`isMulticast`/`isUnspecified`/`isULA`/`isBroadcast`/`isInSubnet`/`isHostInSubnet`/`getType`) nunca são chamadas por `ipKeyGenerator` — inalcançáveis por definição de uso, não por sorte.
+- **1 CVE (alta, `Address4.correctForm()`)**: reproduzido que a biblioteca TEM o bug em isolamento (`new Address4('012.0.0.1').correctForm()` → `'12.0.0.1'`, decimal, deveria ser octal `'10.0.0.1'`) — mas o único caminho desta app até essa função (`Address6.to4()`) é bloqueado ANTES do parsing malicioso por 2 camadas reproduzidas diretamente: `node:net.isIPv6()` rejeita o padrão de ataque, e a própria `Address6.parse4in6` (versão instalada) já lança `AddressError` para octetos com zero à esquerda.
+- **Classificação**: Categoria C. Movido para `SECURITY_HARDENING_BACKLOG.md`, item 14. Nenhuma dependência atualizada — decisão correta para Categoria C, não decisão de deixar o CI vermelho sem motivo.
+
+### Achado colateral — EV-070 (NOVO, não classificado)
+
+Durante o Gate 3 (é preciso ler o código real de `ipKeyGenerator` para confirmar reachability — não bastava o advisory), descobri que **todos os 6 pontos de uso de `ipKeyGenerator` neste projeto chamam a função com a assinatura errada** (`ipKeyGenerator(req, res)` em vez de `ipKeyGenerator(req.ip, subnet)`). Reproduzido com uma instância real do Express: a função retorna o objeto `req` inteiro (nunca extrai o IP), que vira a string constante `"[object Object]"` quando usado como chave. **`authIpLimiter` e `cadastroLimiter` (a mitigação central do EV-057) sempre caem nesse caminho** — não são mais por-IP, viram um balde único compartilhado por toda a aplicação.
+
+Isso é uma descoberta nova, sem relação com o EV-069 em si (é um bug de uso da API do `express-rate-limit`, não da dependência `ip-address`), e está fora do mandato desta missão ("não amplie o escopo"). Não corrigido, não classificado em Categoria A/B/C — a severidade aparente (mitigação central do EV-057 possivelmente inoperante como controle por-origem) é grande demais para eu simplesmente ignorar e declarar a frente encerrada. Ver `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070, para o detalhamento completo.
+
+### Critério de Encerramento
+
+**Existe algum item Categoria A ou B restante?** Tecnicamente, EV-070 ainda não foi classificado (isso exigiria investigação que estaria fora do escopo desta missão) — mas dado o padrão de severidade já observado (a mesma classe de "proteção que deveria estar ativa mas não está" do EV-067), a resposta prudente é **SIM, há uma pendência não resolvida**.
+
+- **Evidência:** `chaveiro-bot/src/middlewares/rateLimiters.js:145,164,179,192,226`, `chaveiro-bot/src/app.js:146` — 6 call sites de `ipKeyGenerator(req, res)`, assinatura incompatível com a função exportada por `express-rate-limit`, reproduzido com Express real.
+- **Impacto:** `authIpLimiter`/`cadastroLimiter` (mitigação do EV-057) operam com um balde único global em vez de por-IP — risco de abuso de trial não mais isolado por origem, e risco de disponibilidade (uma rajada legítima pode esgotar o balde compartilhado).
+- **Causa raiz:** provável divergência entre a assinatura antiga e a atual de `ipKeyGenerator` ao longo de atualizações do `express-rate-limit` (`8.5.2`→`8.6.0` via dependabot, `cf81bca`), sem atualização correspondente nos call sites deste projeto.
+- **Tarefa objetiva necessária:** investigação dedicada (Gate 1-4 do mesmo rigor EDE) para confirmar o comportamento exato em cada limiter, classificar Categoria A/B/C, e corrigir se confirmado — ex.: trocar todos os call sites para `ipKeyGenerator(req.ip, ...)` ou remover o `keyGenerator` customizado onde o default da biblioteca já basta.
+
+Não abro uma nova frente automaticamente. Recomendo uma missão dedicada "EV-070 Validação e Remediação", mesmo rigor EDE, mediante autorização explícita do usuário.

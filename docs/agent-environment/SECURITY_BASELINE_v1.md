@@ -1,6 +1,6 @@
 # Security Baseline v1 — AdmAi / chaveiro-bot
 
-**Status da Frente de Segurança: ATIVA — NÃO ENCERRADA.** Este documento consolida toda a Frente de Segurança executada nesta sessão (missões EV-060, Security Closure Final, EV-063, Missão Final de Encerramento, EV-065 Validation, Missão Final de Consolidação, e esta — "EV-067 Remediação"). **EV-067 foi corrigido nesta missão** (4 rodadas de revisão adversarial, ver Gate 6bis abaixo) — mas essa mesma correção revelou, como efeito colateral dos runs de CI, um achado novo e sem relação causal: **EV-069**, CVE de severidade alta numa dependência transitiva (`ip-address`). É esse o único motivo pelo qual este documento não declara encerramento. Ver parecer formal em `SECURITY_CLOSURE_FINAL_REPORT.md`.
+**Status da Frente de Segurança: ATIVA — NÃO ENCERRADA.** Este documento consolida toda a Frente de Segurança executada nesta sessão (missões EV-060, Security Closure Final, EV-063, Missão Final de Encerramento, EV-065 Validation, Missão Final de Consolidação, EV-067 Remediação, e esta — "EV-069"). **EV-067 e EV-069 estão ambos resolvidos** (EV-067 corrigido, EV-069 refutado com EDE completo — ver Gate 6ter abaixo) — mas a investigação do EV-069 revelou, como efeito colateral do Gate 3 (análise de exploitabilidade), um achado novo e ainda não classificado: **EV-070**, `ipKeyGenerator(req, res)` chamado com assinatura errada em todos os 6 call sites deste projeto, fazendo `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057) operarem com um balde global em vez de por-IP. É esse o único motivo pelo qual este documento não declara encerramento. Ver parecer formal em `SECURITY_CLOSURE_FINAL_REPORT.md`.
 
 ## Referência
 
@@ -27,11 +27,12 @@
 | EV-063 | Vazamento de informação pré-autenticação em `POST /auth/login` (corpo/status + timing) | **Corrigido** | `autenticarCandidatos`, tempo constante até 3 candidatos; 19 testes novos; CI real; 2 rodadas de revisão adversarial independentes (Welch's t-test para o canal de timing) | `EV063_REMEDIATION_REPORT.md` |
 | EV-065 | Bypass de rate-limit por IP via `trust proxy` desalinhado | **Refutado na arquitetura real** | Teste direto contra `https://admai-production.up.railway.app`: 7 requisições, 6 variações de header forjado, decremento monotônico do bucket em todas — borda do Railway sanitiza `X-Forwarded-For`/`X-Real-IP` | `EV065_VALIDATION_REPORT.md` |
 | EV-067 | Ausência de rate limiter dedicado em `POST /me/2fa/ativar`/`POST /me/2fa/desativar` | **Corrigido** | `totpAtivarLimiter`/`totpDesativarLimiter` (rótulo fixo por rota); 4 rodadas de revisão adversarial (3 vetores achados e fechados, 4ª sem achado); 41/41+28/28 testes, zero regressão | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-067/EV-068) |
-| EV-069 | CVE de severidade alta em `ip-address` (dependência transitiva de `express-rate-limit`) | **Aberto — Categoria B, bloqueia o encerramento** | `npm audit`; uso real confirmado só em `ipKeyGenerator` (agrupamento de chave IPv6, não decisão de SSRF); sem relação causal com o EV-067 | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-069); `SECURITY_CLOSURE_FINAL_REPORT.md` (parecer) |
+| EV-069 | CVE de severidade alta em `ip-address` (dependência transitiva de `express-rate-limit`) | **Refutado — Categoria C** | EDE completo: 2 das 3 CVEs afetam funções nunca chamadas por `ipKeyGenerator`; a 3ª (`Address4.correctForm()`) é bloqueada por 2 camadas reproduzidas diretamente (`net.isIPv6` rejeita, `Address6.parse4in6` lança `AddressError`) antes do parsing malicioso | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-069); `SECURITY_HARDENING_BACKLOG.md` item 14 |
+| EV-070 | `ipKeyGenerator(req, res)` chamado com assinatura errada nos 6 call sites do projeto | **Aberto — não classificado, bloqueia o encerramento** | Reproduzido com Express real: retorna o objeto `req`, não o IP; `authIpLimiter`/`cadastroLimiter` (mitigação do EV-057) sempre afetados — balde global, não por-IP | `EOS_SECURITY_CLOSURE_V2_PLAN.md` (EV-070); `SECURITY_CLOSURE_FINAL_REPORT.md` (parecer) |
 
-## Gate 3 — Revisão do Security Hardening Backlog (13 itens, todos Categoria C)
+## Gate 3 — Revisão do Security Hardening Backlog (14 itens, todos Categoria C)
 
-Todos os 13 itens (12 já existentes + item 13, `trust proxy`, adicionado nesta missão) foram reconfirmados como Categoria C — nenhuma implementação de correção realizada, nenhuma promoção a A/B sem evidência objetiva:
+Todos os 14 itens (12 já existentes + item 13 `trust proxy` + item 14 `ip-address`/EV-069) foram reconfirmados como Categoria C — nenhuma implementação de correção realizada, nenhuma promoção a A/B sem evidência objetiva:
 
 | # | Item | Categoria | Explorável hoje? | Depende de mudança arquitetural? | Depende de decisão de produto? |
 |---|---|---|---|---|---|
@@ -74,7 +75,7 @@ Respondido individualmente, com evidência — não genérico:
 | Enumeração crítica | **Não** | EV-063 fechou a enumeração pré-autenticação em `/auth/login` (corpo/status/timing); único resíduo conhecido é UX de cadastro (`409` em `/auth/register`, item 12 do backlog, Categoria C, decisão de produto) |
 | Vazamento de credenciais | **Não** | Gitleaks "no leaks found" em todos os runs de CI desta sessão; regra de código "nunca logue senhas/tokens/segredos TOTP/apikeys" (`README.md`); Sentry sem captura de payload sensível |
 | Vulnerabilidade Categoria A | **Não** | Última pendência conhecida (EV-065) refutada por teste direto contra produção real nesta sessão |
-| Vulnerabilidade Categoria B | **SIM — EV-069** | *(Atualizado após a missão "EV-067 Remediação": EV-067 foi corrigido — ver Gate 6bis abaixo — mas essa remediação revelou **EV-069**, um CVE novo em dependência transitiva (`ip-address`), sem relação causal com o código corrigido. Ver `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-069, para o achado completo.)* |
+| Vulnerabilidade Categoria B | **SIM — EV-070 (não classificado)** | *(Atualizado após a missão "EV-069": o CVE em si foi refutado (Categoria C, ver Gate 6ter abaixo), mas a investigação do Gate 3 revelou **EV-070** — `ipKeyGenerator(req, res)` chamado com assinatura errada em todos os 6 call sites do projeto, afetando `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057). Ainda não classificado em A/B/C. Ver `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070.)* |
 
 ## Riscos aceitos
 
@@ -89,7 +90,7 @@ Respondido individualmente, com evidência — não genérico:
 
 ## Security Hardening Backlog
 
-13 itens Categoria C — ver `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` para o detalhamento completo. Nenhum bloqueia o encerramento.
+14 itens Categoria C — ver `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` para o detalhamento completo. Nenhum bloqueia o encerramento.
 
 ## Gate 6bis — Remediação do EV-067 (missão "EV-067 Remediação")
 
@@ -103,24 +104,32 @@ Reprodução real via CI (`conta_2fa_bruteforce.test.js`, 3/7 testes falhando co
 
 Detalhamento técnico completo: `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-068.
 
-## Pendência Categoria B Aberta — EV-069
+## Gate 6ter — Validação do EV-069 (missão "EV-069")
 
-| ID | Pacote | Instalado | Corrigido em | Caminho transitivo | Severidade | Explorável nesta app? | Estratégia recomendada |
-|---|---|---|---|---|---|---|---|
-| EV-069 | `ip-address` | `10.2.0` | `10.4.0` | `express-rate-limit@8.6.2` → `ip-address` | Alta (+ 2 moderadas) | Não confirmado — uso real é só agrupamento de chave IPv6 em `ipKeyGenerator`, não decisão de SSRF | Bump mecânico do lockfile, `10.2.0`→`10.4.0`, dentro do range já declarado, sem mudança em `package.json` |
+EDE completo (Gates 1-7 do CVE). Cadeia única: `express-rate-limit@8.6.0 → ip-address@10.2.0`, só consumida por `ipKeyGenerator`. Das 3 CVEs (`GHSA-mwp4-54f8-5fhr`/CVE-2026-69192 alta; `GHSA-4xrf-jv44-h6hh`/CVE-2026-69198 e `GHSA-22jq-vg5j-6vgg`/CVE-2026-54272 moderadas):
+- As 2 moderadas afetam métodos de classificação (`isPrivate`/`isLoopback`/`isLinkLocal`/`isCGNAT`/`isMulticast`/`isUnspecified`/`isULA`/`isBroadcast`/`isInSubnet`/`isHostInSubnet`/`getType`) que `ipKeyGenerator` **nunca chama** — inalcançáveis por definição de uso.
+- A alta (`Address4.correctForm()`, alcançável só via `Address6.to4()`) foi reproduzida como bug real em isolamento (`new Address4('012.0.0.1').correctForm()` → `'12.0.0.1'` decimal, deveria ser `'10.0.0.1'` octal) — mas o único caminho desta app até ela é bloqueado ANTES do parsing malicioso por 2 camadas, também reproduzidas diretamente: `node:net.isIPv6('::ffff:012.0.0.1')` retorna `false` (rejeitado antes de `ip-address` ser sequer chamado), e mesmo contornando isso, a própria `Address6.parse4in6` da versão instalada já lança `AddressError: "IPv4 addresses can't have leading zeroes"`.
 
-Detalhamento completo: `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-069. Não implementado nesta missão — requer missão dedicada de tratamento de dependências, mediante autorização do usuário.
+**Classificação: Categoria C.** Nenhuma dependência atualizada (correto para C). Movido para `SECURITY_HARDENING_BACKLOG.md`, item 14.
+
+## Achado Colateral Não Classificado — EV-070
+
+| ID | Descrição | Categoria | Impacto |
+|---|---|---|---|
+| EV-070 | `ipKeyGenerator(req, res)` chamado com assinatura errada nos 6 call sites do projeto (`rateLimiters.js:145,164,179,192,226`, `app.js:146`) — deveria ser `ipKeyGenerator(req.ip, subnet)` | **Não classificado** | `authIpLimiter`/`cadastroLimiter` (mitigação central do EV-057) sempre afetados — reproduzido com Express real que a função retorna o objeto `req` inteiro, coagido para a string constante `"[object Object]"`: o balde deixa de ser por-IP e vira um único balde global compartilhado por toda a aplicação |
+
+Detalhamento completo: `EOS_SECURITY_CLOSURE_V2_PLAN.md`, EV-070. Descoberto como efeito colateral do Gate 3 (análise de exploitabilidade) do EV-069 — não relacionado à CVE em si. Não investigado a fundo nem corrigido nesta missão (fora do mandato) — requer missão dedicada mediante autorização do usuário.
 
 ## Critérios de encerramento — status final
 
 - Nenhuma vulnerabilidade Categoria A permanece aberta — **satisfeito** (EV-065 refutado por teste real contra produção).
-- Nenhuma pendência Categoria B permanece sem resolução — **NÃO satisfeito** — EV-067 foi corrigido, mas **EV-069** (CVE em dependência transitiva, sem relação causal) permanece aberto.
-- Toda correção tem reprodução prévia, causa raiz, teste dedicado, execução real em CI — **satisfeito para EV-056/060/063/067**; EV-069 não é uma correção de código, é uma dependência a atualizar (fora do mandato desta missão).
+- Nenhuma pendência Categoria B permanece sem resolução — **NÃO satisfeito** — EV-067 corrigido e EV-069 refutado, mas **EV-070** (achado colateral, não classificado) permanece aberto.
+- Toda correção tem reprodução prévia, causa raiz, teste dedicado, execução real em CI — **satisfeito para EV-056/060/063/067**; EV-069 refutado com reprodução completa (não é correção de código); EV-070 não investigado a fundo (fora do mandato desta missão).
 - Revisão adversarial dedicada tenta e não consegue reabrir vulnerabilidades corrigidas — **satisfeito**: 4 rodadas sobre o EV-067, a última sem achado; nenhuma das correções anteriores (EV-056/060/063) foi reaberta.
-- CI e Security verdes no commit de referência de código — **NÃO satisfeito**: todos os testes passam (zero regressão), mas o step de auditoria de dependências fica vermelho por causa do EV-069.
-- Itens Categoria C ficam exclusivamente no backlog, cada um com condição de retorno — **satisfeito** (13 itens; nem EV-067 — já corrigido — nem EV-069 — Categoria B ativo — entram nesse backlog).
+- CI e Security verdes no commit de referência de código — **NÃO satisfeito**: todos os testes passam (zero regressão); a auditoria de dependências ainda mostra o achado do EV-069 no relatório do `npm audit` (a ferramenta não distingue "Categoria C confirmada" de "não corrigido") — nenhuma dependência foi atualizada, por ser a decisão correta para Categoria C.
+- Itens Categoria C ficam exclusivamente no backlog, cada um com condição de retorno — **satisfeito** (14 itens; EV-067 já corrigido e EV-069 já refutado não entram; EV-070, não classificado, também não entra — só itens C confirmados vão para o backlog).
 
-**Por causa de EV-069 (não mais EV-067, que está corrigido), esta missão não pode concluir Opção A.** Ver parecer final em `SECURITY_CLOSURE_FINAL_REPORT.md`.
+**Por causa de EV-070 (não mais EV-067 nem EV-069, ambos resolvidos), esta missão não pode concluir Opção A.** Ver parecer final em `SECURITY_CLOSURE_FINAL_REPORT.md`.
 
 ## Revisão Adversarial Final (Gate 7)
 
@@ -141,4 +150,4 @@ Um agente `red-team-attacker` fresco recebeu mandato estrito: encontrar um bloqu
 
 ## Data desta atualização — frente ainda não encerrada
 
-**2026-08-04**, commit de código de referência `fda01cc` (correção final do EV-067, CI verde em todos os testes, único step vermelho é o EV-069). A Frente de Segurança permanece **ATIVA** exclusivamente por causa do EV-069 (Categoria B, CVE em dependência transitiva); este baseline será atualizado (ou sucedido por uma v2) quando EV-069 for corrigido e revalidado.
+**2026-08-04**, commit de código de referência `fda01cc` (correção final do EV-067; nenhum código alterado na missão EV-069, que é só investigação/documentação). CI verde em todos os testes (41/41+28/28), sem regressão. A Frente de Segurança permanece **ATIVA** exclusivamente por causa do EV-070 (achado colateral não classificado); este baseline será atualizado (ou sucedido por uma v2) quando EV-070 for investigado, classificado e — se necessário — corrigido e revalidado.
