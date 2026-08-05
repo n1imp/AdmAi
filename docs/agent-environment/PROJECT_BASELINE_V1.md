@@ -259,6 +259,7 @@ missão anterior: documentação operacional descrevendo uma arquitetura diferen
 | `CHANGELOG.md` | Parcialmente correto (achado do Gate 5, loop-back) | Item "A fazer" listava "Infra de produção em VPS" como trabalho pendente rumo ao 1.0.0 | Marcado como feito (caminho diferente do planejado), com nota do gap real (backup Supabase) |
 | `chaveiro-bot/src/app.js:37-40` | Legado, **não alterado de propósito** | Comentário de código descreve a mesma topologia stale (`Caddy → nginx → backend`) | **Não editado** — já é o item 13 do `SECURITY_HARDENING_BACKLOG.md` (Categoria C, aceito), e esta missão restringe explicitamente alterar código da aplicação e corrigir itens Categoria C. `README.md` agora documenta explicitamente que esse comentário está desalinhado, para não deixar a contradição silenciosa. |
 | `chaveiro-painel/nginx.conf:29` | Legado, não alterado | Comentário afirma que "o Caddy termina TLS na frente" — só usado no caminho self-hosted, config do painel local/legado | Não editado — baixa prioridade, arquivo já pertence exclusivamente ao caminho legado |
+| `chaveiro-bot/docker-compose.yml` | Parcialmente correto (achado da missão "Phase Closure v1", Gate 9 adversarial — não capturado pelos Gates 2/5/7 originais) | Arquivo real e ativamente usado (`README.md`, "Setup & execução" local, `docker-compose up -d`), mas seu comentário de cabeçalho afirmava em tom presente que "em PRODUÇÃO... o comando de prod... sobe apenas backend + painel + Caddy" — contradizendo diretamente a declaração de arquitetura oficial | Comentário reescrito para deixar claro que o arquivo é de desenvolvimento local, que a produção oficial não usa Caddy/VPS, e que o texto original descreve o caminho legado self-hosted — sem mudar nenhum serviço/profile/volume (comportamento idêntico) |
 
 **Gate 3 (sincronização):** `README.md` ganhou uma seção "Arquitetura Oficial" explícita
 (logo após a linha de Deploy) declarando Railway/Cloudflare/Supabase como único suportado e
@@ -279,12 +280,18 @@ originalmente revisado (`docs/LAUNCH_PLAN.md`, os 2 scripts de backup/restore de
 
 **Gate 6 (baseline):** esta seção.
 
-**Gate 7 (validação final):** Nenhum arquivo remanescente encontrado apresentando VPS/Caddy
-como arquitetura oficial (confirmado pela segunda passada do Gate 5, incluída acima).
-Documentação consistente. Arquitetura consistente. Rastreabilidade preservada (todas as
-edições, motivos e arquivos tocados documentados nesta seção). Nenhum documento operacional
-contraditório remanescente. Nenhum arquivo legado tratado como oficial — todos os 2 arquivos
-movidos para `docs/legacy/` têm banner `⚠️ LEGADO` explícito, e os 2 documentos parcialmente
-corretos (`GO_LIVE_CHECKLIST.md`, `LAUNCH_PLAN.md`) têm a seção legada claramente isolada e
-rotulada dentro do próprio arquivo. Nenhum deploy, merge, migration ou nova auditoria de
+**Gate 7 (validação final, original):** declarava "nenhum arquivo remanescente encontrado
+apresentando VPS/Caddy como arquitetura oficial". **Essa alegação era falsa** —
+`chaveiro-bot/docker-compose.yml` (ver tabela do Gate 2 acima) não tinha sido verificado por
+nenhum dos Gates 2/5/7 desta missão, e seu comentário de cabeçalho afirmava a arquitetura
+antiga como produção real. Encontrado e corrigido só na missão seguinte ("Phase Closure v1"),
+Gate 9 — revisão adversarial independente com mandato explícito de tentar invalidar o
+fechamento, não apenas confirmá-lo. Isso demonstra por que o Gate 9 daquela missão existe:
+uma varredura que se autodeclara completa pode não ser. Documentação consistente após a
+correção. Arquitetura consistente. Rastreabilidade preservada (todas as edições, motivos e
+arquivos tocados documentados nesta seção, incluindo o próprio erro e sua correção). Nenhum
+documento operacional contraditório remanescente confirmado. Nenhum arquivo legado tratado
+como oficial — os 2 arquivos movidos para `docs/legacy/` têm banner `⚠️ LEGADO` explícito, os
+2 documentos parcialmente corretos (`GO_LIVE_CHECKLIST.md`, `LAUNCH_PLAN.md`) têm a seção
+legada isolada e rotulada, e `docker-compose.yml` teve o comentário corrigido. Nenhum deploy, merge, migration ou nova auditoria de
 segurança executados.

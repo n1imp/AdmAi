@@ -1,11 +1,19 @@
-# Compose base do ChaveiroBot.
+# Compose base do ChaveiroBot — usado para DESENVOLVIMENTO LOCAL
+# (`docker compose up -d`, ver README.md "Setup & execução").
 #
-# Serviços SEM profile (backend, painel) sobem SEMPRE — inclusive em produção.
+# A produção oficial NÃO usa este arquivo nem docker-compose.prod.yml/Caddy — é
+# Railway (backend) + Cloudflare Pages (painel) + Supabase (banco), ver
+# docs/CI_CD.md e docs/agent-environment/PROJECT_BASELINE_V1.md. O texto original
+# deste comentário (abaixo) descrevia o deploy self-hosted legado — preservado só
+# porque ainda é tecnicamente correto para quem usar docs/legacy/DEPLOYMENT_VPS.md.
+#
+# Serviços SEM profile (backend, painel) sobem SEMPRE — inclusive no caminho legado
+# self-hosted (ver aviso acima; não é a produção oficial atual).
 # Serviços com `profiles: ["local"]` (postgres, redis, evolution-api) só sobem em
 # desenvolvimento local:  docker compose --profile local up -d
-# Em PRODUÇÃO o banco é o Supabase (gerenciado) e o WhatsApp é a Cloud API (Meta),
-# então esses três NÃO rodam na VPS — o comando de prod (com docker-compose.prod.yml)
-# sobe apenas backend + painel + Caddy.
+# No caminho legado self-hosted, o banco é o Supabase (gerenciado) e o WhatsApp é a
+# Cloud API (Meta), então esses três NÃO rodam na VPS — o comando de prod legado
+# (com docker-compose.prod.yml) sobe apenas backend + painel + Caddy.
 networks:
   admai-net:
     driver: bridge
