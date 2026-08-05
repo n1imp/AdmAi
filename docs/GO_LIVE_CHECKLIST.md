@@ -33,41 +33,50 @@ desabilitado** no lançamento, **conta Play ainda não criada**.
 
 ## FASE A — Backend + painel em produção (Railway + Cloudflare Pages + Supabase)
 
-- [ ] **A1. Provisionar Supabase.** Criar projeto Supabase; anotar a **conexão direta**
-  (porta 5432, não o pooler 6543 — migrations no boot exigem conexão direta, ver
-  `docs/CI_CD.md` Troubleshooting) para `DATABASE_URL`/`DIRECT_URL`.
-- [ ] **A2. Provisionar Railway.** New Project → Deploy from GitHub → Root Directory =
-  `chaveiro-bot` (usa `Dockerfile` + `railway.json`). Configurar **volume persistente** em
-  `/app/uploads`. Ativar "Deploy on push" em `master` + "Wait for CI / Check Suites". Ref.:
-  `docs/CI_CD.md`, seção "Backend → Railway".
-- [ ] **A3. Variáveis no Railway.** Gerar segredos (`openssl rand -hex 32` para `JWT_SECRET`/
-  `ENCRYPTION_KEY`, `openssl rand -hex 24` para `API_TOKEN`) e definir no painel do Railway:
-  `NODE_ENV=production`, `DATABASE_URL`/`DIRECT_URL` (Supabase, conexão direta), `JWT_SECRET`,
-  `ENCRYPTION_KEY`, `API_TOKEN`, `ALLOWED_ORIGIN=https://app.SEU_DOMINIO`,
-  `PUBLIC_URL=https://api.SEU_DOMINIO`, `SENTRY_DSN` (opcional). **Não** definir `PORT`
-  (injetado pelo Railway) nem `ADMIN_USERNAME`/`ADMIN_PASSWORD` (crie o admin via tela de
-  cadastro). Deixar WhatsApp OFF (não definir `WHATSAPP_HABILITADO`). Ref.: `docs/CI_CD.md`,
-  "Inventário de secrets/variáveis".
-- [ ] **A4. Provisionar Cloudflare Pages.** Connect to Git → Root Directory =
-  `chaveiro-painel`, build `npm run build`, output `dist`. Definir `VITE_API_URL`/
-  `VITE_SENTRY_DSN` nas Env vars do projeto. Confirmar que `public/_redirects` está no build
-  (fallback de SPA). Ref.: `docs/CI_CD.md`, seção "Painel → Cloudflare Pages". **Nota:** o
-  deploy real do painel roda via GitHub Actions (`.github/workflows/deploy.yml`,
-  `cloudflare/wrangler-action`, disparado após o CI concluir em `master`) — confirmar que
-  `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` estão configurados como secrets do repositório
-  no GitHub, não só no painel do Cloudflare.
-- [ ] **A5. DNS.** Apontar `app.SEU_DOMINIO` (Cloudflare Pages) e `api.SEU_DOMINIO` (Railway)
-  conforme a documentação de cada plataforma para domínio customizado.
-- [ ] **A6. Verificar:** `https://app.SEU_DOMINIO` carrega; `https://api.SEU_DOMINIO/health` →
-  200 com `database: ok`; migrations aplicadas (`prisma migrate status` via Railway).
-- [ ] **A7. Backups.** Confirmar no painel do Supabase (Project Settings → Database → Backups)
-  se o backup automático está ativo e qual a retenção; executar **1 restore de teste**. Não
-  confirmado nesta missão de documentação — ver `docs/RUNBOOK.md §3` (gap declarado
-  explicitamente, não presumir configurado).
-- [ ] **A8. Monitoramento.** UptimeRobot/Healthchecks no `/health`; `SENTRY_DSN` (Railway) e
-  `VITE_SENTRY_DSN` (Cloudflare Pages) recebendo eventos (testar um erro proposital).
-- [ ] **A9. Smoke test:** cadastro, login, 2FA, criar serviço, bater ponto (selfie+geo),
-  excluir uma conta de teste.
+- [x] **A1. Provisionar Supabase.** ✅ Confirmado ao vivo em 2026-08-05 (missão "Project
+  Baseline v1 — Publicação Oficial"): `/health` → `database: ok`.
+- [x] **A2. Provisionar Railway.** ✅ Confirmado ao vivo em 2026-08-05: `Server:
+  railway-hikari`; redeploy real observado (uptime resetou após o merge do PR #101).
+- [x] **A3. Variáveis no Railway.** ✅ Confirmado indiretamente — a aplicação funciona
+  corretamente em produção (cadastro/login/2FA/serviços testados ao vivo em 2026-08-05),
+  o que implica `JWT_SECRET`/`ENCRYPTION_KEY`/`DATABASE_URL`/etc. corretamente definidas.
+- [x] **A4. Provisionar Cloudflare Pages.** ✅ Confirmado ao vivo em 2026-08-05: `Server:
+  cloudflare`; deploy real via `deploy.yml` observado com sucesso (antes disso, o deploy
+  estava silenciosamente bloqueado desde 2026-07-25 pelo gate de `npm audit` — ver
+  commit `8782971`/PR #101; corrigido nesta mesma missão).
+- [ ] **A5. DNS.** **Não confirmado.** Produção roda nos domínios padrão da plataforma
+  (`admai-production.up.railway.app`, `admai-painel.pages.dev`), não em domínio
+  customizado — pode ser decisão deliberada, não investigado nesta missão.
+- [x] **A6. Verificar:** ✅ Confirmado ao vivo em 2026-08-05 — `/health` 200 com
+  `database: ok`; migrations aplicadas e funcionais (smoke test real criou registros —
+  usuário, empresa, técnico, serviço, ponto — todos persistidos com sucesso).
+- [ ] **A7. Backups.** ⚠️ **CONFIRMADO — sem cobertura de backup nenhuma.** Verificado
+  diretamente no painel do Supabase em 2026-08-05 (projeto `AdmAI`, org `n1imp`, Free
+  Plan): aba "Scheduled backups" declara literalmente *"Free Plan does not include
+  project backups."*; aba "Point in time" declara *"Point in Time Recovery is a Pro Plan
+  add-on... Starts at $100/month."* — **nenhum dos dois mecanismos está disponível no
+  plano atual.** Não é um gap de configuração, é uma limitação do plano contratado. Ver
+  `docs/RUNBOOK.md §3`. **Tarefa objetiva:** decisão do usuário — upgrade para o Plano
+  Pro do Supabase (backup diário incluso, PITR como add-on), ou implementar um `pg_dump`
+  externo agendado (ex.: GitHub Actions com cron, contra a conexão direta) como mitigação
+  de menor custo.
+- [ ] **A8. Monitoramento.** **Não confirmado.** `SENTRY_DSN`/`VITE_SENTRY_DSN` são
+  variáveis documentadas, mas presença de eventos reais no Sentry e configuração de
+  uptime externo não são verificáveis sem acesso aos painéis das plataformas.
+- [x] **A9. Smoke test:** ✅ Executado ao vivo em produção em 2026-08-05 (conta
+  `SMOKE-TEST-2026-08-05-*`, claramente identificada): cadastro, login, 2FA
+  (setup+ativação), criar técnico, criar serviço+cliente, login como técnico, troca de
+  senha provisória, bater ponto — **todos OK** (11/12 passos, 1.0–6.1s de resposta cada).
+  **1 achado real:** `POST /me/documentos` (gerar documento) retornou `500 {"erro":"Erro
+  interno"}` — bug reproduzível, não é uma regressão desta publicação (funcionalidade não
+  tocada por este branch), causa raiz não diagnosticada (a aplicação não expõe stack
+  trace por design; sem acesso aos logs do Railway não foi possível ir além). Registrado
+  como pendência objetiva para investigação futura, fora do escopo desta missão.
+  **Não executado:** exclusão da conta de teste — as 2 empresas de teste criadas
+  (`smoketest_1785900291493`, `smoketest_1785900358426`) têm 2FA ativo e a autoexclusão
+  exige um código TOTP válido, que não foi persistido entre execuções do script
+  descartável; ficam como dado de teste isolado (multi-tenant, sem impacto em clientes
+  reais) até uma limpeza manual futura.
 
 ---
 
