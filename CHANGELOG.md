@@ -7,19 +7,50 @@ adota [Versionamento Semântico](https://semver.org/lang/pt-BR/) (SemVer).
 
 ## [Não lançado]
 
-### Adicionado
-- Documentação de lançamento: Política de Privacidade (LGPD), Termos de Uso, `SECURITY.md`,
-  `CONTRIBUTING.md` e este `CHANGELOG.md`.
-
 ### A fazer (rumo ao 1.0.0 — beta fechado)
 - Migração do WhatsApp para a **API oficial (Cloud API / Meta)** com seleção por provedor.
-- ~~Infra de produção em VPS (Docker Compose, reverse proxy + TLS, backups automáticos do Postgres).~~
-  **Feito, caminho diferente do planejado:** produção real é Railway (backend) + Cloudflare
-  Pages (painel) + Supabase (Postgres) — ver `docs/CI_CD.md`. Pendente: confirmar/testar
-  backup automático do Supabase (`docs/GO_LIVE_CHECKLIST.md`, item A7).
+- Backup do banco de produção: confirmado em 2026-08-05 que o Plano Free do Supabase **não
+  inclui backup nenhum** (nem scheduled backups nem PITR) — decisão pendente do usuário
+  (upgrade para Pro, ou `pg_dump` externo agendado). Ver `docs/GO_LIVE_CHECKLIST.md` A7,
+  `docs/RUNBOOK.md §3`.
+- `POST /me/documentos` retorna `500` em produção (achado real do smoke test de
+  2026-08-05, causa raiz não diagnosticada — sem acesso a logs do Railway) — investigação
+  futura, fora do escopo da missão que o encontrou.
 - Observabilidade de produção (Prometheus/Grafana, alertas, uptime, agregação de logs).
 - Aumento de cobertura de testes (CRUD, webhook, OAuth, 2FA) + ESLint/Prettier no CI.
 - PWA, Error Boundary, onboarding e landing page no painel.
+
+---
+
+## [project-baseline-v1] - 2026-08-05
+
+Encerramento oficial da fase de fundação técnica da plataforma — tag anotada
+`project-baseline-v1`, commit `b0124abc9b7b9c0a5ef159149cacd05b8bda61f3` (branch `master`).
+
+### Adicionado
+- Documentação de lançamento: Política de Privacidade (LGPD), Termos de Uso, `SECURITY.md`,
+  `CONTRIBUTING.md` e este `CHANGELOG.md`.
+- `docs/agent-environment/PROJECT_BASELINE_V1.md` e `FUNCTIONALITY_MATRIX_V1.md` — baseline
+  técnico e funcional oficial do projeto.
+- Gate de `npm audit` com exceção granular e auditável (`scripts/audit-gate.mjs` +
+  `scripts/audit-allowlist.json`) — destrava o deploy automático (Railway + Cloudflare
+  Pages), bloqueado desde 2026-07-25 por um CVE já investigado e classificado Categoria C
+  (EV-069).
+
+### Corrigido
+- Frente de Segurança encerrada: 8 achados (EV-056, EV-057, EV-060, EV-063, EV-065, EV-067,
+  EV-069, EV-070) corrigidos, refutados ou aceitos como risco residual. 0 Categoria A, 0
+  Categoria B, 16 Categoria C (backlog, não bloqueante) — ver
+  `docs/agent-environment/SECURITY_BASELINE_v1.md`.
+- Documentação operacional sincronizada com a arquitetura real de produção (Railway +
+  Cloudflare Pages + Supabase); guia self-hosted anterior (VPS + Docker Compose + Caddy)
+  arquivado explicitamente em `docs/legacy/`.
+
+### Validado em produção (2026-08-05)
+- Deploy real confirmado (backend e painel redeployados após a correção do gate de CI).
+- Smoke test funcional real: cadastro, login, 2FA, criar técnico, criar serviço/cliente,
+  bater ponto, dashboard — todos OK. 1 achado real (`POST /me/documentos` → 500, ver "A
+  fazer" acima).
 
 ---
 

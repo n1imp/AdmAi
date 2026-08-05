@@ -10,12 +10,15 @@ execução (git/CI reais, leitura direta de código, testes rerodados localmente
 
 | Campo | Valor |
 |---|---|
-| Data | 2026-08-04 |
-| Commit (HEAD no momento do congelamento) | `e98425a1f98313f059683098318c2edf72572168` |
-| Branch | `fix/seguranca-criticos` (112 commits à frente de `master`) |
+| Data de congelamento original | 2026-08-04 |
+| **Data de publicação oficial** | **2026-08-05** — missão "Project Baseline v1 — Publicação Oficial" |
+| Commit (congelamento original) | `e98425a1f98313f059683098318c2edf72572168` |
+| **Commit oficial (`master`, publicado)** | **`b0124abc9b7b9c0a5ef159149cacd05b8bda61f3`** (merge de PR #100 + PR #101) |
+| **Tag oficial** | **`project-baseline-v1`** (anotada, aponta para `b0124ab...`) |
+| Branch de origem | `fix/seguranca-criticos` → mergeada em `master` via PR #100 e PR #101 |
 | Versão | `chaveiro-bot@1.0.0`, `chaveiro-painel@1.0.0` |
-| Arquitetura de produção real | Backend → **Railway** (Docker + Supabase Postgres) · Painel → **Cloudflare Pages** (estático) · App → **Android `.aab`** (Capacitor, distribuição manual/Play Store pendente) — confirmado ao vivo em `docs/agent-environment/EV065_VALIDATION_REPORT.md` (EV-066) e reconfirmado ao vivo nesta missão (§11) |
-| PR aberta associada | #100 (**estado: DRAFT** — mantido de propósito; título/descrição atualizados nesta missão, §11) |
+| Arquitetura de produção real | Backend → **Railway** (Docker + Supabase Postgres) · Painel → **Cloudflare Pages** (estático) · App → **Android `.aab`** (Capacitor, distribuição manual/Play Store pendente) — confirmado ao vivo em `docs/agent-environment/EV065_VALIDATION_REPORT.md` (EV-066), reconfirmado ao vivo nesta missão (§11) e novamente após a publicação real (§12) |
+| PR(s) | #100 (mergeada em 2026-08-04), #101 — correção do gate de deploy (mergeada em 2026-08-05) |
 | Repositório | `n1imp/AdmAi`, 2 módulos independentes (`chaveiro-bot/`, `chaveiro-painel/`), sem manifest de monorepo na raiz |
 
 ---
@@ -295,3 +298,67 @@ como oficial — os 2 arquivos movidos para `docs/legacy/` têm banner `⚠️ L
 2 documentos parcialmente corretos (`GO_LIVE_CHECKLIST.md`, `LAUNCH_PLAN.md`) têm a seção
 legada isolada e rotulada, e `docker-compose.yml` teve o comentário corrigido. Nenhum deploy, merge, migration ou nova auditoria de
 segurança executados.
+
+---
+
+## 12. Publicação Oficial — missão "Project Baseline v1 — Publicação Oficial" (2026-08-05)
+
+Missão dedicada, EDE completo, para transformar o baseline aprovado (Opção A da missão
+anterior) no estado oficial real do repositório e da produção.
+
+**Gate 1-3 (push + PR):** os 3 commits locais (`3e912b4`, `1f152b4`, `5c8d07b`) publicados
+via `git push`. PR #100 atualizado (título/descrição/links/checklist) e promovido de DRAFT
+para "ready for review".
+
+**Gate 4 (merge):** PR #100 mergeado em `master` (commit `7ce8b3d`) — **com autorização
+explícita do usuário**, ciente de que isso dispara deploy automático real.
+
+**Achado crítico (loop-back obrigatório):** o merge NÃO disparou deploy nenhum — confirmado
+ao vivo (workflow `Deploy` com conclusão `skipped`; uptime do Railway inalterado). Causa
+raiz: `npm audit --audit-level=high` falha desde 2026-07-25 por causa do CVE `ip-address`
+já aceito como Categoria C (EV-069) — isso reprova `ci-ok`, que bloqueia tanto o "Wait for
+CI" do Railway quanto a condição `workflow_run.conclusion == 'success'` do `deploy.yml`.
+Ou seja: **nenhum merge nesta branch jamais disparava deploy**, não só este.
+
+Por decisão explícita do usuário ("investigar corrigir o gate de deploy antes de decidir"),
+foi implementada uma correção cirúrgica: `scripts/audit-gate.mjs` +
+`scripts/audit-gate-helpers.mjs` + `scripts/audit-allowlist.json` — reprova qualquer
+advisory High/Critical, exceto os 3 GHSA IDs do `ip-address` já investigados no EV-069, por
+GHSA ID + pacote exatos, com justificativa, referência e data de revisão (expira em
+2026-11-04). 10 testes novos. PR #101 aberto, validado (CI + Security 100% verdes pela
+primeira vez nesta frente) e mergeado (commit `b0124ab`).
+
+**Confirmado ao vivo, após a correção:** `Deploy` (Cloudflare Pages) concluiu com sucesso;
+Railway redeployou (uptime resetou de ~304615s para 16s). Backend e painel publicados
+rodam o código deste baseline, incluindo o fix do EV-070.
+
+**Gate 5 (validação pós-merge):** `ci-ok` verde nos 2 PRs; `Security` 100% verde (primeira
+vez). Nenhuma regressão — todas as falhas anteriores eram a mesma exceção já classificada.
+
+**Gate 6 (tag oficial):** `project-baseline-v1` (anotada) criada e publicada em
+`b0124abc9b7b9c0a5ef159149cacd05b8bda61f3`, confirmada por dereference do objeto de tag via
+API do GitHub.
+
+**Gate 7 (smoke test real em produção):** conta de teste claramente identificada
+(`SMOKE-TEST-2026-08-05-*`), autorizada explicitamente pelo usuário. 11/12 passos OK:
+cadastro, login, 2FA (setup+ativação), criar técnico, criar serviço+cliente, login como
+técnico, troca de senha provisória, bater ponto, dashboard — todos com resposta HTTP
+correta (200/201) em produção real. **1 achado real:** `POST /me/documentos` → `500`, causa
+raiz não diagnosticada (app não expõe stack trace; sem acesso a logs do Railway), **não é
+uma regressão desta publicação** (funcionalidade não tocada por este branch) — registrado
+como pendência objetiva, não corrigido (fora do escopo). 2 empresas de teste ficam em
+produção (isoladas, multi-tenant, sem 2FA persistido para autoexclusão) — cleanup manual
+futuro.
+
+**Gate 8 (GO_LIVE_CHECKLIST, item A7):** verificado diretamente no painel do Supabase
+(Chrome real, sessão do usuário) — **CONFIRMADO: o Plano Free não inclui backup nenhum**
+(nem scheduled backups nem Point-in-Time Recovery, ambos exigem Plano Pro,
+$100+/mês). Risco real de perda de dados sem via de recuperação. Tarefa objetiva registrada
+em `docs/GO_LIVE_CHECKLIST.md` A7 e `docs/RUNBOOK.md §3`.
+
+**Gate 9 (CHANGELOG/baseline):** `CHANGELOG.md` ganhou a seção `[project-baseline-v1] -
+2026-08-05` com o commit/tag oficiais; esta seção (§12) documenta a missão completa.
+
+**Gate 10:** ver declaração de veredito entregue ao usuário — Opção A, **PROJECT BASELINE
+V1 PUBLICADO**, com o achado do Gate 7 (documentos) e o gap do Gate 8 (backup) registrados
+como pendências objetivas não-bloqueantes, não como falhas da publicação.

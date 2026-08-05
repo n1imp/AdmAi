@@ -38,19 +38,30 @@ curl -s https://api.SEUDOMINIO/metrics    # métricas Prometheus (sem auth, fora
 
 ## 3. Backup e restore do banco (Supabase)
 
-**Limitação declarada nesta execução — não confirmado, não assumido:** não foi possível
-verificar nesta missão (sem acesso ao painel do Supabase desta worktree) se o backup
-automático está habilitado, qual a política de retenção, nem se um restore já foi testado
-para o projeto Supabase de produção. `docs/legacy/DEPLOYMENT_VPS.md`/`RUNBOOK_VPS.md`
-descreviam backup manual via `pg_dump` num container Docker local — **isso não se aplica** à
-arquitetura real (não há container Postgres próprio; o banco é gerenciado pelo Supabase).
+⚠️ **CONFIRMADO em 2026-08-05, direto no painel do Supabase (projeto `AdmAI`, org `n1imp`,
+Free Plan) — não há NENHUM backup automático do banco de produção:**
 
-**Tarefa objetiva pendente (fora do escopo desta missão de documentação — decisão/verificação
-do usuário):** confirmar no painel do Supabase (Project Settings → Database → Backups) se
-backups automáticos estão ativos, qual a retenção, e executar/documentar um teste de restore
-real. Até essa confirmação, este runbook não pode declarar uma estratégia de backup como
-verificada — apenas registrar que o mecanismo é gerenciado pela plataforma, não por script
-próprio do projeto.
+- Aba "Scheduled backups": *"Free Plan does not include project backups."*
+- Aba "Point in time" (PITR): *"Point in Time Recovery is a Pro Plan add-on... Starts at
+  $100/month."*
+
+Nenhum dos dois mecanismos nativos do Supabase está disponível no plano atual — não é uma
+configuração faltando, é uma limitação do plano contratado (Free). `docs/legacy/
+DEPLOYMENT_VPS.md`/`RUNBOOK_VPS.md` descreviam backup manual via `pg_dump` num container
+Docker local — **isso não se aplica** à arquitetura real (não há container Postgres
+próprio; o banco é gerenciado pelo Supabase, sem cron/script de backup próprio do projeto).
+
+**Risco real:** perda de dados de produção sem qualquer via de recuperação, em caso de
+corrupção, exclusão acidental ou incidente na conta Supabase.
+
+**Tarefa objetiva pendente (decisão do usuário, fora do escopo de execução autônoma):**
+1. Upgrade para o Plano Pro do Supabase (inclui backup diário; PITR como add-on pago à
+   parte), **ou**
+2. Implementar um `pg_dump` externo agendado contra a conexão direta (ex.: job periódico
+   no GitHub Actions ou outro agendador, salvando em storage externo) como mitigação de
+   menor custo.
+
+Até uma dessas ações, a produção real está sem cobertura de backup.
 
 ## 4. Migrations de banco
 
