@@ -4,8 +4,14 @@ Este documento cobre os passos **manuais** (dependem da sua infraestrutura e da 
 para colocar o AdmAi no ar e publicá-lo na Play Store. O que já foi entregue em código
 está marcado como ✅ FEITO.
 
-Decisões desta entrega: app via **Capacitor**, hospedagem em **VPS (Docker + Caddy)**,
-**WhatsApp desabilitado** no lançamento, **conta Play ainda não criada**.
+Decisões atuais: app via **Capacitor**, hospedagem em **Railway (backend) + Cloudflare Pages
+(painel) + Supabase (Postgres)** — ver `docs/CI_CD.md` e `docs/RUNBOOK.md`, **WhatsApp
+desabilitado** no lançamento, **conta Play ainda não criada**.
+
+> A FASE A abaixo foi reescrita para a arquitetura atual (Railway/Cloudflare/Supabase). A
+> versão original desta fase, escrita para um VPS self-hosted (Docker Compose + Caddy), não é
+> mais o caminho de produção e está preservada só por histórico em
+> [`docs/legacy/DEPLOYMENT_VPS.md`](./legacy/DEPLOYMENT_VPS.md).
 
 ---
 
@@ -16,35 +22,52 @@ Decisões desta entrega: app via **Capacitor**, hospedagem em **VPS (Docker + Ca
   minha conta". Teste de integração em `chaveiro-bot/test/integration/autoexclusao_conta.test.js`.
 - ✅ **Instrução pública de exclusão** na Política de Privacidade (seção 11), em `/privacidade`
   (acessível sem login) — atende ao requisito da Play Store.
-- ✅ **`chaveiro-bot/docker-compose.prod.yml`** — stack de produção (Postgres + backend + painel
-  + Caddy HTTPS), portas internas fechadas, sem Evolution/Redis.
+- 🗄️ **`chaveiro-bot/docker-compose.prod.yml`** — stack para deploy self-hosted (Postgres +
+  backend + painel + Caddy HTTPS). Não é o caminho de produção atual (ver nota acima) —
+  preservado no repositório só para o cenário legado de `docs/legacy/DEPLOYMENT_VPS.md`.
 - ✅ **App Android (Capacitor)** gerado em `chaveiro-painel/android/`, com câmera/localização no
   manifest e CapacitorHttp (sem CORS). Ver `chaveiro-painel/CAPACITOR.md`.
 - ✅ **API base configurável** (`VITE_API_URL`) para o build do app.
 
 ---
 
-## FASE A — Backend + painel em produção (VPS)
+## FASE A — Backend + painel em produção (Railway + Cloudflare Pages + Supabase)
 
-- [ ] **A1. VPS + DNS.** Provisionar VPS; SSH por chave (sem root/senha); `ufw` + `fail2ban`.
-  Apontar `app.SEU_DOMINIO` (painel) e `api.SEU_DOMINIO` (API) para o IP **antes** de subir o
-  Caddy (senão o TLS não emite). Ref.: `docs/DEPLOYMENT.md §1–3`.
-- [ ] **A2. `.env` de produção** em `chaveiro-bot/.env` (NÃO commitar). Gerar segredos:
-  `openssl rand -hex 32` para `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`, `POSTGRES_PASSWORD`.
-  Definir: `NODE_ENV=production`, `DATABASE_URL=postgresql://chaveiro:<senha>@postgres:5432/chaveirobot`,
-  `ALLOWED_ORIGIN=https://app.SEU_DOMINIO`, `PUBLIC_URL=https://api.SEU_DOMINIO`,
-  `CADDY_APP_DOMAIN=app.SEU_DOMINIO`, `CADDY_API_DOMAIN=api.SEU_DOMINIO`.
-  Deixar WhatsApp OFF (não definir `WHATSAPP_HABILITADO`).
-- [ ] **A3. Subir a stack:** `docker compose -f docker-compose.prod.yml up -d --build`.
-  As migrations rodam sozinhas (`docker-entrypoint.sh` → `prisma migrate deploy`).
-- [ ] **A4. Verificar:** `https://app.` com cadeado; `https://api./health` → 200
-  `{"checks":{"database":"ok"}}`; confirmar com `nmap` que 3000/5432 NÃO estão expostos.
-- [ ] **A5. Backups.** Cron diário de `pg_dump` + **1 restore testado** em DB temporário;
-  (recom.) cópia offsite. Ref.: `docs/DEPLOYMENT.md §7`, `docs/RUNBOOK.md §3`.
-- [ ] **A6. Monitoramento.** UptimeRobot/Healthchecks no `/health`; `SENTRY_DSN` de produção
-  recebendo eventos (testar um erro proposital).
-- [ ] **A7. Smoke test** (`docs/DEPLOYMENT.md §9`): cadastro, login, 2FA, criar serviço, bater
-  ponto (selfie+geo), excluir uma conta de teste.
+- [ ] **A1. Provisionar Supabase.** Criar projeto Supabase; anotar a **conexão direta**
+  (porta 5432, não o pooler 6543 — migrations no boot exigem conexão direta, ver
+  `docs/CI_CD.md` Troubleshooting) para `DATABASE_URL`/`DIRECT_URL`.
+- [ ] **A2. Provisionar Railway.** New Project → Deploy from GitHub → Root Directory =
+  `chaveiro-bot` (usa `Dockerfile` + `railway.json`). Configurar **volume persistente** em
+  `/app/uploads`. Ativar "Deploy on push" em `master` + "Wait for CI / Check Suites". Ref.:
+  `docs/CI_CD.md`, seção "Backend → Railway".
+- [ ] **A3. Variáveis no Railway.** Gerar segredos (`openssl rand -hex 32` para `JWT_SECRET`/
+  `ENCRYPTION_KEY`, `openssl rand -hex 24` para `API_TOKEN`) e definir no painel do Railway:
+  `NODE_ENV=production`, `DATABASE_URL`/`DIRECT_URL` (Supabase, conexão direta), `JWT_SECRET`,
+  `ENCRYPTION_KEY`, `API_TOKEN`, `ALLOWED_ORIGIN=https://app.SEU_DOMINIO`,
+  `PUBLIC_URL=https://api.SEU_DOMINIO`, `SENTRY_DSN` (opcional). **Não** definir `PORT`
+  (injetado pelo Railway) nem `ADMIN_USERNAME`/`ADMIN_PASSWORD` (crie o admin via tela de
+  cadastro). Deixar WhatsApp OFF (não definir `WHATSAPP_HABILITADO`). Ref.: `docs/CI_CD.md`,
+  "Inventário de secrets/variáveis".
+- [ ] **A4. Provisionar Cloudflare Pages.** Connect to Git → Root Directory =
+  `chaveiro-painel`, build `npm run build`, output `dist`. Definir `VITE_API_URL`/
+  `VITE_SENTRY_DSN` nas Env vars do projeto. Confirmar que `public/_redirects` está no build
+  (fallback de SPA). Ref.: `docs/CI_CD.md`, seção "Painel → Cloudflare Pages". **Nota:** o
+  deploy real do painel roda via GitHub Actions (`.github/workflows/deploy.yml`,
+  `cloudflare/wrangler-action`, disparado após o CI concluir em `master`) — confirmar que
+  `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` estão configurados como secrets do repositório
+  no GitHub, não só no painel do Cloudflare.
+- [ ] **A5. DNS.** Apontar `app.SEU_DOMINIO` (Cloudflare Pages) e `api.SEU_DOMINIO` (Railway)
+  conforme a documentação de cada plataforma para domínio customizado.
+- [ ] **A6. Verificar:** `https://app.SEU_DOMINIO` carrega; `https://api.SEU_DOMINIO/health` →
+  200 com `database: ok`; migrations aplicadas (`prisma migrate status` via Railway).
+- [ ] **A7. Backups.** Confirmar no painel do Supabase (Project Settings → Database → Backups)
+  se o backup automático está ativo e qual a retenção; executar **1 restore de teste**. Não
+  confirmado nesta missão de documentação — ver `docs/RUNBOOK.md §3` (gap declarado
+  explicitamente, não presumir configurado).
+- [ ] **A8. Monitoramento.** UptimeRobot/Healthchecks no `/health`; `SENTRY_DSN` (Railway) e
+  `VITE_SENTRY_DSN` (Cloudflare Pages) recebendo eventos (testar um erro proposital).
+- [ ] **A9. Smoke test:** cadastro, login, 2FA, criar serviço, bater ponto (selfie+geo),
+  excluir uma conta de teste.
 
 ---
 

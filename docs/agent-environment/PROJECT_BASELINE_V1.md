@@ -14,9 +14,38 @@ execução (git/CI reais, leitura direta de código, testes rerodados localmente
 | Commit (HEAD no momento do congelamento) | `e98425a1f98313f059683098318c2edf72572168` |
 | Branch | `fix/seguranca-criticos` (112 commits à frente de `master`) |
 | Versão | `chaveiro-bot@1.0.0`, `chaveiro-painel@1.0.0` |
-| Arquitetura de produção real | Backend → **Railway** (Docker + Supabase Postgres) · Painel → **Cloudflare Pages** (estático) · App → **Android `.aab`** (Capacitor, distribuição manual/Play Store pendente) — confirmado ao vivo em `docs/agent-environment/EV065_VALIDATION_REPORT.md` (EV-066) e documentado em `README.md:402`, `docs/CI_CD.md` |
-| PR aberta associada | #100 (**estado: DRAFT**, título desatualizado — ver §7, pendência levantada ao usuário) |
+| Arquitetura de produção real | Backend → **Railway** (Docker + Supabase Postgres) · Painel → **Cloudflare Pages** (estático) · App → **Android `.aab`** (Capacitor, distribuição manual/Play Store pendente) — confirmado ao vivo em `docs/agent-environment/EV065_VALIDATION_REPORT.md` (EV-066) e reconfirmado ao vivo nesta missão (§11) |
+| PR aberta associada | #100 (**estado: DRAFT** — mantido de propósito; título/descrição atualizados nesta missão, §11) |
 | Repositório | `n1imp/AdmAi`, 2 módulos independentes (`chaveiro-bot/`, `chaveiro-painel/`), sem manifest de monorepo na raiz |
+
+---
+
+## Arquitetura Oficial
+
+> **A partir deste commit, esta é a única arquitetura oficialmente suportada.**
+
+| Componente | Plataforma | Evidência |
+|---|---|---|
+| **Backend** | **Railway** (build Docker via `railway.json`, healthcheck `/health`) | Confirmado ao vivo nesta missão: `GET https://admai-production.up.railway.app/health` → `200`, header `Server: railway-hikari` |
+| **Frontend** | **Cloudflare Pages** (estático, projeto `admai-painel`) | Confirmado ao vivo nesta missão: `GET https://admai-painel.pages.dev/` → `200`, header `Server: cloudflare` + `CF-RAY`; CSP `connect-src` aponta para o domínio Railway acima |
+| **Banco** | **Supabase** (Postgres, conexão direta porta 5432 para migrations) | `chaveiro-bot/.env.example:2` ("Deploy: Railway (Docker) + Supabase (Postgres)"), `DATABASE_URL`/`DIRECT_URL` de exemplo usando `supabase.co` |
+| **Deploy backend** | Integração nativa Railway↔GitHub — "Deploy on push" em `master`, condicionado ao CI (`ci-ok`) verde | `docs/CI_CD.md`, seção "Backend → Railway" |
+| **Deploy frontend** | **GitHub Actions** (`deploy.yml`) — dispara via `workflow_run` após o `CI` concluir com sucesso em `master`, publica com `cloudflare/wrangler-action@v4`. **Não** é a integração nativa Git↔Cloudflare | `.github/workflows/deploy.yml`, lido diretamente nesta missão |
+| **App Android** | Capacitor, `.aab` assinado via `.github/workflows/release.yml` (tag `v*`) | `docs/CI_CD.md` |
+| **Rollback** | Backend: redeploy de um deployment anterior no dashboard Railway. Painel: "Rollback to this deployment" no dashboard Cloudflare Pages. Banco: forward-fix (sem migration *down* automática, decisão deliberada) | `docs/RUNBOOK.md`, `docs/DB_ARCHITECTURE_PLAN.md:352-361` |
+| **Monitoramento** | Sentry (`SENTRY_DSN` no Railway, `VITE_SENTRY_DSN` no Cloudflare Pages) + `/metrics` (Prometheus, sem auth) + uptime externo (UptimeRobot/Healthchecks, não confirmado se configurado) | `docs/RUNBOOK.md §6` |
+| **Ambientes** | Só produção confirmada nesta execução (`master` → deploy automático); PRs geram preview deployments no Cloudflare Pages (nativo do Pages, independente do `deploy.yml`) | `docs/CI_CD.md` |
+
+**Arquitetura legada (não oficial):** VPS + Docker Compose + Caddy — desenho original do
+projeto, substituído. Preservada só por valor histórico em `docs/legacy/` (`DEPLOYMENT_VPS.md`,
+`RUNBOOK_VPS.md`), com aviso explícito em cada arquivo. Os artefatos de infraestrutura desse
+caminho (`chaveiro-bot/Caddyfile`, `docker-compose.prod.yml`, `docker-compose.monitoring.yml`,
+`railway.json` — este último na verdade É usado, ver acima) continuam versionados, mas não são
+o caminho de produção.
+
+**Gap conhecido, não confirmado nesta missão:** política de backup automático e teste de
+restore do Supabase de produção — ver `docs/GO_LIVE_CHECKLIST.md`, item A7. Não presumido como
+resolvido.
 
 ---
 
@@ -162,34 +191,24 @@ por padrões suspeitos (`.env`, `.bak`, `.dump`, `.log`, `credential`, `secret`)
 
 ---
 
-## 7. Pendências levantadas ao usuário (não bloqueiam a aprovação documental deste baseline)
+## 7. Pendências — status após a missão "PROJECT BASELINE V1 — Final Approval" (§11)
 
-1. **PR #100 está em DRAFT com título desatualizado** ("C2 + Onda 1 Eos Security Closure v2
-   (T-BILL-01, T-BILL-06, T-REC-01)") — não reflete os ~30+ commits de segurança acumulados
-   desde então. Decisão do usuário: atualizar título, promover para "ready for review", ou
-   manter como está. Push/gestão de PR exige autorização explícita — não alterado nesta
-   missão.
-2. **`docs/DEPLOYMENT.md`, `docs/GO_LIVE_CHECKLIST.md` e `docs/RUNBOOK.md` documentam uma
-   arquitetura de produção (VPS + Docker Compose + Caddy) diferente da arquitetura real
-   atualmente em uso** (Railway + Cloudflare Pages + Supabase, confirmada ao vivo em EV-066,
-   ver §1). Verificado por leitura direta dos 3 arquivos nesta execução — os 3 assumem
-   `docker compose`/Caddy/backup manual via `pg_dump` em container próprio, nenhum menciona
-   Railway/Cloudflare/Supabase. **Correção**: uma verificação anterior desta missão havia
-   concluído erroneamente que `docs/RUNBOOK.md` não existia (falso — foi um erro de
-   evidência: a busca original só confirmou arquivos que *referenciam* "RUNBOOK", sem checar
-   diretamente se o arquivo em si existia); a revisão independente do Gate 9 encontrou e
-   corrigiu esse engano antes da aprovação. `docs/RUNBOOK.md` **existe**, está versionado
-   (adicionado em `cfdf7fe`, 2026-07-04) e tem conteúdo operacional real e substantivo (saúde/
-   diagnóstico, restart, backup/restore, migrations, rotação de segredos, incidentes comuns) —
-   mas, como os outros 2, escrito inteiramente para a arquitetura VPS, não para a real. Os
-   arquivos `Caddyfile`/`docker-compose.prod.yml`/`railway.json` continuam todos versionados
-   — não está claro se o caminho VPS é uma alternativa mantida de propósito ou documentação
-   órfã de uma decisão de arquitetura anterior. Decisão do usuário: atualizar os 3 documentos
-   para refletir Railway/Cloudflare/Supabase como caminho primário, marcar VPS como
-   alternativa explícita, ou arquivar. Nenhuma edição feita nesses 3 arquivos nesta missão.
-3. **`chaveiro-painel/package.json` não declara `engines.node`** (o bot declara `>=20`) —
-   gap menor de consistência, não corrigido (mudança de configuração fora do escopo desta
-   missão de consolidação).
+As 3 pendências levantadas na missão anterior foram **todas resolvidas** nesta execução:
+
+1. ~~PR #100 em DRAFT com título desatualizado~~ — **resolvido**: título e descrição
+   atualizados via `gh pr edit` (autorizado explicitamente pelo Gate 4 desta missão), refletindo
+   o escopo real acumulado. Estado DRAFT mantido de propósito (não é uma pendência — decisão
+   de merge continua do usuário).
+2. ~~`docs/DEPLOYMENT.md`/`GO_LIVE_CHECKLIST.md`/`RUNBOOK.md` descreviam VPS como
+   arquitetura oficial~~ — **resolvido**: ver §11, Gate 2/3.
+3. ~~`chaveiro-painel/package.json` sem `engines.node`~~ — **resolvido**: adicionado
+   `>=20`, grounded em evidência real (todo workflow que roda o painel — `ci.yml` job
+   `frontend`, `deploy.yml`, `release.yml` — usa Node 20).
+
+**Único gap residual conhecido, não resolvido (fora do escopo de uma missão documental):**
+confirmação de backup automático + teste de restore do Supabase de produção
+(`docs/GO_LIVE_CHECKLIST.md`, item A7). Não é uma inconsistência documental — é uma
+verificação operacional pendente que só o usuário pode confirmar no painel do Supabase.
 
 ---
 
@@ -211,6 +230,61 @@ representam fielmente o estado real do repositório, não procurar vulnerabilida
 
 ## 10. Encerramento
 
-Ver a declaração de veredito entregue ao usuário nesta missão (Gate 10) — este documento por
-si só não constitui a aprovação; a aprovação é a resposta formal Opção A/B do orquestrador ao
-usuário, referenciando este arquivo.
+Ver a declaração de veredito entregue ao usuário na missão "Project Baseline v1" (Gate 10
+original) — Opção B (não aprovado), bloqueado exclusivamente pela inconsistência de
+arquitetura resolvida em §11 abaixo.
+
+---
+
+## 11. Consolidação de Infraestrutura — missão "PROJECT BASELINE V1 — Final Approval"
+
+Missão dedicada, EDE completo, para resolver a única pendência que bloqueava a Opção A da
+missão anterior: documentação operacional descrevendo uma arquitetura diferente da real.
+
+**Gate 1 (revalidação com evidência fresca):** confirmado ao vivo, nesta execução — ver
+"Arquitetura Oficial" acima. Sem divergência — não foi necessário interromper a missão.
+
+**Gate 2 (classificação dos documentos operacionais):**
+
+| Documento | Estado | Motivo | Ação |
+|---|---|---|---|
+| `docs/DEPLOYMENT.md` (original) | Legado | Guia completo de deploy self-hosted VPS+Docker+Caddy, nunca mencionava Railway/Cloudflare/Supabase | Movido para `docs/legacy/DEPLOYMENT_VPS.md` (com banner ⚠️), path original virou ponteiro curto para `CI_CD.md` |
+| `docs/RUNBOOK.md` (original) | Legado | Runbook operacional inteiro escrito para `docker compose`/Caddy — nenhum comando se aplica à produção real | Movido para `docs/legacy/RUNBOOK_VPS.md` (com banner ⚠️), path original recebeu um runbook novo e real para Railway/Cloudflare/Supabase |
+| `docs/GO_LIVE_CHECKLIST.md` | Parcialmente correto | FASE A (infra) era só VPS; FASE B (legal)/C (Android)/D (Play Store) são corretas e independentes de arquitetura | Mantido no lugar; FASE A reescrita para Railway/Cloudflare/Supabase; nota explícita apontando a versão original para `docs/legacy/DEPLOYMENT_VPS.md` |
+| `README.md` | Parcialmente correto | 3 pontos stale: checklist OWASP M3/M9 citando Caddy como controle ativo; comentário sobre topologia de proxy (`Caddy → nginx → backend = 2`) desalinhado, mesmo texto do comentário stale em `app.js` (item 13 do backlog, não corrigido) | Atualizar (3 edições pontuais) — feito |
+| `docs/CI_CD.md` | Parcialmente correto | Dizia "CD — integração nativa (sem Actions de deploy)" para o painel, mas o deploy real roda via `deploy.yml`+`wrangler-action`; tabela de secrets omitia `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`/`VITE_CRISP_ID`/`VITE_POSTHOG_KEY` e confundia o `VITE_API_URL` variable (`release.yml`) com o secret de mesmo nome (`deploy.yml`) | Atualizar — feito |
+| `SECURITY_BASELINE_v1.md` | Oficial | Já descrevia a arquitetura real corretamente (linha 10) desde a missão anterior | Manter — nenhuma edição necessária |
+| `docs/LAUNCH_PLAN.md` | Parcialmente correto (achado do Gate 5, loop-back) | Documento de planejamento de 2026-06, FASE 0 inteira descrevia VPS como o go-live pendente; Apêndice A marcava "Deploy/HTTPS/backups" como 🟡 não executado | Banner de documento histórico + FASE 0 marcada como superada, com nota apontando para `GO_LIVE_CHECKLIST.md`; Apêndice A atualizado para 🟢 |
+| `chaveiro-bot/scripts/backup-uploads.sh` / `restore-uploads.sh` | Legado (achado do Gate 5, loop-back) | Scripts reais e funcionais, mas só válidos contra volumes Docker de uma VPS — não aplicáveis ao volume do Railway | Banner de cabeçalho adicionado (comentário, sem mudança de lógica/comportamento) |
+| `CHANGELOG.md` | Parcialmente correto (achado do Gate 5, loop-back) | Item "A fazer" listava "Infra de produção em VPS" como trabalho pendente rumo ao 1.0.0 | Marcado como feito (caminho diferente do planejado), com nota do gap real (backup Supabase) |
+| `chaveiro-bot/src/app.js:37-40` | Legado, **não alterado de propósito** | Comentário de código descreve a mesma topologia stale (`Caddy → nginx → backend`) | **Não editado** — já é o item 13 do `SECURITY_HARDENING_BACKLOG.md` (Categoria C, aceito), e esta missão restringe explicitamente alterar código da aplicação e corrigir itens Categoria C. `README.md` agora documenta explicitamente que esse comentário está desalinhado, para não deixar a contradição silenciosa. |
+| `chaveiro-painel/nginx.conf:29` | Legado, não alterado | Comentário afirma que "o Caddy termina TLS na frente" — só usado no caminho self-hosted, config do painel local/legado | Não editado — baixa prioridade, arquivo já pertence exclusivamente ao caminho legado |
+
+**Gate 3 (sincronização):** `README.md` ganhou uma seção "Arquitetura Oficial" explícita
+(logo após a linha de Deploy) declarando Railway/Cloudflare/Supabase como único suportado e
+apontando `docs/legacy/` como não-oficial. `docs/CI_CD.md` corrigido (mecanismo de deploy do
+painel + tabela de secrets). `SECURITY_BASELINE_v1.md` já estava correto.
+
+**Gate 4 (pendências administrativas):** PR #100 — título e descrição atualizados via
+`gh pr edit` (ação visível autorizada explicitamente pelo texto da missão); estado DRAFT
+mantido, não é uma decisão desta missão. `chaveiro-painel/package.json` — `engines.node
+>=20` adicionado, com base em evidência real (Node 20 em todo workflow que toca o painel).
+
+**Gate 5 (revisão cruzada independente):** agente fresco, mandato de achar qualquer
+referência restante a VPS/Caddy como oficial. Confirmou o núcleo (README/CI_CD/DEPLOYMENT/
+RUNBOOK/GO_LIVE_CHECKLIST/legacy) consistente, mas encontrou 3 arquivos fora do conjunto
+originalmente revisado (`docs/LAUNCH_PLAN.md`, os 2 scripts de backup/restore de uploads,
+`CHANGELOG.md`) — **todos corrigidos nesta mesma execução, sem nova rodada necessária**
+(loop-back único, convergiu).
+
+**Gate 6 (baseline):** esta seção.
+
+**Gate 7 (validação final):** Nenhum arquivo remanescente encontrado apresentando VPS/Caddy
+como arquitetura oficial (confirmado pela segunda passada do Gate 5, incluída acima).
+Documentação consistente. Arquitetura consistente. Rastreabilidade preservada (todas as
+edições, motivos e arquivos tocados documentados nesta seção). Nenhum documento operacional
+contraditório remanescente. Nenhum arquivo legado tratado como oficial — todos os 2 arquivos
+movidos para `docs/legacy/` têm banner `⚠️ LEGADO` explícito, e os 2 documentos parcialmente
+corretos (`GO_LIVE_CHECKLIST.md`, `LAUNCH_PLAN.md`) têm a seção legada claramente isolada e
+rotulada dentro do próprio arquivo. Nenhum deploy, merge, migration ou nova auditoria de
+segurança executados.

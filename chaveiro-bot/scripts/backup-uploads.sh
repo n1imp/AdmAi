@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 # ============================================================================
+# [LEGADO — caminho self-hosted, VPS + Docker Compose]
+# Não se aplica à produção atual (Railway + Cloudflare Pages + Supabase): o
+# volume de uploads em produção é um volume do Railway, não um volume Docker
+# nomeado acessível via `docker volume inspect`/`docker run` num host VPS.
+# Ver docs/RUNBOOK.md §3 para o estado real de backup (Supabase gerenciado;
+# uploads em volume do Railway, procedimento de backup próprio não
+# confirmado nesta execução). Script preservado para o cenário legado de
+# docs/legacy/DEPLOYMENT_VPS.md.
+# ============================================================================
 # backup-uploads.sh — Backup dos volumes Docker que vivem na VPS
 # ----------------------------------------------------------------------------
 # POR QUE ESTE SCRIPT EXISTE:

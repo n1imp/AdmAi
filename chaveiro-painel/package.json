@@ -4,6 +4,9 @@
   "description": "Painel administrativo mobile-first AdmAi",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/gerar-headers.mjs",

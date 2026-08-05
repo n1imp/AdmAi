@@ -11,13 +11,13 @@ documenta o produto e não concede autoridade adicional a nenhum agente.
 |---|-------|----------------------|
 | M1 | Credenciais Impróprias | `.env` nunca comitado; tokens cifrados em BD (`accessTokenEnc`) |
 | M2 | Supply Chain | `npm audit` no CI; versões fixadas em `package-lock.json` |
-| M3 | Comunicação Insegura | HTTPS obrigatório via Caddy; `helmet` no Express |
+| M3 | Comunicação Insegura | HTTPS obrigatório (borda gerenciada Railway/Cloudflare); `helmet` no Express |
 | M4 | Auth/AuthZ Insuficiente | RBAC verificado em todo endpoint; `papel` + `permissoes` no Prisma |
 | M5 | Controles de Privacidade | PII (CPF, telefone) nunca logados; Sentry com `beforeSend` filtrado |
 | M6 | Configuração Insegura | Sem segredos em variáveis de ambiente de produção sem cifragem |
 | M7 | Criptografia Fraca | `bcryptjs` para senhas; `jose` para JWT; `argon2` para tokens sensíveis |
 | M8 | Autenticação Incorreta | 2FA TOTP + OTP WhatsApp; `tokenValidoApos` invalida sessões antigas |
-| M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via Caddy headers |
+| M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via `_headers` gerado no build (`chaveiro-painel/scripts/gerar-headers.mjs`, consumido pela Cloudflare Pages) |
 | M10 | Funcionalidade Excessiva | Endpoints de debug desabilitados em `NODE_ENV=production` |
 
 # 🔑 AdmAi — Plataforma SaaS de Gestão para Chaveiros via WhatsApp
@@ -399,9 +399,19 @@ Validadas por Zod no boot — ver [`config/env.js`](chaveiro-bot/src/config/env.
 | `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio (`ADMIN_PASSWORD` mín. 8 chars) |
 | `SENTRY_DSN` · `LOG_LEVEL` · `APP_VERSION` | — | Observabilidade (ausente = Sentry off) |
 
-> **Deploy:** a arquitetura de produção é **Railway** (backend, Docker + volume) + **Cloudflare
-> Pages** (painel estático) + **Supabase** (Postgres). O CI/CD e o inventário de variáveis por
-> plataforma estão em [`docs/CI_CD.md`](docs/CI_CD.md); o passo a passo manual em
+> **Arquitetura Oficial**
+>
+> Backend: **Railway** (Docker + volume) · Frontend: **Cloudflare Pages** (estático) ·
+> Banco: **Supabase** (Postgres). Confirmado ao vivo (headers `Server: railway-hikari` /
+> `Server: cloudflare`) na missão "Project Baseline v1" —
+> ver `docs/agent-environment/PROJECT_BASELINE_V1.md`.
+>
+> Esta é a única arquitetura oficialmente suportada. Documentação referente a VPS, Docker
+> Compose e Caddy (`docs/legacy/`) representa um ambiente **legado**, não a produção atual.
+>
+> O CI/CD e o inventário de variáveis por plataforma estão em
+> [`docs/CI_CD.md`](docs/CI_CD.md); operação e incidentes em
+> [`docs/RUNBOOK.md`](docs/RUNBOOK.md); ponto de entrada de deploy em
 > [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
@@ -522,9 +532,15 @@ client Prisma **escopado à empresa do usuário** (`prismaParaEmpresa(empresaId)
   401, o que descartaria o passo. Mantenha esse contrato.
 - Segredos por empresa ficam **cifrados** (`ENCRYPTION_KEY`); nunca persista em claro.
 - Não enfraqueça os rate limiters de `auth/*` nem a validação HMAC/token do webhook.
-- `app.set('trust proxy', N)` deve refletir o número real de proxies na frente do backend
-  (hoje: Caddy → nginx → backend = 2). Se a cadeia mudar, esse número precisa mudar junto
-  — senão rate-limit e logs passam a usar o IP errado.
+- `app.set('trust proxy', N)` deve refletir o número real de proxies na frente do backend.
+  O código atual usa `2` com um comentário que descreve uma topologia self-hosted
+  (Caddy → nginx → backend) — **desalinhado com a produção real** (Railway, borda gerenciada
+  de hop único). Isso é hoje inofensivo porque a borda do Railway sanitiza
+  `X-Forwarded-For`/`X-Real-IP` (confirmado ao vivo, EV-065/066); é risco latente se a borda
+  mudar de comportamento. Registrado como item 13 de
+  `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` (Categoria C, não corrigido de
+  propósito nesta missão). Se a cadeia real mudar, esse número precisa mudar junto — senão
+  rate-limit e logs passam a usar o IP errado.
 
 **Convenções do projeto**
 - **Idioma pt-BR** em código, comentários, mensagens de UI/bot e commits.
