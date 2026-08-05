@@ -111,6 +111,7 @@ segredo vive no repositório.
 | Erro de CORS no painel | `ALLOWED_ORIGIN` (Railway) não bate com o domínio real do painel | Ver `docs/CI_CD.md`, Troubleshooting |
 | Migrations falham no boot | `DATABASE_URL` apontando para o pooler (6543) em vez da conexão direta (5432) | Ver `docs/CI_CD.md`, Troubleshooting |
 | Mensagens do WhatsApp não chegam | Webhook/token inválido | Confira `PUBLIC_URL` e config da Meta |
+| **Login no painel falha com "Não foi possível conectar à API"** (achado real, 2026-08-05) | CSP do painel (`connect-src`) sem a origem do Railway — o navegador bloqueia a chamada antes de sair, axios recebe erro de rede. Causa raiz: há **2 pipelines de deploy do painel** (GitHub Actions `deploy.yml` E integração nativa Git↔Cloudflare, ver `docs/CI_CD.md`); se a build da integração nativa vencer a corrida e não tiver `VITE_API_URL` configurada em Cloudflare Pages → Variables and secrets, o `_headers` gerado fica sem a API no `connect-src` | 1. Confirmar via `curl -I https://app.SEUDOMINIO/ \| grep -i content-security-policy` se falta a origem da API; 2. Garantir `VITE_API_URL` setada em **ambos** GitHub Actions secrets e Cloudflare Pages → Variables and secrets (Production); 3. Se já quebrado, promover manualmente o deployment correto em Cloudflare Pages → Deployments → "Rollback to this deployment" |
 
 ## 8. Contatos e escalonamento
 
