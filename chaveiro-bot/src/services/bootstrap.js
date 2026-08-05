@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { TRIAL_DIAS } from './billing.js';
 
 /**
  * Bootstrap de admin (conveniência de desenvolvimento).
@@ -48,6 +49,16 @@ export async function bootstrapAdmin() {
     await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06 (correção pós-revisão): mesmo fluxo de criação de empresa
+      // de /auth/register e /setup — sem isto, a empresa de bootstrap
+      // (a 1ª de toda instância nova) ficaria sem Assinatura.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       await tx.usuario.create({
         data: {
           nome: env.ADMIN_NOME ?? 'Admin',

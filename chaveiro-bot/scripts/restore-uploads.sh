@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================================
+# [LEGADO — caminho self-hosted, VPS + Docker Compose]
+# Não se aplica à produção atual (Railway + Cloudflare Pages + Supabase) —
+# contraparte de backup-uploads.sh, mesma ressalva. Ver docs/RUNBOOK.md §3.
+# ============================================================================
 # restore-uploads.sh — Restaura um backup para o volume backend_uploads
 # ----------------------------------------------------------------------------
 # Recebe o caminho de um arquivo .tar.gz (gerado por backup-uploads.sh) e

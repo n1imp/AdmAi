@@ -1,113 +1,110 @@
 # Runbook Operacional — AdmAi
 
-Procedimentos de operação do dia a dia e de incidentes em produção (VPS + Docker Compose).
-Comandos assumem que você está em `chaveiro-bot/` no servidor, com os arquivos
-`docker-compose.yml` + `docker-compose.prod.yml` (ver [DEPLOYMENT.md](./DEPLOYMENT.md)).
-
-> Atalho útil: `alias dc='docker compose -f docker-compose.yml -f docker-compose.prod.yml'`
+Procedimentos de operação do dia a dia e de incidentes na arquitetura oficial de produção:
+**Railway** (backend) + **Cloudflare Pages** (painel) + **Supabase** (Postgres). Confirmado ao
+vivo nesta execução — ver `docs/agent-environment/PROJECT_BASELINE_V1.md`, seção "Arquitetura
+Oficial". Para o guia self-hosted anterior (VPS + Docker Compose + Caddy, não usado em
+produção), ver [`docs/legacy/RUNBOOK_VPS.md`](./legacy/RUNBOOK_VPS.md).
 
 ---
 
 ## 1. Saúde e diagnóstico rápido
 
 ```bash
-dc ps                                   # estado dos containers
-dc logs -f --tail=100 backend           # logs do backend
-curl -s https://api.[dominio]/health    # health check (espera 200 + database: ok)
-docker stats --no-stream                # uso de CPU/memória por container
+curl -s https://api.SEUDOMINIO/health     # health check (espera 200 + database: ok)
+curl -s https://api.SEUDOMINIO/metrics    # métricas Prometheus (sem auth, fora de /api)
 ```
 
-Sinais de problema:
-- `/health` retorna **503** → banco indisponível ou app desligando.
-- Container em `Restarting` → veja `dc logs <serviço>`.
-- Memória estourando no backend → ajustada por `--max-old-space-size=512` (Dockerfile).
+- Logs, métricas de CPU/memória e histórico de deploys do backend: **dashboard do Railway**
+  (projeto → serviço `chaveiro-bot` → abas "Deployments"/"Metrics"/"Logs").
+- Logs e histórico de builds do painel: **dashboard do Cloudflare Pages** (projeto
+  `admai-painel` → aba "Deployments").
+- Sinais de problema: `/health` retornando `503` → banco indisponível ou app desligando
+  (`estado.isShuttingDown`, ver `chaveiro-bot/src/app.js`); deploy do Railway travado em
+  "Building"/"Crashed" → ver logs do serviço no dashboard.
 
-## 2. Reiniciar serviços
+## 2. Reiniciar / reverter (rollback)
 
-```bash
-dc restart backend          # reinicia só o backend
-dc restart painel
-dc up -d                    # recria o que mudou (idempotente)
-dc down && dc up -d         # parada total e subida (cuidado: breve indisponibilidade)
-```
+- **Backend (Railway):** um redeploy do último commit bom, ou o botão "Redeploy" num
+  deployment anterior específico, ambos disponíveis na aba "Deployments" do serviço no
+  dashboard do Railway. Não há comando `docker compose restart` — o container é gerenciado
+  pela plataforma.
+- **Painel (Cloudflare Pages):** cada deploy fica versionado na aba "Deployments" do projeto;
+  qualquer deployment anterior pode ser promovido a produção com "Rollback to this deployment"
+  (retenção padrão da plataforma).
+- **Migrations:** rodam automaticamente no boot do backend (`docker-entrypoint.sh` →
+  `npx prisma migrate deploy`) — não há um passo manual de "restart" separado da aplicação da
+  migration; um redeploy reaplica o boot inteiro.
 
-> Os dados ficam em **volumes nomeados** (`postgres_data`, etc.); `dc down` **não** apaga
-> volumes. **Nunca** use `dc down -v` em produção (apaga o banco!).
+## 3. Backup e restore do banco (Supabase)
 
-## 3. Backup e restore do banco
+**Limitação declarada nesta execução — não confirmado, não assumido:** não foi possível
+verificar nesta missão (sem acesso ao painel do Supabase desta worktree) se o backup
+automático está habilitado, qual a política de retenção, nem se um restore já foi testado
+para o projeto Supabase de produção. `docs/legacy/DEPLOYMENT_VPS.md`/`RUNBOOK_VPS.md`
+descreviam backup manual via `pg_dump` num container Docker local — **isso não se aplica** à
+arquitetura real (não há container Postgres próprio; o banco é gerenciado pelo Supabase).
 
-### Backup manual
-```bash
-docker exec chaveiro-postgres pg_dump -U chaveiro -d chaveirobot | gzip > backup_$(date +%F).sql.gz
-```
-
-### Restore (teste periódico — obrigatório!)
-Restaure num **banco temporário** para validar o dump, sem tocar produção:
-
-```bash
-# 1) cria DB de teste
-docker exec -i chaveiro-postgres psql -U chaveiro -c "CREATE DATABASE restore_test;"
-# 2) restaura o dump nele
-gunzip -c backup_AAAA-MM-DD.sql.gz | docker exec -i chaveiro-postgres psql -U chaveiro -d restore_test
-# 3) confere e remove
-docker exec -i chaveiro-postgres psql -U chaveiro -d restore_test -c "\dt"
-docker exec -i chaveiro-postgres psql -U chaveiro -c "DROP DATABASE restore_test;"
-```
-
-### Restore real (recuperação de desastre)
-```bash
-dc stop backend                                  # evita escrita concorrente
-docker exec -i chaveiro-postgres psql -U chaveiro -c "DROP DATABASE chaveirobot; CREATE DATABASE chaveirobot;"
-gunzip -c backup.sql.gz | docker exec -i chaveiro-postgres psql -U chaveiro -d chaveirobot
-dc start backend
-```
+**Tarefa objetiva pendente (fora do escopo desta missão de documentação — decisão/verificação
+do usuário):** confirmar no painel do Supabase (Project Settings → Database → Backups) se
+backups automáticos estão ativos, qual a retenção, e executar/documentar um teste de restore
+real. Até essa confirmação, este runbook não pode declarar uma estratégia de backup como
+verificada — apenas registrar que o mecanismo é gerenciado pela plataforma, não por script
+próprio do projeto.
 
 ## 4. Migrations de banco
 
-Rodam **automaticamente** no boot do backend (`prisma migrate deploy`). Para aplicar manualmente:
-
-```bash
-dc exec backend npx prisma migrate deploy
-dc exec backend npx prisma migrate status     # ver estado
-```
-
-> **Faça backup antes** de aplicar migrations novas em produção.
+Aplicadas automaticamente no boot do backend (`docker-entrypoint.sh` → `prisma migrate
+deploy`), usando a **conexão direta** do Supabase (porta 5432), não o pooler (6543) — ver
+`docs/CI_CD.md`, seção Troubleshooting ("Migrations falham no boot"). `DATABASE_URL`/
+`DIRECT_URL` no Railway devem apontar para `db.SEU_REF.supabase.co:5432`
+(`chaveiro-bot/.env.example:15-22`).
 
 ## 5. Rotação de segredos
 
-- **JWT_SECRET**: ao trocar, **todas as sessões são invalidadas** (usuários precisam relogar).
-  Edite o `.env`, depois `dc up -d backend`.
-- **ENCRYPTION_KEY**: ⚠️ **não troque sem plano de migração** — ela cifra segredos por empresa
-  (apikey/2FA). Trocar torna os dados cifrados ilegíveis. Migração exige decifrar com a chave
-  antiga e recifrar com a nova antes da virada.
-- **Token do WhatsApp (Meta, após migração)**: gere novo token de System User no Meta Business,
-  atualize no `.env`/config da empresa e `dc up -d backend`.
-- **Senha do Postgres**: altere no Postgres **e** no `DATABASE_URL` simultaneamente.
+Todas as variáveis vivem no painel do Railway (backend) e do Cloudflare Pages (painel) — ver
+o inventário completo em `docs/CI_CD.md`, seção "Inventário de secrets/variáveis". Nenhum
+segredo vive no repositório.
+
+- **`JWT_SECRET`**: ao trocar, **todas as sessões são invalidadas** (usuários precisam
+  relogar). Atualize a variável no Railway; o redeploy é automático.
+- **`ENCRYPTION_KEY`**: ⚠️ **não troque sem plano de migração** — cifra segredos por empresa
+  (apikey/2FA). Trocar torna os dados cifrados ilegíveis sem decifrar com a chave antiga e
+  recifrar com a nova antes da virada.
+- **Senha do Supabase (`DATABASE_URL`/`DIRECT_URL`)**: altere no painel do Supabase e nas
+  variáveis do Railway simultaneamente.
+- **Secrets de assinatura Android** (`ANDROID_KEYSTORE_BASE64` etc.): GitHub → Settings →
+  Secrets, consumidos só por `.github/workflows/release.yml`.
 
 ## 6. Observabilidade e alertas
 
-- **Sentry**: erros em tempo real (PII filtrada). Configure alerta de pico de erros.
-- **Uptime**: cadastre `https://api.[dominio]/health` no UptimeRobot/Healthchecks.io
-  (intervalo 1–5 min) com alerta por e-mail/WhatsApp.
-- **Métricas**: `https://api.[dominio]/metrics` (Prometheus). Aponte um Prometheus/Grafana
-  (ou Grafana Cloud) para latência, taxa de erro e memória.
-- **Logs**: `dc logs` (stdout JSON). Para retenção/centralização, encaminhe a um agregador
-  (Loki/Better Stack). **Nunca** logar PII/segredos.
+- **Sentry**: `SENTRY_DSN` (Railway, backend) e `VITE_SENTRY_DSN` (Cloudflare Pages, painel) —
+  erros em tempo real (PII filtrada, `beforeSend`). Configure alerta de pico de erros no
+  Sentry.
+- **Uptime**: cadastre `https://api.SEUDOMINIO/health` num serviço de uptime (UptimeRobot/
+  Healthchecks.io), intervalo 1–5 min, alerta por e-mail/WhatsApp.
+- **Métricas**: `https://api.SEUDOMINIO/metrics` (Prometheus, sem auth, fora de `/api`) —
+  aponte um Prometheus/Grafana (ou Grafana Cloud) para latência, taxa de erro e memória.
+- **Logs**: dashboard do Railway (backend) e do Cloudflare Pages (painel/build). Para
+  retenção/centralização de logs do backend, encaminhar a um agregador externo não está
+  configurado nesta execução — **não confirmado**, registrar como gap se necessário.
 
 ## 7. Incidentes comuns
 
 | Sintoma | Causa provável | Ação |
 |---|---|---|
-| `/health` 503 | Postgres caiu | `dc logs postgres`; `dc restart postgres` |
-| 502/Bad Gateway no Caddy | Backend não subiu | `dc logs backend`; verifique `.env`/migrations |
-| Erro de CORS no painel | `ALLOWED_ORIGIN` errado | Ajuste no `.env`, `dc up -d backend` |
-| Mensagens do WhatsApp não chegam | Webhook/token inválido | Confira `PUBLIC_URL`, assinatura e config da Meta |
-| Disco cheio | Logs/dumps/volumes | Limpe backups antigos; `docker system prune` (cuidado) |
-| Boot falha com erro de env | Variável obrigatória ausente | A mensagem do Zod indica qual; corrija o `.env` |
+| `/health` 503 | Supabase indisponível ou app em shutdown | Painel do Supabase (status do projeto); logs do Railway |
+| Deploy do Railway não dispara | "Deploy on push"/"Wait for CI" desligado, ou `master` não ficou verde (`ci-ok`) | Ver `docs/CI_CD.md`, Troubleshooting |
+| Painel não atualiza após merge | `deploy.yml` não rodou/falhou (depende do `workflow_run` do CI concluir com sucesso) | `gh run list --workflow=deploy.yml`; conferir `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` |
+| Selfies do ponto somem após deploy | Volume `/app/uploads` não persistente | Confirmar volume montado no serviço do Railway |
+| Erro de CORS no painel | `ALLOWED_ORIGIN` (Railway) não bate com o domínio real do painel | Ver `docs/CI_CD.md`, Troubleshooting |
+| Migrations falham no boot | `DATABASE_URL` apontando para o pooler (6543) em vez da conexão direta (5432) | Ver `docs/CI_CD.md`, Troubleshooting |
+| Mensagens do WhatsApp não chegam | Webhook/token inválido | Confira `PUBLIC_URL` e config da Meta |
 
 ## 8. Contatos e escalonamento
 
 - **Responsável técnico:** [nome / telefone]
-- **Provedor de VPS:** [painel/suporte]
-- **Suporte WhatsApp/Meta Business:** [link]
+- **Painel Railway:** [link do projeto]
+- **Painel Cloudflare:** [link do projeto]
+- **Painel Supabase:** [link do projeto]
 - **Segurança:** ver [SECURITY.md](../SECURITY.md)

@@ -96,14 +96,24 @@ stripeWebhookRouter.post(
   }
 );
 
-async function despacharEvento(evento) {
+// Exportada para teste unitário direto (T-BILL-01) — sem precisar montar o
+// app inteiro nem assinar HMAC de verdade só pra exercitar o despacho.
+export async function despacharEvento(evento) {
   const obj = evento.data.object;
 
   switch (evento.type) {
     case 'checkout.session.completed': {
       if (obj.mode !== 'subscription') break;
       const empresaId = Number(obj.metadata?.empresaId);
-      if (!empresaId) break;
+      if (!empresaId) {
+        // T-BILL-01: só identificadores operacionais seguros no log — nunca o
+        // payload completo do evento, dado pessoal do cliente Stripe ou segredo.
+        logger.warn('stripe_checkout_sem_empresa_id', {
+          eventId: evento.id,
+          eventType: evento.type,
+        });
+        break;
+      }
       await sincronizarAssinatura(empresaId, {
         stripeCustomerId: obj.customer,
         stripeSubId: obj.subscription,

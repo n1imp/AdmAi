@@ -1,5 +1,15 @@
 # Plano de Lançamento — AdmAi
 
+> ⚠️ **Documento histórico (planejamento de 2026-06), parcialmente superado pela execução
+> real.** A FASE 0 (web em produção) descrevia um deploy self-hosted em **VPS + Docker
+> Compose + Caddy**, que **não é** o caminho usado — a web foi ao ar em **Railway +
+> Cloudflare Pages + Supabase** (ver `docs/CI_CD.md`, `docs/GO_LIVE_CHECKLIST.md`,
+> `docs/agent-environment/PROJECT_BASELINE_V1.md`). O app também passou a ser via
+> **Capacitor** (não React Native/Expo como planejado aqui). Este documento fica preservado
+> como registro do plano original; para o estado real e atualizado, ver
+> `docs/GO_LIVE_CHECKLIST.md` (fonte de verdade operacional) e `PROJECT_BASELINE_V1.md`
+> (fonte de verdade técnica).
+
 Roadmap por fases para levar o AdmAi a um lançamento público sério: **web em
 produção primeiro**, **app Android nativo (React Native/Expo) na Play Store** em seguida.
 Cada tarefa tem um **ID** (vira issue), **prioridade**, **critério de pronto (DoD)** e
@@ -32,16 +42,23 @@ lançamento esperando o app. Sequência recomendada:
 
 ## FASE 0 — Web em produção (go-live)
 
-| ID | P | Tarefa | DoD | Esforço |
+> **Superada pela execução real.** O plano original abaixo (VPS + Docker Compose + Caddy)
+> não foi o caminho seguido — a web está em produção via Railway + Cloudflare Pages +
+> Supabase. A versão real e atualizada desta fase é `docs/GO_LIVE_CHECKLIST.md`, FASE A.
+> Tabela original preservada só por histórico:
+
+| ID | P | Tarefa (plano original, não executado assim) | DoD | Esforço |
 |---|---|---|---|---|
-| **F0-1** | P0 | Provisionar VPS + DNS (`app.` e `api.` apontando pro IP) seguindo [DEPLOYMENT.md §1–3](DEPLOYMENT.md) | SSH com chave, sem root/senha; `ufw` + `fail2ban` ativos | M |
+| **F0-1** | P0 | Provisionar VPS + DNS (`app.` e `api.` apontando pro IP) seguindo `docs/legacy/DEPLOYMENT_VPS.md §1–3` | SSH com chave, sem root/senha; `ufw` + `fail2ban` ativos | M |
 | **F0-2** | P0 | `.env` de produção com segredos fortes (`openssl rand`), `NODE_ENV=production`, `ALLOWED_ORIGIN`, `PUBLIC_URL` | Boot do backend passa na validação Zod ([env.js](../chaveiro-bot/src/config/env.js)); **nada commitado** | S |
 | **F0-3** | P0 | Subir stack `docker-compose.yml + docker-compose.prod.yml` (Caddy + HTTPS, portas internas fechadas) | `https://app.` com cadeado; `https://api./health` = 200 `database: ok`; portas 3000/8081/8080/5432 fechadas externamente (`nmap`) | M |
-| **F0-4** | P0 | Backups automáticos do Postgres + **teste de restore** ([DEPLOYMENT.md §7](DEPLOYMENT.md) / [RUNBOOK.md §3](RUNBOOK.md)) | Cron diário rodando; 1 restore validado em DB temporário; (recom.) cópia offsite S3/Backblaze | M |
+| **F0-4** | P0 | Backups automáticos do Postgres + **teste de restore** (`docs/legacy/DEPLOYMENT_VPS.md §7` / `docs/legacy/RUNBOOK_VPS.md §3`) | Cron diário rodando; 1 restore validado em DB temporário; (recom.) cópia offsite S3/Backblaze | M |
 | **F0-5** | P1 | Monitor de uptime + alerta (UptimeRobot/Healthchecks no `/health`) e Sentry de produção recebendo eventos | Alerta dispara em downtime de teste; evento de teste visível no Sentry | S |
-| **F0-6** | P1 | Smoke test do checklist pós-deploy ([DEPLOYMENT.md §9](DEPLOYMENT.md)): cadastro, login, 2FA, login Google, webhook WhatsApp | Todos os itens do checklist ✔ em produção | M |
+| **F0-6** | P1 | Smoke test do checklist pós-deploy (`docs/legacy/DEPLOYMENT_VPS.md §9`): cadastro, login, 2FA, login Google, webhook WhatsApp | Todos os itens do checklist ✔ em produção | M |
 
-**Saída da Fase 0:** produto web no ar, com backup e monitoramento, usável por clientes reais.
+**Saída da Fase 0 (real):** produto web no ar em Railway + Cloudflare Pages + Supabase —
+ver `docs/GO_LIVE_CHECKLIST.md` FASE A para o checklist real, incluindo o item A7 (backup do
+Supabase), ainda **não confirmado** nesta execução.
 
 ---
 
@@ -54,7 +71,7 @@ lançamento esperando o app. Sequência recomendada:
 | **F1-3** | P1 | Finalizar migração **WhatsApp Cloud API (Meta)** — `WHATSAPP_PROVIDER=cloud`, `META_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` (já há [cloud-gateway.js](../chaveiro-bot/src/services/whatsapp/cloud-gateway.js)) | Envio/recebimento por número oficial; webhook validando assinatura; teste de integração verde | L |
 | **F1-4** | P1 | Página/canal de **suporte** (e-mail + WhatsApp) e "fale conosco" no painel | Canal publicado e respondendo | S |
 | **F1-5** | P2 | **Teste de carga** básico (k6/autocannon) nos endpoints quentes (`/api/dashboard`, `/api/servicos`, webhook) + revisar índices Prisma | Relatório de latência/erro sob carga alvo; gargalos endereçados | M |
-| **F1-6** | P2 | Dashboards Grafana + agregação de logs (Loki/Better Stack) via `docker-compose.monitoring.yml` | Painel de latência/erro/memória no ar; logs centralizados | M |
+| **F1-6** | P2 | Dashboards Grafana + agregação de logs (Loki/Better Stack) apontando para `/metrics` (ver `docs/RUNBOOK.md §6`) — `docker-compose.monitoring.yml` é só o caminho legado self-hosted, não se aplica a Railway | Painel de latência/erro/memória no ar; logs centralizados | M |
 
 **Saída da Fase 1:** conformidade legal completa (incl. exclusão de conta — pré-requisito da Play Store) e robustez operacional.
 
@@ -101,7 +118,7 @@ lançamento esperando o app. Sequência recomendada:
 | Isolamento multi-tenant | 🟢 | Testado |
 | CI (lint+unit+integração+audit) | 🟢 | Backend e frontend |
 | Observabilidade (Sentry/Prometheus/Pino) | 🟢 | Falta cadastrar uptime/alertas (F0-5) |
-| Deploy/HTTPS/backups | 🟡 | Documentado, **não executado** (F0-1..4) |
+| Deploy/HTTPS/backups | 🟢 | Web em produção real (Railway + Cloudflare Pages + Supabase); backup do Supabase **não confirmado** (ver `docs/GO_LIVE_CHECKLIST.md` A7) |
 | LGPD — cliente final | 🟢 | `anonimizar-cliente` + retenção 180d, testado |
 | LGPD/Play — **conta do usuário** | 🔴 | **Autoexclusão ausente** (F1-1) |
 | WhatsApp Cloud API oficial | 🟡 | Migração em andamento (F1-3) |

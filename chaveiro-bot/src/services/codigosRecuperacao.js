@@ -43,11 +43,22 @@ export async function verificarCodigo(usuarioId, codigo) {
   for (const registro of pendentes) {
     const ok = await bcrypt.compare(String(codigo ?? ''), registro.codigoHash);
     if (ok) {
-      await prisma.codigoRecuperacaoTotp.update({
-        where: { id: registro.id },
+      // EV-056: evita TOCTOU — duas requisições concorrentes com o mesmo
+      // código poderiam ambas passar pelo bcrypt.compare acima antes de
+      // qualquer update ser observado pela outra. O updateMany condicional
+      // em `usado: false` é atômico no Postgres: das duas chamadas
+      // concorrentes que tentam UPDATE ... WHERE id=? AND usado=false na
+      // mesma linha, só uma serializa como count=1; a outra vê usado=true
+      // já commitado e recebe count=0.
+      const resultado = await prisma.codigoRecuperacaoTotp.updateMany({
+        where: { id: registro.id, usado: false },
         data: { usado: true },
       });
-      return true;
+      if (resultado.count === 1) {
+        return true;
+      }
+      // Outra chamada venceu a corrida para este registro; continua
+      // tentando os próximos candidatos pendentes.
     }
   }
   return false;

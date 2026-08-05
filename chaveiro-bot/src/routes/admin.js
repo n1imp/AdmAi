@@ -9,6 +9,8 @@ import {
   sanitizarPermissoes,
   limitarPermissoesAoAtor,
   presetDoPapel,
+  podeAtribuirPapel,
+  podeGerenciarUsuario,
   PAPEIS,
   MODULOS,
   ACOES_POR_MODULO,
@@ -215,10 +217,13 @@ router.post('/usuarios', requirePermissao('usuarios', 'editar'), async (req, res
     if (!parse.success)
       return res.status(400).json({ erro: 'Dados inválidos', detalhes: parse.error.format() });
     const { nome, username, senha, papel } = parse.data;
-    // F1-BYPASS (revisão independente): o teto de autoridade e o bloqueio de promoção a
-    // dono valiam só para PATCH /usuarios/:id — POST /usuarios (criação) escapava dos dois.
-    if (papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
-      return res.status(403).json({ erro: 'Somente o dono pode criar outro usuário como dono' });
+    // F1-BYPASS / EV-060: o teto de autoridade bloqueava só atribuir papel 'dono' — um
+    // ator com usuarios.editar (concedido via override, não é o preset padrão de nenhum
+    // papel) podia criar um PAR (mesmo papel que o seu, ex.: gestor cria gestor).
+    // podeAtribuirPapel já fecha isso (só papel ESTRITAMENTE abaixo do ator); dono/admin
+    // seguem sem teto, preservando "dono cria outro dono" (regressão testada).
+    if (req.user.papel !== 'dono' && !req.user.admin && !podeAtribuirPapel(req.user, papel)) {
+      return res.status(403).json({ erro: 'Sem permissão para criar usuário com este papel' });
     }
     const senhaHash = await bcrypt.hash(senha, 12);
     const usuario = await prisma.usuario.create({
@@ -275,10 +280,34 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       if (parse.data.ativo === false)
         return res.status(400).json({ erro: 'Você não pode desativar a própria conta' });
     }
-    if (parse.data.papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
-      return res.status(403).json({ erro: 'Somente o dono pode promover outro usuário a dono' });
-    }
+    // EV-060: o teto de "papel === dono" cobria só a troca de papel — nada impedia um
+    // ator com usuarios.editar de editar (ativo, senha, permissoes) QUALQUER usuário da
+    // empresa, incluindo o dono. precisaGuardarAlvo cobre o PATCH inteiro sobre terceiros,
+    // não só a troca de papel; dono/admin seguem sem teto (preserva comportamento atual).
+    const precisaGuardarAlvo = id !== req.user.id && req.user.papel !== 'dono' && !req.user.admin;
     const { senha, permissoes, papel, ...resto } = parse.data;
+    const auditarRbac = papel !== undefined || permissoes !== undefined;
+    const antes =
+      auditarRbac || precisaGuardarAlvo
+        ? await prisma.usuario.findFirst({
+            where: { id, empresaId: req.user.empresaId },
+            select: { id: true, papel: true, admin: true, permissoes: true },
+          })
+        : null;
+    if (precisaGuardarAlvo) {
+      // Alvo inexistente (ou de outra empresa, já escopado acima) → 404 aqui mesmo, antes
+      // que podeGerenciarUsuario(ator, null) decida (ela retorna false, o que viraria um
+      // 403 indevido em vez do 404 correto — preserva o anti-IDOR cross-tenant existente).
+      if (!antes) return res.status(404).json({ erro: 'Usuário não encontrado' });
+      if (!podeGerenciarUsuario(req.user, antes)) {
+        return res.status(403).json({ erro: 'Sem permissão para gerenciar este usuário' });
+      }
+    }
+    if (papel !== undefined && req.user.papel !== 'dono' && !req.user.admin) {
+      if (!podeAtribuirPapel(req.user, papel)) {
+        return res.status(403).json({ erro: 'Sem permissão para atribuir este papel' });
+      }
+    }
     const data = { ...resto };
     if (papel !== undefined) {
       data.papel = papel;
@@ -287,13 +316,6 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
     if (permissoes !== undefined)
       data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
     if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
-    const auditarRbac = papel !== undefined || permissoes !== undefined;
-    const antes = auditarRbac
-      ? await prisma.usuario.findFirst({
-          where: { id, empresaId: req.user.empresaId },
-          select: { papel: true, permissoes: true },
-        })
-      : null;
     const r = await prisma.usuario.updateMany({
       where: { id, empresaId: req.user.empresaId },
       data,
@@ -348,8 +370,14 @@ router.delete('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (re
       return res.status(400).json({ erro: 'Não é possível remover o próprio usuário' });
     const alvoDel = await prisma.usuario.findFirst({
       where: { id, empresaId: req.user.empresaId },
-      select: { nome: true, papel: true },
+      select: { nome: true, papel: true, admin: true },
     });
+    if (!alvoDel) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    // EV-060: esta rota não tinha NENHUM teto de hierarquia — um ator com
+    // usuarios.editar podia deletar qualquer usuário da empresa, incluindo o dono.
+    if (req.user.papel !== 'dono' && !req.user.admin && !podeGerenciarUsuario(req.user, alvoDel)) {
+      return res.status(403).json({ erro: 'Sem permissão para remover este usuário' });
+    }
     const r = await prisma.usuario.deleteMany({ where: { id, empresaId: req.user.empresaId } });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
     registrarAudit({
@@ -374,11 +402,16 @@ router.post('/usuarios/convidar', requirePermissao('usuarios', 'editar'), async 
     .object({ email: z.string().email(), papel: z.enum(PAPEIS).default('funcionario') })
     .safeParse(req.body);
   if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
-  // F1-BYPASS (revisão independente): o convite decide o papel do futuro usuário no
-  // momento da CRIAÇÃO do convite — quem aceita não é o ator da escalação, então o
-  // bloqueio de promoção a dono precisa valer aqui, não em /convite/:token/aceitar.
-  if (parse.data.papel === 'dono' && req.user.papel !== 'dono' && !req.user.admin) {
-    return res.status(403).json({ erro: 'Somente o dono pode convidar alguém como dono' });
+  // F1-BYPASS / EV-060: o convite decide o papel do futuro usuário no momento da
+  // CRIAÇÃO do convite — quem aceita não é o ator da escalação, então o teto de
+  // autoridade precisa valer aqui, não em /convite/:token/aceitar. podeAtribuirPapel
+  // fecha também o caso de um gestor convidar outro gestor (par), não só 'dono'.
+  if (
+    req.user.papel !== 'dono' &&
+    !req.user.admin &&
+    !podeAtribuirPapel(req.user, parse.data.papel)
+  ) {
+    return res.status(403).json({ erro: 'Sem permissão para convidar com este papel' });
   }
   try {
     const token = randomBytes(32).toString('hex');

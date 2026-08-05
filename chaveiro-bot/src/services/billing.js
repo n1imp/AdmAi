@@ -1,6 +1,12 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
+// T-BILL-06 (D-09): duração fixa do trial concedido a toda empresa nova, em
+// QUALQUER caminho que crie uma Empresa (routes/auth.js: /auth/register,
+// /auth/oauth/:provedor, /setup; services/bootstrap.js: bootstrapAdmin) —
+// centralizado aqui (não redeclarado em cada arquivo) para não divergir.
+export const TRIAL_DIAS = 14;
+
 let _stripe = null;
 
 export async function getStripe() {
@@ -51,6 +57,11 @@ export async function criarCheckoutSession(empresaId, email, returnUrl) {
     line_items: [{ price: env.STRIPE_PRICE_ID_PRO, quantity: 1 }],
     success_url: `${returnUrl}?checkout=success`,
     cancel_url: `${returnUrl}?checkout=cancel`,
+    // T-BILL-01: fonte ÚNICA de verdade pro webhook (checkout.session.completed)
+    // saber a qual empresa a assinatura pertence. Antes só o Customer levava esse
+    // metadata — a Session não, então o evento nunca sincronizava a assinatura
+    // nova (Number(undefined) é NaN, o handler dava break silencioso).
+    metadata: { empresaId: String(empresaId) },
   });
 }
 

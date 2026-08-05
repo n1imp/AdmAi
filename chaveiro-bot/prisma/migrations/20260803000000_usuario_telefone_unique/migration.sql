@@ -1,0 +1,21 @@
+-- ============================================================================
+-- Mitigação de EV-057: Usuario.telefone passa a ser globalmente único.
+--
+-- Decisão explícita do usuário — aceita o risco de uma constraint de schema
+-- sem caso de uso documentado que a contraindique. `@@index([telefone])`
+-- (não-único) já existia; esta migration adiciona a constraint UNIQUE.
+--
+-- ATENÇÃO — NÃO validada contra um banco com dados reais nesta worktree
+-- (sem Postgres disponível). Antes de aplicar em qualquer ambiente com
+-- dados existentes, rodar primeiro:
+--
+--   SELECT telefone, COUNT(*) FROM "Usuario" WHERE telefone IS NOT NULL
+--   GROUP BY telefone HAVING COUNT(*) > 1;
+--
+-- Se houver duplicatas, esta migration falha ao aplicar (CREATE UNIQUE INDEX
+-- não pode indexar valores repetidos) e elas precisam ser resolvidas
+-- manualmente antes.
+-- ============================================================================
+
+-- AlterTable (nomenclatura padrão do Prisma para @unique de coluna única)
+CREATE UNIQUE INDEX "Usuario_telefone_key" ON "Usuario"("telefone");

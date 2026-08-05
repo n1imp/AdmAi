@@ -13,7 +13,10 @@ adota [Versionamento Semântico](https://semver.org/lang/pt-BR/) (SemVer).
 
 ### A fazer (rumo ao 1.0.0 — beta fechado)
 - Migração do WhatsApp para a **API oficial (Cloud API / Meta)** com seleção por provedor.
-- Infra de produção em VPS (Docker Compose, reverse proxy + TLS, backups automáticos do Postgres).
+- ~~Infra de produção em VPS (Docker Compose, reverse proxy + TLS, backups automáticos do Postgres).~~
+  **Feito, caminho diferente do planejado:** produção real é Railway (backend) + Cloudflare
+  Pages (painel) + Supabase (Postgres) — ver `docs/CI_CD.md`. Pendente: confirmar/testar
+  backup automático do Supabase (`docs/GO_LIVE_CHECKLIST.md`, item A7).
 - Observabilidade de produção (Prometheus/Grafana, alertas, uptime, agregação de logs).
 - Aumento de cobertura de testes (CRUD, webhook, OAuth, 2FA) + ESLint/Prettier no CI.
 - PWA, Error Boundary, onboarding e landing page no painel.

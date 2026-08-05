@@ -28,9 +28,9 @@ Um job `changes` (dorny/paths-filter) decide o que roda:
 exigir Pull Request, exigir o status check **`ci-ok`**, e "require branches to be up to date".
 Basta `ci-ok` como check obrigatório (ele agrega os demais).
 
-## CD — integração nativa (sem Actions de deploy)
+## CD
 
-### Backend → Railway
+### Backend → Railway (integração nativa, sem Actions)
 - New Project → Deploy from GitHub → **Root Directory = `chaveiro-bot`** (usa `Dockerfile` +
   `railway.json`).
 - **Volume persistente em `/app/uploads`** (selfies do ponto sobrevivem a deploys; o
@@ -39,11 +39,18 @@ Basta `ci-ok` como check obrigatório (ele agrega os demais).
 - Migrations aplicadas no boot (`docker-entrypoint.sh → prisma migrate deploy`).
 - Domínio do serviço: `api.SEUDOMINIO`.
 
-### Painel → Cloudflare Pages
-- Connect to Git → **Root Directory = `chaveiro-painel`**, build `npm run build`, output `dist`.
-- **Production branch = `master`**; PRs ganham **preview deployments** automáticos.
+### Painel → Cloudflare Pages (via GitHub Actions, `.github/workflows/deploy.yml`)
+- **Não** é integração nativa Git↔Cloudflare — o deploy roda via Actions: `deploy.yml`
+  dispara em `workflow_run` após o workflow `CI` concluir em `master` (só publica se
+  `conclusion == 'success'`), faz checkout do exato `head_sha` testado, `npm ci` + `npm run
+  build` (`chaveiro-painel`, Node 20 — alinhado ao `ci.yml`) e publica com
+  `cloudflare/wrangler-action@v4` (`pages deploy dist --project-name=admai-painel
+  --branch=master`).
+- Variáveis de build (`VITE_API_URL`, `VITE_CRISP_ID`, `VITE_POSTHOG_KEY`) e credenciais
+  (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) vêm de **GitHub Actions secrets**, não do
+  painel do Cloudflare.
 - `public/_redirects` já faz o fallback de SPA (deep links).
-- Domínio: `app.SEUDOMINIO`.
+- Domínio: `app.SEUDOMINIO` (ou `admai-painel.pages.dev` por padrão).
 
 ### App Android → `.github/workflows/release.yml`
 - Dispara em **tag `v*`** ou manual (`workflow_dispatch`). Gera o **`.aab` assinado** e publica
@@ -53,11 +60,13 @@ Basta `ci-ok` como check obrigatório (ele agrega os demais).
 
 | Plataforma | Nome | Para quê |
 |-----------|------|----------|
-| **GitHub → Actions secrets** | `ANDROID_KEYSTORE_BASE64` | keystore `.jks` em base64 (assinar o `.aab`) |
-| | `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` | credenciais de assinatura |
-| **GitHub → Actions variables** | `VITE_API_URL` | URL da API embutida no build do `.aab` |
+| **GitHub → Actions secrets** | `ANDROID_KEYSTORE_BASE64` | keystore `.jks` em base64 (assinar o `.aab`, `release.yml`) |
+| | `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` | credenciais de assinatura (`release.yml`) |
+| | `VITE_API_URL`, `VITE_CRISP_ID`, `VITE_POSTHOG_KEY` | build do painel web (`deploy.yml`) — **secret**, não variable, apesar do mesmo nome usado em `release.yml` |
+| | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | publicação via `cloudflare/wrangler-action@v4` (`deploy.yml`) |
+| **GitHub → Actions variables** | `VITE_API_URL` | URL da API embutida no build do `.aab` (`release.yml` — **variable**, store distinto do secret de mesmo nome usado por `deploy.yml`) |
 | **Railway → Variables** | `NODE_ENV`, `DATABASE_URL` (Supabase direta), `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`, `ALLOWED_ORIGIN`, `PUBLIC_URL`, `SENTRY_DSN` | runtime do backend (ver `chaveiro-bot/.env.example`). **Não** definir `PORT` (injetado) nem `WHATSAPP_HABILITADO`. |
-| **Cloudflare Pages → Env vars** | `VITE_API_URL`, `VITE_SENTRY_DSN` | build do painel (ver `chaveiro-painel/.env.example`) |
+| **Cloudflare Pages** | (nenhuma — o build não roda na Cloudflare) | o deploy é feito por `deploy.yml` via `wrangler pages deploy` de um `dist/` já pronto; não há integração nativa Git↔Cloudflare configurada para build neste projeto |
 
 > Nada de segredo vive no repositório. Os `.env.example` documentam os nomes; os valores ficam
 > só nos painéis das plataformas.

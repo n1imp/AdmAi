@@ -54,7 +54,7 @@ if (apiUrlBruta && !apiUrlBruta.startsWith('/') && !apiOrigem) {
 //  - accounts.google.com/apis.google.com: SDK GSI (BotoesSociais.jsx)
 //  - alcdn.msauth.net + login.microsoftonline.com: MSAL
 //  - appleid.cdn-apple.com + appleid.apple.com: Sign in with Apple
-//  - client.crisp.chat (+ relay wss): widget de suporte, injetado no index.html
+//  - client.crisp.chat (+ relay wss): widget de suporte (src/lib/crispBootstrap.js)
 //  - *.posthog.com: analytics (useAnalytics.js); recorder/remote-config vêm do api_host
 //  - *.ingest*.sentry.io: observabilidade
 //  - fonts.googleapis.com/fonts.gstatic.com: webfonts
@@ -73,8 +73,7 @@ const conectar = [
 
 const csp = [
   "default-src 'self'",
-  // 'unsafe-inline' é exigido pelo bootstrap do Crisp embutido no index.html.
-  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://alcdn.msauth.net https://appleid.cdn-apple.com https://client.crisp.chat ${posthog}`,
+  `script-src 'self' https://accounts.google.com https://apis.google.com https://alcdn.msauth.net https://appleid.cdn-apple.com https://client.crisp.chat ${posthog}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat",
   "font-src 'self' https://fonts.gstatic.com https://client.crisp.chat data:",
   "img-src 'self' data: https:",

@@ -227,7 +227,7 @@ model Usuario {
   nome                String
   username            String    @unique
   email               String?   @unique
-  telefone            String?
+  telefone            String?   @unique
   senhaHash           String?   // null em contas só de login social
   admin               Boolean   @default(false)  // legado/compat: equivale a papel == "dono"
   // ── RBAC do painel ────────────────────────────────────────────────────────

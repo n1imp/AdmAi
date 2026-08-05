@@ -1,21 +1,7 @@
-# SKILL — Fluxo de Desenvolvimento AdmAi
+# Governança de agentes
 
-## Fluxo Padrão: Clarificar → Planejar → Executar
-
-### 1. Clarificar
-- Antes de qualquer código: leia o arquivo relevante inteiro
-- Se a tarefa tocar 3+ arquivos: acione o swarm (`/swarm-orchestration`)
-- Confirme o escopo com o usuário se houver ambiguidade de domínio
-
-### 2. Planejar (TDD-First)
-- Escreva o teste antes da implementação (`vitest`)
-- Defina os contratos de entrada/saída no teste
-- Use `npx @claude-flow/cli@latest memory search --query "[tarefa]"` para buscar padrões anteriores
-
-### 3. Executar
-- Implemente o mínimo para o teste passar
-- Rode `npm run build && npm test` antes de qualquer commit
-- Após sucesso: `npx @claude-flow/cli@latest memory store --namespace patterns --key "[nome]" --value "[o que funcionou]"`
+As regras normativas estão em `AGENTS.md`; Claude carrega também `CLAUDE.md`. Este README
+documenta o produto e não concede autoridade adicional a nenhum agente.
 
 ---
 
@@ -25,19 +11,14 @@
 |---|-------|----------------------|
 | M1 | Credenciais Impróprias | `.env` nunca comitado; tokens cifrados em BD (`accessTokenEnc`) |
 | M2 | Supply Chain | `npm audit` no CI; versões fixadas em `package-lock.json` |
-| M3 | Comunicação Insegura | HTTPS obrigatório via Caddy; `helmet` no Express |
+| M3 | Comunicação Insegura | HTTPS obrigatório (borda gerenciada Railway/Cloudflare); `helmet` no Express |
 | M4 | Auth/AuthZ Insuficiente | RBAC verificado em todo endpoint; `papel` + `permissoes` no Prisma |
 | M5 | Controles de Privacidade | PII (CPF, telefone) nunca logados; Sentry com `beforeSend` filtrado |
 | M6 | Configuração Insegura | Sem segredos em variáveis de ambiente de produção sem cifragem |
 | M7 | Criptografia Fraca | `bcryptjs` para senhas; `jose` para JWT; `argon2` para tokens sensíveis |
 | M8 | Autenticação Incorreta | 2FA TOTP + OTP WhatsApp; `tokenValidoApos` invalida sessões antigas |
-| M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via Caddy headers |
+| M9 | Segurança do Lado do Cliente | Sem segredos no bundle Vite; CSP via `_headers` gerado no build (`chaveiro-painel/scripts/gerar-headers.mjs`, consumido pela Cloudflare Pages) |
 | M10 | Funcionalidade Excessiva | Endpoints de debug desabilitados em `NODE_ENV=production` |
-
-### Auditoria Automática do Ruflo
-```bash
-npx @claude-flow/cli@latest security scan
-npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
 
 # 🔑 AdmAi — Plataforma SaaS de Gestão para Chaveiros via WhatsApp
 
@@ -418,9 +399,19 @@ Validadas por Zod no boot — ver [`config/env.js`](chaveiro-bot/src/config/env.
 | `ADMIN_USERNAME` · `ADMIN_PASSWORD` · `ADMIN_NOME` · `ADMIN_EMPRESA` | — | Bootstrap de admin em banco vazio (`ADMIN_PASSWORD` mín. 8 chars) |
 | `SENTRY_DSN` · `LOG_LEVEL` · `APP_VERSION` | — | Observabilidade (ausente = Sentry off) |
 
-> **Deploy:** a arquitetura de produção é **Railway** (backend, Docker + volume) + **Cloudflare
-> Pages** (painel estático) + **Supabase** (Postgres). O CI/CD e o inventário de variáveis por
-> plataforma estão em [`docs/CI_CD.md`](docs/CI_CD.md); o passo a passo manual em
+> **Arquitetura Oficial**
+>
+> Backend: **Railway** (Docker + volume) · Frontend: **Cloudflare Pages** (estático) ·
+> Banco: **Supabase** (Postgres). Confirmado ao vivo (headers `Server: railway-hikari` /
+> `Server: cloudflare`) na missão "Project Baseline v1" —
+> ver `docs/agent-environment/PROJECT_BASELINE_V1.md`.
+>
+> Esta é a única arquitetura oficialmente suportada. Documentação referente a VPS, Docker
+> Compose e Caddy (`docs/legacy/`) representa um ambiente **legado**, não a produção atual.
+>
+> O CI/CD e o inventário de variáveis por plataforma estão em
+> [`docs/CI_CD.md`](docs/CI_CD.md); operação e incidentes em
+> [`docs/RUNBOOK.md`](docs/RUNBOOK.md); ponto de entrada de deploy em
 > [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
@@ -496,13 +487,10 @@ AdmAi/
 
 ## 🤖 Guia para IAs & Agentes
 
-> Esta seção é a referência completa pra qualquer agente (orquestrador ou subagente) que
-> for trabalhar neste projeto — tanto as regras específicas do AdmAi quanto a
-> política geral de como planejar, executar e reportar qualquer tarefa. Ela incorpora o
-> que antes vivia separado num `CLAUDE.md`, então este README passa a ser a referência
-> única — não é mais necessário consultar um arquivo separado de orquestração. Pra
-> infraestrutura de deploy (VPS, Supabase, Docker em produção), consultar também
-> `instrucoes-deploy.md`, que é um documento companheiro e específico de infra.
+> `AGENTS.md` é o contrato normativo dos agentes e `CLAUDE.md` define o roteamento do
+> orquestrador. Claude é o único writer; Codex delegado atua somente como Decisor,
+> Árbitro ou Revisor em leitura. Esta seção preserva apenas regras técnicas do AdmAi.
+> Para infraestrutura de deploy, consulte também `docs/DEPLOYMENT.md`.
 
 ### 13.1 Regras específicas deste projeto
 
@@ -544,9 +532,15 @@ client Prisma **escopado à empresa do usuário** (`prismaParaEmpresa(empresaId)
   401, o que descartaria o passo. Mantenha esse contrato.
 - Segredos por empresa ficam **cifrados** (`ENCRYPTION_KEY`); nunca persista em claro.
 - Não enfraqueça os rate limiters de `auth/*` nem a validação HMAC/token do webhook.
-- `app.set('trust proxy', N)` deve refletir o número real de proxies na frente do backend
-  (hoje: Caddy → nginx → backend = 2). Se a cadeia mudar, esse número precisa mudar junto
-  — senão rate-limit e logs passam a usar o IP errado.
+- `app.set('trust proxy', N)` deve refletir o número real de proxies na frente do backend.
+  O código atual usa `2` com um comentário que descreve uma topologia self-hosted
+  (Caddy → nginx → backend) — **desalinhado com a produção real** (Railway, borda gerenciada
+  de hop único). Isso é hoje inofensivo porque a borda do Railway sanitiza
+  `X-Forwarded-For`/`X-Real-IP` (confirmado ao vivo, EV-065/066); é risco latente se a borda
+  mudar de comportamento. Registrado como item 13 de
+  `docs/agent-environment/SECURITY_HARDENING_BACKLOG.md` (Categoria C, não corrigido de
+  propósito nesta missão). Se a cadeia real mudar, esse número precisa mudar junto — senão
+  rate-limit e logs passam a usar o IP errado.
 
 **Convenções do projeto**
 - **Idioma pt-BR** em código, comentários, mensagens de UI/bot e commits.
@@ -591,22 +585,9 @@ código que a usa), dependências entre etapas, critérios de sucesso definidos 
 executar, e alternativas consideradas e descartadas (com o motivo, pra não reconsiderar a
 mesma alternativa rejeitada numa tarefa futura).
 
-**Recrutamento de agentes** — decidir quais agentes são necessários, nem mais nem menos.
-Para cada um: nome/função, responsabilidade específica (uma frase — se precisa de
-parágrafo, são dois agentes), objetivo, entradas, saídas esperadas, e critérios de
-validação **concretos e verificáveis** ("testes passam", "lint sem warnings", nunca "parece
-correto").
-
-```
-Agent: System Architect
-Objetivo: Definir arquitetura da solução.
-Entradas: especificação da feature, schema.prisma atual, docs/blueprint/ existente.
-Saídas: documento arquitetural + plano técnico.
-Critérios de validação: plano revisado por pelo menos 1 agente revisor antes da execução.
-```
-
-**Teto de paralelismo: 5 agentes simultâneos por tarefa.** Acima disso exige justificativa
-explícita no plano — caso contrário, recrutar o mínimo necessário.
+**Coordenação Claude–Codex** — os papéis, a autoridade e os protocolos obrigatórios estão
+em `AGENTS.md`. O fluxo orquestrado possui exatamente um writer; não usa swarm nem agentes
+paralelos para escrever a mesma tarefa.
 
 **Sugestões e alternativas** — quando houver mais de uma abordagem razoável, apresentar
 antes de escolher: prós, contras, custo computacional, consumo estimado de tokens
@@ -642,11 +623,10 @@ antes de qualquer cálculo de orçamento, já que mudam com o tempo.
 
 #### Fase 2 — Execução
 
-Começa automaticamente após o plano estar pronto. Seguir o plano rigorosamente, validar
-cada etapa antes de avançar, corrigir falhas imediatamente (não "ver no final").
+Começa somente quando o contrato ativo autorizar implementação. Seguir o plano
+rigorosamente, validar cada etapa antes de avançar e corrigir falhas imediatamente.
 
-**Paralelismo:** executar em paralelo tarefas sem dependência entre si, respeitando o teto
-de 5 agentes simultâneos.
+**Writer único:** Claude executa a implementação. Codex decide ou revisa sempre em leitura.
 
 **Falha de agente:**
 1. Primeira falha: uma única retentativa automática, corrigindo o que for possível (ex:
@@ -655,27 +635,17 @@ de 5 agentes simultâneos.
    bloqueio técnico real, reportado pra decisão humana.
 3. Falha de um agente nunca é silenciosamente contornada por outro sem registro.
 
-**Continuidade operacional:** ao concluir uma tarefa, identificar o próximo gargalo e
-seguir sem esperar instrução nova. Fontes válidas: testes falhando, erros de lint/build
-pendentes, itens do backlog/blueprint, dependências que acabaram de ser destravadas.
+**Continuidade operacional:** avance somente pela fila já autorizada no contrato ativo.
+Uma nova tarefa ou ampliação de escopo não nasce automaticamente de um gargalo encontrado.
 
 ### 13.3 Política de autonomia operacional
 
-Os agentes têm autonomia máxima pra executar o necessário, sem pedir confirmação
-intermediária quando a próxima ação é inferível com segurança a partir do contexto, do
-plano aprovado, da documentação existente ou de melhores práticas técnicas.
+Claude pode executar ações locais e reversíveis que já estejam autorizadas pelo contrato.
+Decisões técnicas materiais exigem consenso com o Codex Decisor; divergência persistente
+vai ao Codex Árbitro. Negócio, custos, risco aceito, escopo, dados pessoais e ações externas
+continuam reservados ao usuário. Nenhuma instrução deste README amplia permissões.
 
-**Por quê isso é a configuração certa na maioria dos casos:** a maior parte das ações de
-desenvolvimento (ler um arquivo, rodar um teste, corrigir um lint) é reversível sem custo —
-pedir confirmação nelas só desperdiça tempo sem reduzir risco real.
-
-**Autorizado sem confirmação:** ler, criar, modificar e reorganizar arquivos do projeto;
-executar comandos locais; instalar dependências (via gerenciador do projeto, respeitando o
-lockfile); corrigir erros; refatorar; criar e executar testes; atualizar documentação;
-criar scripts auxiliares; pesquisar o necessário; coordenar múltiplos agentes; tomar
-decisões técnicas compatíveis com os objetivos do projeto.
-
-**A execução continua sem intervenção até uma destas quatro condições:**
+**A tarefa autorizada pode continuar sem intervenção até uma destas quatro condições:**
 
 1. **Todos os objetivos concluídos**, pelos critérios de sucesso definidos na Fase 1 — não
    por impressão do agente.
@@ -709,11 +679,8 @@ decisões técnicas compatíveis com os objetivos do projeto.
    ponto pra um "ok" explícito antes de executar, sem isso interromper o resto do fluxo
    autônomo ao redor.
 
-**Critério de escolha entre alternativas válidas** (quando não é caso do item 4): qualidade,
-velocidade, custo computacional, consumo de tokens, facilidade de manutenção — com
-desempate pela mesma ordem das Diretrizes de Eficiência abaixo (precisão > confiabilidade >
-economia de tokens > velocidade > escalabilidade). Toda escolha feita assim é registrada no
-relatório, com a alternativa descartada.
+**Escolha entre alternativas válidas:** detalhes triviais seguem os padrões existentes;
+decisões materiais seguem o consenso e a arbitragem definidos em `AGENTS.md`.
 
 ### 13.4 Relatórios obrigatórios
 
@@ -735,10 +702,8 @@ incremental.
 Prioridades, em ordem, usadas pra resolver qualquer empate de decisão: **precisão >
 confiabilidade > economia de tokens > velocidade > escalabilidade.**
 
-Evitar, concretamente: execuções redundantes (re-validar algo que não mudou desde a última
-validação); leitura desnecessária de arquivo já no contexto ativo ou já resumido; reanálise
-de algo já registrado no log de decisões; criação de agentes além do teto sem justificativa
-explícita.
+Evitar, concretamente: execuções redundantes, leitura desnecessária de arquivo já no
+contexto ativo e reanálise de algo já registrado no log de decisões.
 
 ### 13.6 Critério de excelência
 

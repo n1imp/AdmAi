@@ -8,10 +8,14 @@ import {
   gerarRefreshTokenRaw,
   hashRefreshToken,
   dataExpiracaoRefresh,
+  gerarDesafio2fa,
+  verificarDesafio2fa,
+  autenticarCandidatos,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
 import { verificarCodigo, decifrarSegredo } from '../services/totp.js';
+import { verificarCodigo as verificarCodigoRecuperacao } from '../services/codigosRecuperacao.js';
 import { definirOtpTelefone, validarOtpTelefone, limparOtpTelefone } from '../services/otp.js';
 import { canonizarTelefone, variantesTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
@@ -23,6 +27,7 @@ import {
   enviarEmailMagicLink,
 } from '../services/email.js';
 import { agendarSequencia } from '../services/onboarding.js';
+import { TRIAL_DIAS } from '../services/billing.js';
 import { createHash } from 'node:crypto';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
@@ -101,18 +106,8 @@ async function responderSessao(res, usuario, via) {
   return res.json(payloadSessao(usuario, token));
 }
 
-function gerarDesafio2fa(userId) {
-  return jwt.sign({ sub: userId, tipo: '2fa' }, env.JWT_SECRET, {
-    algorithm: 'HS256',
-    expiresIn: '5m',
-  });
-}
-
-function verificarDesafio2fa(desafio) {
-  const payload = jwt.verify(desafio, env.JWT_SECRET, { algorithms: ['HS256'] });
-  if (payload?.tipo !== '2fa' || !payload?.sub) throw new Error('Desafio 2FA inválido');
-  return payload;
-}
+// T-REC-01: gerarDesafio2fa/verificarDesafio2fa agora vivem em services/auth.js
+// (compartilhadas com /auth/login/2fa/recuperar, abaixo) — ver import no topo.
 
 const ultimoOtpEnviado = new Map();
 const OTP_REENVIO_MS = 5 * 60_000;
@@ -167,49 +162,53 @@ router.post('/auth/login', async (req, res) => {
   const { username, telefone, usuarioId, password } = parse.data;
   const ref = username ?? telefone ?? `id:${usuarioId}`;
   try {
-    let usuario = null;
+    // EV-063: candidatos são só resolvidos aqui — NENHUMA informação (existe? está
+    // ativo? é conta social? quantas empresas?) é revelada antes de `autenticarCandidatos`
+    // provar a senha. O ramo de telefone não filtra `ativo` na query de propósito: o
+    // filtro de ativo acontece dentro de `autenticarCandidatos`, no mesmo lugar e do
+    // mesmo jeito que para username/usuarioId — antes, só o ramo de telefone filtrava
+    // ativo na query, o que por si só já era uma diferença observável de comportamento.
+    let candidatos;
     if (usuarioId) {
-      usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+      const u = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+      candidatos = u ? [u] : [];
     } else if (username) {
-      usuario = await prisma.usuario.findUnique({ where: { username } });
+      const u = await prisma.usuario.findUnique({ where: { username } });
+      candidatos = u ? [u] : [];
     } else {
       const variantes = variantesTelefone(telefone);
-      const candidatos = variantes.length
+      candidatos = variantes.length
         ? await prisma.usuario.findMany({
-            where: { telefone: { in: variantes }, ativo: true },
+            where: { telefone: { in: variantes } },
             include: { empresa: { select: { nome: true } } },
           })
         : [];
-      if (candidatos.length > 1) {
-        logger.info('login_desambiguacao', { telefone: '***', n: candidatos.length });
-        return res.json({
-          desambiguacao: candidatos.map((c) => ({
-            usuarioId: c.id,
-            empresa: c.empresa?.nome ?? '—',
-          })),
-        });
-      }
-      usuario = candidatos[0] ?? null;
     }
-    if (!usuario) {
-      logger.info('login_failure', { ref, motivo: 'user_not_found' });
+
+    const autenticados = await autenticarCandidatos(candidatos, password);
+
+    if (autenticados.length === 0) {
+      // Cobre, com a MESMA resposta: telefone/username/id inexistente, usuário
+      // inativo, conta social (sem senha) e senha incorreta — nenhum desses casos é
+      // distinguível de fora antes da autenticação (regra arquitetural do EV-063).
+      logger.info('login_failure', { ref, motivo: 'invalid_credentials' });
       return res.status(401).json({ erro: 'Credenciais inválidas' });
     }
-    if (!usuario.ativo) {
-      logger.info('login_failure', { ref, motivo: 'user_inactive' });
-      return res.status(401).json({ erro: 'Usuário inativo' });
+
+    if (autenticados.length > 1) {
+      // Só chega aqui DEPOIS de provar a senha em mais de uma conta — é o caso
+      // legítimo de uma pessoa com o mesmo telefone (e mesma senha) em empresas
+      // diferentes. Antes do EV-063, esta lista era revelada sem checar senha nenhuma.
+      logger.info('login_desambiguacao', { ref, n: autenticados.length });
+      return res.json({
+        desambiguacao: autenticados.map((c) => ({
+          usuarioId: c.id,
+          empresa: c.empresa?.nome ?? '—',
+        })),
+      });
     }
-    if (!usuario.senhaHash) {
-      logger.info('login_failure', { ref, motivo: 'sem_senha_social' });
-      return res
-        .status(401)
-        .json({ erro: 'Esta conta usa login social. Entre com Google, Microsoft ou Apple.' });
-    }
-    const senhaCorreta = await bcrypt.compare(password, usuario.senhaHash);
-    if (!senhaCorreta) {
-      logger.info('login_failure', { ref, motivo: 'invalid_password' });
-      return res.status(401).json({ erro: 'Credenciais inválidas' });
-    }
+
+    const usuario = autenticados[0];
     if (usuario.twoFactorAtivo && usuario.totpSecret) {
       logger.info('login_2fa_required', { userId: usuario.id, metodo: 'totp' });
       return res.json({
@@ -301,6 +300,46 @@ router.post('/auth/login/2fa-telefone', async (req, res) => {
   }
 });
 
+// T-REC-01: rota MOVIDA de routes/account.js (POST /me/2fa/recuperar), onde
+// vivia atrás de `router.use(requireAuth)` — inalcançável pelo fluxo real,
+// porque nesse ponto do login (desafio 2FA pendente) o usuário AINDA NÃO tem
+// sessão completa, só o `desafio` recebido de `/auth/login` (EV-022). Aqui,
+// como `/auth/login/2fa` e `/auth/login/2fa-telefone` acima, a própria
+// verificação do desafio (verificarDesafio2fa) É a autenticação da rota —
+// não uma dispensa dela.
+router.post('/auth/login/2fa/recuperar', async (req, res) => {
+  const parse = z
+    .object({ desafio: z.string().min(1), codigo: z.string().min(1) })
+    .safeParse(req.body);
+  if (!parse.success) return res.status(400).json({ erro: 'Dados inválidos' });
+  try {
+    let payload;
+    try {
+      payload = verificarDesafio2fa(parse.data.desafio);
+    } catch {
+      return res.status(401).json({ erro: 'Desafio inválido ou expirado' });
+    }
+    const usuario = await prisma.usuario.findUnique({ where: { id: payload.sub } });
+    if (!usuario || !usuario.ativo)
+      return res.status(401).json({ erro: 'Usuário inativo ou não encontrado' });
+    if (!usuario.twoFactorAtivo) return res.status(400).json({ erro: '2FA não está ativo' });
+
+    const ok = await verificarCodigoRecuperacao(usuario.id, parse.data.codigo);
+    if (!ok) {
+      logger.info('recuperacao_2fa_falha', { userId: usuario.id });
+      return res.status(400).json({ erro: 'Código de recuperação inválido ou já utilizado' });
+    }
+
+    await emitirRefreshCookie(res, usuario.id);
+    const token = gerarJWT(usuario);
+    logger.info('login_success', { userId: usuario.id, via: '2fa-recuperacao' });
+    res.json(payloadSessao(usuario, token));
+  } catch (erro) {
+    logger.error('Erro POST /auth/login/2fa/recuperar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 router.post('/setup', async (req, res) => {
   try {
     const count = await prisma.usuario.count();
@@ -323,6 +362,17 @@ router.post('/setup', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06 (correção pós-revisão): /setup cria empresa pelo mesmo
+      // caminho de /auth/register — sem isto, a 1ª empresa da instância
+      // (a do próprio bootstrap) ficaria sem Assinatura, mesmo estado
+      // "indeterminado" (503) que T-BILL-06 existe pra fechar.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       return tx.usuario.create({
         data: { nome, username, senhaHash, admin: true, papel: 'dono', empresaId: empresa.id },
         select: { id: true, nome: true, username: true, admin: true, papel: true, empresaId: true },
@@ -353,6 +403,16 @@ router.post('/auth/register', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06: sem isto, a empresa ficava SEM registro de Assinatura até
+      // tocar o Stripe pela 1ª vez (EV-032) — o paywall (T-BILL-04) trataria
+      // isso como estado indeterminado (503), bloqueando toda empresa nova.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       return tx.usuario.create({
         data: {
           nome,
@@ -775,6 +835,16 @@ router.post('/auth/oauth/:provedor', async (req, res) => {
     const usuario = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { nome: nomeEmpresa, slug } });
       await tx.empresaWhatsapp.create({ data: { empresaId: empresa.id } });
+      // T-BILL-06: mesmo cadastro-de-empresa que /auth/register, só que via
+      // login social — precisa do mesmo trial pra não cair em "indeterminado"
+      // (503) no paywall (T-BILL-04) assim que a empresa nascer.
+      await tx.assinatura.create({
+        data: {
+          empresaId: empresa.id,
+          status: 'trialing',
+          trialFimEm: new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000),
+        },
+      });
       const novo = await tx.usuario.create({
         data: {
           nome,
