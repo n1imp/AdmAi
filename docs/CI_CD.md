@@ -39,16 +39,32 @@ Basta `ci-ok` como check obrigatório (ele agrega os demais).
 - Migrations aplicadas no boot (`docker-entrypoint.sh → prisma migrate deploy`).
 - Domínio do serviço: `api.SEUDOMINIO`.
 
-### Painel → Cloudflare Pages (via GitHub Actions, `.github/workflows/deploy.yml`)
-- **Não** é integração nativa Git↔Cloudflare — o deploy roda via Actions: `deploy.yml`
-  dispara em `workflow_run` após o workflow `CI` concluir em `master` (só publica se
-  `conclusion == 'success'`), faz checkout do exato `head_sha` testado, `npm ci` + `npm run
-  build` (`chaveiro-painel`, Node 20 — alinhado ao `ci.yml`) e publica com
-  `cloudflare/wrangler-action@v4` (`pages deploy dist --project-name=admai-painel
-  --branch=master`).
-- Variáveis de build (`VITE_API_URL`, `VITE_CRISP_ID`, `VITE_POSTHOG_KEY`) e credenciais
-  (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) vêm de **GitHub Actions secrets**, não do
-  painel do Cloudflare.
+### Painel → Cloudflare Pages (DOIS pipelines em paralelo — achado real, 2026-08-05)
+
+⚠️ **Correção de um engano documentado aqui anteriormente**: este arquivo dizia que a
+Cloudflare NÃO tinha integração nativa Git. **Isso era falso** — confirmado diretamente no
+painel da Cloudflare (Settings → Build) após um incidente real em produção. Existem **dois
+pipelines de deploy independentes e concorrentes** para o painel:
+
+1. **GitHub Actions** (`.github/workflows/deploy.yml`): dispara em `workflow_run` após o
+   workflow `CI` concluir com sucesso em `master`, `npm ci` + `npm run build`
+   (`chaveiro-painel`, Node 20), publica com `cloudflare/wrangler-action@v4`. Variáveis de
+   build vêm de **GitHub Actions secrets** (`VITE_API_URL`, `VITE_CRISP_ID`,
+   `VITE_POSTHOG_KEY`).
+2. **Integração nativa Git↔Cloudflare** (Settings → Build, projeto `admai-painel`, "Git
+   repository: n1imp/AdmAi", "Production branch: master", "Automatic deployments: Enabled"):
+   a própria Cloudflare também builda e publica a cada push em `master`, **independente** do
+   Actions. Suas variáveis vivem em **Cloudflare Pages → Variables and secrets** (painel do
+   projeto), não nos secrets do GitHub.
+
+**Incidente real (2026-08-05):** a integração nativa não tinha `VITE_API_URL` configurada nas
+suas próprias variáveis — seu build gerou um `_headers`/CSP com `connect-src` **sem** a origem
+da API, e essa build (não a do Actions) acabou sendo a que ficou ativa em produção — login
+quebrado (`connect-src` bloqueava a chamada ao Railway antes de sair do navegador). Corrigido
+adicionando `VITE_API_URL=https://admai-production.up.railway.app` em Cloudflare Pages →
+Variables and secrets (ambiente Production) e promovendo manualmente o deployment correto já
+existente. **Ambos os pipelines agora produzem build correta** — não importa mais qual "vence"
+a corrida, eliminando o risco de recorrência.
 - `public/_redirects` já faz o fallback de SPA (deep links).
 - Domínio: `app.SEUDOMINIO` (ou `admai-painel.pages.dev` por padrão).
 
@@ -66,7 +82,7 @@ Basta `ci-ok` como check obrigatório (ele agrega os demais).
 | | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | publicação via `cloudflare/wrangler-action@v4` (`deploy.yml`) |
 | **GitHub → Actions variables** | `VITE_API_URL` | URL da API embutida no build do `.aab` (`release.yml` — **variable**, store distinto do secret de mesmo nome usado por `deploy.yml`) |
 | **Railway → Variables** | `NODE_ENV`, `DATABASE_URL` (Supabase direta), `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`, `ALLOWED_ORIGIN`, `PUBLIC_URL`, `SENTRY_DSN` | runtime do backend (ver `chaveiro-bot/.env.example`). **Não** definir `PORT` (injetado) nem `WHATSAPP_HABILITADO`. |
-| **Cloudflare Pages** | (nenhuma — o build não roda na Cloudflare) | o deploy é feito por `deploy.yml` via `wrangler pages deploy` de um `dist/` já pronto; não há integração nativa Git↔Cloudflare configurada para build neste projeto |
+| **Cloudflare Pages → Variables and secrets** | `VITE_API_URL` (adicionada em 2026-08-05, ver acima) | build da **integração nativa** Git↔Cloudflare — pipeline separado do `deploy.yml`, existe de verdade (achado real, corrige engano anterior deste documento) |
 
 > Nada de segredo vive no repositório. Os `.env.example` documentam os nomes; os valores ficam
 > só nos painéis das plataformas.
