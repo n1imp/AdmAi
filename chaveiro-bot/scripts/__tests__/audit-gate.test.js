@@ -25,7 +25,16 @@ function auditComAdvisories(pacote, advisories) {
         fixAvailable: true,
       },
     },
-    metadata: { vulnerabilities: { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: advisories.length } },
+    metadata: {
+      vulnerabilities: {
+        info: 0,
+        low: 0,
+        moderate: 0,
+        high: 0,
+        critical: 0,
+        total: advisories.length,
+      },
+    },
   };
 }
 
@@ -71,7 +80,11 @@ describe('avaliarGate — apenas advisories aceitos', () => {
 describe('avaliarGate — advisory High novo, fora da allowlist', () => {
   it('falha (ok=false) e lista o advisory como bloqueante', () => {
     const audit = auditComAdvisories('algum-pacote-novo', [
-      { ghsaId: 'GHSA-aaaa-bbbb-cccc', severity: 'high', title: 'Vulnerabilidade nova nunca revisada' },
+      {
+        ghsaId: 'GHSA-aaaa-bbbb-cccc',
+        severity: 'high',
+        title: 'Vulnerabilidade nova nunca revisada',
+      },
     ]);
 
     const resultado = avaliarGate(audit, allowlistReal, HOJE_DENTRO_DO_PRAZO);

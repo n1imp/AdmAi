@@ -71,7 +71,10 @@ function avaliarGate(auditJson, allowlistJson, hoje = new Date()) {
     if (entradaAllowlist && !entradaAllowlist.expirada) {
       dispensados.push({ ...adv, allowlist: entradaAllowlist });
     } else if (entradaAllowlist && entradaAllowlist.expirada) {
-      bloqueantes.push({ ...adv, motivo: 'excecao expirada (reviewBy vencido) — precisa de nova revisão' });
+      bloqueantes.push({
+        ...adv,
+        motivo: 'excecao expirada (reviewBy vencido) — precisa de nova revisão',
+      });
     } else {
       bloqueantes.push({ ...adv, motivo: 'não consta na allowlist' });
     }
