@@ -82,5 +82,12 @@ jobs:
           cache-dependency-path: ${{ matrix.proj }}/package-lock.json
       - run: npm ci --ignore-scripts
       # No painel, --omit=dev: vulns de tooling de build (ex.: esbuild dev-server, minimatch
-      # ReDoS) não são risco de runtime — alinha com o ci.yml. No backend, auditamos tudo.
-      - run: npm audit --audit-level=high ${{ matrix.proj == 'chaveiro-painel' && '--omit=dev' || '' }}
+      # ReDoS) não são risco de runtime — alinha com o ci.yml. No backend, auditamos tudo,
+      # com exceções explícitas e auditáveis via scripts/audit-gate.mjs (ver ci.yml) — só o
+      # GHSA ID + pacote exatos já investigados, nunca um bypass genérico.
+      - if: matrix.proj == 'chaveiro-bot'
+        run: |
+          npm audit --json > audit-report.json || true
+          node scripts/audit-gate.mjs audit-report.json
+      - if: matrix.proj == 'chaveiro-painel'
+        run: npm audit --audit-level=high --omit=dev

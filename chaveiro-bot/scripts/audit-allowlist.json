@@ -1,0 +1,29 @@
+{
+  "_leiame": "Exceções documentadas e auditáveis ao gate de `npm audit` (High/Critical), consumidas por audit-gate.mjs. Cada entrada exige ghsaId, package, severity, justification, reference e reviewBy. Uma entrada só dispensa o gate se ghsaId E package baterem exatamente E a data de hoje ainda não passou de reviewBy — depois disso volta a bloquear até nova revisão humana. Não existe exceção por nome de pacote inteiro nem genérica.",
+  "entries": [
+    {
+      "ghsaId": "GHSA-mwp4-54f8-5fhr",
+      "package": "ip-address",
+      "severity": "high",
+      "justification": "Address4 decodifica octeto com zero à esquerda como decimal em vez de octal (SSRF/bypass de fronteira de confiança). Investigado na missão EV-069 (Evidence Driven Execution completo, não presumido): o único consumidor de ip-address neste projeto é ipKeyGenerator (express-rate-limit), que só constrói Address4 via Address6.to4() — nunca a partir de texto cru controlado por atacante. Esse caminho é bloqueado por 2 camadas antes de qualquer parsing malicioso: net.isIPv6() do Node rejeita o padrão malformado (::ffff:012.0.0.1), e a própria Address6.parse4in6 instalada já lança AddressError para zero à esquerda. Ambas as camadas foram reproduzidas diretamente nesta investigação.",
+      "reference": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md (linha EV-069), docs/agent-environment/SECURITY_HARDENING_BACKLOG.md item 14",
+      "reviewBy": "2026-11-04"
+    },
+    {
+      "ghsaId": "GHSA-4xrf-jv44-h6hh",
+      "package": "ip-address",
+      "severity": "moderate",
+      "justification": "Sufixo CIDR suprime classificação especial via isInSubnet() — este projeto nunca chama isInSubnet nem nenhuma outra função de classificação (isPrivate/isLoopback/isLinkLocal/isCGNAT/etc) de ip-address; estruturalmente inalcançável. Mesma investigação EV-069.",
+      "reference": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md (linha EV-069), docs/agent-environment/SECURITY_HARDENING_BACKLOG.md item 14",
+      "reviewBy": "2026-11-04"
+    },
+    {
+      "ghsaId": "GHSA-22jq-vg5j-6vgg",
+      "package": "ip-address",
+      "severity": "moderate",
+      "justification": "Address6 classifica errado endereço IPv4-mapeado/NAT64 — mesma classe de função de classificação nunca chamada por este projeto; estruturalmente inalcançável. Mesma investigação EV-069.",
+      "reference": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md (linha EV-069), docs/agent-environment/SECURITY_HARDENING_BACKLOG.md item 14",
+      "reviewBy": "2026-11-04"
+    }
+  ]
+}

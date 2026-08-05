@@ -146,8 +146,13 @@ jobs:
       - name: Testes de integração (Supertest + Postgres)
         run: npm run test:integration
 
-      - name: Auditoria de dependências (falha em High+)
-        run: npm audit --audit-level=high
+      # Falha em High+, exceto exceções explícitas e auditáveis em scripts/audit-allowlist.json
+      # (só o GHSA ID + pacote exatos, com justificativa e data de revisão — nunca o pacote
+      # inteiro nem um bypass genérico). Ver scripts/audit-gate.mjs.
+      - name: Auditoria de dependências (High+, exceções documentadas)
+        run: |
+          npm audit --json > audit-report.json || true
+          node scripts/audit-gate.mjs audit-report.json
 
   # ── Backend: smoke do Docker build (pega quebra do Dockerfile antes do Railway) ──
   docker-build:
