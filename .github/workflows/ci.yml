@@ -56,7 +56,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       # Glob explícito: passar o diretório faz o runner tratá-lo como módulo.
@@ -103,7 +103,7 @@ jobs:
       ENCRYPTION_KEY: ci-encryption-key-for-testing-only-32ch
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -174,7 +174,7 @@ jobs:
         working-directory: chaveiro-painel
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
