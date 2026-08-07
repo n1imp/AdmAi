@@ -28,7 +28,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # Alinhado ao Node do ci.yml. Estava em 22 enquanto o CI valida em 20, ou seja,
           # o artefato publicado era construído numa versão que nenhum job testa — e
