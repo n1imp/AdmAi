@@ -48,10 +48,26 @@ chaveiro-bot/uploads-docs/
 **/supabase/.temp/
 **/supabase/.branches/
 
+# ── Config local de ferramenta de IA (por maquina, nao versionar) ──
+# Poluem o baseline por lane do Write Set Gate (628 arquivos) sem serem parte do
+# projeto: `project.yml` da Serena carrega caminho local, `config.toml` do Codex
+# carrega preferencia de perfil.
+.serena/
+.codex/
+
 # ── Ruflo / claude-flow / swarm / tooling de IA (local, não versionar) ──
 .swarm/
 .claude-flow/
-.claude/
+# `.claude/*` (e não `.claude/`) porque o Git não desce em diretório ignorado —
+# sem isso, nenhuma exceção abaixo funcionaria.
+.claude/*
+# Exceção estreita: o roteador de ferramentas é configuração compartilhável do
+# projeto (sem segredo, sem caminho pessoal) e precisa ser reproduzível em outra
+# worktree. Mesmo princípio que já mantém CLAUDE.md e AGENTS.md rastreados.
+# Tudo o mais em `.claude/` continua ignorado: perfil, launcher, hashes e locks.
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/admai-tool-router/
 claude/
 .mcp.json
 CLAUDE.md

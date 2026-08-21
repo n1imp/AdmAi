@@ -1,0 +1,267 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Execution Responsibility Vector (correcao de F-004).",
+    "Escrito ANTES de responsibility.mjs e derivado do contrato da missao.",
+    "",
+    "F-004: o Router confundia IMPORTANCIA DO RISCO com RESPONSABILIDADE DE",
+    "EXECUCAO. Risco em seguranca significa que seguranca precisa OLHAR, nao",
+    "que seguranca precisa ESCREVER.",
+    "",
+    "Regra sob teste:",
+    "  PRIMARY   = Surface + Concern + Change Intent + Required Capability",
+    "  REVIEWER  = Risk Domains sem necessidade de escrever",
+    "",
+    "CONVENCAO DOCUMENTADA (pedida pela secao 8 do contrato): quando o Change",
+    "Intent E a propria especialidade, a especialidade e PRIMARY e o dono da",
+    "superficie e COLLABORATOR. Vale uniformemente para accessibility,",
+    "observability e performance. A alternativa ('UI e sempre do Frontend') foi",
+    "descartada por contradizer OWN-03, onde data e Primary de uma migration",
+    "pedida por seguranca."
+  ],
+  "schemaVersion": 1,
+  "roles": ["PRIMARY_OWNER", "COLLABORATOR", "REQUIRED_REVIEWER", "CONSUMER", "NOT_INVOLVED"],
+  "cases": [
+    {
+      "id": "OWN-01",
+      "title": "backend com risco de seguranca, implementacao e logica normal de backend",
+      "input": {
+        "surface": "backend",
+        "concern": "applicationLogic",
+        "changeIntent": "testability",
+        "riskDomains": ["security"]
+      },
+      "expect": {
+        "primaryOwner": "backend",
+        "roles": { "security": ["REQUIRED_REVIEWER", "COLLABORATOR"] },
+        "notPrimary": ["security"]
+      },
+      "rationale": "E o caso do DOG-001. Risco de seguranca NAO transfere a escrita."
+    },
+    {
+      "id": "OWN-02",
+      "title": "alterar diretamente regra de autorizacao",
+      "input": {
+        "surface": "backend",
+        "concern": "authorization",
+        "changeIntent": "securityRemediation",
+        "riskDomains": ["security"]
+      },
+      "expect": {
+        "primaryOwner": "security",
+        "roles": { "backend": ["COLLABORATOR"] }
+      },
+      "rationale": "Aqui o concern alterado E o controle de seguranca."
+    },
+    {
+      "id": "OWN-03",
+      "title": "schema alterado para garantir constraint de seguranca",
+      "input": {
+        "surface": "data",
+        "concern": "schema",
+        "changeIntent": "securityRemediation",
+        "riskDomains": ["security", "data"]
+      },
+      "expect": {
+        "primaryOwner": "data",
+        "roles": { "security": ["REQUIRED_REVIEWER"] },
+        "notPrimary": ["security"]
+      },
+      "rationale": "Quem escreve migration e Data, mesmo quando o pedido nasce de seguranca."
+    },
+    {
+      "id": "OWN-04",
+      "title": "frontend exibe dado indevido; API ja entrega conforme contrato",
+      "input": {
+        "surface": "frontend",
+        "concern": "frontendBehavior",
+        "changeIntent": "bugFix",
+        "riskDomains": ["security"],
+        "evidence": "endpoint correto conforme contrato vigente"
+      },
+      "expect": {
+        "primaryOwner": "frontend",
+        "roles": { "security": ["REQUIRED_REVIEWER"] },
+        "notInvolved": ["backend"]
+      },
+      "rationale": "Backend nao entra automaticamente quando a evidencia o exclui."
+    },
+    {
+      "id": "OWN-05",
+      "title": "botao indevido no frontend E endpoint permite a acao proibida",
+      "input": {
+        "surface": "backend",
+        "concern": "authorization",
+        "changeIntent": "securityRemediation",
+        "riskDomains": ["security"],
+        "consumers": ["frontend"],
+        "evidence": "endpoint permite acao proibida"
+      },
+      "expect": {
+        "primaryOwner": "security",
+        "roles": { "backend": ["COLLABORATOR"], "frontend": ["CONSUMER", "COLLABORATOR"] }
+      },
+      "rationale": "O defeito real e a autorizacao; a correcao visual e consequencia."
+    },
+    {
+      "id": "OWN-06a",
+      "title": "query lenta resolvida por indice/SQL",
+      "input": {
+        "surface": "data",
+        "concern": "queryPerformance",
+        "changeIntent": "performanceOptimization",
+        "riskDomains": ["operational"]
+      },
+      "expect": {
+        "primaryOwner": "data",
+        "roles": { "performance": ["REQUIRED_REVIEWER", "COLLABORATOR"] }
+      },
+      "rationale": "Nao existe regra fixa 'performance sempre'. Quem escreve indice e Data."
+    },
+    {
+      "id": "OWN-06b",
+      "title": "query lenta resolvida por estrategia de cache na aplicacao",
+      "input": {
+        "surface": "backend",
+        "concern": "caching",
+        "changeIntent": "performanceOptimization",
+        "riskDomains": ["operational"]
+      },
+      "expect": {
+        "primaryOwnerOneOf": ["performance", "backend"],
+        "notPrimary": ["data"]
+      },
+      "rationale": "Mesma origem, superficie diferente, dono diferente."
+    },
+    {
+      "id": "OWN-07",
+      "title": "adicionar tracing a rota existente",
+      "input": {
+        "surface": "backend",
+        "concern": "instrumentation",
+        "changeIntent": "observabilityImprovement",
+        "riskDomains": []
+      },
+      "expect": {
+        "primaryOwner": "observability",
+        "roles": { "backend": ["COLLABORATOR", "REQUIRED_REVIEWER"] }
+      },
+      "rationale": "Convencao documentada: Change Intent da especialidade -> especialidade e Primary."
+    },
+    {
+      "id": "OWN-08",
+      "title": "corrigir focus management em componente React",
+      "input": {
+        "surface": "frontend",
+        "concern": "accessibility",
+        "changeIntent": "accessibilityCorrection",
+        "riskDomains": []
+      },
+      "expect": {
+        "primaryOwner": "accessibility",
+        "roles": { "frontend": ["COLLABORATOR"] }
+      },
+      "rationale": "Mesma convencao de OWN-07, aplicada sem excecao."
+    },
+    {
+      "id": "OWN-09",
+      "title": "mudanca explicita do contrato entre backend e frontend",
+      "input": {
+        "surface": "integrationContract",
+        "concern": "apiContract",
+        "changeIntent": "contractChange",
+        "riskDomains": [],
+        "surfacesTouched": ["backend", "frontend"]
+      },
+      "expect": {
+        "contractOwner": "integration",
+        "sliceOwners": { "backend": "backend", "frontend": "frontend" },
+        "integrationNotPrimaryOfImplementation": true
+      },
+      "rationale": "Integration cuida da coerencia do contrato; nao edita os dois lados."
+    },
+    {
+      "id": "OWN-10",
+      "title": "seguranca analisa e conclui que nenhuma alteracao e necessaria",
+      "input": {
+        "surface": "backend",
+        "concern": "applicationLogic",
+        "changeIntent": "hardening",
+        "riskDomains": ["security"],
+        "securityRequiresWrite": false
+      },
+      "expect": {
+        "roles": { "security": ["REQUIRED_REVIEWER"] },
+        "notPrimary": ["security"],
+        "securityHasNoImplementationSlice": true
+      },
+      "rationale": "Nenhum Primary artificial para quem so precisa revisar."
+    },
+    {
+      "id": "OWN-11",
+      "title": "seguranca e backend precisam editar a mesma funcao",
+      "input": {
+        "surface": "backend",
+        "concern": "authorization",
+        "changeIntent": "securityRemediation",
+        "riskDomains": ["security"],
+        "contenders": ["security", "backend"],
+        "sharedSymbol": "chaveiro-bot/src/middleware/auth.js"
+      },
+      "expect": {
+        "exactlyOnePrimary": true,
+        "primaryOwner": "security",
+        "roles": { "backend": ["COLLABORATOR"] },
+        "concurrentEditAllowed": false
+      },
+      "rationale": "Um dono; o outro colabora. Nunca edicao concorrente."
+    },
+    {
+      "id": "OWN-12",
+      "kind": "NEGATIVO",
+      "title": "caso genuinamente ambiguo",
+      "$note": [
+        "CORRIGIDO EM F-005. A entrada anterior era {surface:null, concern:null,",
+        "changeIntent:null} — ou seja, ZERO candidatos, nao ambiguidade. O rotulo",
+        "nunca correspondeu ao input, e a expectativa codificava o defeito que",
+        "F-005 identificou: fallback mascarando lacuna estrutural.",
+        "",
+        "As assercoes seguem IDENTICAS (fallback declarado, confianca BAIXA,",
+        "escalada em L2); so a entrada passou a ser de fato ambigua. O caso de",
+        "zero candidatos e agora coberto por CAP-01, que exige o OPOSTO:",
+        "CAPABILITY_GAP e fallbackUsed=false."
+      ],
+      "input": {
+        "ambiguousCandidates": ["security", "data"],
+        "level": "L2"
+      },
+      "expect": {
+        "fallbackUsed": true,
+        "fallbackCode": "OWNERSHIP_FALLBACK_USED",
+        "confidence": "BAIXA",
+        "escalates": true
+      },
+      "rationale": "Sem derivacao possivel, o Router declara o fallback em vez de decidir em silencio pela precedencia antiga."
+    },
+    {
+      "id": "CB-NOOP",
+      "kind": "NEGATIVO",
+      "title": "backend Primary + security Reviewer na mesma logica, sem contrato material",
+      "input": {
+        "surface": "backend",
+        "concern": "applicationLogic",
+        "changeIntent": "testability",
+        "riskDomains": ["security"],
+        "outputDependency": false,
+        "apiContract": false,
+        "schemaContract": false,
+        "eventContract": false,
+        "breakingChange": false
+      },
+      "expect": {
+        "contractRequests": 0,
+        "contractOwner": null
+      },
+      "rationale": "DOG-001 mostrou que Contract Bus por pluralidade de Engineers e overhead. Zero CONTRACT_REQ e o comportamento CORRETO aqui."
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Execution Router. Escrito ANTES de router.mjs e derivado",
+    "da secao 13 do contrato, nao da implementacao.",
+    "",
+    "Duas gravidades, como no oraculo de risco:",
+    "  ENGINEER FALTANDO  -> GRAVE. Superficie sem dono e trabalho sem responsavel.",
+    "  ENGINEER SOBRANDO  -> GRAVE tambem, mas por outro motivo: cada Engineer",
+    "                        desnecessario custa contexto e dilui ownership. A secao",
+    "                        26 do contrato e explicita: sem impacto material, nao",
+    "                        acionar. Por isso 'forbidden' existe."
+  ],
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "ENG-01",
+      "request": "Corrija o tratamento de erro do service de agendamento quando o job falha no retry.",
+      "expect": {
+        "primaryOwner": "backend",
+        "required": ["backend"],
+        "forbidden": ["frontend", "mobile", "accessibility", "externalIntegrations"]
+      },
+      "rationale": "Mudanca contida no backend: service, retry, erro."
+    },
+    {
+      "id": "ENG-02",
+      "request": "Ajuste o estado vazio da lista de clientes no painel quando nao ha resultado.",
+      "expect": {
+        "primaryOwner": "frontend",
+        "required": ["frontend"],
+        "forbidden": ["data", "security", "mobile", "externalIntegrations"]
+      },
+      "rationale": "Superficie unica de interface."
+    },
+    {
+      "id": "ENG-03",
+      "request": "Adicione o campo prioridade na tabela de servicos, exponha na API e mostre na tela de servicos.",
+      "expect": {
+        "required": ["data", "backend", "frontend", "integration"],
+        "minEngineers": 4,
+        "forbidden": ["externalIntegrations"]
+      },
+      "rationale": "Atravessa schema, contrato e interface. Integration entra porque ha contrato entre camadas."
+    },
+    {
+      "id": "ENG-04",
+      "request": "Resolva o conflito de sincronizacao offline quando o tecnico edita o mesmo servico em dois dispositivos.",
+      "expect": {
+        "required": ["mobile", "backend", "data", "integration"],
+        "minEngineers": 4
+      },
+      "rationale": "Sincronizacao offline e transversal por natureza."
+    },
+    {
+      "id": "ENG-05",
+      "request": "Permita que o papel Gestor conceda autorizacao de estoque a um tecnico.",
+      "expect": {
+        "required": ["security", "backend"],
+        "forbidden": ["accessibility", "performance", "externalIntegrations"],
+        "primaryOwnerOneOf": ["security", "backend"]
+      },
+      "rationale": "RBAC. Data entra somente se a persistencia for tocada; nao e obrigatorio."
+    },
+    {
+      "id": "ENG-06",
+      "request": "Troque o provedor de envio de e-mail transacional usado pelo backend nas notificacoes.",
+      "expect": {
+        "required": ["externalIntegrations", "backend"],
+        "forbidden": ["frontend", "accessibility"]
+      },
+      "rationale": "Integracao externa mais o Engineer da aplicacao que a consome."
+    },
+    {
+      "id": "ENG-07",
+      "kind": "NEGATIVO",
+      "request": "Reescreva o middleware de autorizacao para melhorar performance de consulta.",
+      "forceContenders": ["security", "performance"],
+      "forceSurface": "chaveiro-bot/src/middleware/auth.js",
+      "expect": {
+        "status": "OWNERSHIP_CONFLICT",
+        "resolvedPrimary": "security",
+        "demotedToCollaborator": ["performance"]
+      },
+      "rationale": "Superficie critica de seguranca disputada. Um Primary Owner; o outro vira colaborador via Contract Bus. Nunca edicao concorrente."
+    },
+    {
+      "id": "ENG-08",
+      "kind": "NEGATIVO",
+      "contractConflict": { "from": "frontend", "to": "backend", "rounds": 3, "structural": false },
+      "expect": { "escalatesTo": "integration" },
+      "rationale": "Discordancia de contrato entre dois Engineers escala a Integration, sem ping-pong indefinido."
+    },
+    {
+      "id": "ENG-09",
+      "kind": "NEGATIVO",
+      "contractConflict": { "from": "backend", "to": "data", "rounds": 3, "structural": true },
+      "expect": { "escalatesTo": "architectureGuardian" },
+      "rationale": "Conflito estrutural (boundary, direcao de dependencia) vai ao Architecture Guardian."
+    },
+    {
+      "id": "ENG-10",
+      "request": "Corrija o erro de digitacao no rotulo do botao Cancelar.",
+      "expect": {
+        "maxEngineers": 1,
+        "required": ["frontend"],
+        "forbidden": ["security", "data", "integration", "performance", "accessibility", "mobile", "backend", "release", "observability", "externalIntegrations"],
+        "verificationLevel": "MINIMAL"
+      },
+      "rationale": "L0. Acionar roster amplo aqui e falha: custo sem impacto material."
+    }
+  ]
+}

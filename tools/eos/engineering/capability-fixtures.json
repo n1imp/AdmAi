@@ -1,0 +1,125 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Capability Gap (F-005). Escrito ANTES da correcao.",
+    "",
+    "F-004 ensinou: risco nao e ownership.",
+    "F-005 ensina:  ausencia de owner nao e ambiguidade.",
+    "",
+    "  1 candidato   -> seleciona",
+    "  >1 candidatos -> resolve semanticamente, ou OWNERSHIP_AMBIGUOUS com fallback",
+    "  0 candidatos  -> CAPABILITY_GAP. Fallback aqui e PROIBIDO: mascarar lacuna",
+    "                   estrutural escolhendo alguem por precedencia e o defeito.",
+    "",
+    "FRONTEIRA que decide os casos dificeis: workflow de CI e do Release; runner e",
+    "harness locais sao do testInfrastructure; tools/eos/** e do eosMaintainer; a",
+    "POLITICA de PASS/FAIL nunca pertence a quem constroi o instrumento."
+  ],
+  "schemaVersion": 1,
+  "ownershipStates": ["OWNED", "OWNERSHIP_AMBIGUOUS", "CAPABILITY_GAP"],
+  "cases": [
+    {
+      "id": "CAP-01",
+      "kind": "NEGATIVO",
+      "title": "zero candidatos produz CAPABILITY_GAP, nunca fallback",
+      "input": { "surface": "quantumTeleporter", "concern": "warpDrive", "changeIntent": "bugFix", "level": "L1" },
+      "expect": { "ownershipState": "CAPABILITY_GAP", "fallbackUsed": false, "primaryOwner": null,
+                  "hasMissingMapping": true, "hasEscalationTarget": true }
+    },
+    {
+      "id": "CAP-02",
+      "title": "um candidato valido e selecionado sem fallback",
+      "input": { "surface": "backend", "concern": "applicationLogic", "changeIntent": "refactor" },
+      "expect": { "ownershipState": "OWNED", "primaryOwner": "backend", "fallbackUsed": false }
+    },
+    {
+      "id": "CAP-03",
+      "title": "dois candidatos com vencedor semantico: resolve sem fallback",
+      "input": { "surface": "backend", "concern": "authorization", "changeIntent": "securityRemediation",
+                 "riskDomains": ["security"] },
+      "expect": { "ownershipState": "OWNED", "primaryOwner": "security", "fallbackUsed": false }
+    },
+    {
+      "id": "CAP-04",
+      "title": "ambiguidade real: dois candidatos igualmente validos",
+      "input": { "ambiguousCandidates": ["backend", "data"], "level": "L2" },
+      "expect": { "ownershipState": "OWNERSHIP_AMBIGUOUS", "fallbackUsed": true,
+                  "confidence": "BAIXA", "escalates": true }
+    },
+    {
+      "id": "CAP-05",
+      "title": "cenario real do Verification Hardening encontra owner",
+      "input": { "surface": "testInfrastructure", "concern": "testIsolation", "changeIntent": "testability",
+                 "level": "L1" },
+      "expect": { "ownershipState": "OWNED", "primaryOwner": "testInfrastructure", "fallbackUsed": false }
+    },
+    {
+      "id": "CAP-06",
+      "title": "escrever teste de feature NAO aciona testInfrastructure",
+      "input": { "surface": "backend", "concern": "applicationLogic", "changeIntent": "testability" },
+      "expect": { "primaryOwner": "backend", "notPrimary": ["testInfrastructure"] }
+    },
+    {
+      "id": "CAP-07",
+      "title": "config global do Vitest",
+      "input": { "surface": "testInfrastructure", "concern": "testRunnerConfig", "changeIntent": "refactor" },
+      "expect": { "primaryOwner": "testInfrastructure", "notPrimary": ["release", "verification"] }
+    },
+    {
+      "id": "CAP-08",
+      "title": "somente a etapa de testes no GitHub Actions",
+      "input": { "surface": "release", "concern": "deployment", "changeIntent": "releaseChange" },
+      "expect": { "primaryOwner": "release", "notPrimary": ["testInfrastructure"] }
+    },
+    {
+      "id": "CAP-09",
+      "title": "self-test dentro de tools/eos/**",
+      "input": { "surface": "eos", "concern": "testHarness", "changeIntent": "testability" },
+      "expect": { "primaryOwner": "eosMaintainer", "notPrimary": ["testInfrastructure", "frontend"] }
+    },
+    {
+      "id": "CAP-10",
+      "title": "teste unitario de componente React nao e infraestrutura",
+      "input": { "surface": "frontend", "concern": "reactComponent", "changeIntent": "testability" },
+      "expect": { "primaryOwner": "frontend", "notPrimary": ["testInfrastructure"] }
+    },
+    {
+      "id": "CAP-11",
+      "title": "infraestrutura compartilhada do harness E2E",
+      "input": { "surface": "testInfrastructure", "concern": "testHarness", "changeIntent": "refactor" },
+      "expect": { "primaryOwner": "testInfrastructure" }
+    },
+    {
+      "id": "CAP-12",
+      "title": "harness de carga (k6) futuro",
+      "input": { "surface": "testInfrastructure", "concern": "testHarness", "changeIntent": "performanceOptimization" },
+      "expect": { "primaryOwner": "testInfrastructure", "roles": { "performance": ["REQUIRED_REVIEWER", "COLLABORATOR"] } }
+    },
+    {
+      "id": "CAP-13",
+      "kind": "NEGATIVO",
+      "title": "regra de PASS/FAIL do EOS e governanca, nao instrumento",
+      "input": { "surface": "eos", "concern": "verificationPolicy", "changeIntent": "refactor" },
+      "expect": { "primaryOwner": "eosMaintainer", "notPrimary": ["testInfrastructure", "verification"] }
+    },
+    {
+      "id": "CAP-14",
+      "kind": "NEGATIVO",
+      "title": "guarda F-004: risco de ambiente nao vira Primary",
+      "input": { "surface": "testInfrastructure", "concern": "testRunnerConfig", "changeIntent": "refactor",
+                 "riskDomains": ["environment"] },
+      "expect": { "primaryOwner": "testInfrastructure", "notPrimary": ["release"],
+                  "roles": { "release": ["REQUIRED_REVIEWER"] } }
+    }
+  ],
+  "nonOverlapMatrix": [
+    { "task": "acceptance criteria",          "owner": "verification" },
+    { "task": "implementacao de teste de feature", "owner": "featureEngineer" },
+    { "task": "config global do Vitest",      "owner": "testInfrastructure" },
+    { "task": "fixtures de teste",            "owner": "testInfrastructure" },
+    { "task": "harness E2E",                  "owner": "testInfrastructure" },
+    { "task": "workflow de CI",               "owner": "release" },
+    { "task": "self-tests do EOS",            "owner": "eosMaintainer" },
+    { "task": "isolamento do runner",         "owner": "testInfrastructure" },
+    { "task": "checagens de deploy",          "owner": "release" }
+  ]
+}

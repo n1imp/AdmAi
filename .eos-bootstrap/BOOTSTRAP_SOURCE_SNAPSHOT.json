@@ -1,0 +1,494 @@
+{
+  "bootstrapSnapshotId": "BSS-001",
+  "createdAt": "2026-08-12T23:58:47Z",
+  "baseCommit": "30bf5453d847c17d88197b11c93da965406be53c",
+  "branch": "fix/seguranca-criticos",
+  "masterPlanVersion": "1.1.0",
+  "amendment": "BOOTSTRAP_EXECUTION_AMENDMENT_001",
+  "counts": {
+    "planning": 52,
+    "baseline": 43,
+    "total": 95
+  },
+  "files": {
+    "planning": [
+      {
+        "path": "docs/eos-v2/.eos-run",
+        "sha256": "6a43d6d2f0a7cdf0a32354c91e36fe0cf8d1f2a6b2f6e10ca32be91e26b09f6b",
+        "bytes": 25
+      },
+      {
+        "path": "docs/eos-v2/01_LEGACY_EOS_FORENSICS.md",
+        "sha256": "e8d517003fe3ea2e71569c31bb568efccacfd76c5a61123bef1e1c4a4976aa8e",
+        "bytes": 15202
+      },
+      {
+        "path": "docs/eos-v2/02_LEGACY_TO_V2_MAPPING.md",
+        "sha256": "44509490cb7cae4915a9f7a05c819dbe82f8788755d205bc29a682340f235aee",
+        "bytes": 13283
+      },
+      {
+        "path": "docs/eos-v2/03_SYSTEM_INTERFACE_MAP.md",
+        "sha256": "cab239ee3376ddeb8a0ad561e70c9fcb56fc146342d899ef5fcb8706c2dd372b",
+        "bytes": 12414
+      },
+      {
+        "path": "docs/eos-v2/04_GAP_ANALYSIS.md",
+        "sha256": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
+        "bytes": 8736
+      },
+      {
+        "path": "docs/eos-v2/05_MIGRATION_PLAN.md",
+        "sha256": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
+        "bytes": 12060
+      },
+      {
+        "path": "docs/eos-v2/06_IMPLEMENTATION_STATE.md",
+        "sha256": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
+        "bytes": 30022
+      },
+      {
+        "path": "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md",
+        "sha256": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
+        "bytes": 22987
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_A_FOUNDATIONS.md",
+        "sha256": "2e7156b583641368ea081ed623f431e0bf8a1ecc0751c9702a8b5d17be968b47",
+        "bytes": 20408
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_B_EOS_KERNEL.md",
+        "sha256": "5e52f5865eae7a712ef19b0fe121f5de02c0849a5735ba909c024f5d588aef95",
+        "bytes": 25815
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_C_CODEX_COGNITIVE_PLANE.md",
+        "sha256": "d2606b19eee04f8d4338680250de729fd42bb0a97cd024a3c0bceae062935f03",
+        "bytes": 25969
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_D_CLAUDE_EXECUTION_PLANE.md",
+        "sha256": "632bfb10339b8901f0e685e6009f11b68db836ea62735d3931d039c9a6304859",
+        "bytes": 58508
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_E_PROOF_RESILIENCE.md",
+        "sha256": "312d38e2b802bad63c819364d34c8ad1d7c1c68f708df5fd3d96ce4c78c08e9e",
+        "bytes": 56391
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_F_ACTIVE_MIGRATION.md",
+        "sha256": "2f6dd4ee35d2386d3be6a247b2f68139e4c8d2053523592eeb0075c1f22ee49f",
+        "bytes": 58206
+      },
+      {
+        "path": "docs/eos-v2/plans/PLAN_G_INTEGRATION_MASTER_PLAN.md",
+        "sha256": "c4f70886f7c41354c75f18120ff97715c11f5cb80222fd9ea392510b52bc983f",
+        "bytes": 89327
+      },
+      {
+        "path": "docs/eos-v2/TOOL_COST_REGISTRY.md",
+        "sha256": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
+        "bytes": 8210
+      },
+      {
+        "path": "docs/agent-environment/AGENT_DECISIONS.md",
+        "sha256": "5ef1b89b5d4da189a93ddaf759bec43496438cb52b8a00ada951543c36389176",
+        "bytes": 837
+      },
+      {
+        "path": "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md",
+        "sha256": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
+        "bytes": 15961
+      },
+      {
+        "path": "docs/agent-environment/B2_R2E_INERT_VALIDATION.md",
+        "sha256": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
+        "bytes": 26076
+      },
+      {
+        "path": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md",
+        "sha256": "269b0e7b998783f7319d6f4f1a89b63a6db9bd6be3004387081769b2379099e0",
+        "bytes": 216403
+      },
+      {
+        "path": "docs/agent-environment/EV060_REMEDIATION_REPORT.md",
+        "sha256": "881bd8c309a29feee08d4ee8ef8334f0aea23dc029d453cbe7ecc4835bd745e8",
+        "bytes": 8969
+      },
+      {
+        "path": "docs/agent-environment/EV063_REMEDIATION_REPORT.md",
+        "sha256": "76b9462b11c9db29cdd7bdba5541074c5c3fee8664543cdc95edbf7e167427e3",
+        "bytes": 11281
+      },
+      {
+        "path": "docs/agent-environment/EV065_VALIDATION_REPORT.md",
+        "sha256": "a4fde24c31b9863a7ecd0b5b14fde45ed67081b5b812aca7bb9f5e10ae536df9",
+        "bytes": 13280
+      },
+      {
+        "path": "docs/agent-environment/EV070_VALIDATION_AND_REMEDIATION_REPORT.md",
+        "sha256": "3ef9320e06f6a7734b5eedca8d53b9035195d4ffbf9c98b341bcebf582541c5a",
+        "bytes": 15710
+      },
+      {
+        "path": "docs/agent-environment/FUNCTIONALITY_MATRIX_V1.md",
+        "sha256": "39a24196f95d319ece8027034e47fc0dc9e20715bda6ec0180898f96bbc94b0e",
+        "bytes": 9480
+      },
+      {
+        "path": "docs/agent-environment/LAUNCHER_TOOLING_MIGRATION.md",
+        "sha256": "b51b31f9af2b443bc48e08ed063bbb2af2c7a6b296109d46703601415ffa668f",
+        "bytes": 13787
+      },
+      {
+        "path": "docs/agent-environment/PROJECT_BASELINE_V1.md",
+        "sha256": "9b2f47ecb523dcd08b80dac612a8df0f38637fb2f50f74ac1336ceded7375a87",
+        "bytes": 26106
+      },
+      {
+        "path": "docs/agent-environment/SECURITY_BASELINE_v1.md",
+        "sha256": "6adf5ba446d7e17f710db9eead8d7c339505c81568dcb5860be9081cdd52503d",
+        "bytes": 25618
+      },
+      {
+        "path": "docs/agent-environment/SECURITY_CLOSURE_FINAL_REPORT.md",
+        "sha256": "f925067baa8dfff86a5f369c595e9f5bd47606ef5d1f450c341843b0f4c8ab94",
+        "bytes": 28569
+      },
+      {
+        "path": "docs/agent-environment/SECURITY_CLOSURE_REPORT.md",
+        "sha256": "184378e6d3c49b0dac1f51f4ed5b77f972861c38f35119f00eb391f8549e299a",
+        "bytes": 17600
+      },
+      {
+        "path": "docs/agent-environment/SECURITY_FINAL_REPORT.md",
+        "sha256": "7880160c25cc70b2efb6bcb50a297ef0a391da4633e6e059f4558b9098c9c04c",
+        "bytes": 25324
+      },
+      {
+        "path": "docs/agent-environment/SECURITY_HARDENING_BACKLOG.md",
+        "sha256": "e3d92c4b74bdc6fb96cb01327be9a0bbc3ed1275c2f43266b8837bf97bb8a66f",
+        "bytes": 18041
+      },
+      {
+        "path": "docs/agent-environment/TOKEN_EFFICIENCY_BASELINE.md",
+        "sha256": "a07575e3519edd0e61b6bef33031dd9bb56272c666c9964a27cf4755b3878fd6",
+        "bytes": 7274
+      },
+      {
+        "path": "docs/agent-environment/TOOL_ROUTING_MATRIX.md",
+        "sha256": "af8071aac72cf307ab534f5dbdba3bc36151d92fae523bdc04a201a26138ed3b",
+        "bytes": 9636
+      },
+      {
+        "path": "docs/functionality-discovery/00_CANDIDATE_BACKLOG.md",
+        "sha256": "92c54a3c0c02c3d8281d9d83fee4f2de98f8e75bab68dca35a2f17c62cf68b7b",
+        "bytes": 22599
+      },
+      {
+        "path": "docs/functionality-discovery/00_DECISION_LOG.md",
+        "sha256": "a781c684f5443f040898cad72a06ca2ca542f2956888cf66aed7dbfb1d0db16e",
+        "bytes": 18596
+      },
+      {
+        "path": "docs/functionality-discovery/00_DEPENDENCY_MAP.md",
+        "sha256": "63a6b2371f114748ea5c5aaedca5897ce457b7f70d5dfa4e94c121f53f122e25",
+        "bytes": 10253
+      },
+      {
+        "path": "docs/functionality-discovery/00_EOS_DISCOVERY_PROTOCOL.md",
+        "sha256": "9ee2db6fd2e0f3ec70011ed3667e2bb107c9fce7d12f6680e0502bb6792fd3eb",
+        "bytes": 18706
+      },
+      {
+        "path": "docs/functionality-discovery/00_OPEN_QUESTIONS.md",
+        "sha256": "61c64cda382787e88acd4a22b06589f47755adee79093b8b6c1117819e8937ec",
+        "bytes": 10532
+      },
+      {
+        "path": "docs/functionality-discovery/00_TRACEABILITY_MATRIX.md",
+        "sha256": "6f7bbee4a33b2f34ba770406e5fe339ffb6bc55d3848814338a3429764aa7517",
+        "bytes": 4733
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/README.md",
+        "sha256": "80e190068238ee86bb7a43afae6a528555ff44270363e0001ad38e61b2019a9d",
+        "bytes": 4357
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-00-MAPPER-BACKEND.md",
+        "sha256": "5e814a6f3d3dd3fdbbb812c9ae48b57e79330ceede0cb9bcf16a4dc9eda757e6",
+        "bytes": 30729
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-00-MAPPER-FRONTEND.md",
+        "sha256": "0ccd95bdb3d25432963d625550d2302002ec760fec6c60293c7e829bc298d632",
+        "bytes": 31030
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-00-MAPPER-TESTS-CI-DOCS.md",
+        "sha256": "5138c2c8152c9219fcca1b5da46ef3e4c3499aed867f3f8da9ebb7ee93811720",
+        "bytes": 29716
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-DATA-ARCHITECTURE.md",
+        "sha256": "99e48bfe73851c68843827721b2f9a5d0fc43ca6d5fbb404d249398f9f5b30a7",
+        "bytes": 59378
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-DOMAIN-OPERATIONS.md",
+        "sha256": "7a948821b5ca973841cbb668323e8c8ff68b87768b1068d1174a66a953e52c58",
+        "bytes": 45723
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-PRODUCT-DISCOVERY.md",
+        "sha256": "9435f9dd4dc53143c998df60fd8db8593c11156d10c4be6df33beaba6e8fb3e3",
+        "bytes": 47376
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-REPOSITORY-MAPPER.md",
+        "sha256": "24330d5fa0790838ab46311769d1e3a5fdb3d7c35aa06e4813bf274e7b5caaa2",
+        "bytes": 53456
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-SECURITY-PRIVACY.md",
+        "sha256": "46743f69511450ee8799ee8f581e27de1ce0f3226b3df3f7c77295e45e84947f",
+        "bytes": 52547
+      },
+      {
+        "path": "docs/functionality-discovery/evidence/ROUND-01-EOS-UX-MOBILE-ACCESSIBILITY.md",
+        "sha256": "1858358f46f8e2d7b30a1e11041c9f760ab8df26433efff3007987fb3917ed49",
+        "bytes": 64033
+      },
+      {
+        "path": "docs/functionality-discovery/rounds/01_PRODUCT_SYSTEM_AND_CROSS_CUTTING_RULES.md",
+        "sha256": "1e9251f75cfe1d87bb55aa2adf415621aaa7ce9daea88359e5f4d05f69cdfa41",
+        "bytes": 53879
+      },
+      {
+        "path": "docs/functionality-discovery/rounds/README.md",
+        "sha256": "959d3f81a77d9031b7927306dde447b61ca860ccc770731cd189e43f726158fd",
+        "bytes": 4170
+      }
+    ],
+    "baseline": [
+      {
+        "path": "tools/eos/accounting/fixtures.json",
+        "sha256": "a9217383675619845e87fd5f278b020a353a8e773aca4c7ad37b46f7cb97a1bc",
+        "bytes": 4877
+      },
+      {
+        "path": "tools/eos/accounting/measure.mjs",
+        "sha256": "6400ad27525168dfaef72281428fd9f9f29274471fb72572fca3815cc394640b",
+        "bytes": 3585
+      },
+      {
+        "path": "tools/eos/accounting/run.mjs",
+        "sha256": "1732b61f002b4e5cb6355b275b83c6b0616392da074178438d387949163f9de1",
+        "bytes": 7659
+      },
+      {
+        "path": "tools/eos/accounting/verify.mjs",
+        "sha256": "5dd1796e09d535af39708d6f14d751b094d5aa23fcbfaf38de90ba8aa64d1664",
+        "bytes": 5525
+      },
+      {
+        "path": "tools/eos/baseline/classify.mjs",
+        "sha256": "28cdb090c96b92c2ffd98be857a3aaae6a8f51605912478ac3f37df0d30ecd53",
+        "bytes": 8317
+      },
+      {
+        "path": "tools/eos/baseline/fingerprint.mjs",
+        "sha256": "cba17a4e619c8d9bda4bac4e1a29b0d9f30c94ac72685340bc928515301378c4",
+        "bytes": 3397
+      },
+      {
+        "path": "tools/eos/baseline/fixtures.json",
+        "sha256": "247ee9a6f5ce6df8fa8e1224acabf29b2b3dbabb8464f868aee39596becce9c6",
+        "bytes": 9855
+      },
+      {
+        "path": "tools/eos/baseline/verify.mjs",
+        "sha256": "2a252a65b46e9fc54471187b234870066d1ba70c525c05885b3525e7f861e9cb",
+        "bytes": 2759
+      },
+      {
+        "path": "tools/eos/engineering/capability-fixtures.json",
+        "sha256": "a4bc6002934fbfd423e2053fc7002fabd10abe023a711c5f8bac251dde4dd039",
+        "bytes": 6154
+      },
+      {
+        "path": "tools/eos/engineering/contract-bus.mjs",
+        "sha256": "e65652ab96aa046fc4a07f74228c4d435dc23c00b5e7e4812e92785bdf8f57f1",
+        "bytes": 7695
+      },
+      {
+        "path": "tools/eos/engineering/contract-fixtures.json",
+        "sha256": "351058c1da1bb2ef15b3a887d1dbd8d21fea9ae1a0ffab992b0da0718970a0d6",
+        "bytes": 4337
+      },
+      {
+        "path": "tools/eos/engineering/fixtures.json",
+        "sha256": "ed4224ed357d1f95f445ae6d795569885f75d0d3aca99dee946bc694c913585b",
+        "bytes": 4700
+      },
+      {
+        "path": "tools/eos/engineering/ownership-fixtures.json",
+        "sha256": "c93957a0e08e2e0282f51453c76b222f22802fd0130b1f0269c6bec4e0d5a7f1",
+        "bytes": 9478
+      },
+      {
+        "path": "tools/eos/engineering/responsibility.mjs",
+        "sha256": "cdd3575ba5f31172333cfcf0ba79b8bab7cbe69cc7bba2ce8bbec17f52ce72cf",
+        "bytes": 19000
+      },
+      {
+        "path": "tools/eos/engineering/roster.mjs",
+        "sha256": "2936d46d1d38ca9ecf8378d539e1d284228a88e60a987f9f8931ef09ef6b27e1",
+        "bytes": 16867
+      },
+      {
+        "path": "tools/eos/engineering/router.mjs",
+        "sha256": "5567c493b860c9a04bdd24e80c891c0477df43fdfde25611df170f914326da4a",
+        "bytes": 7649
+      },
+      {
+        "path": "tools/eos/engineering/slice.mjs",
+        "sha256": "16f68c923e75bee21dbe6b81a58b8e42fea4b8597c5a05f456640f2cbd4044d4",
+        "bytes": 4597
+      },
+      {
+        "path": "tools/eos/engineering/verify-capability.mjs",
+        "sha256": "244f61cf504b194a6f00c0079883d4b67982c85e686a2ad37a31cdc0f7af4ccd",
+        "bytes": 3304
+      },
+      {
+        "path": "tools/eos/engineering/verify-contract.mjs",
+        "sha256": "922a2936005cfc744f02651919298ed56e186563c0f852b8dcc8f04e8a5fdd8d",
+        "bytes": 4433
+      },
+      {
+        "path": "tools/eos/engineering/verify-ownership.mjs",
+        "sha256": "63ee517a741800969bab0cef90e8c8d87c6f867a6769b271b2085d4d67054c44",
+        "bytes": 3606
+      },
+      {
+        "path": "tools/eos/engineering/verify.mjs",
+        "sha256": "6aa8d192292709c91202b38de8167afcc7ef4cbc1db9bb3ac7cbf9c01e4cedd2",
+        "bytes": 3332
+      },
+      {
+        "path": "tools/eos/knowledge/decision-fixtures.json",
+        "sha256": "3015fc43a7ecec8700d2212af2b6019d832361999fcf9c695bed98895bf0715e",
+        "bytes": 7132
+      },
+      {
+        "path": "tools/eos/knowledge/loader.mjs",
+        "sha256": "894f2a26229ad4235e025dbf83ffa3cb6344fbb0f5ddeed22e1a2ef44ddf470b",
+        "bytes": 4692
+      },
+      {
+        "path": "tools/eos/knowledge/readiness.mjs",
+        "sha256": "1e445125138bff4b3d3b76ff44b8c4266b949b9c13a4e970184171781394b9b0",
+        "bytes": 7536
+      },
+      {
+        "path": "tools/eos/knowledge/registries.mjs",
+        "sha256": "ed785af73d192b6b86f97207247475534ab70060eb1c036641583484a3c2eeed",
+        "bytes": 17375
+      },
+      {
+        "path": "tools/eos/knowledge/verify-decisions.mjs",
+        "sha256": "385d7579e17566f53266549b39d258969196b2a7ac6061c3d86c1476fb0e2068",
+        "bytes": 3885
+      },
+      {
+        "path": "tools/eos/proof/validate.mjs",
+        "sha256": "7ccd4f705f8d72730c1f767865ac7e1ac5d114e17e293f0beb485fabe084bcc5",
+        "bytes": 7124
+      },
+      {
+        "path": "tools/eos/proof/verify.mjs",
+        "sha256": "473030e5c274336004148e8905d917d7f26edf4607b3411278fe19020cb2015c",
+        "bytes": 5101
+      },
+      {
+        "path": "tools/eos/risk/classify.mjs",
+        "sha256": "e331789eb219450a3996d9ec210ccbb0129678f27499f8ff5f0fdb2616fbec46",
+        "bytes": 15801
+      },
+      {
+        "path": "tools/eos/risk/fixtures.json",
+        "sha256": "0b09893fba5d9e21fe3f1a7c10d9bcfe46a39a28484fec49309aac1cecc9dd7b",
+        "bytes": 7023
+      },
+      {
+        "path": "tools/eos/risk/verify.mjs",
+        "sha256": "619529a298216e8a1b95496981cbc96148100258a472ec5365c8f565e1df5b69",
+        "bytes": 4163
+      },
+      {
+        "path": "tools/eos/router/tools.mjs",
+        "sha256": "417849bc9f1cf1d34799a7cd9940b15415fc118f876db37fffd43d7d01abcd55",
+        "bytes": 4576
+      },
+      {
+        "path": "tools/eos/runs/DOG-001-replay.mjs",
+        "sha256": "b616882276d2fe5acd0303a87168bb21816164ebc3be4b63d6b54166d94e9b62",
+        "bytes": 5531
+      },
+      {
+        "path": "tools/eos/runs/DOG-001-semgrep-sendfile.mjs",
+        "sha256": "2b16367433c279a17084357474b37c5b5f6a8976f8d7d25817945e5617b75c77",
+        "bytes": 8555
+      },
+      {
+        "path": "tools/eos/selftest/run.mjs",
+        "sha256": "dc7e3827dfbe4dbac51d58cb0580089e2cda4d0c79b5c0ee03eba08be8d551fa",
+        "bytes": 30714
+      },
+      {
+        "path": "tools/eos/selftest/serena-probe.mjs",
+        "sha256": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
+        "bytes": 4459
+      },
+      {
+        "path": "tools/eos/verification/findings.mjs",
+        "sha256": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
+        "bytes": 6592
+      },
+      {
+        "path": "tools/codex-policy/agent-governance.test.mjs",
+        "sha256": "94b3f9165f5137b3ca4bda6cb0d8f5e8378004a47ca7df67d289470c9e3ac2aa",
+        "bytes": 5560
+      },
+      {
+        "path": "tools/codex-policy/approval-policy.mjs",
+        "sha256": "a2a750f65515178551ef097b527370b94efbb4f888be87fa01fd173306722c25",
+        "bytes": 22635
+      },
+      {
+        "path": "tools/codex-policy/approval-policy.test.mjs",
+        "sha256": "456f3b95e0cc245bed05e1897a695a44cf37eed58bef41ed3d1bcf07ad9f696d",
+        "bytes": 15915
+      },
+      {
+        "path": "tools/codex-policy/envoltorio.test.mjs",
+        "sha256": "20d71b12fb920f7050e5eab46bb3e94ec6873938eb5d463a46b00d63cc874bfc",
+        "bytes": 5717
+      },
+      {
+        "path": "tools/codex-policy/flags.test.mjs",
+        "sha256": "7247118e3d1f172a8038380cbc675e842e4e7cf0525b43403f1ee2dd4c66c640",
+        "bytes": 7007
+      },
+      {
+        "path": "tools/codex-policy/README.md",
+        "sha256": "a8eecbfd6e54a00738c65e82d5b6f663eb89a1d7f1c1cea00d4d893b77ba0047",
+        "bytes": 9924
+      }
+    ]
+  }
+}

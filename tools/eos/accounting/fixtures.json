@@ -1,0 +1,119 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Resource Accounting. Escrito ANTES do codigo.",
+    "",
+    "REGRA QUE GOVERNA TUDO: token, credito, custo monetario, bytes de contexto,",
+    "chamadas de ferramenta e wall time sao grandezas DIFERENTES. Nenhuma se",
+    "deriva da outra quando o provedor nao expoe a relacao.",
+    "",
+    "VERIFICADO NESTE AMBIENTE: ~/.claude-admai/telemetry esta vazio e nao ha",
+    "arquivo de uso no perfil. Portanto token/credito/custo sao UNAVAILABLE por",
+    "OBSERVACAO, nao por suposicao. RES-02 existe para garantir que UNAVAILABLE",
+    "jamais vire zero — zero e um valor medido; ausencia nao e.",
+    "",
+    "CUSTO E OBJETIVO SECUNDARIO: o accounting observa consumo. Nao autoriza",
+    "reduzir evidencia, verificacao, seguranca ou invariante (RES-14)."
+  ],
+  "schemaVersion": 1,
+  "measurementStatuses": ["MEASURED", "ESTIMATED", "UNAVAILABLE", "NOT_APPLICABLE"],
+  "completeness": ["COMPLETE", "PARTIAL", "MINIMAL"],
+  "cases": [
+    {
+      "id": "RES-01",
+      "title": "metrica diretamente observada",
+      "metric": { "name": "knowledgeSliceBytes", "value": 1582, "observed": true },
+      "expect": { "status": "MEASURED", "value": 1582 }
+    },
+    {
+      "id": "RES-02",
+      "kind": "NEGATIVO",
+      "title": "token indisponivel nao vira zero",
+      "metric": { "name": "inputTokens", "observed": false },
+      "expect": { "status": "UNAVAILABLE", "valueIsNull": true, "notValue": 0 }
+    },
+    {
+      "id": "RES-03",
+      "title": "estimativa carrega metodo e nunca se passa por medida",
+      "metric": { "name": "approxTokens", "value": 4000, "estimated": true, "method": "bytes/4" },
+      "expect": { "status": "ESTIMATED", "hasMethod": true, "notStatus": "MEASURED" }
+    },
+    {
+      "id": "RES-04",
+      "title": "ferramenta chamada duas vezes",
+      "toolCalls": [{ "tool": "grep", "ok": true }, { "tool": "grep", "ok": true }],
+      "expect": { "toolCount": { "grep": 2 } }
+    },
+    {
+      "id": "RES-05",
+      "title": "retry contabilizado separadamente da chamada",
+      "toolCalls": [{ "tool": "vitest", "ok": false, "retry": true }, { "tool": "vitest", "ok": true }],
+      "expect": { "toolCount": { "vitest": 2 }, "retries": 1, "failures": 1 }
+    },
+    {
+      "id": "RES-06",
+      "title": "knowledge slice com bytes e razao corretos",
+      "context": { "knowledgeTotalBytes": 9125, "knowledgeSliceBytes": 1582 },
+      "expect": { "sliceRatio": 0.173 }
+    },
+    {
+      "id": "RES-07",
+      "title": "reuso de evidencia reconhecido sem inventar economia de token",
+      "evidence": { "packsCreated": 1, "reusedReferences": 3, "repeatedSearches": 0 },
+      "expect": { "reuseRate": 0.75, "tokenSavingsStatus": "UNAVAILABLE" }
+    },
+    {
+      "id": "RES-08",
+      "kind": "NEGATIVO",
+      "title": "pesquisa repetida vira anomalia",
+      "evidence": { "packsCreated": 1, "reusedReferences": 0, "repeatedSearches": 3 },
+      "expect": { "anomaly": "RESOURCE_ANOMALY", "anomalyKindContains": "pesquisa repetida" }
+    },
+    {
+      "id": "RES-09",
+      "kind": "NEGATIVO",
+      "title": "sem atribuicao por agente, nao ratear o total",
+      "agents": [{ "id": "backend" }, { "id": "frontend" }],
+      "totalTokens": null,
+      "expect": { "attribution": "TOKEN_ATTRIBUTION_UNAVAILABLE", "noProration": true }
+    },
+    {
+      "id": "RES-10",
+      "kind": "NEGATIVO",
+      "title": "Codex sem credito exposto",
+      "provider": { "id": "codex", "calls": 2, "creditsObserved": false },
+      "expect": { "callsStatus": "MEASURED", "creditsStatus": "UNAVAILABLE", "notCredits": 0 }
+    },
+    {
+      "id": "RES-11",
+      "title": "run bloqueado ainda produz accounting",
+      "run": { "outcome": "BLOCKED" },
+      "expect": { "recordProduced": true, "outcome": "BLOCKED" }
+    },
+    {
+      "id": "RES-12",
+      "title": "run verificado registra outcome",
+      "run": { "outcome": "LOCAL_VERIFIED" },
+      "expect": { "recordProduced": true, "outcome": "LOCAL_VERIFIED" }
+    },
+    {
+      "id": "RES-13",
+      "kind": "NEGATIVO",
+      "title": "saida de ferramenta com segredo nao entra no accounting",
+      "toolOutput": { "tool": "gh", "raw": "token=ghp_AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH1234 ok" },
+      "expect": { "storedRawContains": false, "hasHash": true, "hasByteCount": true }
+    },
+    {
+      "id": "RES-14",
+      "kind": "NEGATIVO",
+      "title": "alvo de custo e consultivo, nao bloqueia",
+      "budget": { "level": "L1", "advisoryTargetBytes": 15000, "observedBytes": 40000 },
+      "expect": { "kind": "ADVISORY_TARGET", "blocks": false, "exceeded": true }
+    },
+    {
+      "id": "RES-15",
+      "title": "completude reflete o que foi observavel",
+      "run": { "contextObserved": true, "toolsObserved": true, "tokensObserved": false },
+      "expect": { "completeness": "PARTIAL", "notCompleteness": "COMPLETE" }
+    }
+  ]
+}

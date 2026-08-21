@@ -1,0 +1,72 @@
+{
+  "oraculo": "EOS_CANONICAL_TYPE_FAMILIES",
+  "versao": "1.0.0",
+  "estado": "CONGELADO",
+  "slice": "SL-A-01",
+  "fonteDocumental": {
+    "arquivo": "docs/eos-v2/plans/PLAN_A_FOUNDATIONS.md",
+    "secao": "E. Taxonomia canonica",
+    "regraDaSecao": "Nove familias. Cada tipo tem uma definicao e um dono.",
+    "ancoraInicio": "## E. Taxonomia canonica",
+    "ancoraFim": "## F. Relacoes e distincoes obrigatorias"
+  },
+  "porQueExterno": "Este oraculo NAO pode importar families.mjs. Um teste que compara a implementacao com ela mesma e vacuamente verdadeiro: passa por construcao e nao pode falhar quando a propriedade que protege e sabotada. A independencia e a propriedade essencial deste arquivo.",
+  "totalFamilias": 9,
+  "totalMembros": 75,
+  "familias": [
+    {
+      "nome": "Runtime",
+      "membros": ["Runtime", "Plane", "Process", "Provider", "Adapter", "Session", "Role", "AgentIdentity", "Capability"]
+    },
+    {
+      "nome": "Work",
+      "membros": ["Run", "Intent", "Task", "Slice", "Node", "Join", "Dependency", "ExecutionGraph", "PlanProposal", "ArchitectureProposal"]
+    },
+    {
+      "nome": "Knowledge",
+      "membros": ["Decision", "Invariant", "Evidence", "Finding", "KnownRisk", "ArchitectureRecord", "ImpactRecord", "Contract", "TestContract", "ProofLedger"]
+    },
+    {
+      "nome": "State",
+      "membros": ["RuntimeState", "AgentState", "NodeState", "RunState", "ContractState", "FindingState", "SideEffectState", "VerificationState", "EnvironmentState"]
+    },
+    {
+      "nome": "Authority",
+      "membros": ["DecisionOwner", "Recommender", "ApprovalOwner", "Executor", "Verifier", "AuthorityClass", "ImpactClass", "ReversibilityClass", "ConfidenceClass"]
+    },
+    {
+      "nome": "Security",
+      "membros": ["Authorization", "Enforcement", "Detection", "Coordination", "Verification", "ContentProvenance", "TrustState", "SecurityEnvelope", "RepositorySecurityProfile"]
+    },
+    {
+      "nome": "Persistence",
+      "membros": ["Event", "Journal", "Projection", "Checkpoint", "Snapshot", "ArtifactVersion", "RuntimeManifest"]
+    },
+    {
+      "nome": "Concurrency",
+      "membros": ["RepositoryRuntimeLease", "SliceLease", "FencingToken", "Writer", "Reader", "Ownership", "Lock"]
+    },
+    {
+      "nome": "Side Effects",
+      "membros": ["SideEffect", "SideEffectIntent", "SideEffectObservation", "Reconciliation", "WriteManifest"]
+    }
+  ],
+  "regraDeExtracaoDocumental": {
+    "porQue": "A versao anterior deste oraculo trazia uma lista `tokensNaoMembros` com os tres tokens entre crases da secao E que nao sao tipos canonicos. O Codex demonstrou o buraco: a lista era controlada pelo candidato, entao bastava REMOVER um membro real do oraculo e da implementacao e acrescenta-lo a `tokensNaoMembros` para a ancora reversa continuar passando. Um filtro que o candidato edita nao filtra nada.",
+    "regra": "Removem-se os trechos entre parenteses da secao E ANTES de extrair os tokens entre crases. Os tres nao-membros (codex.architect, claude.backend, 'provider + runtime + repositoryId + role') estao todos dentro de parenteses, como exemplos; nenhum membro canonico esta. A regra e estrutural e nao admite excecao caso a caso.",
+    "associacaoDeFamilia": "A extracao e feita POR BLOCO DE FAMILIA ('**Runtime** — ...' ate o proximo bloco), nunca sobre a secao inteira. Sem isso, mover Checkpoint de Persistence para Work no oraculo E na implementacao ao mesmo tempo passava com zero falhas — foi o achado bloqueante numero 1 da revisao do Codex."
+  },
+  "foraDeEscopoNesteSlice": {
+    "porQue": "SL-A-01 entrega NOMES canonicos e membresia de familia. As maquinas e semanticas abaixo pertencem a Slices posteriores do PLAN-G secao Y e nao podem ser implementadas aqui.",
+    "simbolos": [
+      { "nome": "EnforcementClass", "dono": "SL-A-02" },
+      { "nome": "EnforcementMap", "dono": "SL-A-02" },
+      { "nome": "InvariantRegistry", "dono": "SL-A-02" },
+      { "nome": "ArtifactModel", "dono": "SL-A-03" },
+      { "nome": "ArtifactMutability", "dono": "SL-A-03" },
+      { "nome": "EvidenceConstructor", "dono": "SL-A-03" },
+      { "nome": "CapabilityState", "dono": "SL-A-09" },
+      { "nome": "CapabilityRevalidation", "dono": "SL-A-09" }
+    ]
+  }
+}

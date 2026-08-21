@@ -1,0 +1,50 @@
+{
+  "oraculo": "EOS_SL_A_01_SURFACE",
+  "versao": "1.0.0",
+  "estado": "CONGELADO",
+  "slice": "SL-A-01",
+  "porQueExterno": "Achados 4, 5 e 6 da revisao do Codex: a superficie esperada estava declarada DENTRO do proprio barrel e os campos permitidos DENTRO do proprio modulo de tipos. Uma alteracao coordenada — acrescentar um simbolo aos exports e a superficie ao mesmo tempo — passava com zero falhas. Um oraculo que o candidato edita junto com a implementacao nao e oraculo.",
+  "limitacaoConhecida": "Este arquivo tambem vive no repositorio e tambem pode ser editado. Ele eleva o custo da alteracao coordenada e a torna visivel no diff; NAO a torna impossivel. Diferente das familias e das distincoes, PLAN-A nao enumera a superficie de export de um modulo, entao nao existe ancora documental para ancorar isto. A afirmacao final do verificador diz exatamente isso.",
+
+  "superficieEsperada": [
+    "FAMILIAS",
+    "TIPOS_CANONICOS",
+    "TODOS_OS_TIPOS",
+    "CAMPOS_DO_DESCRITOR",
+    "marcaDe",
+    "tipoCanonico",
+    "familiaDe",
+    "DISTINCOES_OBRIGATORIAS",
+    "marcaDeConceito",
+    "marcaDoTermo",
+    "pendente"
+  ],
+
+  "camposDoDescritor": {
+    "campos": ["nome", "familia", "marca"],
+    "porQue": "Um campo a mais no descritor e o vetor de antecipacao de escopo mais barato que existe. `estado: 'PROVEN'` em Capability tornaria irrepresentavel a distincao DISCOVERED != PROVEN do SL-A-09; um campo de forca violaria MAR-INV-025 antes mesmo de EnforcementClass existir (SL-A-02)."
+  },
+
+  "vocabularioDeProvider": {
+    "termos": [
+      "sandbox", "permission-mode", "permissionmode", "approval_policy", "approvalpolicy",
+      "trust_level", "trustlevel", "dangerously", "workspace-write",
+      "codex", "claude", "openai", "anthropic", "gpt", "gemini", "copilot", "cursor"
+    ],
+    "porQueNaoContemProvider": "`Provider` e `Adapter` sao TIPOS CANONICOS da secao E — abstracoes do proprio EOS, nao identificadores nativos de fornecedor. Incluir 'provider' na lista reprovaria o tipo canonico `Provider`, que e exatamente o oposto do que a fronteira do PLAN-G secao K protege.",
+    "limitacaoConhecida": "Uma lista de negacao e sempre incompleta: o Codex demonstrou que `Gemini Runtime` passava porque o vocabulario nao cobria esse fornecedor. Ampliar a lista reduz o buraco sem fecha-lo. O que FECHA o vetor para conceitos e a ancora documental TYPE-08: todo termo CONCEITO precisa aparecer literalmente na secao F, e nenhum nome de fornecedor aparece la."
+  },
+
+  "simbolosDeSlicesPosteriores": [
+    { "nome": "EnforcementClass", "dono": "SL-A-02" },
+    { "nome": "ENFORCEMENT_CLASSES", "dono": "SL-A-02" },
+    { "nome": "EnforcementMap", "dono": "SL-A-02" },
+    { "nome": "InvariantRegistry", "dono": "SL-A-02" },
+    { "nome": "ArtifactModel", "dono": "SL-A-03" },
+    { "nome": "ArtifactMutability", "dono": "SL-A-03" },
+    { "nome": "EvidenceConstructor", "dono": "SL-A-03" },
+    { "nome": "CapabilityState", "dono": "SL-A-09" },
+    { "nome": "CapabilityMachine", "dono": "SL-A-09" },
+    { "nome": "CapabilityRevalidation", "dono": "SL-A-09" }
+  ]
+}

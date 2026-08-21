@@ -1,0 +1,269 @@
+/**
+ * AdmAi Delivery Harness — Execution State legivel por maquina.  [Wave P0]
+ *
+ * Implementa a estrutura da secao 6 do contrato de entrega. Duas regras moldaram este arquivo:
+ *
+ *   1. "Nao invente um formato incompativel se ja existir schema EOS apropriado; se o EOS congelado
+ *      nao permitir a alteracao agora, mantenha o estado temporario na Delivery Lane sem modificar
+ *      contratos congelados." — e o caso: `docs/eos-v2/EXECUTION_STATE.md` esta sob Planning Freeze
+ *      e continua sendo a fonte de verdade do EOS. Este JSON o COMPLEMENTA e nao o substitui.
+ *
+ *   2. Estado gerado, nao redigido. Um estado escrito a mao diverge do repositorio no primeiro
+ *      commit e passa a mentir com aparencia de precisao. Os campos observaveis saem de `git` e do
+ *      filesystem; os declarativos saem de um bloco explicito, marcado como tal.
+ *
+ * PROVENANCE por campo: `observado` e OBSERVED; `declarado` e DECLARED — o consumidor precisa
+ * saber qual e qual, porque so o primeiro sustenta gate.
+ */
+
+import { writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { RAIZ, observarRepositorio } from './snapshot.mjs';
+import { FEATURES, observarCapacidades, derivarGrafo } from './feature-graph.mjs';
+
+export const DESTINO = `${RAIZ}docs/eos-v2/RUN_STATE.json`;
+
+/**
+ * Estado DECLARADO. Tudo aqui vem de contrato ou de decisao registrada, nunca de observacao —
+ * por isso fica separado, e por isso cada valor cita a origem.
+ */
+export const DECLARADO = Object.freeze({
+  runId: 'EOS-RUN-20260808T030320Z',
+  masterPlanVersion: '1.2.0', // Amendment 002 materializado; o valor 1.1.0 citado no prompt e anterior
+  planningFreeze: 'VIGENTE',
+  runState: 'RUNNING',
+
+  eosLane: {
+    slice: 'SL-A-01',
+    sliceState: 'VERIFIED',
+    phase: 'INTEGRADO',
+    /* Treze rodadas de revisao independente. R7 a R12 produziram achado; R13 = APROVADO sem
+       achados. As rodadas R8 a R13 atacaram sempre a CORRECAO ANTERIOR, nunca o codigo original —
+       e as cinco ultimas foram calibragem de linguagem, nao propriedade quebrada. */
+    revisoes: { total: 13, ultimaAprovada: 'R13', log: 'docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md' },
+    decisoesRegistradas: ['D2-SL-A-01-COMPILE-FAIL', 'D3-SL-A-02-ONDE-VIVE-O-REGISTRO'],
+    proofRegime: 'BOOTSTRAP_PROOF',
+    lastVerifiedGate: 'BASELINE_CAPTURED',
+    pendingGate: 'FOUNDATIONS_IMPLEMENTED',
+    // O gate da onda cobre os dez slices; SL-A-01 sozinho nao o fecha.
+    gateCobre: ['SL-A-01', 'SL-A-02', 'SL-A-03', 'SL-A-04', 'SL-A-05',
+      'SL-A-06', 'SL-A-07', 'SL-A-08', 'SL-A-09', 'SL-A-10'],
+    slicesVerificados: ['SL-BOOT-01', 'SL-BOOT-02', 'SL-BOOT-03', 'SL-BOOT-04', 'SL-A-01'],
+    /* SL-A-01 era o unico pre-requisito da onda 1; com ele verificado, a frente abre. */
+    readyFrontierEos: ['SL-A-02', 'SL-A-03', 'SL-A-04', 'SL-A-05', 'SL-A-06',
+      'SL-A-07', 'SL-A-08', 'SL-A-09', 'SL-A-10'],
+    limitesPublicados: [
+      'TYPE-09 cobre superficie textual de import (DETECTIVE); aquisicao sem keyword e UNKNOWN',
+      'layout observa presenca atual, nao historico — caminho recriado com o mesmo nome passa',
+      'compile-fail cruzado e NOT_APPLICABLE por D2-SL-A-01-COMPILE-FAIL; nenhuma garantia estatica',
+      'independencia de oraculo: nenhuma propriedade e STRUCTURALLY_IMPOSSIBLE'
+    ]
+  },
+
+  productLane: {
+    wave: 'P0',
+    feature: 'DELIVERY_HARNESS_BOOTSTRAP',
+    featureState: 'VERIFIED',
+    /* Fechado por `tools/admai-delivery/gate.mjs`: 9 criterios DECLARADOS antes da avaliacao,
+       12/12 sabotagens detectadas, controle positivo aceito, exit 0. O bundle e deste HEAD. */
+    lastVerifiedGate: 'P0_DELIVERY_HARNESS_BOOTSTRAP',
+    gateEvidencia: 'docs/eos-v2/EVIDENCE_BUNDLE.json',
+    proximaFeature: 'BILLING_ACCESS_AUDIT'
+  },
+
+  claudeLane: 'BUILD — writer unico da integration lane',
+  // F-MAR-064: escrita do Codex refutada por evidencia em tres probes; bypass proibido.
+  codexLane: 'THINK/CHALLENGE/REVIEW — read-only, sem autoridade de escrita',
+
+  handoff: false,
+  handoffReason: null
+});
+
+/** Monta o estado combinando o declarado com o observado, sem misturar as duas naturezas. */
+export function montarEstado({ agora, estadoRepo = observarRepositorio() } = {}) {
+  const grafo = derivarGrafo({ features: FEATURES, capacidades: observarCapacidades(estadoRepo) });
+
+  return {
+    schema: 'admai.delivery.run-state/1',
+    geradoEm: agora ?? null,
+    aviso: 'Gerado por tools/admai-delivery/run-state.mjs. Nao editar a mao: a proxima execucao sobrescreve.',
+    fonteDeVerdadeDoEos: 'docs/eos-v2/EXECUTION_STATE.md (Planning Freeze) — este arquivo complementa, nao substitui',
+
+    declarado: DECLARADO,
+
+    observado: {
+      branch: estadoRepo.git.branch,
+      head: estadoRepo.git.head,
+      diffCheckLimpo: estadoRepo.git.diffCheckLimpo,
+      arquivosDeProdutoModificados: estadoRepo.git.arquivosDeProduto?.length ?? null,
+      modelosPrisma: estadoRepo.prisma.modelos?.length ?? null,
+      migrations: estadoRepo.prisma.migrations?.length ?? null,
+      modelosAusentesParaWavesFuturas: ['Cliente', 'Endereco', 'Agendamento', 'Orcamento',
+        'CategoriaServico', 'Lead', 'Oportunidade', 'Garantia']
+        .filter((m) => !(estadoRepo.prisma.modelos ?? []).includes(m))
+    },
+
+    /* Achados que atravessam as duas missoes. Ficam no estado, e nao so em prosa, porque prosa
+       nao e consultavel por maquina no proximo turno. */
+    openFindings: [
+      {
+        id: 'Q-010',
+        origem: 'docs/functionality-discovery/00_OPEN_QUESTIONS.md',
+        classificacao: 'STILL_VALID',
+        severidade: 'CRITICA_PARA_PROMOCAO',
+        resumo: 'Plano Supabase Free sem backup e sem PITR; RPO indefinido, confirmado no painel em 2026-08-05',
+        impacto: 'As waves P2+ criam Cliente, Endereco, Agendamento, Orcamento e CRM — muito mais dado de negocio sobre base sem recuperacao',
+        bloqueia: 'promocao a producao das waves P2+',
+        naoBloqueia: 'implementacao e verificacao locais'
+      },
+      {
+        id: 'BILLING-GATE-RESOLVIDO',
+        classificacao: 'BILLING_GATE_ABSENT_WITH_TESTED_SCOPE',
+        substitui: 'BILLING-GATE-UNKNOWN',
+        resumo: 'Nao existe gate comercial bloqueando o produto, dentro do escopo testado',
+        evidencia: 'chaveiro-bot/test/integration/billing_access_audit.test.js — 6/6 PASS, exitCode 0, contra Postgres+Redis locais',
+        escopoTestado: '5 rotas (/api/servicos, /api/tecnicos, /api/estoque, /api/dashboard, /api/me) sob 4 condicoes: canceled com periodo encerrado, past_due, trial vencido, e SEM assinatura nenhuma; mais um caso de ESCRITA (POST /api/tecnicos) com assinatura cancelada',
+        naoVacuo: 'o primeiro caso prova que o cadastro cria Assinatura(trialing) — sem isso os demais mediriam o nada',
+        cuidadoDeFalsoPositivo: '403 so contaria como bloqueio comercial se a mensagem citasse assinatura/trial/pagamento; o produto usa 403 para RBAC, e confundir os dois levaria a desativar controle de acesso real',
+        consequencia: 'ADMAI_FREE_MODE ja e o comportamento real do backend. NAO ha paywall a remover — e remover billing as cegas seria mexer no que nao bloqueia',
+        limite: 'o veredito vale para o escopo declarado acima. Rota fora dessa lista nao foi medida, e por isso o nome e ABSENT_WITH_TESTED_SCOPE, nao "nao existe gate"'
+      },
+      {
+        id: 'F-MAR-064',
+        classificacao: 'RUNTIME_CAPABILITY_REFUTED',
+        resumo: 'Codex nao consegue escrever: sandbox read-only em tres probes; bypass proibido',
+        consequencia: 'a lane Codex e de analise e review, nao de implementacao'
+      },
+      {
+        id: 'ENV-TEST-EXAMPLE-INCOMPLETO',
+        classificacao: 'OBSERVED',
+        severidade: 'BAIXA_MAS_CUSTOSA',
+        resumo: 'chaveiro-bot/.env.test.example lista 4 chaves, mas a suite de integracao tambem exige ENCRYPTION_KEY e um Redis no ar',
+        evidencia: 'vitest.integration.config.js liga WHATSAPP_HABILITADO=true, e src/config/env.js:162 torna ENCRYPTION_KEY obrigatoria nesse caso; sem ela /auth/register falha e ~50 testes reprovam por causa ambiental. Redis: 232 ECONNREFUSED na porta 6379, e REDIS_URL tem default, entao a variavel nunca falta — o servico e que falta',
+        estado: 'CORRIGIDO — ENCRYPTION_KEY acrescentada a .env.test.example, com o motivo no comentario. O caminho seguido foi o que este harness impoe: declarar o path no Write Set primeiro (write-scope reprovou por WS-03, "declarado e nao cumprido"), depois escrever, depois reverificar',
+        residual: 'Redis nao entra no exemplo: REDIS_URL tem default e o job do CI nao sobe o servico. Fica como pre-condicao de SERVICO no test-orchestrator, nao como variavel'
+      },
+      {
+        id: 'INTEGRACAO-FALHAS-ERAM-DO-INSTRUMENTO',
+        classificacao: 'RESOLVIDO_POR_EVIDENCIA_MELHOR',
+        severidade: 'METODOLOGICA',
+        resumo: 'As falhas espalhadas que observei na suite de integracao NAO eram do produto: eram corrida entre execucoes minhas concorrentes no mesmo banco',
+        comoFoiObservado: 'Relatei falhas em RBAC, multi-tenant, 2FA, setup e autoexclusao em 10+ arquivos, com causa raiz UNKNOWN',
+        oQueRefutou: 'Execucao unica e limpa via test-orchestrator: bot:integration PASS, exitCode 0, 517887ms. A suite passa inteira',
+        causaRaiz: 'TaskStop encerrava o wrapper do shell mas NAO a arvore de processos. Quatro `npm run test:integration` orfaos (23:30, 23:52, 23:54, 23:57) ficaram vivos dando TRUNCATE simultaneo no mesmo banco. `fileParallelism: false` isola arquivos DENTRO de uma execucao; nao protege contra outra execucao',
+        licao: 'Falha de instrumento imita defeito de produto com muita fidelidade — as falhas caiam justamente em RBAC e multi-tenant, que sao onde um leitor procuraria defeito real. O sinal que separava as duas hipoteses estava disponivel o tempo todo: contagem de processos e de conexoes no banco',
+        residual: 'O experimento sem Redis (8 de 9 reprovando, timeouts de 30-42s) fica valido e separado: sem Redis a suite piora de verdade. O CI nao sobe Redis, o que merece verificacao propria — nao investigada aqui'
+      },
+      {
+        id: 'CI-REDIS-PRESENT',
+        classificacao: 'OBSERVED',
+        resumo: 'O job de integracao do CI SOBE Redis — redis:7-alpine na 6379 com health check, ao lado do Postgres (.github/workflows/ci.yml:88-96)',
+        corrige: 'Eu havia afirmado que meu container local de Redis afastava o ambiente do CI. Estava errado: o grep que sustentou aquilo capturou so o primeiro bloco `services:`. O ambiente local COINCIDE com o CI',
+        consequencia: 'O experimento sem Redis (8 de 9 reprovando) mede um ambiente que o CI nao usa; permanece valido como experimento, e nao como divergencia a corrigir'
+      },
+      {
+        id: 'VAZAMENTO-COLECAO-ESCRITO-NAO-EXECUTADO',
+        classificacao: 'OBSERVED',
+        resumo: 'chaveiro-bot/test/integration/vazamento_colecao_cross_tenant.test.js existe e NAO rodou com sucesso — bloqueado por DOCKER-ENGINE-UNAVAILABLE',
+        oQueEleMede: '6 casos sobre rotas de COLECAO (estoque, servicos/pendentes, dashboard, avaliacoes, ponto/hoje, pagamentos): A consulta e o resultado nao pode conter linha de B',
+        porQueEUmTesteDIFERENTE: 'essas rotas nao recebem identificador externo, entao IDOR nao se aplica. A falha delas e status 200 com CORPO contaminado, que nenhuma assercao de status detecta',
+        naoVacuo: 'cada caso verifica tambem, como B, que o proprio dado E visivel — sem isso passaria por ausencia de alvo',
+        triagem: 'A unica execucao terminou com 6 falhas de 30s EXATOS, sem assercao — assinatura de timeout de conexao, nao de produto. Docker havia caido. ENVIRONMENT_FAILURE, nao PRODUCT_DEFECT',
+        veredito: 'UNKNOWN ate executar. Escrito nao e executado'
+      },
+      {
+        id: 'DOCKER-ENGINE-UNAVAILABLE',
+        classificacao: 'ENVIRONMENT_FAILURE',
+        resumo: 'O daemon do Docker parou entre turnos e nao voltou: pipe dockerDesktopLinuxEngine ausente',
+        tentativas: 'Start-Process, `wsl -d docker-desktop`, e `docker desktop start` (que funcionou DUAS vezes e depois o daemon caiu de novo). Instabilidade recorrente: tres quedas nesta sessao',
+        padrao: 'Quando cai durante teste de integracao, a assinatura e uniforme: todos os casos falham em ~30s exatos, sem assercao. Isso distingue ENVIRONMENT_FAILURE de PRODUCT_DEFECT sem ambiguidade',
+        consequencia: 'bot:integration volta a NAO_EXECUTADA — corretamente, pela pre-condicao declarada. NAO reverte o PASS anterior, que foi obtido e registrado com exitCode 0',
+        naoBloqueia: 'trabalho offline: EOS, feature graph, gate P0, DeepSpec'
+      },
+      {
+        id: 'METRIC-FOUNDATION-CONTRATO-ENTREGUE',
+        classificacao: 'OBSERVED',
+        resumo: 'Fundacao metrica entregue como CONTRATO EXECUTAVEL: contract + registry (12 metricas) + availability + verify',
+        veredicto: 'DeepSpec SWEET_SPOT_REACHED — as duas incertezas de investigacao foram resolvidas por evidencia, nao por decisao minha',
+        disponibilidade: '8 de 12 metricas AVAILABLE_NOW derivadas do schema.prisma; as 4 restantes NOMEIAM o modelo que falta (Cliente, Agendamento, Orcamento, Lead+Oportunidade)',
+        porQueDerivar: 'a classe sai do schema, nao de campo declarado. Anotacao fica certa hoje e mente na proxima migration — foi o drift que custou tres correcoes no SL-A-02',
+        seguranca: 'MET-05 reprova drilldown mais permissivo que agregado. O produto JA distingue os dois eixos (requirePermissao(dashboard,ver) x podeProprio(user,ver_metricas)); o contrato formaliza o que existe em vez de inventar modelo paralelo',
+        oQueNaoProva: 'corretude de calculo. Nenhuma formula e executada — mede CONTRATO. Metrica com formula errada e contrato completo passa',
+        proximaAcao: 'camada de calculo das 8 AVAILABLE_NOW, com teste que prove o numero'
+      },
+      {
+        id: 'EOS-FRONTIER-PARALELISMO',
+        classificacao: 'OBSERVED',
+        resumo: 'Fronteira EOS classificada por seguranca de paralelismo, derivada do DAG do PLAN-G e dos destinos de escrita',
+        conjuntoSeguro: 'PARALLEL_SAFE: SL-A-02 (invariants/), SL-A-06 (protocol/events/), SL-A-09 (protocol/schemas/)',
+        comJuncao: 'SL-A-07 — sem colisao, mas tem gate proprio SNAPSHOT_ID_FROZEN',
+        serial: 'SL-A-03 e SL-A-04 colidem em protocol/artifacts/ — um de cada vez',
+        desconhecido: 'SL-K-08 sem destino determinavel pelo contrato; serializa por precaucao',
+        defeitoDoInstrumento: 'A primeira versao do parser engolia a linha inteira, e o DAG real tem TRES entradas por linha: derivava SL-A-02 dependendo de SL-A-03, invertendo o grafo. Meus controles so testavam uma entrada por linha — a forma facil, nao a forma real. Corrigido, com o caso da forma real entre os controles',
+        naoProva: 'que os slices do conjunto seguro sejam compativeis entre si. Escrever em lugares diferentes evita SOBRESCRITA; compatibilidade de contrato e do DeepSpec de cada um'
+      },
+      {
+        id: 'TENANT-COVERAGE-LACUNAS',
+        classificacao: 'OBSERVED',
+        severidade: 'ALTA_PARA_P1',
+        resumo: '37 de 60 rotas escopadas por empresa nao sao nomeadas por nenhum teste que exercite cross-tenant (38% de cobertura)',
+        instrumento: 'tools/admai-delivery/tenant-coverage.mjs — 6 arquivos de rota declarados fora do escopo de tenant, com motivo por arquivo',
+        progresso: 'De 38% para 52% (23 -> 31 cobertas) apos idor_escrita_cross_tenant.test.js — 7/7 PASS. As 6 rotas de escrita por id de maior consequencia estao provadas isoladas, verificando o EFEITO no banco e nao so o status 404, com controle positivo (o dono legitimo consegue no mesmo endpoint)',
+        naoHouveVulnerabilidade: 'O isolamento do client Prisma estendido segura as 6 rotas. As 4 falhas intermediarias foram premissas erradas minhas: payload de servico exige `tecnico` por NOME (nao tecnicoId), campo e `quantidadeAtual` (nao quantidade), e POST /tecnicos com telefone cria acesso automaticamente salvo `criarAcesso: false`',
+        maiores: 'restam 29 lacunas — account.js concentra a maioria',
+        classeHonesta: 'DETECTIVE. "Coberta" significa MENCIONADA por um teste cross-tenant, nao isolamento provado — o teste pode citar a rota sem exercer o caminho perigoso',
+        nuance: 'boa parte das lacunas de account.js sao rotas /me/* auto-escopadas, cujo negativo natural e de POSSE (outro tecnico da mesma empresa), nao de tenant. O numero bruto de 38% subestima a cobertura real dessa familia — investigar por rota antes de tratar como divida uniforme',
+        proximaAcao: 'feature PRODUCT_INTEGRITY: priorizar rotas com escrita e com dado de outra empresa alcancavel por id'
+      },
+      {
+        id: 'TRIAGEM-FUNCIONOU-DUAS-VEZES',
+        classificacao: 'METODOLOGICA',
+        resumo: 'A regra TEST_FAILURE_TRIAGE evitou duas classificacoes erradas nesta sessao',
+        caso1: 'Suite de integracao reprovando em RBAC/multi-tenant/escalacao: parecia PRODUCT_FAILURE, era INSTRUMENT_FAILURE (4 execucoes orfas concorrentes). Regressao determinista adicionada: TEST-EXCL-01, 4/4',
+        caso2: 'Billing audit reprovando 6/6, INCLUSIVE a pre-condicao: pareceria BILLING_GATE_PRESENT. Era TEST_FAILURE meu — `criarApp()` devolve { app, estado } e eu nao desestruturei. Depois da correcao: 6/6 PASS. Ter uma pre-condicao no teste foi o que denunciou: gate comercial nao faz o cadastro parar de criar Assinatura',
+        licao: 'Nos dois casos a leitura ingenua apontava para o produto. O sinal que separava as hipoteses era barato de obter e estava disponivel antes de concluir'
+      },
+      {
+        id: 'BROWSER-CAPABILITY-UNAVAILABLE',
+        classificacao: 'OBSERVED',
+        resumo: 'Nenhuma ferramenta de browser/Chrome/Supabase registrada nesta sessao; sondagem por ToolSearch devolveu somente WebFetch, que falha em URL autenticada',
+        consequencia: 'a rota de recuperacao de credencial via painel do Supabase e inviavel aqui — e ficou desnecessaria: a integracao roda contra Postgres e Redis locais descartaveis, sem credencial nenhuma'
+      }
+    ],
+
+    /* READY_FRONTIER derivada, não redigida — e serializada INTEIRA.
+       Antes este campo simplesmente não existia no JSON: a fronteira só aparecia em prosa, que
+       não é consultável por máquina no turno seguinte. Nada aqui é encurtado por `slice()` ou
+       reticências: truncar silenciosamente uma fronteira faz sumir trabalho disponível. */
+    readyFrontier: grafo.readyFrontier,
+    featureGraph: grafo.nos.map((n) => ({
+      id: n.id, wave: n.wave, estado: n.estado, faltando: n.faltando
+    })),
+
+    blockedItems: grafo.nos.filter((n) => n.estado === 'BLOCKED').map((n) => ({
+      id: n.id, faltando: n.faltando
+    })),
+    integrationQueue: []
+  };
+}
+
+export function executar() {
+  const estado = montarEstado({ agora: new Date().toISOString() });
+  writeFileSync(DESTINO, `${JSON.stringify(estado, null, 2)}\n`);
+
+  console.log('AdmAi Delivery — RUN_STATE  [Wave P0]');
+  console.log(`  destino : ${DESTINO.replace(RAIZ, '')}`);
+  console.log(`  branch  : ${estado.observado.branch} @ ${String(estado.observado.head).slice(0, 12)}`);
+  console.log(`  EOS     : ${estado.declarado.eosLane.slice} = ${estado.declarado.eosLane.sliceState} (${estado.declarado.eosLane.phase})`);
+  console.log(`  produto : wave ${estado.declarado.productLane.wave} — ${estado.declarado.productLane.feature} = ${estado.declarado.productLane.featureState}`);
+  console.log(`  modelos ausentes p/ waves futuras : ${estado.observado.modelosAusentesParaWavesFuturas.length}`);
+  console.log(`  findings abertos : ${estado.openFindings.map((f) => f.id).join(', ')}`);
+  console.log('  RUN_STATE_MATERIALIZADO');
+  console.log('    `declarado` vem de contrato e decisao registrada; `observado` vem de git e do');
+  console.log('    filesystem. So o segundo sustenta gate — e por isso os dois nao se misturam.');
+  return 0;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exit(executar());
+}

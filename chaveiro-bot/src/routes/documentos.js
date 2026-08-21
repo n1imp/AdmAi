@@ -39,6 +39,22 @@ const TIPOS = ['contrato', 'rg', 'cpf', 'cnh', 'comprovante', 'outro'];
 const DOC_MIME = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const DATA_URI_RE = /^data:(application\/pdf|image\/jpeg|image\/png);base64,(.+)$/s;
 
+/**
+ * Gera a chave de armazenamento do documento.
+ *
+ * A chave é 100% do servidor: prefixo literal + UUID aleatório + extensão vinda
+ * de DOC_MIME (tabela fechada). Nenhum trecho vem do cliente — nem o nome do
+ * arquivo, nem o MIME cru, que já passou por DATA_URI_RE e conferirMagicBytes.
+ *
+ * É desta função que depende o confinamento em DOCS_DIR no GET .../arquivo:
+ * `path.join` neutraliza caminho absoluto, mas NÃO neutraliza `..`. Como a chave
+ * não pode conter ponto além do separador de extensão nem separador de caminho,
+ * a travessia é impossível. Exportada para que essa garantia seja testável.
+ */
+export function gerarStorageKey(mime) {
+  return `doc-${randomUUID()}.${DOC_MIME[mime]}`;
+}
+
 const criarSchema = z.object({
   tipo: z.enum(TIPOS),
   nome: z.string().trim().min(1).max(200),
@@ -108,7 +124,7 @@ router.post('/me/documentos', recursoDocumentos, async (req, res) => {
       return res.status(400).json({ erro: 'Conteúdo não corresponde ao tipo declarado' });
     }
 
-    const storageKey = `doc-${randomUUID()}.${DOC_MIME[mime]}`;
+    const storageKey = gerarStorageKey(mime);
     // Bucket PRIVADO. Sem storage (dev/test) grava no disco; STORAGE_STRICT segue valendo
     // no caminho do storage (uploadPrivado lança e o erro cai no 500 — sem fallback silencioso).
     if (storageHabilitado()) {

@@ -1,0 +1,38 @@
+{
+  "oraculo": "EOS_LAYOUT_PLAN_ANCHOR",
+  "versao": "1.0.0",
+  "estado": "CONGELADO",
+  "slice": "SL-BOOT-02",
+  "porQueExiste": "Mesmo defeito que a revisao R2 do Codex encontrou nos parsers de tipos, aqui na camada de layout: `derivarLayoutDoPlano` removia parenteses indiscriminadamente, entao parentetizar `versioning/` na secao AK e remove-lo do contrato passava com zero falhas. E reformatar o bloco AK como arvore multiline legitima fazia o parser ler `types`, `schemas` etc. como namespaces de topo. Parser parcial que trata extracao menor como sucesso nao ancora nada.",
+
+  "secaoAK": {
+    "titulo": "AK. Layout futuro — PROPOSED",
+    "sha256": "e2874764f00cd6be474d6b28b169fae26cdcb61ba427392a0307902c92ee2f8e",
+    "bytes": 424,
+    "prefixoDeRaiz": ["tools", "eos"],
+    "namespacesEsperados": ["protocol", "authority", "provenance", "invariants"],
+    "tokensEntreParenteses": ["knowledge"],
+    "regraDeTotalidade": "Todo token da forma 'nome/' no bloco de codigo da secao AK precisa ser OU parte do prefixo de raiz OU um namespace declarado OU um subnamespace de um namespace declarado OU um dos tokens acima, que aparecem dentro do comentario entre parenteses. Parentetizar um subnamespace o move para a lista de comentario, que e fechada, e a divergencia reprova."
+  },
+
+  "secaoWdoPlanoG": {
+    "titulo": "W. EOS_MASTER_IMPLEMENTATION_DAG",
+    "porQue": "`doDag` reunia qualquer `SL-*` mencionado em QUALQUER lugar do PLAN-G. Uma mencao em prosa, num registro de findings ou num exemplo passaria como Slice existente. Corrigido para ler so o bloco da secao W — e a revisao R3 mostrou que isso ainda era insuficiente: a extracao pegava o PRIMEIRO bloco cercado, entao um bloco-resumo inserido antes do normativo, contendo apenas os nove IDs que o layout usa, era aceito com zero falhas embora o DAG real tenha 85.",
+    "regra": "A secao W precisa conter EXATAMENTE UM bloco cercado. Toda linha nao vazia dele precisa ser cabecalho de onda ou entrada de dependencia. O total de IDs distintos precisa bater com o congelado. Bloco ausente, bloco duplicado, linha nao reconhecida ou contagem divergente sao FALHA, nunca SKIP.",
+    "blocosEsperados": 1,
+    "idsEsperados": 85,
+    "gramatica": {
+      "cabecalhoDeOnda": "^WAVE-\\d+",
+      "entradaDeDependencia": "^\\s+SL-[A-Z]+-\\d+\\s+←"
+    }
+  },
+
+  "markupProibido": {
+    "porQue": "Mesmo defeito que a revisao R3 encontrou nas secoes E e F: tachado e comentario HTML marcam conteudo como removido sem remove-lo do texto extraido. A secao AK nao contem nenhum '~' nem nenhum '<' — medido, nao suposto.",
+    "caracteres": ["~", "<"]
+  },
+
+  "blocosEsperadosEmAK": 1,
+
+  "limitacaoConhecida": "Este arquivo tambem pode ser editado junto com um ataque. Ele exige alteracao coordenada em tres lugares — plano congelado, este oraculo e o contrato — e da visibilidade no diff. NAO e impossibilidade estrutural, e nenhuma mensagem deve afirmar que e."
+}

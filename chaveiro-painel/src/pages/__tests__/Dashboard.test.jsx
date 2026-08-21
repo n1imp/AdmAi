@@ -10,7 +10,16 @@ vi.mock('../../lib/api.js', () => ({
   default: { get: (...a) => mockGet(...a) },
   formatarMoeda: (v) => `R$ ${Number(v ?? 0).toFixed(2)}`,
 }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
+// `Link` entrou no mock quando o KPI de Serviços virou porta de entrada do Metric Hub: sem ele o
+// mock deixa de cobrir o que o componente usa e a página inteira falha ao renderizar.
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+  Link: ({ to, children, ...resto }) => (
+    <a href={to} {...resto}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock('../DashboardWidgets.jsx', () => ({ default: () => <div data-testid="widgets" /> }));
 vi.mock('../../components/WelcomeCard.jsx', () => ({ default: () => null }));
 vi.mock('../../components/TourGuide.jsx', () => ({ startTour: vi.fn() }));

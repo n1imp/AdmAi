@@ -1,0 +1,36 @@
+{
+  "capturadoEm": "SL-BOOT-01 / BSS-001",
+  "baseCommit": "30bf5453",
+  "subsistemas": {
+    "accounting": {
+      "modulos": 3
+    },
+    "baseline": {
+      "modulos": 3
+    },
+    "engineering": {
+      "modulos": 9
+    },
+    "knowledge": {
+      "modulos": 4
+    },
+    "proof": {
+      "modulos": 2
+    },
+    "risk": {
+      "modulos": 2
+    },
+    "router": {
+      "modulos": 1
+    },
+    "runs": {
+      "modulos": 2
+    },
+    "selftest": {
+      "modulos": 2
+    },
+    "verification": {
+      "modulos": 1
+    }
+  }
+}

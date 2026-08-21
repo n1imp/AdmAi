@@ -1,0 +1,19 @@
+{
+  "schema": "admai.delivery.verification-record/1",
+  "registradoEm": "2026-08-20T19:54:27.399Z",
+  "aviso": "Capturado no momento da VERIFICACAO. O stale check compara isto com o estado no momento da INTEGRACAO.",
+  "baseHead": "30bf5453d847c17d88197b11c93da965406be53c",
+  "baseBranch": "fix/seguranca-criticos",
+  "fingerprints": {
+    "tools/eos/layout.mjs": "1eebcdc0c9e0acdff9ecb780db660473882251878056f244e9c7f11905850c4f",
+    "tools/eos/verify-layout.mjs": "a874635eeb2af50a93b57997fc6cfc7fd4615e5c0ff033037cc1d315093a2d86",
+    "tools/eos/layout-plan-anchor.json": "ff3c81fcbe339c7b38b955871ea2edd894d1811436a4408b65e2e66335912926",
+    "tools/eos/protocol/types/families.mjs": "9576713c3162eb1c344d120c12d7b0bcb31db49fa1674901729c487222931d55",
+    "tools/eos/protocol/types/distinctions.mjs": "4157ea4d06bb0237c25750604e6fc7d3b4a3eb3df8ed5733e21eeb854b1b9ec0",
+    "tools/eos/protocol/types/index.mjs": "dbbe7b39d4a67fe233d49d9798d35b34dab694b57fcf5b0b5f27392ffd35c255",
+    "tools/eos/protocol/types/verify.mjs": "8bdc52ca4a88c696f3b751228a7c0d98c3631e4903c1a68fab0ae984b3efe511",
+    "tools/eos/protocol/types/oracle/canonical-families.json": "312c51036ad036f0362ef69452d6d8cee9b3d9bc340d5d6dfeeaf2ca3e5707c6",
+    "tools/eos/protocol/types/oracle/plan-anchor.json": "4fc5cff4c3b7c2f5b175343870ed57b1dccb78db8bb108a16dd7d7fd9614c30f",
+    "tools/eos/protocol/types/oracle/sl-a-01-surface.json": "2a4cb81489cba208199e19b1c8306eea4e3ad3f25e400a4349b3e2871d720701"
+  }
+}

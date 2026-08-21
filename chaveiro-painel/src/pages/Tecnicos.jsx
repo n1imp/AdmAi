@@ -264,7 +264,12 @@ export default function Tecnicos() {
           <div className="lg:col-span-2 xl:col-span-3">
             <SkeletonLista qtd={4} />
           </div>
-        ) : tecnicos.length === 0 ? (
+        ) : /* Falha de carregamento nao e evidencia de lista vazia: com `erro`,
+               a lista continua desconhecida. Afirmar "Nenhum técnico cadastrado"
+               aqui — ainda por cima com CTA de cadastro — declara um fato que
+               nao esta em evidencia. O ErroBanner acima ja comunica o estado e
+               oferece o retry. (DOG-002 / F-DOG-002) */
+        tecnicos.length === 0 && !erro ? (
           <div className="lg:col-span-2 xl:col-span-3">
             <EstadoVazio
               mensagem="Nenhum técnico cadastrado"

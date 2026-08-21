@@ -5,6 +5,7 @@ import servicosRouter from './servicos.js';
 import tecnicosRouter from './tecnicos.js';
 import estoqueRouter from './estoque.js';
 import documentosRouter from './documentos.js';
+import metricasRouter from './metricas.js';
 import adminRouter from './admin.js';
 import { billingRouter } from './billing.js';
 
@@ -15,6 +16,7 @@ router.use('/', servicosRouter);
 router.use('/', tecnicosRouter);
 router.use('/', estoqueRouter);
 router.use('/', documentosRouter);
+router.use('/', metricasRouter);
 router.use('/', adminRouter);
 router.use('/', billingRouter);
 

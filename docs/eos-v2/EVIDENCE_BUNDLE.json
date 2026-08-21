@@ -1,0 +1,102 @@
+{
+  "schema": "admai.delivery.evidence-bundle/1",
+  "geradoEm": "2026-08-20T17:29:07.297Z",
+  "wave": "P0",
+  "feature": "DELIVERY_HARNESS_BOOTSTRAP",
+  "fechaGate": false,
+  "artefatos": [
+    {
+      "caminho": "tools/admai-delivery/snapshot.mjs",
+      "sha256": "6cbc0a1d4ed9acbc04079631624132ff08829722e9046d9c11c0d86961ebe054"
+    },
+    {
+      "caminho": "tools/admai-delivery/write-scope.mjs",
+      "sha256": "0f0e650119747fbff7c89e3252d4d6ea729290822724ec5f216165b37f1ba003"
+    },
+    {
+      "caminho": "tools/admai-delivery/test-orchestrator.mjs",
+      "sha256": "7799a8f39d1cdeba3e01b7508c64f9b79b6792b0b04a4de695587498aed4c186"
+    },
+    {
+      "caminho": "tools/admai-delivery/stale-check.mjs",
+      "sha256": "127f36c3fe9e5feda61b840a71582106718ec94ba2f07bafc0852e962ce1075e"
+    },
+    {
+      "caminho": "tools/admai-delivery/evidence-bundle.mjs",
+      "sha256": "0dac9681331e0ccaf626c990c5eefd6b5546195954adcdef796dd328d3a519bb"
+    },
+    {
+      "caminho": "tools/admai-delivery/run-state.mjs",
+      "sha256": "a7145dae76ec1b7b2643290ff2713b12b26e25c9c8ac8cce22ec7973157f3144"
+    }
+  ],
+  "ambiente": {
+    "node": "v24.18.0",
+    "plataforma": "win32",
+    "branch": "fix/seguranca-criticos",
+    "head": "30bf5453d847c17d88197b11c93da965406be53c",
+    "config": {
+      "DATABASE_URL": "ABSENT"
+    },
+    "databaseTarget": "NENHUM"
+  },
+  "execucoes": [
+    {
+      "id": "bot:unit",
+      "estado": "PASS",
+      "exitCode": 0,
+      "duracaoMs": 30139,
+      "saidaFinal": " Test Files  43 passed (43)\n      Tests  406 passed (406)\n   Start at  08:06:51\n   Duration  28.58s (transform 2.51s, setup 0ms, import 36.54s, tests 21.19s, environment 15ms)"
+    },
+    {
+      "id": "painel:unit",
+      "estado": "PASS",
+      "exitCode": 0,
+      "duracaoMs": 66113,
+      "saidaFinal": " Test Files  31 passed (31)\n      Tests  157 passed (157)\n   Start at  08:07:21\n   Duration  64.53s (transform 3.41s, setup 19.93s, import 19.51s, tests 31.63s, environment 97.04s)"
+    },
+    {
+      "id": "bot:lint",
+      "estado": "PASS",
+      "exitCode": 0,
+      "duracaoMs": 3984,
+      "saidaFinal": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment\\chaveiro-bot\\test\\integration\\idor.test.js\n  91:11  warning  'tecnico' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars\n\n✖ 6 problems (0 errors, 6 warnings)"
+    },
+    {
+      "id": "painel:lint",
+      "estado": "PASS",
+      "exitCode": 0,
+      "duracaoMs": 5398,
+      "saidaFinal": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment\\chaveiro-painel\\src\\pages\\NovoServico.jsx\n  46:6  warning  React Hook useEffect has a missing dependency: 'track'. Either include it or remove the dependency array  react-hooks/exhaustive-deps\n\n✖ 12 problems (0 errors, 12 warnings)"
+    },
+    {
+      "id": "bot:integration",
+      "estado": "PASS",
+      "exitCode": 0,
+      "duracaoMs": 676205,
+      "saidaFinal": "\nLoaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.prisma."
+    }
+  ],
+  "afirmacoes": [
+    {
+      "texto": "branch fix/seguranca-criticos em 30bf5453d847",
+      "provenance": "OBSERVED"
+    },
+    {
+      "texto": "git diff --check limpo: true",
+      "provenance": "OBSERVED"
+    },
+    {
+      "texto": "26 modelos no schema Prisma",
+      "provenance": "OBSERVED"
+    },
+    {
+      "texto": "27 migrations no repositorio",
+      "provenance": "OBSERVED"
+    },
+    {
+      "texto": "5 suites aprovadas por exitCode 0",
+      "provenance": "DERIVED"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Star } from 'lucide-react';
 import { formatarMoeda } from '../lib/api.js';
 
@@ -25,9 +26,14 @@ function Variacao({ valor }) {
   );
 }
 
-export function KpiCard({ label, valor, icon: Icon, cor = 'accent', variacao }) {
-  return (
-    <div className="card flex items-center gap-3">
+/**
+ * `hubEm` transforma o card em porta de entrada do Metric Hub daquele indicador — o Dashboard
+ * segue cockpit resumido, e o aprofundamento vive na página própria. Sem `hubEm` o card continua
+ * exatamente como era: nenhum card existente muda de comportamento por acidente.
+ */
+export function KpiCard({ label, valor, icon: Icon, cor = 'accent', variacao, hubEm }) {
+  const conteudo = (
+    <>
       <div
         className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${CORES_KPI[cor]}`}
       >
@@ -40,7 +46,20 @@ export function KpiCard({ label, valor, icon: Icon, cor = 'accent', variacao }) 
           {variacao !== undefined && <Variacao valor={variacao} />}
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  if (!hubEm) return <div className="card flex items-center gap-3">{conteudo}</div>;
+
+  return (
+    <Link
+      to={hubEm}
+      className="card flex items-center gap-3 transition-colors hover:border-accent-400/60
+                 focus:outline-none focus:ring-2 focus:ring-accent-400/40"
+      aria-label={`${label}: abrir análise detalhada`}
+    >
+      {conteudo}
+    </Link>
   );
 }
 

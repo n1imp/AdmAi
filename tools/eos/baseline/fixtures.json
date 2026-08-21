@@ -1,0 +1,195 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Baseline-Aware Verification.",
+    "Escrito ANTES de classify.mjs e fingerprint.mjs.",
+    "",
+    "MOTIVACAO CONCRETA: no DOG-002 eu classifiquei uma falha como preexistente",
+    "com base em 'acoplamento zero' e 'passa isolado'. Nenhuma das duas provas",
+    "sustentava a conclusao — faltava baseline. A suite estava verde no formato",
+    "pretendido; a falha era artefato do meu proprio contorno de diagnostico.",
+    "BASE-NEG-01 existe para tornar esse erro impossivel de repetir.",
+    "",
+    "ORTOGONALIDADE: a classificacao de baseline descreve relacao TEMPORAL/CAUSAL",
+    "com a mudanca atual. FindingCategory descreve a NATUREZA do defeito. Uma",
+    "falha pode ser PRE_EXISTING_FAILURE e ter categoria TEST_DEFECT ao mesmo",
+    "tempo — sao eixos distintos e o codigo nao pode fundi-los."
+  ],
+  "schemaVersion": 1,
+  "classifications": ["NEW_FAILURE", "REGRESSION", "PRE_EXISTING_FAILURE",
+                      "FLAKY_FAILURE", "ENVIRONMENT_FAILURE", "UNRELATED_FAILURE"],
+  "gateModes": ["STRICT_GREEN_PASS", "BASELINE_EQUIVALENT_PASS", "LOCAL_GATE_BLOCKED",
+                "REQUIRES_RECLASSIFICATION"],
+  "cases": [
+    {
+      "id": "BASE-01",
+      "title": "baseline verde e pos-mudanca verde",
+      "input": { "baseline": { "recorded": true, "failures": [] }, "current": { "failures": [] },
+                 "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true },
+      "expect": { "gateMode": "STRICT_GREEN_PASS", "newFailures": 0, "regressions": 0 }
+    },
+    {
+      "id": "BASE-02",
+      "title": "mesma falha conhecida antes e depois, com Finding persistente",
+      "input": {
+        "baseline": { "recorded": true, "failures": [
+          { "file": "a.test.js", "test": "x", "errorType": "AssertionError", "message": "expected 1 received 2" }] },
+        "current": { "failures": [
+          { "file": "a.test.js", "test": "x", "errorType": "AssertionError", "message": "expected 1 received 2" }] },
+        "findings": [{ "fingerprint": "auto", "id": "F-1", "severity": "MEDIUM", "status": "OPEN" }],
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true,
+        "verificationApproved": true
+      },
+      "expect": { "gateMode": "BASELINE_EQUIVALENT_PASS",
+                  "classifications": { "a.test.js::x": "PRE_EXISTING_FAILURE" },
+                  "newFailures": 0, "regressions": 0 }
+    },
+    {
+      "id": "BASE-03",
+      "title": "falha nova apos a mudanca",
+      "input": {
+        "baseline": { "recorded": true, "failures": [] },
+        "current": { "failures": [
+          { "file": "b.test.js", "test": "y", "errorType": "TypeError", "message": "cannot read x of undefined" }] },
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true
+      },
+      "expect": { "gateMode": "LOCAL_GATE_BLOCKED",
+                  "classifications": { "b.test.js::y": "NEW_FAILURE" }, "newFailures": 1 }
+    },
+    {
+      "id": "BASE-04",
+      "title": "mesmo arquivo e teste, fingerprint materialmente diferente",
+      "input": {
+        "baseline": { "recorded": true, "failures": [
+          { "file": "a.test.js", "test": "x", "errorType": "AssertionError", "message": "expected 1 received 2" }] },
+        "current": { "failures": [
+          { "file": "a.test.js", "test": "x", "errorType": "TypeError", "message": "fn is not a function" }] },
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true
+      },
+      "expect": { "gateMode": "REQUIRES_RECLASSIFICATION",
+                  "requiresReclassification": ["a.test.js::x"] }
+    },
+    {
+      "id": "BASE-05",
+      "title": "falha diferente com causalidade refutada por evidencia",
+      "input": {
+        "baseline": { "recorded": true, "failures": [] },
+        "current": { "failures": [
+          { "file": "c.test.js", "test": "z", "errorType": "AssertionError", "message": "timeout",
+            "causalityRefuted": { "evidenceRef": { "kind": "command", "ref": "grep -c import c.test.js -> 0 acoplamento", "producedBy": "grep" } } }] },
+        "findings": [{ "fingerprint": "auto", "id": "F-2", "severity": "LOW", "status": "OPEN" }],
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true,
+        "verificationApproved": true
+      },
+      "expect": { "gateMode": "BASELINE_EQUIVALENT_PASS",
+                  "classifications": { "c.test.js::z": "UNRELATED_FAILURE" } }
+    },
+    {
+      "id": "BASE-06",
+      "title": "resultado alterna sob o mesmo codigo",
+      "input": {
+        "baseline": { "recorded": true, "failures": [] },
+        "current": { "failures": [
+          { "file": "d.test.js", "test": "w", "errorType": "AssertionError", "message": "expected true",
+            "observations": ["PASS", "FAIL", "PASS", "FAIL"] }] },
+        "findings": [{ "fingerprint": "auto", "id": "F-3", "severity": "MEDIUM", "status": "OPEN" }],
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true,
+        "verificationApproved": true
+      },
+      "expect": { "classifications": { "d.test.js::w": "FLAKY_FAILURE" }, "regressions": 0 }
+    },
+    {
+      "id": "BASE-07",
+      "title": "falha reproduzida por condicao de ambiente",
+      "input": {
+        "baseline": { "recorded": true, "failures": [] },
+        "current": { "failures": [
+          { "file": "e.test.js", "test": "v", "errorType": "Error", "message": "Timeout waiting for worker to respond",
+            "environmentEvidence": { "evidenceRef": { "kind": "environment", "ref": "pool=forks expira; pool=threads passa; teste leve passa em ambos" } } }] },
+        "findings": [{ "fingerprint": "auto", "id": "F-4", "severity": "MEDIUM", "status": "OPEN" }],
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true,
+        "verificationApproved": true
+      },
+      "expect": { "classifications": { "e.test.js::v": "ENVIRONMENT_FAILURE" } }
+    },
+    {
+      "id": "BASE-08",
+      "title": "baseline inexistente ou insuficiente",
+      "input": {
+        "baseline": { "recorded": false },
+        "current": { "failures": [
+          { "file": "f.test.js", "test": "u", "errorType": "AssertionError", "message": "expected 3" }] },
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true
+      },
+      "expect": { "gateMode": "LOCAL_GATE_BLOCKED", "baselineSufficient": false,
+                  "notAllowed": "BASELINE_EQUIVALENT_PASS" }
+    },
+    {
+      "id": "BASE-09",
+      "kind": "NEGATIVO",
+      "title": "'ja falhava antes' sem baseline evidence",
+      "input": {
+        "baseline": { "recorded": false },
+        "current": { "failures": [
+          { "file": "g.test.js", "test": "t", "errorType": "AssertionError", "message": "expected 4",
+            "engineerClaim": "isso ja falhava antes" }] },
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true
+      },
+      "expect": { "gateMode": "LOCAL_GATE_BLOCKED", "claimRejected": true }
+    },
+    {
+      "id": "BASE-10",
+      "kind": "NEGATIVO",
+      "title": "falha preexistente de severidade alta nao vira ignoravel por ser antiga",
+      "input": {
+        "baseline": { "recorded": true, "failures": [
+          { "file": "h.test.js", "test": "s", "errorType": "AssertionError", "message": "tenant leak" }] },
+        "current": { "failures": [
+          { "file": "h.test.js", "test": "s", "errorType": "AssertionError", "message": "tenant leak" }] },
+        "findings": [{ "fingerprint": "auto", "id": "F-5", "severity": "CRITICAL", "status": "OPEN",
+                       "characterized": false }],
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true,
+        "verificationApproved": true
+      },
+      "expect": { "gateMode": "LOCAL_GATE_BLOCKED",
+                  "classifications": { "h.test.js::s": "PRE_EXISTING_FAILURE" },
+                  "reason": "severidade CRITICAL nao caracterizada" }
+    },
+
+    {
+      "id": "BASE-NEG-01",
+      "kind": "NEGATIVO",
+      "title": "afirmacao sem prova nao libera o gate",
+      "note": "e exatamente o erro cometido no DOG-002",
+      "input": {
+        "baseline": { "recorded": true, "failures": [] },
+        "current": { "failures": [
+          { "file": "i.test.js", "test": "r", "errorType": "AssertionError", "message": "expected 5",
+            "engineerClaim": "ja falhava", "isolatedPass": true, "couplingZero": true }] },
+        "targetedTestsPass": true, "requiredRegressionPass": true, "invariantsPass": true
+      },
+      "expect": { "gateMode": "LOCAL_GATE_BLOCKED", "claimRejected": true,
+                  "classifications": { "i.test.js::r": "NEW_FAILURE" },
+                  "reason": "passar isolado e nao ter acoplamento nao provam preexistencia" }
+    },
+    {
+      "id": "BASE-NEG-02",
+      "kind": "NEGATIVO",
+      "title": "duas falhas diferentes no mesmo arquivo nao colidem no mesmo fingerprint",
+      "fingerprintPair": [
+        { "file": "j.test.js", "test": "a", "errorType": "AssertionError", "message": "expected 1 received 2" },
+        { "file": "j.test.js", "test": "b", "errorType": "AssertionError", "message": "expected 9 received 8" }
+      ],
+      "expect": { "fingerprintsEqual": false }
+    },
+    {
+      "id": "BASE-NEG-03",
+      "kind": "NEGATIVO",
+      "title": "valores volateis nao quebram o fingerprint da mesma falha",
+      "fingerprintPair": [
+        { "file": "k.test.js", "test": "a", "errorType": "Error", "message": "timeout after 5123ms at C:\\tmp\\x\\run-8891" },
+        { "file": "k.test.js", "test": "a", "errorType": "Error", "message": "timeout after 7440ms at C:\\tmp\\y\\run-2210" }
+      ],
+      "expect": { "fingerprintsEqual": true }
+    }
+  ]
+}

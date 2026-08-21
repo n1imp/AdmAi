@@ -1,0 +1,102 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO dos guards do Contract Bus. Escrito ANTES do codigo.",
+    "",
+    "CONTEXTO: DOG-003 foi BLOQUEADO por ausencia de candidato real com boundary",
+    "material. Estes guards ficam prontos e provados para quando um candidato",
+    "existir — mas passar aqui NAO significa Contract Bus exercitado em producao.",
+    "A secao 45 exige uso real, e nao houve.",
+    "",
+    "Duas propriedades opostas sob teste, e as duas importam:",
+    "  NAO FORCAR  — pluralidade de Engineers nao gera contrato (CB-REAL-02).",
+    "  NAO EVITAR  — dependencia material gera contrato (CB-REAL-01).",
+    "",
+    "E tres protecoes que decidem se o mecanismo vale algo:",
+    "  drift (04), breaking silencioso (03), auto-certificacao (10)."
+  ],
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "CB-REAL-01",
+      "title": "Frontend depende de campo novo do Backend",
+      "kind": "boundary",
+      "input": { "outputDependency": true, "apiContract": true, "from": "frontend", "to": "backend" },
+      "expect": { "contractRequired": true, "contractOwner": "integration" }
+    },
+    {
+      "id": "CB-REAL-02",
+      "title": "dois Engineers na mesma logica, sem boundary",
+      "kind": "NEGATIVO",
+      "input": { "outputDependency": false, "apiContract": false, "schemaContract": false,
+                 "eventContract": false, "blockingInput": false, "breakingChange": false, "boundary": false },
+      "expect": { "contractRequired": false, "contractRequests": 0 }
+    },
+    {
+      "id": "CB-REAL-03",
+      "title": "remocao de campo sem autorizacao de breaking change",
+      "kind": "NEGATIVO",
+      "contractPair": {
+        "previous": { "fields": { "id": "number", "nome": "string", "ativo": "boolean" }, "statusCodes": [200, 404] },
+        "next":     { "fields": { "id": "number", "nome": "string" }, "statusCodes": [200, 404] },
+        "breakingChangeAllowed": false
+      },
+      "expect": { "breaking": true, "code": "CONTRACT_BREAKING_CHANGE", "gate": "BLOCKED",
+                  "reasonContains": "ativo" }
+    },
+    {
+      "id": "CB-REAL-04",
+      "title": "Backend implementa V1 e Frontend implementa V0",
+      "kind": "NEGATIVO",
+      "drift": {
+        "producer": { "side": "backend", "contract": { "fields": { "id": "number", "prioridade": "string" } } },
+        "consumer": { "side": "frontend", "contract": { "fields": { "id": "number" } } }
+      },
+      "expect": { "drift": true, "code": "CONTRACT_DRIFT", "findingOwner": "integration",
+                  "blocksVerification": true }
+    },
+    {
+      "id": "CB-REAL-05",
+      "title": "consumidor nao confirma o contrato",
+      "kind": "NEGATIVO",
+      "acceptance": { "contractId": "C-1", "producerFrozen": true, "consumerAccepted": false },
+      "expect": { "gate": "BLOCKED", "reasonContains": "aceite" }
+    },
+    {
+      "id": "CB-REAL-06",
+      "title": "request que nao altera entendimento nem execucao",
+      "kind": "NEGATIVO",
+      "redundancy": { "requests": [
+        { "id": "R1", "need": "shape de /tecnicos", "changedUnderstanding": true },
+        { "id": "R2", "need": "shape de /tecnicos", "changedUnderstanding": false }
+      ] },
+      "expect": { "redundant": ["R2"], "redundantCount": 1 }
+    },
+    {
+      "id": "CB-REAL-07",
+      "title": "contrato resolvido em duas rodadas",
+      "input": { "from": "frontend", "to": "backend", "rounds": 2 },
+      "expect": { "escalatesTo": null, "action": "CONTINUE" }
+    },
+    {
+      "id": "CB-REAL-08",
+      "title": "terceira rodada escala",
+      "input": { "from": "frontend", "to": "backend", "rounds": 3 },
+      "expect": { "escalatesTo": "integration", "action": "ESCALATE" }
+    },
+    {
+      "id": "CB-REAL-09",
+      "title": "Integration tenta implementar os dois lados",
+      "kind": "NEGATIVO",
+      "ownershipAttempt": { "actor": "integration", "action": "implementBothSides",
+                            "sides": ["backend", "frontend"] },
+      "expect": { "allowed": false, "code": "OWNERSHIP_VIOLATION" }
+    },
+    {
+      "id": "CB-REAL-10",
+      "title": "Contract Owner tenta certificar a funcionalidade",
+      "kind": "NEGATIVO",
+      "ownershipAttempt": { "actor": "integration", "action": "certifyFeature" },
+      "expect": { "allowed": false, "code": "SELF_CERTIFICATION_VIOLATION" }
+    }
+  ]
+}

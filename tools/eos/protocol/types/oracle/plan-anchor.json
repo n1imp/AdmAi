@@ -1,0 +1,54 @@
+{
+  "oraculo": "EOS_PLAN_A_SECTION_ANCHOR",
+  "versao": "1.0.0",
+  "estado": "CONGELADO",
+  "slice": "SL-A-01",
+  "porQueExiste": "A revisao R2 do Codex demonstrou tres bypasses da mesma raiz: os parsers documentais eram PARCIAIS. Parentetizar `Checkpoint` na secao E, ou quebrar `Journal ≠ Projection` em dois spans na secao F, fazia o parser extrair MENOS e chamar isso de sucesso — o membro sumia do mapa sem sumir do documento, e a implementacao podia ser reduzida junto, com zero falhas. Um parser que aceita extracao parcial nao ancora nada.",
+  "comoIssoFecha": "Duas camadas. (1) FINGERPRINT: a secao inteira tem sha256 congelado; qualquer reformatacao, legitima ou nao, vira drift EXPLICITO e reprova, em vez de virar extracao silenciosamente menor. O PLAN-A esta sob Planning Freeze — ele nao deveria mudar, entao rigidez aqui e o contrato, nao excesso. (2) TOTALIDADE: mesmo que alguem atualize o fingerprint junto com o ataque, todo token contratual da secao precisa continuar classificado; nenhum pode simplesmente desaparecer da contagem.",
+  "secoes": {
+    "E": {
+      "titulo": "E. Taxonomia canonica",
+      "sha256": "833fe399c9483ad296cb0b12050b1d3ceb4b7fc0ff8a61dc1fde9077ee7052e0",
+      "bytes": 1965,
+      "familiasEsperadas": 9,
+      "membrosEsperados": 75,
+      "tokensEntreParenteses": [
+        "codex.architect",
+        "claude.backend",
+        "provider + runtime + repositoryId + role"
+      ],
+      "regraDeTotalidade": "Todo token entre crases da secao E precisa ser OU membro de exatamente uma familia OU um dos tokens acima, que a secao cita como exemplo dentro de parenteses. A lista e fechada: mover um membro para dentro de parenteses o faz aparecer aqui, e a divergencia reprova.",
+      "linhasNaoVazias": 25,
+      "porQueContarLinhas": "R6-01: a classe CONTINUACAO aceita qualquer linha iniciada por letra, e as continuacoes reais sao exatamente isso. Uma linha \"Exemplo: token\" e estruturalmente indistinguivel de uma continuacao legitima; o que a separa e ser uma linha A MAIS. Sob Planning Freeze, acrescentar linha e drift."
+    },
+    "F": {
+      "titulo": "F. Relacoes e distincoes obrigatorias",
+      "sha256": "32ec9589c46987d45703b16e15c81900b6fc98df4ecfdbb46d43ed77a29a6ac3",
+      "bytes": 956,
+      "gruposEsperados": 14,
+      "ocorrenciasDeNaoIgual": 24,
+      "regraDeTotalidade": "A soma de (termos - 1) sobre os grupos derivados precisa ser igual ao numero de ocorrencias de '≠' na secao. Quebrar um grupo em spans separados reduz os grupos derivados sem reduzir os '≠' do texto, e a divergencia reprova.",
+      "linhasNaoVazias": 13
+    }
+  },
+  "gramaticaDeLinha": {
+    "porQue": "A quarta revisao derrubou a abordagem anterior, que era uma LISTA DE NEGACAO de caracteres ('~' e '<'). Uma definicao de referencia Markdown nao renderizada — linha iniciando com '[rotulo]:' e contendo o token entre crases — passava com zero falhas mediante apenas documento e SHA, sem tocar em implementacao nem nos oraculos taxonomicos. Lista de negacao de caracteres e incompleta por construcao: sempre existe outra sintaxe que nao renderiza.",
+    "regra": "Gramatica FECHADA E POSITIVA, medida sobre o texto congelado: toda linha nao vazia das secoes E e F comeca com '#', '*', crase, '(' ou letra. Nenhuma comeca com '[', que e como comecam definicao de referencia e nota de rodape. Alem disso nenhuma contem sequencia estrutural que produza conteudo nao renderizado. Linha fora dessa gramatica reprova, em vez de ser ignorada pelo extrator.",
+    "primeirosCaracteresPermitidos": [
+      "#",
+      "*",
+      "`",
+      "(",
+      "letra"
+    ],
+    "sequenciasProibidas": [
+      "](",
+      "![",
+      "[^",
+      "<",
+      "~",
+      "```"
+    ]
+  },
+  "limitacaoConhecida": "Este arquivo tambem vive no repositorio e tambem pode ser editado junto com um ataque. Ele exige alteracao coordenada em TRES lugares — documento congelado, este oraculo e a implementacao — e visibilidade no diff. NAO e impossibilidade estrutural, e nenhuma mensagem deve afirmar que e."
+}

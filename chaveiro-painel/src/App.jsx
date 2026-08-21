@@ -9,6 +9,8 @@ import { useOffline } from './hooks/useOffline.js';
 import Login from './pages/Login.jsx';
 import TrocarSenha from './pages/TrocarSenha.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import MetricHub from './pages/MetricHub.jsx';
+import MetricHubReceita from './pages/MetricHubReceita.jsx';
 import GestorHome from './pages/GestorHome.jsx';
 import Servicos from './pages/Servicos.jsx';
 import NovoServico from './pages/NovoServico.jsx';
@@ -107,6 +109,32 @@ function AppContent() {
           <Route path="/magic-link" element={<MagicLink />} />
 
           <Route path="/" element={<Home />} />
+          {/* Rota por Hub implementado, não `/metricas/:metricId`: das 8 métricas, 6 ainda não
+              têm Hub, e uma rota curinga renderizaria página quebrada para elas. */}
+          <Route
+            path="/metricas/faturamento-liquido"
+            element={
+              <RequireAuth>
+                <RequirePermissao modulo="financeiro" acao="ver">
+                  <Layout>
+                    <MetricHubReceita />
+                  </Layout>
+                </RequirePermissao>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/metricas/servicos-concluidos"
+            element={
+              <RequireAuth>
+                <RequirePermissao modulo="servicos" acao="ver">
+                  <Layout>
+                    <MetricHub />
+                  </Layout>
+                </RequirePermissao>
+              </RequireAuth>
+            }
+          />
           <Route
             path="/servicos"
             element={

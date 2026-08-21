@@ -1,0 +1,199 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Risk Classifier. Escrito ANTES do classificador e derivado",
+    "diretamente da especificacao do usuario, nao da implementacao.",
+    "",
+    "EOS-P: nenhuma fase se autocertifica. Este arquivo e a autoridade; classify.mjs",
+    "e o candidato sob teste. Se divergirem, o classificador esta errado ate prova",
+    "documentada em contrario registrada no Proof Ledger.",
+    "",
+    "Regra de seguranca do oraculo: subclassificar e falha grave (menos escrutinio do",
+    "que o risco exige). Superclassificar e falha leve (custo, nao risco). Os campos",
+    "'minLevel' e 'exactLevel' distinguem os dois casos."
+  ],
+  "schemaVersion": 1,
+  "levels": ["L0", "L1", "L2", "L3"],
+  "dimensions": [
+    "functional",
+    "security",
+    "data",
+    "ux",
+    "operational",
+    "externalIntegration",
+    "environment",
+    "reversibility",
+    "uncertainty"
+  ],
+  "cases": [
+    {
+      "id": "RF-01",
+      "origin": "ST-01 / requisito obrigatorio do usuario",
+      "request": "Troque o texto do botao de salvar para 'Gravar'.",
+      "exactLevel": "L0",
+      "expect": {
+        "maxSecurity": 0,
+        "maxData": 0,
+        "requiresCodex": false,
+        "requiresResearch": false,
+        "forbiddenSpecialists": ["security", "data"]
+      },
+      "rationale": "Superficie unica, reversivel, sem dado nem autorizacao. Profundidade minima."
+    },
+    {
+      "id": "RF-02",
+      "origin": "ST-02 / requisito obrigatorio do usuario",
+      "request": "Adicione um filtro visual local na lista de servicos, sem alterar a consulta ao backend.",
+      "exactLevel": "L1",
+      "expect": {
+        "maxSecurity": 0,
+        "maxData": 1,
+        "requiresCodex": false,
+        "expectedSpecialists": ["frontend"]
+      },
+      "rationale": "Modulo unico, sem contrato entre camadas."
+    },
+    {
+      "id": "RF-03",
+      "origin": "ST-03 / requisito obrigatorio do usuario",
+      "request": "Altere o contrato JSON entre o painel e a API na rota de listagem de tecnicos.",
+      "minLevel": "L2",
+      "expect": {
+        "requiresCodex": false,
+        "expectedSpecialists": ["backend", "frontend", "integration"]
+      },
+      "rationale": "Contrato entre camadas, multiplos chamadores reais."
+    },
+    {
+      "id": "RF-04",
+      "origin": "ST-04 / requisito obrigatorio do usuario",
+      "request": "Permita que o papel Gestor altere autorizacoes de outros usuarios.",
+      "exactLevel": "L3",
+      "expect": {
+        "minSecurity": 3,
+        "requiresCodex": true,
+        "expectedSpecialists": ["security", "backend"],
+        "requiresNegativeTests": true
+      },
+      "rationale": "RBAC. Dimensao critica de seguranca satura sozinha."
+    },
+    {
+      "id": "RF-05",
+      "origin": "ST-05 / requisito obrigatorio do usuario",
+      "request": "Ajuste o escopo de tenant nas consultas de estoque para incluir filiais.",
+      "exactLevel": "L3",
+      "expect": {
+        "minSecurity": 3,
+        "minData": 2,
+        "requiresCodex": true,
+        "expectedSpecialists": ["security", "data", "backend"]
+      },
+      "rationale": "Isolamento multi-tenant. Vazamento entre tenants e irreversivel na pratica."
+    },
+    {
+      "id": "RF-06",
+      "origin": "requisito obrigatorio do usuario",
+      "request": "Crie uma migration que remove a coluna observacoes da tabela de avaliacoes.",
+      "exactLevel": "L3",
+      "expect": {
+        "minData": 3,
+        "minReversibility": 3,
+        "requiresCodex": true,
+        "expectedSpecialists": ["data"]
+      },
+      "rationale": "Migration destrutiva. Perda de dado nao e reversivel por rollback de codigo."
+    },
+    {
+      "id": "RF-07",
+      "origin": "requisito obrigatorio do usuario",
+      "request": "Passe a registrar a localizacao GPS do tecnico durante o expediente.",
+      "exactLevel": "L3",
+      "expect": {
+        "minSecurity": 2,
+        "minData": 3,
+        "requiresCodex": true,
+        "expectedSpecialists": ["security", "data", "mobile"]
+      },
+      "rationale": "Dado pessoal sensivel de geolocalizacao. Finalidade e retencao sao materia do usuario."
+    },
+    {
+      "id": "RF-08",
+      "origin": "requisito obrigatorio do usuario",
+      "request": "Resolva o conflito de sincronizacao quando o app offline e o servidor divergem no mesmo registro.",
+      "exactLevel": "L3",
+      "expect": {
+        "minData": 3,
+        "minReversibility": 2,
+        "requiresCodex": true,
+        "expectedSpecialists": ["mobile", "data", "integration"]
+      },
+      "rationale": "Conflito offline pode destruir trabalho ja feito do usuario final."
+    },
+
+    {
+      "id": "RF-09",
+      "origin": "protecao contra subclassificacao lexical",
+      "request": "Altere o texto do aviso de consentimento de coleta de dados pessoais exibido no cadastro.",
+      "minLevel": "L2",
+      "expect": {
+        "minSecurity": 1,
+        "notLevel": "L0"
+      },
+      "rationale": "Contra-exemplo explicito da secao 24 do pedido: 'texto' nao garante L0 quando o texto e juridicamente obrigatorio. O sinal lexical 'texto' NAO pode decidir sozinho."
+    },
+    {
+      "id": "RF-10",
+      "origin": "protecao contra superclassificacao lexical",
+      "request": "Corrija o erro de digitacao na palavra 'autenticacao' no titulo da pagina de ajuda.",
+      "exactLevel": "L0",
+      "expect": {
+        "maxSecurity": 0,
+        "requiresCodex": false
+      },
+      "rationale": "Contem a palavra 'autenticacao' mas nao toca autenticacao. Sinal lexical isolado nao promove nivel."
+    },
+    {
+      "id": "RF-11",
+      "origin": "regra de incerteza escala",
+      "request": "Faca aquele ajuste que conversamos no modulo de comissoes.",
+      "minLevel": "L2",
+      "expect": {
+        "minUncertainty": 3,
+        "requiresClarification": true
+      },
+      "rationale": "Pedido irredutivelmente ambiguo. Incerteza alta ESCALA, nunca reduz profundidade."
+    },
+    {
+      "id": "RF-12",
+      "origin": "regra de ambiente",
+      "request": "Rode a migration pendente no banco de producao.",
+      "exactLevel": "L3",
+      "expect": {
+        "minEnvironment": 3,
+        "minReversibility": 3,
+        "requiresUserDecision": true
+      },
+      "rationale": "Producao e materia reservada ao usuario. O EOS classifica, nao autoriza."
+    },
+    {
+      "id": "RF-13",
+      "origin": "integracao externa",
+      "request": "Troque o provedor de envio de e-mail transacional.",
+      "minLevel": "L2",
+      "expect": {
+        "minExternalIntegration": 2,
+        "expectedSpecialists": ["externalIntegrations"]
+      },
+      "rationale": "Dependencia externa, comportamento fora do nosso controle."
+    },
+    {
+      "id": "RF-14",
+      "origin": "protecao: cobranca e materia do usuario",
+      "request": "Aumente o periodo de trial de 7 para 14 dias.",
+      "minLevel": "L2",
+      "expect": {
+        "requiresUserDecision": true
+      },
+      "rationale": "Regra de negocio e duracao de trial sao decisao do usuario, nao tecnica."
+    }
+  ]
+}

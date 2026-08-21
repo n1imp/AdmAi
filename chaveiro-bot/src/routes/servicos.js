@@ -450,6 +450,18 @@ router.get('/dashboard', requirePermissao('dashboard', 'ver'), async (req, res) 
         take: MAX_AGREGACAO,
       }),
     ]);
+    /* AUTORIDADE DA DEFINIÇÃO: `servicos-concluidos` em `services/metricas/registro.js`.
+       Esta contagem NÃO é uma segunda definição — é o mesmo predicado (`status = ativo` e
+       `criadoEm` na janela) executado no banco, que é onde ele deve rodar para o cockpit.
+
+       Por que não delegar ao calculador canônico aqui: ele opera sobre linhas, e este handler só
+       carrega linhas com `take: MAX_AGREGACAO` (10k, para a série diária). Contar sobre linhas
+       truncadas daria número ERRADO acima de 10k, enquanto `_count` é exato. Delegar seria trocar
+       uma duplicação de definição por um defeito de correção.
+
+       O que amarra os dois: o teste de equivalência em `metricas_exposicao.test.js` exige
+       `/dashboard.totalServicos === /metricas/servicos-concluidos.value` para a mesma janela e
+       tenant. Divergiu, reprova — que é a garantia que "mesma authority" precisa ter para valer. */
     const totalServicos = agg._count;
     const receitaBruta = agg._sum.valorCobrado ?? 0;
     const totalMaterial = agg._sum.valorMaterial ?? 0;

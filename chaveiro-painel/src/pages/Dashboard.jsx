@@ -239,6 +239,7 @@ export default function Dashboard() {
             <KpiCard
               label="Receita Líquida"
               valor={formatarMoeda(dados.receitaLiquida)}
+              hubEm="/metricas/faturamento-liquido"
               icon={Wallet}
               cor="green"
               variacao={comp.receitaLiquida}
@@ -261,6 +262,7 @@ export default function Dashboard() {
               icon={ClipboardList}
               cor="blue"
               variacao={comp.totalServicos}
+              hubEm="/metricas/servicos-concluidos"
             />
             <KpiCard
               label="Ticket Médio"

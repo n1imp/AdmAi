@@ -1,0 +1,147 @@
+{
+  "$comment": [
+    "ORACULO EXTERNO do Decision Readiness Gate (F-006). Escrito ANTES do codigo.",
+    "",
+    "F-006: o EOS sabia avaliar a mudanca tecnicamente, mas nao sabia verificar se",
+    "estava AUTORIZADO a executa-la pelas decisoes vigentes.",
+    "",
+    "SEPARACAO QUE O ORACULO PROTEGE:",
+    "  Risk      -> qual o risco tecnico desta mudanca?",
+    "  Readiness -> existe decisao suficiente para ela ser executavel?",
+    "Sao perguntas diferentes. DEC-11 prova que uma nao contamina a outra.",
+    "",
+    "DISTINCAO CENTRAL: APPROVED_FROZEN e DEFERRED sao ambos 'congelados' e tem",
+    "efeito OPOSTO. Um libera, o outro bloqueia. Confundi-los E o defeito."
+  ],
+  "schemaVersion": 1,
+  "decisionStatuses": ["APPROVED_FROZEN", "PENDING", "DEFERRED", "SUPERSEDED", "CONFLICTING", "NOT_FOUND"],
+  "decisionRequirements": ["NONE", "EXISTING_DECISION_APPLIES", "PENDING_DECISION",
+                           "DEFERRED_DECISION", "CONFLICTING_DECISIONS", "MISSING_DECISION"],
+  "readinessStates": ["READY", "BLOCKED_BY_PENDING_DECISION", "BLOCKED_BY_DEFERRED_DECISION",
+                      "BLOCKED_BY_CONFLICTING_DECISIONS", "BLOCKED_BY_MISSING_DECISION",
+                      "BLOCKED_BY_INVALID_DECISION_REFERENCE"],
+  "cases": [
+    {
+      "id": "DEC-01",
+      "title": "mudanca tecnica independente, nenhuma decisao necessaria",
+      "input": { "changeId": "CH-1", "dependsOn": [] },
+      "expect": { "readiness": "READY", "decisionRequirement": "NONE", "requiresUserDecision": false }
+    },
+    {
+      "id": "DEC-02",
+      "title": "decisao vigente ja resolve a questao",
+      "input": { "changeId": "CH-2", "dependsOn": ["D-APPROVED"] },
+      "decisions": [{ "id": "D-APPROVED", "decisionStatus": "APPROVED_FROZEN", "decision": "usar req.db" }],
+      "expect": { "readiness": "READY", "decisionRequirement": "EXISTING_DECISION_APPLIES",
+                  "requiresUserDecision": false }
+    },
+    {
+      "id": "DEC-03",
+      "title": "decisao identificada e ainda nao tomada",
+      "input": { "changeId": "CH-3", "dependsOn": ["D-PENDING"] },
+      "decisions": [{ "id": "D-PENDING", "decisionStatus": "PENDING" }],
+      "expect": { "readiness": "BLOCKED_BY_PENDING_DECISION", "decisionRequirement": "PENDING_DECISION",
+                  "requiresUserDecision": true }
+    },
+    {
+      "id": "DEC-04",
+      "title": "decisao explicitamente adiada",
+      "input": { "changeId": "CH-4", "dependsOn": ["C1"] },
+      "decisions": [{ "id": "C1", "decisionStatus": "DEFERRED", "deferredTo": "Lote 12" }],
+      "expect": { "readiness": "BLOCKED_BY_DEFERRED_DECISION", "decisionRequirement": "DEFERRED_DECISION",
+                  "requiresUserDecision": true, "reasonContains": "Lote 12" }
+    },
+    {
+      "id": "DEC-05",
+      "title": "decisao superseded segue a vigente mais recente",
+      "input": { "changeId": "CH-5", "dependsOn": ["D-OLD"] },
+      "decisions": [
+        { "id": "D-OLD", "decisionStatus": "SUPERSEDED", "supersededBy": "D-NEW" },
+        { "id": "D-NEW", "decisionStatus": "APPROVED_FROZEN" }
+      ],
+      "expect": { "readiness": "READY", "decisionRequirement": "EXISTING_DECISION_APPLIES",
+                  "effectiveDecision": "D-NEW" }
+    },
+    {
+      "id": "DEC-06",
+      "title": "decisoes vigentes incompativeis",
+      "input": { "changeId": "CH-6", "dependsOn": ["D-A", "D-B"] },
+      "decisions": [
+        { "id": "D-A", "decisionStatus": "APPROVED_FROZEN", "scope": "menu", "decision": "esconder" },
+        { "id": "D-B", "decisionStatus": "APPROVED_FROZEN", "scope": "menu", "decision": "mostrar desabilitado",
+          "conflictsWith": ["D-A"] }
+      ],
+      "expect": { "readiness": "BLOCKED_BY_CONFLICTING_DECISIONS",
+                  "decisionRequirement": "CONFLICTING_DECISIONS", "requiresUserDecision": true }
+    },
+    {
+      "id": "DEC-07",
+      "title": "a mudanca exige decisao e nenhuma foi encontrada",
+      "input": { "changeId": "CH-7", "dependsOn": ["D-INEXISTENTE"] },
+      "decisions": [],
+      "expect": { "readiness": "BLOCKED_BY_MISSING_DECISION", "decisionRequirement": "MISSING_DECISION",
+                  "requiresUserDecision": true }
+    },
+    {
+      "id": "DEC-08",
+      "kind": "NEGATIVO",
+      "title": "dependencia nao determinavel nao vira READY silencioso",
+      "input": { "changeId": "CH-8", "dependsOn": null, "dependencyResolvable": false },
+      "expect": { "readiness": "BLOCKED_BY_INVALID_DECISION_REFERENCE", "notReadiness": "READY" }
+    },
+    {
+      "id": "DEC-09",
+      "kind": "NEGATIVO",
+      "title": "APPROVED_FROZEN nao e confundido com DEFERRED",
+      "pair": [
+        { "input": { "changeId": "A", "dependsOn": ["X"] },
+          "decisions": [{ "id": "X", "decisionStatus": "APPROVED_FROZEN" }], "expectReadiness": "READY" },
+        { "input": { "changeId": "B", "dependsOn": ["Y"] },
+          "decisions": [{ "id": "Y", "decisionStatus": "DEFERRED" }], "expectReadiness": "BLOCKED_BY_DEFERRED_DECISION" }
+      ],
+      "expect": { "oppositeEffect": true }
+    },
+    {
+      "id": "DEC-10",
+      "title": "mudanca de estado da decisao recalcula readiness",
+      "pair": [
+        { "input": { "changeId": "C", "dependsOn": ["Z"] },
+          "decisions": [{ "id": "Z", "decisionStatus": "DEFERRED" }], "expectReadiness": "BLOCKED_BY_DEFERRED_DECISION" },
+        { "input": { "changeId": "C", "dependsOn": ["Z"] },
+          "decisions": [{ "id": "Z", "decisionStatus": "APPROVED_FROZEN" }], "expectReadiness": "READY" }
+      ],
+      "expect": { "recalculated": true }
+    },
+    {
+      "id": "DEC-11",
+      "kind": "NEGATIVO",
+      "title": "risco tecnico L2 permanece L2 mesmo com decisao adiada",
+      "input": { "changeId": "CH-11", "dependsOn": ["C1"], "riskLevel": "L2" },
+      "decisions": [{ "id": "C1", "decisionStatus": "DEFERRED" }],
+      "expect": { "readiness": "BLOCKED_BY_DEFERRED_DECISION", "riskLevelPreserved": "L2",
+                  "executionAllowed": false }
+    },
+    {
+      "id": "DEC-12",
+      "title": "decisao de produto ja resolvida nao e perguntada de novo",
+      "input": { "changeId": "CH-12", "dependsOn": ["D-RESOLVIDA"] },
+      "decisions": [{ "id": "D-RESOLVIDA", "decisionStatus": "APPROVED_FROZEN", "kind": "product" }],
+      "expect": { "readiness": "READY", "requiresUserDecision": false, "reAsksUser": false }
+    },
+    {
+      "id": "DEC-13",
+      "title": "decisao de produto e roteada ao gate do usuario, nao como defeito",
+      "input": { "changeId": "CH-13", "dependsOn": ["D-PROD"] },
+      "decisions": [{ "id": "D-PROD", "decisionStatus": "PENDING", "kind": "product" }],
+      "expect": { "findingCategory": "PRODUCT_DECISION_REQUIRED", "routesTo": "userDecisionGate",
+                  "notFindingCategory": "SECURITY_DEFECT" }
+    },
+    {
+      "id": "DEC-14",
+      "title": "indice basta; registro completo so quando necessario",
+      "input": { "changeId": "CH-14", "dependsOn": ["D-APPROVED"] },
+      "decisions": [{ "id": "D-APPROVED", "decisionStatus": "APPROVED_FROZEN", "sourceRef": "docs/x.md#D" }],
+      "expect": { "readiness": "READY", "fullRecordLoaded": false }
+    }
+  ]
+}
