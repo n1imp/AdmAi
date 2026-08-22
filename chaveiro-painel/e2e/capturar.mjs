@@ -46,6 +46,110 @@ export const VIEWPORTS = Object.freeze([
 
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * SONDA — mede o que é objetivo, para que o olho fique livre para o que é julgamento.
+ *
+ * POR QUE EXISTE
+ *   28 superfícies × 4 viewports são ~112 capturas. Classificar tudo olhando imagem é caro e,
+ *   pior, subjetivo: "parece apertado" não é achado, é impressão. Mas várias das perguntas da
+ *   matriz têm resposta EXATA no runtime — o conteúdo transborda? o botão está coberto? o alvo
+ *   tem 44px? o texto foi cortado? Essas o navegador responde melhor que eu.
+ *
+ * O QUE ELA NÃO SUBSTITUI
+ *   Hierarquia, densidade e clareza continuam exigindo olhar a captura. A sonda diminui o volume
+ *   de julgamento visual, não o elimina — e uma superfície com sonda limpa ainda pode ser REFINE.
+ *
+ * OCLUSÃO: HIT-TEST, NÃO GEOMETRIA
+ *   Comparar retângulos daria falso positivo em tudo que se sobrepõe legitimamente (dropdown,
+ *   modal, header sticky sobre conteúdo que rolou). O que importa é: clicando no centro deste
+ *   botão, o clique chega nele? `elementFromPoint` responde isso do jeito que o usuário sofre.
+ *   Foi assim que o banner de consentimento sobre "Esqueci minha senha" apareceu como medida, e
+ *   não como suspeita.
+ */
+export const EXPRESSAO_SONDA = `(() => {
+  const W = window.innerWidth, H = window.innerHeight;
+  const doc = document.documentElement;
+  const txt = (el) => (el.innerText || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 70);
+
+  const visivel = (el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return false;
+    const cs = getComputedStyle(el);
+    return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0';
+  };
+
+  const SEL = 'button, a[href], input, select, textarea, [role=button], [tabindex]:not([tabindex="-1"])';
+  const interativos = [...document.querySelectorAll(SEL)].filter(visivel);
+
+  /* Elementos tirados do fluxo: são eles que podem cobrir conteúdo sem reservar espaço. */
+  const fixos = [...document.querySelectorAll('*')].filter((el) => {
+    const p = getComputedStyle(el).position;
+    return (p === 'fixed' || p === 'sticky') && visivel(el);
+  });
+
+  /* OCLUSÃO por hit-test. Só conta quando quem intercepta é um elemento fixo/sticky que NÃO é
+     ancestral do alvo — sobreposição legítima (ícone dentro do próprio botão) não é defeito. */
+  const ocluidos = [];
+  for (const el of interativos) {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (cx < 0 || cy < 0 || cx > W || cy > H) continue;
+    const topo = document.elementFromPoint(cx, cy);
+    if (!topo || el.contains(topo) || topo.contains(el)) continue;
+    const culpado = fixos.find((f) => f === topo || f.contains(topo));
+    if (culpado) {
+      ocluidos.push({ alvo: txt(el) || el.tagName, por: txt(culpado).slice(0, 45) || culpado.className });
+    }
+  }
+
+  /* ALVO DE TOQUE. 44px é o mínimo de WCAG 2.5.5 / HIG; só se mede no mobile, onde o dedo é o
+     ponteiro. No desktop um link de 16px é normal e apontá-lo seria ruído. */
+  const alvosPequenos = W <= 480
+    ? interativos.filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.height > 0 && (r.height < 40 || r.width < 40);
+      }).map((el) => ({ alvo: txt(el) || el.tagName, h: Math.round(el.getBoundingClientRect().height) }))
+    : [];
+
+  /* TRUNCAMENTO real: o texto não coube na própria caixa. Distingue de quebra de linha. */
+  const truncados = [...document.querySelectorAll('h1,h2,h3,h4,p,span,button,a,td,th,label,li')]
+    .filter((el) => visivel(el) && el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0)
+    .map((el) => ({ el: el.tagName.toLowerCase(), texto: txt(el) }));
+
+  /* ABAIXO DA DOBRA: ação que exige rolagem para ser descoberta. */
+  const abaixoDaDobra = interativos
+    .filter((el) => el.getBoundingClientRect().top > H)
+    .map((el) => txt(el) || el.tagName);
+
+  const corpo = (document.body.innerText || '').replace(/\s+/g, ' ');
+  return {
+    titulo: document.title,
+    cabecalho: txt(document.querySelector('h1, h2') || document.createElement('i')),
+    overflowX: doc.scrollWidth - W,
+    alturaDoc: doc.scrollHeight,
+    telas: +(doc.scrollHeight / H).toFixed(1),
+    interativos: interativos.length,
+    ocluidos,
+    alvosPequenos: alvosPequenos.slice(0, 8),
+    qtdAlvosPequenos: alvosPequenos.length,
+    truncados: truncados.slice(0, 6),
+    abaixoDaDobra: abaixoDaDobra.slice(0, 6),
+    fixos: fixos.map((f) => {
+      const r = f.getBoundingClientRect();
+      return { texto: txt(f).slice(0, 40), h: Math.round(r.height), bottom: Math.round(r.bottom) };
+    }).slice(0, 6),
+    /* Sinais de estado, para não confundir tela vazia com tela quebrada nem com tela carregando. */
+    erro: [...document.querySelectorAll('[role=alert]')].filter(visivel).map(txt),
+    carregando: /carregando|aguarde/i.test(corpo) || !!document.querySelector('.skeleton, [aria-busy=true]'),
+    semDados: /nenhum|nada (aqui|encontrad)|sem (dados|resultado|registro)|vazio|comece/i.test(corpo),
+    /* a11y barato e determinístico; o axe completo já roda em suíte própria. */
+    imgSemAlt: [...document.querySelectorAll('img:not([alt])')].filter(visivel).length,
+    botaoSemNome: interativos.filter((el) =>
+      !txt(el) && !el.getAttribute('aria-label') && !el.getAttribute('title')).length,
+    palavras: corpo.split(' ').filter(Boolean).length,
+  };
+})()`;
+
 /** Navega com UMA repetição: a primeira navegação de um alvo recém-criado ainda pode recusar. */
 async function navegar(cdp, url) {
   try {
@@ -91,6 +195,28 @@ async function alvoDaPagina(perfil) {
      bom tempo. */
   await espera(800);
   return alvo.webSocketDebuggerUrl;
+}
+
+/**
+ * Repoe o PRIMEIRO ACESSO — e precisa ser POR VIEWPORT, nao uma vez por execucao.
+ *
+ * A primeira versao limpava so no inicio. Ai o consentimento respondido em 360x800 ficava
+ * gravado no `localStorage` do perfil, e nos tres viewports seguintes o banner simplesmente
+ * nao existia mais. O resultado nao era um erro visivel: era captura de "primeiro acesso" que
+ * mostrava o estado de segundo acesso, com nome de arquivo dizendo o contrario.
+ *
+ * Limpar ANTES de cada navegacao resolve porque `CookieBanner` le `localStorage` uma unica vez,
+ * na montagem (`useState(() => ...)` em CookieBanner.jsx:18) — entao a limpeza so tem efeito se
+ * acontecer antes de a pagina montar.
+ */
+async function limparPrimeiroAcesso(cdp) {
+  if (process.env.LIMPAR_PRIMEIRO_ACESSO !== '1') return;
+  await cdp.send('Runtime.evaluate', {
+    expression: `['admai_cookies_consent', 'admai_welcome_seen', 'admai_tour_done'].forEach((k) =>
+      localStorage.removeItem(k)
+    );`,
+    returnByValue: true,
+  });
 }
 
 /**
@@ -156,13 +282,7 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
     /* PRIMEIRO ACESSO de verdade quando `LIMPAR_PRIMEIRO_ACESSO=1`: sem isto, a segunda captura
        já não vê banner nem card, e comparar BEFORE com AFTER mediria o estado do localStorage
        em vez da mudança na interface. [GAP-UI-02] */
-    if (process.env.LIMPAR_PRIMEIRO_ACESSO === '1') {
-      await cdp.send('Runtime.evaluate', {
-        expression: `['admai_cookies_consent','admai_welcome_seen','admai_tour_done']
-          .forEach((k) => localStorage.removeItem(k));`,
-        returnByValue: true,
-      });
-    }
+    await limparPrimeiroAcesso(cdp);
 
     /* Superfície pública não tem sessão. Login, Cadastro e as páginas legais são exatamente as
        telas que o usuário vê ANTES de existir conta — exigir login para observá-las impediria de
@@ -193,6 +313,7 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
     }
 
     const feitas = [];
+    const medidas = [];
     for (const vp of VIEWPORTS) {
       await cdp.send('Emulation.setDeviceMetricsOverride', {
         width: vp.width,
@@ -201,10 +322,40 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
         mobile: vp.mobile,
       });
       for (const rota of rotas) {
+        await limparPrimeiroAcesso(cdp);
         await navegar(cdp, `${BASE}${rota}`);
         /* Espera fixa em vez de `Page.loadEventFired`: o painel busca dados DEPOIS do load, e
            capturar no load pega esqueleto de carregamento em vez de conteúdo. */
         await espera(2600);
+
+        /* CATALOGO_MODAIS nao tem rota: so existe depois de um clique dentro de `/materiais`.
+           Sem este passo ela ficaria `NOT_INVENTORIED` por limitacao do instrumento — e "nao
+           consegui abrir" nao e uma classificacao. Busca por TEXTO VISIVEL, e nao por seletor
+           de classe, porque o texto e o que o usuario procura e nao muda quando o CSS muda. */
+        /* Sequencia separada por `|`: chegar ao tour exige responder o consentimento E abrir o
+           tutorial. Um clique so nao alcanca superficie que mora atras de dois passos. */
+        for (const passo of (process.env.CLICAR_TEXTO ?? '').split('|').filter(Boolean)) {
+          const alvo = JSON.stringify(passo);
+          const clique = await cdp.send('Runtime.evaluate', {
+            expression: `(() => {
+              const q = ${alvo}.toLowerCase();
+              const el = [...document.querySelectorAll('button, a[href], [role=button]')].find(
+                (e) => (e.innerText || '').trim().toLowerCase().includes(q)
+                  && e.getBoundingClientRect().width > 0
+              );
+              if (!el) return 'NAO_ENCONTRADO';
+              el.click();
+              return 'CLICADO';
+            })()`,
+            returnByValue: true,
+          });
+          /* Falha alto: capturar `/materiais` de novo e arquivar como se fosse o dialogo seria
+             evidencia errada com aparencia de certa. */
+          if (clique.result?.value !== 'CLICADO') {
+            throw new Error(`CLICAR_TEXTO passo "${passo}" nao encontrado em ${rota}`);
+          }
+          await espera(1200);
+        }
 
         const largura = await cdp.send('Runtime.evaluate', {
           expression: 'window.innerWidth',
@@ -216,10 +367,31 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
         const shot = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 82 });
         const nome = nomeDoArquivo(papel, vp.nome, rota);
         writeFileSync(path.join(destino, nome), Buffer.from(shot.data, 'base64'));
+
+        /* A medida vai junto da imagem e com a MESMA origem: mesma navegação, mesmo instante,
+           mesmo viewport. Sonda e captura separadas mediriam dois estados parecidos, e a
+           divergência entre eles seria impossível de explicar depois. */
+        const sonda = await cdp.send('Runtime.evaluate', {
+          expression: EXPRESSAO_SONDA,
+          returnByValue: true,
+        });
+        medidas.push({
+          papel,
+          rota,
+          viewport: vp.nome,
+          innerWidth: largura.result.value,
+          arquivo: nome,
+          ...(sonda.result?.value ?? {
+            falhou: sonda.exceptionDetails?.text ?? 'sonda sem retorno',
+          }),
+        });
         feitas.push(`${nome}  (innerWidth=${largura.result.value})`);
       }
     }
     cdp.close();
+    /* JSON ao lado das imagens: e o que a classificacao vai citar, e fica auditavel junto da
+       evidencia visual que o originou. */
+    writeFileSync(path.join(destino, `sonda-${papel}.json`), JSON.stringify(medidas, null, 2));
     return feitas;
   } finally {
     chrome.kill();
