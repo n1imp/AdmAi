@@ -164,8 +164,14 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
       });
     }
 
-    const login = await cdp.send('Runtime.evaluate', {
-      expression: `(async () => {
+    /* Superfície pública não tem sessão. Login, Cadastro e as páginas legais são exatamente as
+       telas que o usuário vê ANTES de existir conta — exigir login para observá-las impediria de
+       observar as duas marcadas MUST_REVIEW. [SCOPE-F2B] */
+    const anonimo = usuario === 'anonimo';
+    const login = anonimo
+      ? { result: { value: 200 } }
+      : await cdp.send('Runtime.evaluate', {
+          expression: `(async () => {
         const r = await fetch('/api/auth/login', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: ${JSON.stringify(JSON.stringify({ username: usuario, password: senha }))}
@@ -174,9 +180,9 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
         if (d.token) localStorage.setItem('admai_token', d.token);
         return r.status;
       })()`,
-      awaitPromise: true,
-      returnByValue: true,
-    });
+          awaitPromise: true,
+          returnByValue: true,
+        });
     if (login.result?.value !== 200) {
       /* Falhar aqui é melhor que capturar 12 telas de login: uma sessão ausente produz imagens
          que parecem válidas e não mostram nada do que se queria ver. */
