@@ -18,6 +18,7 @@ import { pathToFileURL } from 'node:url';
 import { METRICAS } from '../../../chaveiro-bot/src/services/metricas/registro.js';
 import { CALCULADORES, FIXTURES } from '../../../chaveiro-bot/src/services/metricas/calculo.js';
 import { CONSULTAS } from '../../../chaveiro-bot/src/services/metricas/consulta.js';
+import { flagsDoModulo, recusarDesconhecida } from '../cli.mjs';
 
 export const CLASSES_DE_HUB = Object.freeze([
   'HUB_COMPATIBLE_DIRECTLY',
@@ -177,4 +178,10 @@ export function executar() {
   return falhas.length ? 2 : 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(executar());
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
+
+/** [H-01.3] Derivado da fonte deste modulo, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());

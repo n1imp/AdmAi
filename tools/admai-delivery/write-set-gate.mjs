@@ -54,6 +54,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RAIZ } from './snapshot.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 export const ARTEFATO = `${RAIZ}docs/eos-v2/WRITE_SET.json`;
 
@@ -138,6 +139,21 @@ export function shasDaLane(raiz = RAIZ) {
  * Declaração sem baseline não devolve lista vazia — devolve indisponibilidade. Lista vazia
  * significaria "nada foi escrito", que é a afirmação forte que não se pode fazer sem o baseline.
  */
+/**
+ * O caminho passou a ser ignorado pelo git?  [H-01.11]
+ *
+ * `check-ignore` sai 0 quando o caminho casa com uma regra de ignore, 1 quando não. Só isso separa
+ * "deixou de ser rastreado" de "foi apagado" — e nenhuma das duas é "foi escrito".
+ */
+export function ignorado(raiz, caminho) {
+  try {
+    execFileSync('git', ['-C', raiz, 'check-ignore', '-q', '--', caminho], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function observarEscritaDaLane(declaracao, raiz) {
   const base = declaracao?.baselineDaLane;
   if (!base || typeof base !== 'object' || Array.isArray(base)) {
@@ -146,11 +162,37 @@ export function observarEscritaDaLane(declaracao, raiz) {
   const lane = raiz ?? declaracao.lane ?? RAIZ;
   const agora = shasDaLane(lane);
   const observado = new Set();
+  const ignoradosAgora = new Set();
+
   for (const [caminho, sha] of Object.entries(agora)) {
     if (!(caminho in base) || base[caminho] !== sha) observado.add(caminho);
   }
-  for (const caminho of Object.keys(base)) if (!(caminho in agora)) observado.add(caminho);
-  return { disponivel: true, observado: [...observado].sort() };
+
+  /* [H-01.11] Sumir da listagem tinha TRÊS causas tratadas como uma: revertido, commitado, ou
+     **passou a ser ignorado**. A terceira não é escrita — nada foi escrito no arquivo; o que mudou
+     foi a regra de rastreamento, tipicamente por uma edição de `.gitignore` que ESTAVA declarada.
+     Classificar isso como `UNDECLARED_WRITE` afirma que houve escrita onde não houve. Foi o que
+     aconteceu na Fase 0 do ADMAI DELIVERY MODE, e o registro ficou impreciso por isso. */
+  const sumidos = Object.keys(base).filter((c) => !(c in agora));
+  for (const caminho of sumidos) {
+    /* [H01-REV-03] A primeira versão perguntava só "está ignorado?". Um arquivo APAGADO que também
+       casasse com uma regra de ignore desaparecia da observação — exclusão real e líquida sumindo,
+       o que é fail-open ALÉM da limitação declarada de "escrever e restaurar".
+       `AGORA_IGNORADO` exige que o arquivo AINDA EXISTA e que seu conteúdo seja o mesmo do baseline.
+       Ausente ou alterado continua sendo diferença observada, ignorado ou não. */
+    const abs = join(lane, caminho);
+    const aindaExiste = existsSync(abs) && statSync(abs).isFile();
+    const mesmoConteudo = aindaExiste
+      && createHash('sha256').update(readFileSync(abs)).digest('hex') === base[caminho];
+
+    (aindaExiste && mesmoConteudo && ignorado(lane, caminho) ? ignoradosAgora : observado).add(caminho);
+  }
+
+  return {
+    disponivel: true,
+    observado: [...observado].sort(),
+    ignoradosAgora: [...ignoradosAgora].sort()
+  };
 }
 
 /**
@@ -218,8 +260,10 @@ export function observarEscritaDasLanes(decl) {
 
   const observado = [];
   const livroRazao = [];
+  const ignoradosAgora = [];
   for (const [nome, raiz] of Object.entries(lanes)) {
     const r = observarEscritaDaLane({ baselineDaLane: porLane[nome], lane: raiz }, raiz);
+    ignoradosAgora.push(...(r.ignoradosAgora ?? []).map((c) => qualificar(nome, c)));
     for (const c of r.observado) {
       /* [R25-03] Antes eu REMOVIA o livro-razão da observação. Estreito por nome, largo por
          autoria: adulteração manual dos mesmos dois caminhos sumia junto. Agora ele sai da lista
@@ -230,6 +274,7 @@ export function observarEscritaDasLanes(decl) {
   }
   return {
     disponivel: true, observado: observado.sort(), livroRazao: livroRazao.sort(),
+    ignoradosAgora: ignoradosAgora.sort(),
     escopo: Object.keys(lanes).length > 1 ? 'TODAS_AS_LANES_DECLARADAS' : 'LANE_UNICA',
     lanes: Object.keys(lanes)
   };
@@ -278,9 +323,29 @@ export function validarDeclaracao(decl, { sujos, baseCommitAtual, shaAtual, mome
       problemas.push(`${e.caminho}: lane "${e.lane}" não está declarada em lanes`);
     }
   }
-  if (decl.lanes && decl.baselinePorLane) {
+  /* [R28-01] A checagem de baseline só disparava quando `lanes` **e** `baselinePorLane` existiam.
+     Faltando os dois, ela era pulada inteira, e a declaração virava `VALIDATED` sem âncora alguma.
+     Verificação condicionada à presença do dado que ela verifica não verifica nada. */
+  if (!decl.baselinePorLane && !decl.baselineDaLane) {
+    problemas.push('declaração sem baseline — sem ele a observação não tem contra o que comparar');
+  }
+  /* [H01-REV-06] O `!== undefined` deixava a AUSENCIA passar para o fallback de lane unica, e
+     `lanes: null` idem. Declaracao que nao nomeia escopo nao tem escopo — e o schema corrente
+     sempre o nomeia. */
+  const temLaneUnica = typeof decl.lane === 'string' && decl.lane.length > 0;
+  if ((decl.lanes === undefined || decl.lanes === null) && !temLaneUnica) {
+    problemas.push('declaracao sem `lanes` nem `lane` — o escopo nao pode vir de fallback');
+  } else if (decl.lanes != null && (typeof decl.lanes !== 'object' || Array.isArray(decl.lanes))) {
+    problemas.push(`lanes precisa ser objeto nome->raiz, e veio ${Array.isArray(decl.lanes) ? 'array' : typeof decl.lanes}`);
+  }
+  if (decl.baselinePorLane) {
     const faltando = lanesConhecidas.filter((n) => !decl.baselinePorLane[n]);
     if (faltando.length) problemas.push(`lane sem baseline: ${faltando.join(', ')}`);
+  }
+  /* [R28-01] `baseCommit` é o que torna o baseline datável. Sem ele, "diferença contra o baseline"
+     não distingue escrita desta rodada de estado herdado de outro commit. */
+  if (!decl.baseCommitPorLane && !decl.baseCommit) {
+    problemas.push('declaração sem baseCommit — o baseline deixa de ser datável');
   }
 
   /* [R26-01] Estado REAL por lane. Antes, `sujos` chegava como parâmetro e nunca era lido, e
@@ -539,12 +604,25 @@ export function arquivar(caminho = ARTEFATO, historico = HISTORICO) {
      mesmo sliceId removia um UNDECLARED_WRITE e o bloqueio sumia. Isso contradiz frontalmente a
      afirmacao de que a comparacao permanece UNDECLARED_WRITE para sempre — bastava rearquivar
      limpo. Violacao registrada nao se sobrescreve; a nova entrada convive com a anterior. */
-  const anteriores = hist.declaracoes.filter((d) => d.sliceId === decl.sliceId);
-  const violacaoAnterior = anteriores.find((d) => d.comparacao === 'UNDECLARED_WRITE');
+  /* [R28-02] A correção do R27-03 preservava só `UNDECLARED_WRITE`. Um `UNKNOWN_DIFFERENCE`
+     anterior — que passou a bloquear no R27-04 — continuava sendo apagado por rearquivamento, o que
+     reabria exatamente o fail-open recém-fechado. Preserva-se toda classe bloqueante, e também toda
+     entrada que já carrega disposição: apagar uma reconciliação apagaria a decisão do usuário. */
+  const idBase = (id) => String(id).split('#')[0];
+  const preservar = (d) => CLASSES_QUE_BLOQUEIAM.includes(d.comparacao) || Boolean(d.reconciliacao);
+
+  const mesmaFatia = hist.declaracoes.filter((d) => idBase(d.sliceId) === decl.sliceId);
+  const haPreservada = mesmaFatia.some(preservar);
   hist.declaracoes = hist.declaracoes.filter(
-    (d) => d.sliceId !== decl.sliceId || d.comparacao === 'UNDECLARED_WRITE'
+    (d) => idBase(d.sliceId) !== decl.sliceId || preservar(d)
   );
-  const sufixo = violacaoAnterior ? `${decl.sliceId}#rearquivado-${anteriores.length}` : decl.sliceId;
+
+  /* [R28-04] O sufixo usava `anteriores.length`, e `anteriores` excluía as JÁ sufixadas — duas
+     rearquivações produziam dois `#rearquivado-1` idênticos, e `reconciliar()` usa `find()`, então
+     a segunda ficava inalcançável. Conta-se pelo id-BASE, que inclui as sufixadas. */
+  const sufixo = haPreservada
+    ? `${decl.sliceId}#rearquivado-${hist.declaracoes.filter((d) => idBase(d.sliceId) === decl.sliceId).length}`
+    : decl.sliceId;
   hist.declaracoes.push({
     ...decl, sliceId: sufixo, arquivadoEm: new Date().toISOString(), provenance,
     comparacao: r.classe, escopoDaComparacao: r.escopo, lanesObservadas: r.lanes ?? null,
@@ -576,18 +654,33 @@ export function arquivar(caminho = ARTEFATO, historico = HISTORICO) {
 export const DISPOSICOES = Object.freeze([
   'CONTEUDO_ACEITO_ORDEM_VIOLADA',   // a escrita é legítima; o que faltou foi a declaração prévia
   'REVERTIDO',                       // desfeita e refeita sob declaração válida
-  'ACEITO_COMO_RISCO'                // aceito com risco explícito, sem alegar que estava correto
+  'ACEITO_COMO_RISCO',               // aceito com risco explícito, sem alegar que estava correto
+  /* [H-01.11] As três acima assumem que HOUVE escrita. Esta é para o caso em que não houve: a
+     comparação foi produzida por um classificador defeituoso, e o defeito está corrigido e provado.
+     `observarEscritaDaLane` tratava "sumiu da listagem" como escrita sem distinguir revertido,
+     commitado e AGORA_IGNORADO — e o terceiro não é escrita nenhuma.
+     Não é atalho para as outras: exige que o defeito seja NOMEADO e que a correção seja apontável,
+     e a comparação continua `UNDECLARED_WRITE` no histórico como qualquer outra. */
+  'CLASSIFICACAO_INVALIDADA_POR_DEFEITO_DO_INSTRUMENTO'
 ]);
 
-export function reconciliar({ sliceId, disposicao, autorizadoPor, justificativa, caminhos = [] },
-  historico = HISTORICO) {
+/** Disposição que nega a escrita precisa nomear o defeito e a correção. [H-01.11] */
+export const EXIGE_DEFEITO_NOMEADO = 'CLASSIFICACAO_INVALIDADA_POR_DEFEITO_DO_INSTRUMENTO';
+
+export function reconciliar({ sliceId, disposicao, autorizadoPor, justificativa, caminhos = [],
+  defeito, correcao }, historico = HISTORICO) {
   if (!existsSync(historico)) return { reconciliado: false, motivo: 'histórico ausente' };
 
   let hist;
   try { hist = JSON.parse(readFileSync(historico, 'utf8')); } catch (e) {
     return { reconciliado: false, motivo: `histórico ilegível: ${e.message}` };
   }
-  const d = (hist.declaracoes ?? []).find((x) => x.sliceId === sliceId);
+  /* [R28-03] `?? []` tratava historico malformado como "sem declaracoes", e `arquivar()` ja
+     recusava a mesma estrutura. O irmao do R27-02 sobreviveu aqui. */
+  if (!Array.isArray(hist.declaracoes)) {
+    return { reconciliado: false, motivo: 'historico sem lista `declaracoes` — estrutura desconhecida nao se reconcilia' };
+  }
+  const d = hist.declaracoes.find((x) => x.sliceId === sliceId);
 
   if (!d) return { reconciliado: false, motivo: `fatia ${sliceId} não está no histórico` };
   if (!CLASSES_QUE_BLOQUEIAM.includes(d.comparacao)) {
@@ -606,10 +699,25 @@ export function reconciliar({ sliceId, disposicao, autorizadoPor, justificativa,
     return { reconciliado: false, motivo: 'disposição sem justificativa substantiva' };
   }
 
+  /* [H-01.11] Negar que houve escrita é a afirmação mais forte das quatro disposições, então é a que
+     exige mais: o defeito precisa ser NOMEADO e a correção precisa ser apontável. Sem isso, esta
+     disposição viraria o atalho por onde qualquer violação escaparia — "o instrumento errou". */
+  if (disposicao === EXIGE_DEFEITO_NOMEADO) {
+    if (typeof defeito !== 'string' || defeito.trim().length < 10) {
+      return { reconciliado: false, motivo: 'disposição que nega a escrita exige o defeito nomeado' };
+    }
+    if (typeof correcao !== 'string' || correcao.trim().length < 10) {
+      return { reconciliado: false, motivo: 'disposição que nega a escrita exige a correção apontável' };
+    }
+  }
+
   d.reconciliacao = {
     em: new Date().toISOString(), disposicao, autorizadoPor, justificativa,
     caminhos: caminhos.length ? caminhos : (d.caminhosNaoDeclarados ?? []),
-    preserva: 'A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação.'
+    ...(disposicao === EXIGE_DEFEITO_NOMEADO ? { defeito, correcao } : {}),
+    preserva: disposicao === EXIGE_DEFEITO_NOMEADO
+      ? 'A comparação permanece UNDECLARED_WRITE no histórico. Isto NÃO autoriza escrita — registra que escrita não houve, e que a medição estava errada.'
+      : 'A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação.'
   };
   d.bloqueiaIntegracao = false;
   hist.geradoEm = new Date().toISOString();
@@ -627,9 +735,20 @@ export function reconciliar({ sliceId, disposicao, autorizadoPor, justificativa,
 export const CLASSES_QUE_BLOQUEIAM = Object.freeze(['UNDECLARED_WRITE', 'UNKNOWN_DIFFERENCE']);
 
 export function disposicaoValida(rec) {
-  return Boolean(rec) && DISPOSICOES.includes(rec.disposicao)
+  const base = Boolean(rec) && DISPOSICOES.includes(rec.disposicao)
     && typeof rec.autorizadoPor === 'string' && rec.autorizadoPor.trim().length >= 3
     && typeof rec.justificativa === 'string' && rec.justificativa.trim().length >= 20;
+  if (!base) return false;
+
+  /* [H01-REV-04] `reconciliar()` exigia defeito e correcao para a disposicao que NEGA a escrita, e
+     `disposicaoValida()` nao — mas quem levanta o bloqueio e `bloqueiosAbertos()`, que usa esta
+     funcao. Um registro escrito a mao com a disposicao especial e sem defeito passava pela porta que
+     `reconciliar()` fechava. A exigencia mora aqui, no leitor, e nao so no escritor. */
+  if (rec.disposicao === EXIGE_DEFEITO_NOMEADO) {
+    return typeof rec.defeito === 'string' && rec.defeito.trim().length >= 10
+      && typeof rec.correcao === 'string' && rec.correcao.trim().length >= 10;
+  }
+  return true;
 }
 
 /** Fatias que ainda bloqueiam integração: `UNDECLARED_WRITE` sem disposição VÁLIDA registrada. */
@@ -639,7 +758,10 @@ export function bloqueiosAbertos(historico = HISTORICO) {
   if (!existsSync(historico)) return ['HISTORICO_AUSENTE'];
   try {
     const hist = JSON.parse(readFileSync(historico, 'utf8'));
-    return (hist.declaracoes ?? [])
+    /* [R28-03] Historico sem lista de declaracoes devolvia `[]`, que se le como "nada bloqueia" —
+       a afirmacao mais forte possivel a partir da estrutura mais desconhecida possivel. */
+    if (!Array.isArray(hist.declaracoes)) return ['HISTORICO_MALFORMADO'];
+    return hist.declaracoes
       .filter((d) => CLASSES_QUE_BLOQUEIAM.includes(d.comparacao) && !disposicaoValida(d.reconciliacao))
       .map((d) => d.sliceId);
   } catch { return ['HISTORICO_ILEGIVEL']; }
@@ -692,7 +814,10 @@ export function compararRodada(decl = lerDeclaracao()) {
     expansoesAutorizadas: (decl.expansoesAutorizadas ?? []).map((e) =>
       (typeof e === 'string' ? e : qualificar(e.lane, e.caminho)))
   });
-  return { ...r, escopo: obs.escopo, lanes: obs.lanes, observado: obs.observado, livroRazao: obs.livroRazao };
+  return {
+    ...r, escopo: obs.escopo, lanes: obs.lanes, observado: obs.observado,
+    livroRazao: obs.livroRazao, ignoradosAgora: obs.ignoradosAgora
+  };
 }
 
 /**
@@ -704,25 +829,27 @@ export function compararRodada(decl = lerDeclaracao()) {
  * existiu. É o padrão que seis rodadas seguidas apontaram: tratar a instância nomeada e deixar o
  * irmão de pé.
  */
-export const FLAGS = Object.freeze(['--comparar', '--promover', '--selftest', '--validar']);
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Escreve WRITE_SET.json e WRITE_SET_HISTORY.json — o proprio livro-razao. */
+export const MODO_DE_ACESSO = 'MUTATING';
+
+/** [H-01.3] Derivado da fonte: allowlist literal ja removeu uma capacidade real. */
+export const FLAGS = flagsDoModulo(import.meta.url);
 
 export function executar(argv = []) {
-  const desconhecidas = argv
-    .filter((a) => a.startsWith('--')).map((a) => a.split('=')[0])
-    .filter((a) => !FLAGS.includes(a));
-  if (desconhecidas.length) {
-    console.log(`FLAG_DESCONHECIDA — ${desconhecidas.join(', ')}`);
-    console.log(`  reconhecidas: ${FLAGS.join(', ')}`);
-    console.log('  Recusar e deliberado: aceitar e ignorar faz o chamador crer que pediu outro modo.');
-    return 2;
-  }
+  const recusa = recusarDesconhecida(argv, FLAGS);
+  if (recusa !== null) return recusa;
   /* [R27-05] Eu adicionei `--selftest` a FLAGS e NAO liguei o modo: o seletor continuava mandando
      para `validar`, e as duas saidas ficavam byte a byte iguais. Reproduzi "parametro aceito e nao
      aplicado" DENTRO da correcao dessa mesma classe, e reportei como fechada. Allowlist nao e
      roteamento. */
+  /* [H-01.2] `--validar` constava da allowlist literal e NUNCA era despachado — era o default
+     com um nome. Nomear um modo e nao rotea-lo e a mesma classe do `--selftest`, so que mais
+     discreta, porque o comportamento coincidia. Explicito aqui, ele passa a ser derivavel da fonte
+     e a existir de verdade. */
   const modo = argv.includes('--comparar') ? 'comparar'
     : argv.includes('--promover') ? 'promover'
-      : argv.includes('--selftest') ? 'selftest' : 'validar';
+      : argv.includes('--selftest') ? 'selftest'
+        : argv.includes('--validar') ? 'validar' : 'validar';
   if (modo === 'promover') {
     const r = promover();
     console.log(r.promovido
@@ -745,6 +872,8 @@ export function executar(argv = []) {
     if (r.naoEntregues?.length) console.log(`  declarado e nao escrito : ${r.naoEntregues.join(', ')}`);
     /* [R25-03] O livro-razão sai do confronto mas NÃO some do relatório. */
     if (r.livroRazao?.length) console.log(`  livro-razao tocado (isento) : ${r.livroRazao.join(', ')}`);
+    /* [H-01.11] Sair da listagem por virar ignorado nao e escrita, e nao pode sumir do relatorio. */
+    if (r.ignoradosAgora?.length) console.log(`  passou a ser IGNORADO (nao houve escrita) : ${r.ignoradosAgora.join(', ')}`);
     console.log('  LIMITE: diferenca liquida contra o baseline, nao historico de escritas.');
     console.log('    arquivo escrito e depois restaurado ao conteudo do baseline e invisivel aqui.');
     return r.classe === 'UNDECLARED_WRITE' || r.classe === 'UNKNOWN_DIFFERENCE' ? 1 : 0;
@@ -765,7 +894,14 @@ export function executar(argv = []) {
   /* ---- Sabotagens: o gate precisa PODER rejeitar ---- */
   const base = { sujos: new Set(), baseCommitAtual: 'abc', shaAtual: {} };
   const entradaOk = { caminho: 'x.js', precisao: 'EXACT', existiaNaDeclaracao: false, shaNaDeclaracao: null, sujoNaDeclaracao: false };
-  const declOk = { sliceId: 'S', estado: 'VALIDATED', baseCommit: 'abc', entradas: [entradaOk] };
+  /* [R28-01] O fixture nao tinha baseline. Passava porque a checagem so disparava quando o dado
+     ja estava la — o defeito e o fixture compartilhavam a mesma omissao. */
+  /* [H01-REV-06] O fixture nao nomeava escopo — a mesma omissao que o defeito. Usa `lane` (schema/2)
+     porque a checagem aceita as duas formas e ambas precisam ser exercitadas. */
+  const declOk = {
+    sliceId: 'S', estado: 'VALIDATED', baseCommit: 'abc', lane: '/tmp/lane',
+    baselineDaLane: { 'x.js': 'a'.repeat(64) }, entradas: [entradaOk]
+  };
 
   const sabotagens = [
     ['mutação sem declaração é rejeitada',
@@ -803,6 +939,25 @@ export function executar(argv = []) {
       validarDeclaracao(
         { ...declOk, lanes: {}, baselinePorLane: {} }, base
       ).valido === false],
+    /* [R28-01] Os três dados que datam e ancoram o baseline. Faltando qualquer um, "diferença contra
+       o baseline" deixa de significar "escrita desta rodada". */
+    ['declaração SEM baseline reprova', (() => {
+      const { baselineDaLane, ...semBase } = declOk;
+      return validarDeclaracao(semBase, base).valido === false;
+    })()],
+    ['declaração SEM  nem  reprova', (() => {
+      const { lane, ...semEscopo } = declOk;
+      return validarDeclaracao(semEscopo, base).valido === false;
+    })()],
+    ['`lanes: null` reprova',
+      validarDeclaracao({ ...declOk, lane: undefined, lanes: null }, base).valido === false],
+    ['declaração SEM baseCommit reprova', (() => {
+      const { baseCommit, ...semCommit } = declOk;
+      return validarDeclaracao(semCommit, base).valido === false;
+    })()],
+    ['`lanes` que não é objeto reprova',
+      validarDeclaracao({ ...declOk, lanes: 'EOS' }, base).valido === false
+      && validarDeclaracao({ ...declOk, lanes: ['EOS'] }, base).valido === false],
     ['declaração que MENTE sobre sujeira reprova', (() => {
       const r = validarDeclaracao(
         { ...declOk, entradas: [{ ...entradaOk, sujoNaDeclaracao: false }] },
@@ -998,6 +1153,59 @@ export function executar(argv = []) {
       soDeclaradoMulti.observado.join() === 'A::alvo.txt'],
     ['escrita na SEGUNDA lane entra na observação',
       comOutraLane.observado.includes('B::clandestino.txt')],
+    /* [H-01.11] Virar ignorado não é escrever. A versão anterior classificava as duas como
+       `UNDECLARED_WRITE`, e o registro da Fase 0 do ADMAI DELIVERY MODE saiu impreciso por isso. */
+    ...(() => {
+      const dir = mkdtempSync(join(tmpdir(), 'ws-ign-'));
+      execFileSync('git', ['-C', dir, 'init', '-q']);
+      execFileSync('git', ['-C', dir, 'config', 'user.email', 'a@b.c']);
+      execFileSync('git', ['-C', dir, 'config', 'user.name', 't']);
+      writeFileSync(join(dir, 'fica.txt'), 'x');
+      writeFileSync(join(dir, 'vira-ignorado.txt'), 'y');
+      writeFileSync(join(dir, 'some.txt'), 'z');
+      const baseIgn = shasDaLane(dir);
+
+      writeFileSync(join(dir, '.gitignore'), 'vira-ignorado.txt\n');
+      rmSync(join(dir, 'some.txt'), { force: true });
+      const o = observarEscritaDaLane({ baselineDaLane: baseIgn, lane: dir }, dir);
+      rmSync(dir, { recursive: true, force: true });
+
+      return [
+        ['caminho que passou a ser IGNORADO nao entra como escrita',
+          o.ignoradosAgora.includes('vira-ignorado.txt') && !o.observado.includes('vira-ignorado.txt')],
+        /* [H01-REV-03] O caso que a primeira versao perdia: APAGADO **e** ignorado. Perguntar so
+           "esta ignorado?" fazia uma exclusao real e liquida desaparecer. */
+        ...(() => {
+          const d2 = mkdtempSync(join(tmpdir(), 'ws-del-'));
+          execFileSync('git', ['-C', d2, 'init', '-q']);
+          execFileSync('git', ['-C', d2, 'config', 'user.email', 'a@b.c']);
+          execFileSync('git', ['-C', d2, 'config', 'user.name', 't']);
+          writeFileSync(join(d2, 'seed.txt'), 'x');
+          execFileSync('git', ['-C', d2, 'add', '-A']);
+          execFileSync('git', ['-C', d2, 'commit', '-qm', 'b']);
+          writeFileSync(join(d2, 'apagado.txt'), 'conteudo');
+          writeFileSync(join(d2, 'alterado.txt'), 'v1');
+          const b2 = shasDaLane(d2);
+
+          writeFileSync(join(d2, '.gitignore'), 'apagado.txt\nalterado.txt\n');
+          rmSync(join(d2, 'apagado.txt'), { force: true });
+          writeFileSync(join(d2, 'alterado.txt'), 'v2');
+          const r2 = observarEscritaDaLane({ baselineDaLane: b2, lane: d2 }, d2);
+          rmSync(d2, { recursive: true, force: true });
+
+          return [
+            ['APAGADO + ignorado continua sendo diferenca observada',
+              r2.observado.includes('apagado.txt') && !r2.ignoradosAgora.includes('apagado.txt')],
+            ['ALTERADO + ignorado continua sendo diferenca observada',
+              r2.observado.includes('alterado.txt') && !r2.ignoradosAgora.includes('alterado.txt')]
+          ];
+        })(),
+        ['CONTRAPROVA: caminho APAGADO continua entrando como diferenca',
+          o.observado.includes('some.txt')],
+        ['CONTRAPROVA: caminho intacto nao aparece em lugar nenhum',
+          !o.observado.includes('fica.txt') && !o.ignoradosAgora.includes('fica.txt')]
+      ];
+    })(),
     ['... e a comparação multi-lane classifica UNDECLARED_WRITE',
       classeMulti === 'UNDECLARED_WRITE'],
     ['CONTRAPROVA: a mesma escrita observada por uma lane só devolve MATCH',
@@ -1118,6 +1326,45 @@ export function executar(argv = []) {
           histFinal.length === 2 && histFinal.some((d) => d.comparacao === 'UNDECLARED_WRITE')],
         ['UNKNOWN_DIFFERENCE bloqueia: não saber não é estar limpo',
           indeterminado.join() === 'Z'],
+        /* [R28-02] O R27-03 preservava só `UNDECLARED_WRITE`; um `UNKNOWN_DIFFERENCE` anterior
+           continuava sendo apagado, reabrindo o fail-open que o R27-04 tinha fechado. */
+        ['rearquivar NÃO apaga UNKNOWN_DIFFERENCE anterior', (() => {
+          writeFileSync(hist, JSON.stringify({ declaracoes: [{ sliceId: 'Y', comparacao: 'UNKNOWN_DIFFERENCE' }] }));
+          gravarDecl(declBoa);
+          arquivar(decl, hist);
+          return bloqueiosAbertos(hist).includes('Y');
+        })()],
+        ['rearquivar NÃO apaga reconciliação anterior', (() => {
+          writeFileSync(hist, JSON.stringify({ declaracoes: [{
+            sliceId: 'Y', comparacao: 'UNDECLARED_WRITE',
+            reconciliacao: { disposicao: 'ACEITO_COMO_RISCO', autorizadoPor: 'usuario', justificativa: 'a'.repeat(30) }
+          }] }));
+          gravarDecl(declBoa);
+          arquivar(decl, hist);
+          const d = JSON.parse(readFileSync(hist, 'utf8')).declaracoes;
+          return d.some((x) => x.reconciliacao?.disposicao === 'ACEITO_COMO_RISCO');
+        })()],
+        /* [R28-04] `anteriores.length` excluía as já sufixadas: duas rearquivações davam dois
+           `#rearquivado-1`, e `reconciliar()` usa `find()` — a segunda ficava inalcançável. */
+        ['dois rearquivamentos NÃO colidem no mesmo id', (() => {
+          writeFileSync(hist, JSON.stringify({ declaracoes: [{ sliceId: 'Y', comparacao: 'UNDECLARED_WRITE' }] }));
+          gravarDecl(declBoa);
+          arquivar(decl, hist);
+          arquivar(decl, hist);
+          const ids = JSON.parse(readFileSync(hist, 'utf8')).declaracoes.map((d) => d.sliceId);
+          return new Set(ids).size === ids.length;
+        })()],
+        /* [R28-03] Histórico malformado devolvia `[]` — a afirmação mais forte a partir da
+           estrutura mais desconhecida. Irmão do R27-02, que eu corrigi só em `arquivar()`. */
+        ['histórico sem lista `declaracoes` bloqueia em vez de parecer limpo', (() => {
+          writeFileSync(hist, '{"declaracoes":"EVIDENCIA"}');
+          return bloqueiosAbertos(hist).join() === 'HISTORICO_MALFORMADO';
+        })()],
+        ['... e não se reconcilia sobre estrutura desconhecida',
+          reconciliar({
+            sliceId: 'Y', disposicao: 'ACEITO_COMO_RISCO', autorizadoPor: 'controle',
+            justificativa: 'estrutura desconhecida nao pode receber disposicao'
+          }, hist).reconciliado === false],
         ['arquivar RECUSA histórico ilegível em vez de sobrescrever', comHistoricoRuim.arquivado === false],
         ['... e o histórico corrompido é PRESERVADO byte a byte', preservou],
         ['declaração não escolhe a própria provenance', forjada.provenance === 'UNKNOWN_PROVENANCE'],
@@ -1189,6 +1436,66 @@ export function executar(argv = []) {
         ['disposição sem autoria é RECUSADA', semAutor.reconciliado === false],
         ['disposição sem justificativa substantiva é RECUSADA', semRazao.reconciliado === false],
         ['disposição fora da taxonomia é RECUSADA', disposicaoInvalida.reconciliado === false],
+        /* [H-01.11] A quarta disposição nega que houve escrita — a afirmação mais forte das quatro.
+           Não pode virar o atalho por onde qualquer violação escapa dizendo "o instrumento errou". */
+        ['negar a escrita SEM nomear o defeito é RECUSADO', (() => {
+          gravar({ ...violado });
+          return reconciliar({ ...bom, disposicao: EXIGE_DEFEITO_NOMEADO, correcao: 'x'.repeat(20) }, hTmp)
+            .reconciliado === false;
+        })()],
+        ['negar a escrita SEM apontar a correção é RECUSADO', (() => {
+          gravar({ ...violado });
+          return reconciliar({ ...bom, disposicao: EXIGE_DEFEITO_NOMEADO, defeito: 'x'.repeat(20) }, hTmp)
+            .reconciliado === false;
+        })()],
+        ['defeito só de espaços é RECUSADO', (() => {
+          gravar({ ...violado });
+          return reconciliar({
+            ...bom, disposicao: EXIGE_DEFEITO_NOMEADO, defeito: ' '.repeat(20), correcao: 'x'.repeat(20)
+          }, hTmp).reconciliado === false;
+        })()],
+        /* CONTRAPROVA: com defeito e correção nomeados, a disposição é aceita. */
+        ['CONTRAPROVA: defeito e correção nomeados são aceitos, e a violação PERSISTE', (() => {
+          gravar({ ...violado });
+          const r = reconciliar({
+            ...bom, disposicao: EXIGE_DEFEITO_NOMEADO,
+            defeito: 'classificava mudanca de ignore-status como escrita',
+            correcao: 'H-01.11 separa AGORA_IGNORADO de escrita, provado nos dois sentidos'
+          }, hTmp);
+          const d = ler();
+          return r.reconciliado && d.comparacao === 'UNDECLARED_WRITE'
+            && d.reconciliacao.defeito.length > 10 && /autoriza escrita/.test(d.reconciliacao.preserva);
+        })()],
+        ['as outras disposições NÃO exigem defeito nomeado', (() => {
+          gravar({ ...violado });
+          return reconciliar(bom, hTmp).reconciliado === true;
+        })()],
+        /* [H01-REV-04] A exigência morava só no ESCRITOR (`reconciliar`), e quem levanta o bloqueio é
+           o LEITOR (`bloqueiosAbertos` via `disposicaoValida`). Um registro escrito à mão com a
+           disposição especial e sem defeito passava pela porta que `reconciliar` fechava. */
+        ['registro manual com a disposição especial e SEM defeito NÃO levanta o bloqueio', (() => {
+          gravar({ ...violado, reconciliacao: {
+            disposicao: EXIGE_DEFEITO_NOMEADO, autorizadoPor: 'alguem',
+            justificativa: 'justificativa suficientemente longa para passar'
+          } });
+          return bloqueiosAbertos(hTmp).join() === 'X';
+        })()],
+        ['... e SEM correção também não', (() => {
+          gravar({ ...violado, reconciliacao: {
+            disposicao: EXIGE_DEFEITO_NOMEADO, autorizadoPor: 'alguem',
+            justificativa: 'justificativa suficientemente longa para passar',
+            defeito: 'defeito nomeado aqui'
+          } });
+          return bloqueiosAbertos(hTmp).join() === 'X';
+        })()],
+        ['CONTRAPROVA: com defeito E correção, o leitor concorda com o escritor', (() => {
+          gravar({ ...violado, reconciliacao: {
+            disposicao: EXIGE_DEFEITO_NOMEADO, autorizadoPor: 'alguem',
+            justificativa: 'justificativa suficientemente longa para passar',
+            defeito: 'defeito nomeado aqui', correcao: 'correcao apontavel aqui'
+          } });
+          return bloqueiosAbertos(hTmp).length === 0;
+        })()],
         ['registro que não é UNDECLARED_WRITE não se reconcilia', nadaAReconciliar.reconciliado === false],
         ['bloqueio some da lista só APÓS a disposição',
           antesDaDisposicao.join() === 'X' && depoisDaDisposicao.length === 0],

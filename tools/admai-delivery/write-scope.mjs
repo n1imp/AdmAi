@@ -30,6 +30,7 @@
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { RAIZ } from './snapshot.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 /**
  * Write Set declarado da wave P0 deste Run. E uma DECLARACAO — o valor dela vem de ser conferida
@@ -350,6 +351,13 @@ export function executar(declaradoArg) {
   return real.falhas.length === 0 ? 0 : 1;
 }
 
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve: classifica caminhos contra o escopo declarado. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
+
+/** [H-01.3] Derivado da fonte, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(executar(process.argv.slice(2).length ? process.argv.slice(2) : undefined));
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS)
+    ?? executar(process.argv.slice(2).length ? process.argv.slice(2) : undefined));
 }

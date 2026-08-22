@@ -24,6 +24,84 @@ import { RAIZ, observarRepositorio } from './snapshot.mjs';
 /* `tenant-coverage` só depende de `snapshot`, então não há ciclo. A cobertura entra aqui como
    FATO OBSERVADO por instrumento próprio — o grafo não recalcula cobertura, ele consulta. */
 import { observarCobertura, derivarCobertura } from './tenant-coverage.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
+
+/** Provas que uma conclusao pode declarar. Fora disso, nao ha estado forte concedivel. [H-01.4] */
+export const PROVAS = Object.freeze(['PRESENCA', 'EXECUCAO']);
+
+/**
+ * Lista de NEGACAO, INCOMPLETA por construcao. Rede secundaria: reforca, nao garante.
+ * Quem sustenta a checagem e `provaDe` — a derivacao positiva.
+ */
+export const AFIRMACOES_DE_EXECUCAO = Object.freeze([
+  [/\bexit\s*(?:code\s*)?\d+/i, 'exit code'],
+  [/\b\d+\s*\/\s*\d+\s*PASS/i, 'contagem N/N PASS'],
+  [/\b\d+\s+PASS\b/i, 'contagem N PASS'],
+  [/\b\d+\s*\/\s*\d+\b[^"]*\b(?:su[ií]tes?|testes?|integra)/i, 'razao sobre suites'],
+  [/\btestes?\s+pass(ou|aram|ing)\b/i, 'afirmacao verbal de execucao'],
+  [/\b(executad[oa]s?|rodou|rodaram)\b/i, 'afirmacao verbal de execucao']
+]);
+
+/**
+ * Conclusoes que afirmam mais do que o grafo observou. PURA — as sabotagens atravessam aqui.  [H-01.4]
+ *
+ * O R28-07 mostrou o limite da versao anterior: quatro regexes olhando so `evidencia`. Uma conclusao
+ * dizendo "testes passaram" passava, e o controle publicava `ok`. Lista de negacao e incompleta por
+ * construcao — licao que ja estava escrita em `PADROES_DE_SEGREDO` deste mesmo harness, e que eu
+ * repeti mesmo assim.
+ *
+ * A regra agora e POSITIVA: estado forte exige `provaDe`; `EXECUCAO` exige `execucaoRef` que resolva
+ * para execucao real do Evidence Bundle. Sem bundle legivel, `EXECUCAO` nao e concedivel.
+ */
+/**
+ * Execucoes que podem SUSTENTAR estado forte, extraidas do bundle.  [H01-DREV-01]
+ *
+ * Era um `filter` inline dentro de `executar()`. O controle de "referencia a execucao FAIL reprova"
+ * passava um `Set` ja filtrado a mao para `inflacoesDe`, entao testava o CONSUMIDOR e nunca o
+ * FILTRO: restaurar a versao antiga — que aceitava todo id do bundle — nao quebrava o controle. E o
+ * bundle real so tem execucoes PASS, entao a execucao de verdade tambem nao diferenciava.
+ *
+ * Funcao pura, usada pelo caminho real E pelo controle: o que se sabota e o que se executa.
+ */
+export function execucoesQueSustentam(bundle) {
+  return new Set(
+    (bundle?.execucoes ?? [])
+      .filter((e) => e.estado === 'PASS' && e.exitCode === 0)
+      .map((e) => e.id)
+  );
+}
+
+export function inflacoesDe(nos = [], execucoesReais = new Set()) {
+  const fora = [];
+  for (const n of nos) {
+    const forte = n.estado === 'VERIFIED' || n.estado === 'IN_PROGRESS';
+    if (forte && !PROVAS.includes(n.provaDe)) {
+      fora.push(`${n.id}: estado ${n.estado} sem provaDe declarada (${PROVAS.join('/')})`);
+    }
+    if (n.provaDe === 'EXECUCAO') {
+      if (!n.execucaoRef) fora.push(`${n.id}: provaDe EXECUCAO sem execucaoRef`);
+      else if (!execucoesReais.has(n.execucaoRef)) {
+        /* [H01-REV-07] `execucoesReais` recebia TODO id do bundle, inclusive de execucao FAIL ou
+           NAO_EXECUTADA. Existencia de id nao e resultado: um VERIFIED podia apontar para uma suite
+           que falhou. So execucao APROVADA sustenta estado forte. */
+        fora.push(`${n.id}: execucaoRef "${n.execucaoRef}" nao e execucao APROVADA no Evidence Bundle`);
+      }
+    }
+    /* Rede secundaria sobre o objeto INTEIRO. [H01-REV-07] A versao anterior listava tres campos a
+       mao — `evidencia`, `restante`, `entrega` — entao um campo NOVO na conclusao ficava livre.
+       Serializa-se o no inteiro, menos os campos estruturais que nao carregam afirmacao. */
+    if (n.provaDe === 'PRESENCA') {
+      const ESTRUTURAIS = ['id', 'wave', 'estado', 'provaDe', 'execucaoRef', 'faltando'];
+      const texto = JSON.stringify(
+        Object.fromEntries(Object.entries(n).filter(([k]) => !ESTRUTURAIS.includes(k)))
+      );
+      for (const [re, rotulo] of AFIRMACOES_DE_EXECUCAO) {
+        if (re.test(texto)) fora.push(`${n.id}: ${rotulo} numa conclusao de PRESENCA`);
+      }
+    }
+  }
+  return fora;
+}
 
 /**
  * Capacidades observáveis: cada uma é uma pergunta que um script responde olhando o repositório.
@@ -110,7 +188,7 @@ export const FEATURES = Object.freeze([
     depende: (c) => c.harnessDeEntrega ? [] : ['os seis módulos de tools/admai-delivery/'],
     entrega: 'snapshot · write-scope · test-orchestrator · evidence-bundle · stale-check · gate',
     conclusao: (c) => c.gateP0Verificado && c.harnessDeEntrega
-      ? { estado: 'VERIFIED', evidencia: 'os seis modulos do harness presentes e EVIDENCE_BUNDLE.json existe; o resultado das execucoes esta NO bundle, nao aqui' }
+      ? { estado: 'VERIFIED', provaDe: 'PRESENCA', evidencia: 'os seis modulos do harness presentes e EVIDENCE_BUNDLE.json existe; o resultado das execucoes esta NO bundle, nao aqui' }
       : { estado: null }
   },
   {
@@ -121,7 +199,7 @@ export const FEATURES = Object.freeze([
     entrega: 'veredito BILLING_GATE_PRESENT / ABSENT_WITH_TESTED_SCOPE / PARTIAL / UNKNOWN',
     bloqueiaSe: 'o teste dirigido não executar — escrito não é executado',
     conclusao: (c) => c.teste('billing_access_audit.test.js')
-      ? { estado: 'VERIFIED', evidencia: 'billing_access_audit.test.js presente; o veredito BILLING_GATE depende da execucao registrada no bundle' }
+      ? { estado: 'VERIFIED', provaDe: 'PRESENCA', evidencia: 'billing_access_audit.test.js presente; o veredito BILLING_GATE depende da execucao registrada no bundle' }
       : { estado: null }
   },
   {
@@ -140,14 +218,14 @@ export const FEATURES = Object.freeze([
       if (!c.teste('idor_escrita_cross_tenant.test.js')) return { estado: null };
       const lacunas = c.lacunasDeTenant;
       return lacunas === 0
-        ? { estado: 'VERIFIED',
+        ? { estado: 'VERIFIED', provaDe: 'PRESENCA',
             evidencia: 'as 4 suites dirigidas existem — IDOR leitura, IDOR escrita, vazamento de colecao e billing; nenhum vetor material ou nao classificado ficou sem suite que o nomeie. Os resultados sao do Evidence Bundle',
             /* Calibração: o que está provado é ausência de LACUNA MATERIAL no escopo medido, não
                isolamento de toda rota. As 15 auto-escopadas por token seguem descobertas e pedem
                instrumento de autenticação/sessão; `POST /materiais/upload` tem risco de storage,
                não de query cross-tenant. Ambos declarados, nenhum resolvido aqui. */
             restante: '15 rotas auto-escopadas por token e 1 sem acesso a dado de tenant seguem fora deste instrumento, por declaração' }
-        : { estado: 'IN_PROGRESS', evidencia: 'idor_escrita_cross_tenant.test.js presente, cobrindo as 6 rotas de escrita',
+        : { estado: 'IN_PROGRESS', provaDe: 'PRESENCA', evidencia: 'idor_escrita_cross_tenant.test.js presente, cobrindo as 6 rotas de escrita',
             restante: `${lacunas} rotas ainda sem negativo cross-tenant que as nomeie` };
     }
   },
@@ -216,11 +294,11 @@ export const FEATURES = Object.freeze([
     conclusao: (c) => {
       if (!c.metricFoundation) return { estado: null };
       if (!c.metricExposicao) {
-        return { estado: 'IN_PROGRESS',
+        return { estado: 'IN_PROGRESS', provaDe: 'PRESENCA',
           evidencia: 'contrato + registro (12 metricas) + availability + calculate presentes, com 8 calculadoras declaradas',
           restante: 'camada de exposição: nenhuma rota serve estes números ainda' };
       }
-      return { estado: 'VERIFIED',
+      return { estado: 'VERIFIED', provaDe: 'PRESENCA',
         evidencia: 'contrato + registro + calculo + exposicao + suites de integracao presentes; as propriedades cobertas sao autorizacao por pode() com override, allowlist que rejeita, INSUFFICIENT que nao vira zero e consistencia agregado <-> registros',
         /* Calibração: o que está provado é a FUNDAÇÃO — número correto, autorizado e explicável.
            A experiência analítica rica é o Metric Hub, e prometê-la aqui seria sobreafirmar. */
@@ -240,7 +318,7 @@ export const FEATURES = Object.freeze([
        uma das sete restantes. */
     conclusao: (c) => (c.metricHubVertical
       ? {
-        estado: 'IN_PROGRESS',
+        estado: 'IN_PROGRESS', provaDe: 'PRESENCA',
         evidencia: c.metricHubVertical2
           ? 'DUAS verticais: `servicos-concluidos` (contagem + drilldown) e `faturamento-liquido` (seguranca por CAMPO), com suites de exposicao, field-level security, UI e a11y presentes; framework compartilhado extraido DEPOIS da repeticao (useMetricHub + MetricHubShell + primitivos)'
           : 'vertical `servicos-concluidos` completa',
@@ -327,6 +405,11 @@ export function derivarGrafo({ features, capacidades }) {
     return {
       id: f.id, wave: f.wave, titulo: f.titulo, entrega: f.entrega,
       estado, faltando, evidencia: conclusao.evidencia ?? null,
+      /* [H-01.4/10] A conclusao declara em QUE tipo de observacao ela se apoia. Sem isto, o grafo
+         dizia "6/6 PASS" a partir da existencia de um arquivo, e a unica defesa era uma lista de
+         frases proibidas — incompleta por construcao. */
+      provaDe: conclusao.provaDe ?? null,
+      execucaoRef: conclusao.execucaoRef ?? null,
       restante: conclusao.restante ?? null
     };
   });
@@ -355,16 +438,11 @@ export function derivarGrafo({ features, capacidades }) {
  * a mesma saida do modo padrao, entao o chamador acreditava ter pedido outro modo. Corrigi essa
  * classe no `evidence-bundle`, depois no `write-set-gate` — e aqui ela seguia de pe.
  */
-export const FLAGS = Object.freeze(['--selftest']);
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve: deriva o grafo do estado observado. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
 
-export function flagDesconhecida(argv = []) {
-  const fora = argv.filter((a) => a.startsWith('--')).map((a) => a.split('=')[0])
-    .filter((a) => !FLAGS.includes(a));
-  if (!fora.length) return null;
-  console.log(`FLAG_DESCONHECIDA — ${fora.join(', ')}`);
-  console.log(`  reconhecidas: ${FLAGS.join(', ') || '(nenhuma; este modulo nao aceita flag)'}`);
-  return 2;
-}
+/** [H-01.3] Derivado da fonte: allowlist literal ja removeu uma capacidade real. */
+export const FLAGS = flagsDoModulo(import.meta.url);
 
 export function executar() {
   const estadoRepo = observarRepositorio();
@@ -402,7 +480,7 @@ export function executar() {
        dois sentidos importam — resolver quando satisfeita, e bloquear quando não. */
     ['dependência entre features resolve quando satisfeita', (() => {
       const g = derivarGrafo({
-        features: [{ id: 'A', wave: 'P', titulo: 't', entrega: 'e', depende: () => [], conclusao: () => ({ estado: 'VERIFIED' }) },
+        features: [{ id: 'A', wave: 'P', titulo: 't', entrega: 'e', depende: () => [], conclusao: () => ({ estado: 'VERIFIED', provaDe: 'PRESENCA' }) },
           { id: 'B', wave: 'P', titulo: 't', entrega: 'e', depende: (c) => (c.estadoDe('A') === 'VERIFIED' ? [] : ['A']) }],
         capacidades
       });
@@ -410,7 +488,7 @@ export function executar() {
     })()],
     ['dependência entre features bloqueia quando NÃO satisfeita', (() => {
       const g = derivarGrafo({
-        features: [{ id: 'A', wave: 'P', titulo: 't', entrega: 'e', depende: () => [], conclusao: () => ({ estado: 'IN_PROGRESS' }) },
+        features: [{ id: 'A', wave: 'P', titulo: 't', entrega: 'e', depende: () => [], conclusao: () => ({ estado: 'IN_PROGRESS', provaDe: 'PRESENCA' }) },
           { id: 'B', wave: 'P', titulo: 't', entrega: 'e', depende: (c) => (c.estadoDe('A') === 'VERIFIED' ? [] : ['A']) }],
         capacidades
       });
@@ -419,17 +497,87 @@ export function executar() {
     ['CLIENTES sai de BLOCKED com o modelo', comTudo.nos.find((n) => n.id === 'CLIENTES').estado !== 'BLOCKED'],
     /* Os quatro estados precisam ser alcançáveis, e nenhum pode ser o padrão. Sem isto, um grafo
        que devolvesse sempre READY teria as sabotagens acima verdes. */
-    ['VERIFIED alcançável', est(() => ({ estado: 'VERIFIED' })) === 'VERIFIED'],
-    ['IN_PROGRESS alcançável', est(() => ({ estado: 'IN_PROGRESS' })) === 'IN_PROGRESS'],
+    ['VERIFIED alcançável', est(() => ({ estado: 'VERIFIED', provaDe: 'PRESENCA' })) === 'VERIFIED'],
+    ['IN_PROGRESS alcançável', est(() => ({ estado: 'IN_PROGRESS', provaDe: 'PRESENCA' })) === 'IN_PROGRESS'],
     ['READY é o caso sem conclusão', est(() => ({ estado: null })) === 'READY'],
     ['BLOCKED vence conclusão', derivarGrafo({
-      features: [{ id: 'FX', wave: 'PX', titulo: 't', entrega: 'e', depende: () => ['falta'], conclusao: () => ({ estado: 'VERIFIED' }) }],
+      features: [{ id: 'FX', wave: 'PX', titulo: 't', entrega: 'e', depende: () => ['falta'], conclusao: () => ({ estado: 'VERIFIED', provaDe: 'PRESENCA' }) }],
       capacidades
     }).nos[0].estado === 'BLOCKED'],
     /* O ponto da correção: concluída NÃO aparece na fronteira executável. */
-    ['VERIFIED fora da fronteira', !derivarGrafo({ features: fx(() => ({ estado: 'VERIFIED' })), capacidades }).readyFrontier.includes('FX')],
-    ['IN_PROGRESS dentro da fronteira', derivarGrafo({ features: fx(() => ({ estado: 'IN_PROGRESS' })), capacidades }).readyFrontier.includes('FX')]
+    ['VERIFIED fora da fronteira', !derivarGrafo({ features: fx(() => ({ estado: 'VERIFIED', provaDe: 'PRESENCA' })), capacidades }).readyFrontier.includes('FX')],
+    ['IN_PROGRESS dentro da fronteira', derivarGrafo({ features: fx(() => ({ estado: 'IN_PROGRESS', provaDe: 'PRESENCA' })), capacidades }).readyFrontier.includes('FX')]
   ];
+  /* ---- [H-01.4 / R28-07] `INFLACAO-01` precisa MORDER ----
+   *
+   * A versão anterior não mordia: o probe do revisor trocou uma conclusão por "testes passaram" e o
+   * instrumento publicou `ok`. Controle que só passa porque o caso não ocorre não distingue
+   * corrigido de não corrigido. Cada caso abaixo é uma conclusão que DEVE derrubar o grafo. */
+  const no = (extra) => ({ id: 'N', estado: 'VERIFIED', evidencia: 'x', ...extra });
+  const reais = new Set(['bot:unit']);
+  const infla = (n, e = reais) => inflacoesDe([n], e);
+
+  /* As assercoes de reprova sao `> 0`, nao `=== 1`: "6/6 PASS" casa com dois padroes da rede
+     secundaria, e exigir contagem exata testaria o FORMATO da lista em vez da propriedade. As
+     contraprovas continuam `=== 0`, onde a contagem exata E a propriedade. */
+  const casosInflacao = [
+    ['estado forte SEM provaDe reprova', infla(no({})).length > 0],
+    ['provaDe fora da taxonomia reprova', infla(no({ provaDe: 'ACHO_QUE_SIM' })).length > 0],
+    ['EXECUCAO sem execucaoRef reprova', infla(no({ provaDe: 'EXECUCAO' })).length > 0],
+    ['EXECUCAO com ref inexistente reprova',
+      infla(no({ provaDe: 'EXECUCAO', execucaoRef: 'nao:existe' })).length > 0],
+    ['EXECUCAO com bundre ilegivel (conjunto vazio) reprova',
+      infla(no({ provaDe: 'EXECUCAO', execucaoRef: 'bot:unit' }), new Set()).length > 0],
+    /* CONTRAPROVA: sem ela, "reprovar tudo" passaria como rigor. */
+    ['CONTRAPROVA: EXECUCAO com ref REAL e aceita',
+      infla(no({ provaDe: 'EXECUCAO', execucaoRef: 'bot:unit' })).length === 0],
+    ['CONTRAPROVA: PRESENCA honesta e aceita',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'os modulos existem' })).length === 0],
+    /* O caso EXATO do R28-07: frase de execucao sem numero nenhum. */
+    ['PRESENCA dizendo "testes passaram" reprova',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'os testes passaram' })).length > 0],
+    ['PRESENCA dizendo "executado" reprova',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'suite executada com sucesso' })).length > 0],
+    ['PRESENCA com "6/6 PASS" reprova',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'billing 6/6 PASS' })).length > 0],
+    ['PRESENCA com "exit 0" reprova',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'gate.mjs exit 0' })).length > 0],
+    /* R28-07: olhar so `evidencia` deixava o resto do objeto livre. */
+    ['inflacao em `restante` tambem e pega, nao so em `evidencia`',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'ok', restante: 'faltam 3/8 suites' })).length > 0],
+    /* [H01-REV-07 / H01-DREV-01] O conjunto vem do FILTRO real, nao de um Set montado a mao. Com
+       `Set` pre-filtrado, a versao antiga do filtro — que aceitava todo id — passaria neste
+       controle. Bundle sintetico com os tres estados que importam. */
+    ...(() => {
+      const bundleMisto = { execucoes: [
+        { id: 'bot:unit', estado: 'PASS', exitCode: 0 },
+        { id: 'bot:falhou', estado: 'FAIL', exitCode: 1 },
+        { id: 'bot:pulado', estado: 'NAO_EXECUTADA', exitCode: 0 }
+      ] };
+      const sustentam = execucoesQueSustentam(bundleMisto);
+      const ref = (id) => infla(no({ provaDe: 'EXECUCAO', execucaoRef: id }), sustentam);
+      return [
+        ['o filtro exclui execucao FAIL do conjunto que sustenta',
+          !sustentam.has('bot:falhou') && ref('bot:falhou').length > 0],
+        ['o filtro exclui NAO_EXECUTADA com exitCode 0',
+          !sustentam.has('bot:pulado') && ref('bot:pulado').length > 0],
+        ['CONTRAPROVA: execucao APROVADA sustenta',
+          sustentam.has('bot:unit') && ref('bot:unit').length === 0],
+        ['bundle ausente nao sustenta nada', execucoesQueSustentam(null).size === 0]
+      ];
+    })(),
+    /* [H01-REV-07] A rede secundaria listava tres campos a mao; campo novo ficava livre. */
+    ['inflacao em campo NOVO da conclusao tambem e pega',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'ok', detalhe: 'os testes passaram' })).length > 0],
+    ['inflacao em campo aninhado tambem e pega',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'ok', extra: { nota: 'suite executada' } })).length > 0],
+    ['CONTRAPROVA: campo novo sem afirmacao de execucao nao reprova',
+      infla(no({ provaDe: 'PRESENCA', evidencia: 'ok', detalhe: 'modulos presentes' })).length === 0],
+    ['estado fraco sem provaDe NAO reprova — so estado forte exige',
+      infla({ id: 'N', estado: 'READY' }).length === 0]
+  ];
+  const inflaFalhos = casosInflacao.filter(([, ok]) => !ok).map(([r]) => r);
+
   const negFalhos = sabotagens.filter(([, ok]) => !ok).map(([r]) => r);
 
   console.log('AdmAi Delivery — Feature Graph derivado do estado REAL  [P0 → P1]');
@@ -471,27 +619,27 @@ export function executar() {
    * Corrigir as frases uma a uma repetiria o padrão que seis rodadas apontaram: tratar a instância
    * e deixar o irmão. Isto REPROVA a forma — qualquer conclusão deste grafo que contenha afirmação
    * de execução, hoje ou numa entrada futura, derruba o instrumento. */
-  const AFIRMACOES_DE_EXECUCAO = [
-    [/\bexit\s*(?:code\s*)?\d+/i, 'exit code'],
-    [/\b\d+\s*\/\s*\d+\s*PASS/i, 'contagem N/N PASS'],
-    [/\b\d+\s+PASS\b/i, 'contagem N PASS'],
-    [/\b\d+\s*\/\s*\d+\b(?=[^\n]*\b(?:su[ií]tes?|testes?|integra)\b)/i, 'razão sobre suítes']
-  ];
-  const inflacoes = [];
-  for (const n of grafo.nos) {
-    const texto = String(n.evidencia ?? '');
-    for (const [re, rotulo] of AFIRMACOES_DE_EXECUCAO) {
-      if (re.test(texto)) inflacoes.push(`${n.id}: ${rotulo}`);
-    }
-  }
+  const bundle = (() => {
+    const p = `${RAIZ}docs/eos-v2/EVIDENCE_BUNDLE.json`;
+    if (!existsSync(p)) return null;
+    try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  })();
+  const execucoesReais = execucoesQueSustentam(bundle);
+  const inflacoes = inflacoesDe(grafo.nos, execucoesReais);
+
   console.log(`  controles do grafo : ${sabotagens.length - negFalhos.length}/${sabotagens.length}` +
     (negFalhos.length ? ` — falhou: ${negFalhos.join('; ')}` : ''));
-  console.log(`  INFLACAO-01 (conclusão não afirma execução que não observou): ${inflacoes.length ? `${inflacoes.length} violações` : 'ok'}`);
+  console.log(`  INFLACAO-01 (toda conclusão declara a força da observação): ${inflacoes.length ? `${inflacoes.length} violações` : 'ok'}`);
   for (const i of inflacoes) console.log(`    infla: ${i}`);
-  console.log('    Este grafo observa PRESENÇA. Resultado de execução vem do Evidence Bundle,');
-  console.log('    e "arquivo existe" nunca é "teste passou".');
+  console.log('    Regra POSITIVA: estado forte exige provaDe; EXECUCAO exige execucaoRef que exista');
+  console.log('    no Evidence Bundle. Este grafo observa PRESENCA — "arquivo existe" nunca e');
+  console.log('    "teste passou".');
+  console.log(`    A rede secundaria e uma lista de NEGACAO de ${AFIRMACOES_DE_EXECUCAO.length} padroes, INCOMPLETA por`);
+  console.log('    construcao: ela reforca, nao garante. Quem sustenta a checagem e o provaDe.');
+  console.log(`  INFLACAO-02 (a regra de inflacao MORDE): ${casosInflacao.length - inflaFalhos.length}/${casosInflacao.length}` +
+    (inflaFalhos.length ? ` — falhou: ${inflaFalhos.join('; ')}` : ''));
 
-  if (negFalhos.length || inflacoes.length) {
+  if (negFalhos.length || inflacoes.length || inflaFalhos.length) {
     console.log('  INSTRUMENTO_COMPROMETIDO — grafo não reage ao estado, ou afirma execução não observada');
     return 2;
   }
@@ -505,5 +653,5 @@ export function executar() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(flagDesconhecida(process.argv.slice(2)) ?? executar());
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());
 }

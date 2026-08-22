@@ -21,6 +21,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { RAIZ } from './snapshot.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 /**
  * Suites conhecidas do repositorio. `cwd` relativo a raiz; `opcional` marca suite que pode nao
@@ -500,8 +501,16 @@ export function executar(exigidasArg, { json = null } = {}) {
   return real.falhas.length === 0 ? 0 : 1;
 }
 
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Escreve o JSON de resultados quando `--json <caminho>` e dado. Condicional ainda e MUTATING: declarar READ_ONLY porque o caminho comum nao escreve seria a mesma sobreafirmacao que o MAR-INV-025 proibe. */
+export const MODO_DE_ACESSO = 'MUTATING';
+
+/** [H-01.3] Derivado da fonte, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const argv = process.argv.slice(2);
+  const recusa = recusarDesconhecida(argv, FLAGS);
+  if (recusa !== null) process.exit(recusa);
   const i = argv.indexOf('--json');
   const json = i >= 0 ? argv[i + 1] : null;
   const exigidas = argv.filter((a, k) => a !== '--json' && k !== i + 1);

@@ -584,6 +584,212 @@ nomeada e deixar o irmao foi o padrao dominante, e allowlist escrita a mao foi o
 — foi assim que quebrei `--registrar`. Onde couber, a lista deve ser DERIVADA da fonte, como o
 `FLAGS` do `stale-check` passou a ser.
 
+## 6e. `SL-H-01` — estabilizacao do harness
+
+Escopo FECHADO, entregue. O que mudou de natureza: pela primeira vez nesta frente, os defeitos foram
+encontrados pelo USO e pelo proprio instrumento, nao por revisao paga.
+
+### Evidencia FRESH — execucao REAL
+
+| Suite | Estado | exitCode | Duracao |
+|---|---|---|---|
+| `bot:unit` | PASS | 0 | 35 s |
+| `painel:unit` | PASS | 0 | 79 s |
+| `bot:lint` | PASS | 0 | 7 s |
+| `painel:lint` | PASS | 0 | 11 s |
+| **`bot:integration`** | **PASS** | **0** | **775 s** |
+
+`bot:integration` rodou contra **PostgreSQL 16 e Redis 7 reais**, com migrations aplicadas pela
+receita do CI. `EVIDENCE_BUNDLE.ambiente.head` confere com o HEAD do repo; `stale-check` = `FRESH`;
+`gate.mjs` = **`P0 = VERIFIED`**.
+
+### `DOCKER-ENGINE-UNAVAILABLE` — RESOLVIDO
+
+Bloqueava gates especificos desde o inicio da frente. A recuperacao foi a prevista pelo projeto:
+subir o daemon e espelhar a receita do `.github/workflows/ci.yml`. O `.env.test` aponta para a porta
+**55432**, nao 5432 — o `postgres` do `docker-compose.yml` do projeto **nao expoe porta ao host** por
+endurecimento deliberado (`H8a`), entao ele nao serve a suite de teste. Containers efemeros
+`admai-pg-test` e `admai-redis-test`.
+
+### Resultados deterministicos
+
+`cli` 19/19 · `write-set-gate` 97/97 (era 22 no inicio da frente) · `evidence-bundle` 12/12, 10/10,
+8/8 · `stale-check` 9/9 e `ST-EVID-01` 11/11 · `feature-graph` 11/11, `INFLACAO-01` ok, `INFLACAO-02`
+20/20 · EOS 104/0 intocado · `diff --check` limpo nas duas lanes.
+
+Os quatro totais acima foram publicados uma vez com os numeros de ANTES das correcoes do
+`CODEX_FINAL_REVIEW` — drift apontado pelo `H01-DREV-02`. Numero publicado que nao corresponde a
+bateria executada e a mesma classe que o `INFLACAO-01` policia, uma camada acima.
+
+Varredura de roteamento sobre 18 modulos: **nenhum modo aceito-e-ignorado**, nenhum `MODO_DE_ACESSO`
+faltando. Sao **cinco** modulos `MUTATING` — quatro com modos nao provados por serem mutantes, e
+`run-state` sem modo algum a provar. A primeira versao desta secao dizia "quatro", contando so o
+recorte e omitindo o quinto: claim quantitativo subafirmado, apontado pelo `CODEX_FINAL_REVIEW`
+(`H01-REV-08`). O `cli.mjs` nao varre a si mesmo — autorrecursao —, e isso sai como
+`NAO_VARRIDO_POR_AUTORRECURSAO`.
+
+### `CODEX_FINAL_REVIEW` — oito achados, sete deles fail-open dentro do escopo
+
+O revisor executou os controles e sondou os caminhos. Nenhum achado foi sobre a logica principal;
+todos foram sobre **caminhos de erro e omissao** que produziam o desfecho mais permissivo.
+
+| Achado | Fail-open |
+|---|---|
+| `H01-REV-02` | `registrar({ evidencia: { ok: true } })` gravava sem bundle, sem HEAD e sem execucao. Eu criei esse parametro como ponto de injecao de teste, e ele virou o bypass do controle que a funcao existe para impor. Meu controle so exercitava `ok: false`. Agora injeta-se o INSUMO, nunca o VEREDITO. |
+| `H01-REV-03` | Arquivo APAGADO que tambem casasse com regra de ignore sumia da observacao. `AGORA_IGNORADO` agora exige que o arquivo AINDA EXISTA com o mesmo sha do baseline. |
+| `H01-REV-04` | A exigencia de defeito nomeado morava so no ESCRITOR (`reconciliar`); quem levanta o bloqueio e o LEITOR (`disposicaoValida`). Registro manual passava pela porta que `reconciliar` fechava. |
+| `H01-REV-05` | Timeout de UM modo era empurrado para `roteadas` e `provado` virava `true`: o timeout provava o que ele impede de observar. |
+| `H01-REV-06` | Declaracao SEM `lanes` caia no fallback de lane unica. Agora exige `lanes` ou `lane`. |
+| `H01-REV-07` | `execucoesReais` aceitava id de execucao que FALHOU; e a rede secundaria listava tres campos a mao, entao campo NOVO ficava livre. Agora so aprovada sustenta, e serializa-se o no inteiro menos os estruturais. |
+| `H01-REV-08` | Contagem de `MUTATING` subafirmada. |
+
+**Um defeito que apareceu ao corrigir o `H01-REV-02`:** a primeira versao do controle novo chamou
+`registrar()` com o estado REAL, caiu na checagem verdadeira, que passou — e **gravou o
+`VERIFICATION_RECORD.json` de producao**. Um controle escrito para impedir fabricacao de evidencia
+fabricou uma. E o `F-MAR-069` de novo. Corrigido com `destino`, e com o controle que prova que
+`destino` e APLICADO e nao apenas aceito — sem ele, os dois controles anteriores passariam mesmo com
+a escrita indo para producao, porque ambos recusam antes de escrever.
+
+### Defeitos MEUS descobertos durante a propria fatia
+
+| Defeito | Quem apontou |
+|---|---|
+| `cli.mjs` derivava modos das proprias fixtures e do proprio comentario de doc | o instrumento |
+| loop abortado deixou `metric/verify.mjs` sem migrar | verificacao por modulo |
+| fixture do gate declarava `sujoNaDeclaracao: true` contra conjunto vazio de sujos | a checagem nova |
+| `INFLACAO-02` assertava contagem exata onde dois padroes casam | a execucao |
+| **OPCAO com valor tratada como MODO exclusivo**, recusando `--execucoes X --fecha-gate` | **o USO** |
+| assercao comparando `NAO` com `NAO` acentuado | a execucao |
+
+O quinto e o mais instrutivo: e a MESMA classe do `--registrar`, e eu a reintroduzi dentro da
+correcao dela. Quem apontou nao foi revisao — foi tentar usar a ferramenta.
+
+### Limitacoes que PERMANECEM
+
+1. `write-set-gate` e `COORDINATION_ONLY`, nao `POLICY_ENFORCED`. `F-MAR-071` ABERTO.
+2. Observacao e **diferenca liquida** contra baseline, nao historico de escritas.
+3. `provarRoteamento` prova que o modo faz coisa DIFERENTE, nao que faz a coisa CERTA.
+4. A lista de padroes do `INFLACAO-01` e de NEGACAO, incompleta por construcao.
+5. `F-MAR-070` ABERTO: `EXECUTION_STATE.md` duplicado entre lanes.
+
+### Quarta disposicao — `CLASSIFICACAO_INVALIDADA_POR_DEFEITO_DO_INSTRUMENTO`
+
+Autorizada pelo usuario. As tres anteriores assumem que HOUVE escrita; esta e para quando nao houve
+e a comparacao veio de classificador defeituoso. Por negar mais, exige mais: **defeito nomeado e
+correcao apontavel**, com cinco controles provando que nao vira atalho. A comparacao permanece
+`UNDECLARED_WRITE` no historico, como todas.
+
+## 6f. `HARNESS_STABILIZED` — FECHADO  ·  EOS congelado
+
+```yaml
+HARNESS: STABILIZED
+EOS_FEATURE_DEVELOPMENT: FROZEN
+EOS_VNEXT: DEFERRED
+PRIMARY_GOAL: ADMAI_RELEASE
+```
+
+### O gate, condicao a condicao
+
+| Condicao | Evidencia |
+|---|---|
+| suites reais PASS | 5/5 — `bot:unit`, `painel:unit`, `bot:lint`, `painel:lint`, **`bot:integration`** |
+| Evidence Bundle FRESH | `ambiente.head` == HEAD do repo; `stale-check` = `FRESH` |
+| controles positivos e sabotagens | `cli` 19/19 · `write-set-gate` 97/97 · `evidence-bundle` 12/12 · `stale-check` 9/9 e 11/11 · `feature-graph` 11/11 e 20/20 |
+| violacoes historicas preservadas | 12 disposicoes, **12 com a comparacao preservada** |
+| zero bloqueio nao resolvido | `bloqueiosAbertos()` = `[]` |
+| revisao semantica final | `FINAL` (8 achados) -> `DELTA` (2) -> `DELTA-2` **PASS** |
+| gate P0 | `P0 = VERIFIED` |
+| `git diff --check` | limpo nas duas lanes |
+
+### O que a revisao que PASSOU de fato cobriu
+
+Precisa ficar escrito, porque a diferenca importa. A ultima revisao **nao** reexaminou o escopo
+inteiro: ela se declara *"restrita aos dois achados indicados"*. A cadeia foi:
+
+- `CODEX_FINAL_REVIEW` sobre `H-01.1..H-01.11` completo -> **8 achados**, sete deles fail-open.
+- `CODEX_DELTA_REVIEW` sobre as sete correcoes -> **2 achados**; e a frase que importa:
+  *"Nao encontrei correcao que atualmente reintroduza a classe corrigida ou crie novo fail-open."*
+- `CODEX_DELTA_REVIEW` sobre esses dois -> **PASS**, com os quatro controles novos confirmados
+  capazes de falhar e os totais publicados conferidos contra a bateria reexecutada.
+
+Nao ha uma revisao PASS sobre o escopo inteiro em uma unica passada. Ha uma revisao completa cujos
+achados foram todos fechados, e duas revisoes delta encadeadas, a ultima limpa. E o que o protocolo
+do usuario prescreve (`DELTA_REVIEW` apos correcao, sem repetir FULL sem motivo), e e o que existe.
+
+### O que este gate NAO significa
+
+1. `write-set-gate` continua `COORDINATION_ONLY`. `F-MAR-071` ABERTO.
+2. A observacao continua sendo **diferenca liquida** contra baseline.
+3. `provarRoteamento` prova modo DIFERENTE, nao modo CERTO.
+4. A rede secundaria do `INFLACAO-01` continua incompleta por construcao.
+5. `F-MAR-070` ABERTO: `EXECUTION_STATE.md` duplicado entre lanes.
+6. `bot:integration` passou **neste ambiente**, com containers efemeros. Nao e prova de CI.
+
+### `EOS_FEATURE_DEVELOPMENT = FROZEN`
+
+Nenhuma slice EOS retoma automaticamente. `SL-A-06`, `SL-A-09`, `SL-A-10` e `SL-K-01` estao READY no
+DAG e **nao entram no caminho critico** sem passar pelo `ADMAI_DELIVERY_RELEVANCE_CHECK`.
+
+## 6g. `ADMAI_DELIVERY_RELEVANCE_CHECK` e o Feature Registry
+
+### Relevance check das slices EOS `READY`
+
+Pergunta unica: *esta slice e necessaria para construir, verificar ou entregar o AdmAi com
+seguranca?*
+
+| Slice | Escreve em | Veredito |
+|---|---|---|
+| `SL-A-06` | `protocol/events/` | `DEFER_TO_EOS_VNEXT` — envelope de evento e coordenacao do runtime EOS |
+| `SL-A-09` | `protocol/schemas/` | `DEFER_TO_EOS_VNEXT` — maquina de capability do EOS |
+| `SL-A-07` | snapshot congelado | `DEFER_TO_EOS_VNEXT` |
+| `SL-A-03` / `SL-A-04` | `protocol/artifacts/` | `DEFER_TO_EOS_VNEXT` |
+| `SL-K-08` | destino indeterminavel | `DEFER_TO_EOS_VNEXT` |
+
+**Nenhuma entra no caminho critico.** O que o AdmAi precisava do EOS era o harness de verificacao, e
+ele esta estabilizado. Nao ha slice EOS `REQUIRED_FOR_ADMAI` aberta.
+
+### `ADMAI_MASTER_FEATURE_REGISTRY` — derivado do repositorio real
+
+`tools/admai-delivery/feature-registry.mjs`. Superficie observada: 12 rotas, 26 modelos Prisma, 69
+services, 2 middlewares, 42 paginas, 34 suites de integracao.
+
+```text
+MVP FEATURES TOTAL: 22
+  SUITE_APROVADA : 17     teto derivavel
+  IMPLEMENTADO   : 2
+  NAO_INICIADO   : 3      AUDITORIA · OBSERVABILIDADE · STAGING
+  DONE           : 0      nao derivavel
+```
+
+**Por que `DONE` e zero, e por que isso e o resultado correto.** A primeira versao concedia `DONE`
+quando as pecas existiam e a suite dirigida passava. Deu **17 de 22 e zero bloqueador P0 aberto** —
+que se le como "quase pronto para vender". Mas `SERVICOS_CRUD` ganhou `DONE` porque duas suites
+especificas passam (servico atual, paginacao keyset), nao porque o ciclo
+`Cliente -> Servico -> Execucao -> Conclusao -> Financeiro` foi aceito. E `BILLING` ganhou `DONE`
+enquanto o proprio criterio exige o veredito do gate comercial definido, e o veredito conhecido e
+`BILLING_GATE_ABSENT_WITH_TESTED_SCOPE`.
+
+Suite dirigida provar suas PROPRIEDADES nao e a funcionalidade estar PRONTA. E a mesma inflacao que
+o `INFLACAO-01` policia no `feature-graph`, um nivel acima — e desta vez apareceu no produto.
+`DONE` saiu da taxonomia derivavel; um controle prova que **nenhuma combinacao de observacao** o
+produz.
+
+**Segundo fail-open, na mesma sessao:** `[].every()` e verdadeiro, entao feature que nao declara
+peca alguma — `AUDITORIA`, `OBSERVABILIDADE`, `STAGING` — passava por "todas as pernas presentes" e
+caia em `IMPLEMENTADO`. Ausencia total de evidencia virando quase-pronto. Corrigido: exige-se ao
+menos uma perna aplicavel E presente.
+
+17 controles, incluindo o que verifica que nenhuma feature aponta para artefato inexistente no repo.
+
+### O trabalho restante, pelo Registry
+
+`P0_RELEASE_BLOCKER`: 11 features, todas com suite aprovada e **aceitacao pendente**. A diferenca
+entre o que a suite cobre e o que o `acceptanceCriteria` pede E o trabalho.
+
+`NAO_INICIADO` e `P1_MVP_REQUIRED`: `AUDITORIA` (AuditLog existe no schema, sem cobertura),
+`OBSERVABILIDADE` (erro em producao ainda nao e detectavel sem acesso ao banco), `STAGING` (deploy
+reproduzivel e rollback provado).
+
 ## 7. Known Risks
 
 `KR-005` (forks/jsdom) · `KR-007` (residual do classificador) · `KR-MAR-001` (telemetria vazia →

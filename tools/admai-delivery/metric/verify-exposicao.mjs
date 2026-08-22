@@ -28,6 +28,7 @@ import {
   redigirRegistros,
   servivel, validarPedido
 } from '../../../chaveiro-bot/src/services/metricas/exposicao.js';
+import { flagsDoModulo, recusarDesconhecida } from '../cli.mjs';
 
 const ROUTER = `${RAIZ}chaveiro-bot/src/routes/metricas.js`;
 const CONSULTA_JS = `${RAIZ}chaveiro-bot/src/services/metricas/consulta.js`;
@@ -393,4 +394,10 @@ export function executar() {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(executar());
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
+
+/** [H-01.3] Derivado da fonte deste modulo, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());

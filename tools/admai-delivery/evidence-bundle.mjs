@@ -38,6 +38,7 @@ import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RAIZ, observarRepositorio } from './snapshot.mjs';
+import { flagsDoModulo, modosDoModulo, recusarDesconhecida } from './cli.mjs';
 
 export const DESTINO = `${RAIZ}docs/eos-v2/EVIDENCE_BUNDLE.json`;
 
@@ -256,12 +257,23 @@ export function resolverExecucoes(argv = [], { destino = DESTINO } = {}) {
   }
 
   if (existsSync(destino)) {
+    let anterior;
     try {
-      const anterior = JSON.parse(readFileSync(destino, 'utf8'));
-      if (Array.isArray(anterior.execucoes) && anterior.execucoes.length) {
-        return { execucoes: anterior.execucoes, origem: 'BUNDLE_ANTERIOR', erro: null };
-      }
-    } catch { /* bundle anterior corrompido: segue vazio, e a saida declara isso */ }
+      anterior = JSON.parse(readFileSync(destino, 'utf8'));
+    } catch (erro) {
+      /* [R28-05] O `catch` vazio convertia bundle ilegível em `NENHUMA` sem erro, e o caminho normal
+         seguia adiante e SOBRESCREVIA o arquivo. Ou seja: evidência corrompida virava evidência
+         apagada, em silêncio. É o irmão exato do `R27-02`, que corrigi no `arquivar()` do gate e
+         deixei de pé aqui. Bundle ilegível é motivo para RECUSAR, não para começar do zero. */
+      return vazio('BUNDLE_ANTERIOR', `bundle anterior ilegivel (${erro.message}) — recusado para nao sobrescrever conteudo desconhecido`);
+    }
+    if (!Array.isArray(anterior.execucoes)) {
+      return vazio('BUNDLE_ANTERIOR',
+        'bundle anterior sem lista `execucoes` — estrutura desconhecida, recusado para nao sobrescrever');
+    }
+    if (anterior.execucoes.length) {
+      return { execucoes: anterior.execucoes, origem: 'BUNDLE_ANTERIOR', erro: null };
+    }
   }
   return vazio('NENHUMA');
 }
@@ -274,19 +286,16 @@ export function resolverExecucoes(argv = [], { destino = DESTINO } = {}) {
  * (`EV-PRESERVA-01`), o modo nao existia, e cada "verificacao" reescrevia o artefato de producao.
  * Parametro aceito e nao aplicado e pior que recusado — o chamador acredita ter pedido algo.
  */
-export const FLAGS = Object.freeze(['--fecha-gate', '--execucoes', '--verificar']);
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Escreve EVIDENCE_BUNDLE.json, exceto em --verificar. */
+export const MODO_DE_ACESSO = 'MUTATING';
+
+/** [H-01.3] Derivado da fonte: allowlist literal ja removeu uma capacidade real. */
+export const FLAGS = flagsDoModulo(import.meta.url);
 
 export function executar(argv = []) {
-  const desconhecidas = argv
-    .filter((a) => a.startsWith('--'))
-    .map((a) => a.split('=')[0])
-    .filter((a) => !FLAGS.includes(a));
-  if (desconhecidas.length) {
-    console.log(`FLAG_DESCONHECIDA — ${desconhecidas.join(', ')}`);
-    console.log(`  reconhecidas: ${FLAGS.join(', ')}`);
-    console.log('  Recusar e deliberado: aceitar e ignorar faz o chamador crer que pediu outro modo.');
-    return 2;
-  }
+  /* Passa os MODOS separadamente: `--execucoes` carrega valor e coexiste com `--fecha-gate`. */
+  const recusa = recusarDesconhecida(argv, FLAGS, { modos: modosDoModulo(import.meta.url) });
+  if (recusa !== null) return recusa;
 
   /* `--verificar` roda os controles e NAO escreve. Um instrumento que muta o artefato a cada
      observacao transforma toda conferencia de rotina numa escrita nao declarada — foi assim que
@@ -357,6 +366,18 @@ export function executar(argv = []) {
       r(['--execucoes', `${tmp}.nao-existe`], anteriorComExec).erro !== null]);
     /* O caso exato do incidente: sem flag, o que ja havia NAO pode sumir. */
     const semFlag = r([], anteriorComExec);
+
+    /* [R28-05] Bundle anterior ilegivel ou com `execucoes` fora de lista: recusa, nao NENHUMA. */
+    const ruim = join(dirTmp, 'ruim.json');
+    writeFileSync(ruim, '{ isto nao e json');
+    const ilegivel = r([], ruim);
+    const semLista = join(dirTmp, 'sem-lista.json');
+    writeFileSync(semLista, JSON.stringify({ execucoes: 'EVIDENCIA_ANTIGA' }));
+    const naoLista = r([], semLista);
+    casosPreserva.push(['bundle anterior ILEGIVEL recusa em vez de comecar do zero',
+      ilegivel.erro !== null && ilegivel.origem === 'BUNDLE_ANTERIOR']);
+    casosPreserva.push(['bundle anterior com `execucoes` fora de lista recusa',
+      naoLista.erro !== null && naoLista.origem === 'BUNDLE_ANTERIOR']);
     casosPreserva.push(['sem --execucoes PRESERVA o bundle anterior',
       semFlag.origem === 'BUNDLE_ANTERIOR' && semFlag.execucoes.length === 1]);
 

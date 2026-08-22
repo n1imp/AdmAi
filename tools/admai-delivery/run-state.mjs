@@ -20,6 +20,7 @@ import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { RAIZ, observarRepositorio } from './snapshot.mjs';
 import { FEATURES, observarCapacidades, derivarGrafo } from './feature-graph.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 export const DESTINO = `${RAIZ}docs/eos-v2/RUN_STATE.json`;
 
@@ -264,6 +265,12 @@ export function executar() {
   return 0;
 }
 
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Escreve no repositorio: seus artefatos entram no Write Set ANTES da execucao. */
+export const MODO_DE_ACESSO = 'MUTATING';
+
+/** [H-01.3] Derivado da fonte deste modulo, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(executar());
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());
 }

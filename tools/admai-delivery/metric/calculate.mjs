@@ -25,6 +25,7 @@ import {
   CALCULADORES, FIXTURES, podeVer, verificarAncoragem
 } from '../../../chaveiro-bot/src/services/metricas/calculo.js';
 import { derivarDisponibilidade, lerModelos, SCHEMA } from './availability.mjs';
+import { flagsDoModulo, recusarDesconhecida } from '../cli.mjs';
 
 /* `noPeriodo` do cálculo é interno; a bateria refaz o recorte só para MEDIR quantas linhas o
    filtro de valor inválido descartou. Refazer aqui é de propósito: usar a função do módulo
@@ -176,4 +177,10 @@ export function executar() {
   return 0;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(executar());
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
+
+/** [H-01.3] Derivado da fonte deste modulo, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());

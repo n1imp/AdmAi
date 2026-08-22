@@ -24,6 +24,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { RAIZ } from './snapshot.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 const DIR_ROTAS = `${RAIZ}chaveiro-bot/src/routes`;
 const DIR_TESTES = `${RAIZ}chaveiro-bot/test/integration`;
@@ -451,6 +452,12 @@ export function executar() {
   return 0;
 }
 
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve. A prova de roteamento pode executa-lo com seguranca. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
+
+/** [H-01.3] Derivado da fonte deste modulo, nao de lista literal a manter em paralelo. */
+export const FLAGS = flagsDoModulo(import.meta.url);
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(executar());
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());
 }

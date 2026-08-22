@@ -19,11 +19,13 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { RAIZ } from './snapshot.mjs';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 export const REGISTRO = `${RAIZ}docs/eos-v2/VERIFICATION_RECORD.json`;
 
@@ -122,16 +124,74 @@ export function avaliarFrescor({ registro, agora }) {
 }
 
 /** Grava o registro de verificacao. So deve ser chamado quando a verificacao acabou de passar. */
-export function registrar({ agora = new Date().toISOString(), estado = observarFrescor() } = {}) {
+/**
+ * Existe evidência de execução PARA O ESTADO ATUAL?  [H-01.8]
+ *
+ * Sem esta checagem, `--registrar` convertia `STALE` em `FRESH` só por ser chamado. Rodei o comando
+ * como teste de fumaça duas vezes nesta sessão e nas duas ele reescreveu o registro para um estado
+ * cujas baterias eu não acabara de rodar. Registro de verificação que não exige verificação mede a
+ * invocação, não o estado.
+ *
+ * A ordem que isto impõe: `MUTAÇÃO → BATERIA → CAPTURA (Evidence Bundle) → REGISTRO → FRESCOR`.
+ *
+ * O bundle é lido como JSON, sem importar `evidence-bundle.mjs`: acoplar o registro ao módulo que
+ * ESCREVE o bundle criaria dependência entre dois `MUTATING`, e ler o artefato basta.
+ */
+export function evidenciaDoEstadoAtual({ bundle, headAtual } = {}) {
+  if (!bundle) return { ok: false, motivo: 'EVIDENCE_BUNDLE_AUSENTE_OU_ILEGIVEL' };
+
+  const doBundle = bundle.ambiente?.head;
+  if (!doBundle) return { ok: false, motivo: 'EVIDENCE_BUNDLE_SEM_HEAD' };
+  if (doBundle !== headAtual) {
+    return {
+      ok: false,
+      motivo: `EVIDENCE_DE_OUTRO_ESTADO — bundle em ${String(doBundle).slice(0, 12)}, repo em ${String(headAtual).slice(0, 12)}`
+    };
+  }
+
+  const aprovadas = (bundle.execucoes ?? []).filter((e) => e.estado === 'PASS' && e.exitCode === 0);
+  if (!aprovadas.length) return { ok: false, motivo: 'EVIDENCE_SEM_EXECUCAO_APROVADA' };
+
+  return { ok: true, motivo: null, execucoesAprovadas: aprovadas.length };
+}
+
+/** Lê o bundle como dado. Ilegível é `null`, nunca objeto vazio que pareça um bundle vazio. */
+export function lerBundle(caminho = `${RAIZ}docs/eos-v2/EVIDENCE_BUNDLE.json`) {
+  if (!existsSync(caminho)) return null;
+  try { return JSON.parse(readFileSync(caminho, 'utf8')); } catch { return null; }
+}
+
+export function registrar({ agora = new Date().toISOString(), estado = observarFrescor(),
+  bundle, destino = REGISTRO } = {}) {
+  /* `destino` existe para que CONTROLE nunca escreva o artefato de producao. A primeira versao do
+     controle do H01-REV-02 chamava `registrar({ estado, evidencia: { ok: true } })` com o estado
+     REAL: como `evidencia` deixou de ser honrada, ele caiu na checagem verdadeira, que passou — e
+     gravou `VERIFICATION_RECORD.json` de verdade. Um controle escrito para impedir fabricacao de
+     evidencia fabricou uma. E o `F-MAR-069` outra vez: instrumento que muta o que observa. */
+  /* [H01-REV-02] A versão anterior aceitava um parâmetro `evidencia` que SUBSTITUÍA a checagem
+     inteira: `registrar({ evidencia: { ok: true } })` gravava sem bundle, sem HEAD e sem execução —
+     fabricava `FRESH` por chamada direta. Eu criei esse parâmetro como ponto de injeção para teste e
+     ele virou o bypass do controle que a função existe para impor. E o meu controle só exercitava
+     `ok: false`, então o caminho permissivo nunca era tocado.
+     A injeção agora é do INSUMO (`bundle`), nunca do RESULTADO: o veredito é sempre calculado aqui. */
+  const conferida = evidenciaDoEstadoAtual({
+    bundle: bundle ?? lerBundle(), headAtual: estado.baseHead
+  });
+  if (!conferida.ok) return { gravado: false, motivo: conferida.motivo, registro: null };
+
   const registro = {
-    schema: 'admai.delivery.verification-record/1',
+    schema: 'admai.delivery.verification-record/2',
     registradoEm: agora,
     aviso: 'Capturado no momento da VERIFICACAO. O stale check compara isto com o estado no momento da INTEGRACAO.',
-    ...estado
+    ...estado,
+    evidenciaDeExecucao: {
+      execucoesAprovadas: conferida.execucoesAprovadas,
+      fonte: bundle ? 'BUNDLE_FORNECIDO_PELO_CHAMADOR' : 'docs/eos-v2/EVIDENCE_BUNDLE.json'
+    }
   };
-  mkdirSync(dirname(REGISTRO), { recursive: true });
-  writeFileSync(REGISTRO, `${JSON.stringify(registro, null, 2)}\n`);
-  return registro;
+  mkdirSync(dirname(destino), { recursive: true });
+  writeFileSync(destino, `${JSON.stringify(registro, null, 2)}\n`);
+  return { gravado: true, motivo: null, registro, destino };
 }
 
 export function lerRegistro(caminho = REGISTRO) {
@@ -160,30 +220,27 @@ export function lerRegistro(caminho = REGISTRO) {
    confundia e este remove funcao. Allowlist escrita a mao repete a classe que ela deveria fechar:
    uma lista literal que alguem precisa lembrar de manter. Agora e DERIVADA da fonte. */
 const FONTE_DESTE_MODULO = readFileSync(new URL(import.meta.url), 'utf8');
-export const FLAGS = Object.freeze([
-  ...new Set([
-    ...[...FONTE_DESTE_MODULO.matchAll(/modo === '(--[a-z-]+)'/g)].map((m) => m[1]),
-    '--selftest', '--verificar'
-  ])
-].sort());
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Escreve VERIFICATION_RECORD.json em --registrar. */
+export const MODO_DE_ACESSO = 'MUTATING';
 
-export function flagDesconhecida(argv = []) {
-  const fora = argv.filter((a) => a.startsWith('--')).map((a) => a.split('=')[0])
-    .filter((a) => !FLAGS.includes(a));
-  if (!fora.length) return null;
-  console.log(`FLAG_DESCONHECIDA — ${fora.join(', ')}`);
-  console.log(`  reconhecidas: ${FLAGS.join(', ') || '(nenhuma; este modulo nao aceita flag)'}`);
-  return 2;
-}
+/** [H-01.3] Derivado da fonte: allowlist literal ja removeu uma capacidade real. */
+export const FLAGS = flagsDoModulo(import.meta.url);
 
 export function executar(modo) {
   const estado = observarFrescor();
 
   if (modo === '--registrar') {
-    const r = registrar({ estado });
+    const { gravado, motivo, registro: r } = registrar({ estado });
+    if (!gravado) {
+      console.log(`REGISTRO_RECUSADO — ${motivo}`);
+      console.log('  A ordem exigida e: MUTACAO -> BATERIA -> CAPTURA no Evidence Bundle -> REGISTRO.');
+      console.log('  Gravar sem evidencia do estado atual converteria STALE em FRESH por invocacao.');
+      return 1;
+    }
     console.log('AdmAi Delivery — registro de verificacao gravado  [Wave P0]');
     console.log(`  destino  : ${REGISTRO.replace(RAIZ, '')}`);
     console.log(`  base     : ${r.baseBranch} @ ${String(r.baseHead).slice(0, 12)}`);
+    console.log(`  evidencia: ${r.evidenciaDeExecucao.execucoesAprovadas} execucao(oes) aprovada(s) neste HEAD`);
     console.log(`  arquivos : ${Object.keys(r.fingerprints).length}`);
     for (const [k, v] of Object.entries(r.fingerprints)) {
       console.log(`    ${v ? v.slice(0, 12) : 'AUSENTE     '}  ${k}`);
@@ -220,6 +277,78 @@ export function executar(modo) {
      reprovasse sempre exibiria 9/9 sabotagens e pareceria correto. */
   const positivo = avaliarFrescor({ registro: registroBase, agora: agoraBase });
 
+  /* ---- [H-01.8] O REGISTRO exige evidencia de execucao DESTE estado ----
+   *
+   * Todos os casos atravessam `evidenciaDoEstadoAtual`, que e pura: nenhum escreve em disco. O que
+   * se prova aqui e a REGRA; que a recusa nao escreve e provado logo abaixo, com o sha do artefato.
+   */
+  /* Nenhum controle escreve em `REGISTRO`. Ver a nota em `registrar()`. */
+  const DESTINO_DE_CONTROLE = join(mkdtempSync(join(tmpdir(), 'st-ctl-')), 'registro.json');
+
+  const HEAD = 'a'.repeat(40);
+  const passou1 = [{ id: 'x', estado: 'PASS', exitCode: 0 }];
+  const bundleBom = { ambiente: { head: HEAD }, execucoes: passou1 };
+  const ev = (bundle, headAtual = HEAD) => evidenciaDoEstadoAtual({ bundle, headAtual });
+
+  const casosEvidencia = [
+    ['bundle ausente RECUSA', ev(null).motivo === 'EVIDENCE_BUNDLE_AUSENTE_OU_ILEGIVEL'],
+    ['bundle sem head RECUSA', ev({ execucoes: passou1 }).motivo === 'EVIDENCE_BUNDLE_SEM_HEAD'],
+    ['bundle de OUTRO estado RECUSA',
+      ev(bundleBom, 'b'.repeat(40)).motivo?.startsWith('EVIDENCE_DE_OUTRO_ESTADO') === true],
+    ['bundle sem execucao aprovada RECUSA',
+      ev({ ambiente: { head: HEAD }, execucoes: [] }).motivo === 'EVIDENCE_SEM_EXECUCAO_APROVADA'],
+    ['execucao FAIL nao conta como aprovada',
+      ev({ ambiente: { head: HEAD }, execucoes: [{ id: 'x', estado: 'FAIL', exitCode: 1 }] })
+        .motivo === 'EVIDENCE_SEM_EXECUCAO_APROVADA'],
+    ['NAO_EXECUTADA com exitCode 0 nao conta como aprovada',
+      ev({ ambiente: { head: HEAD }, execucoes: [{ id: 'x', estado: 'NAO_EXECUTADA', exitCode: 0 }] })
+        .motivo === 'EVIDENCE_SEM_EXECUCAO_APROVADA'],
+    /* CONTRAPROVA: sem ela, "recusar sempre" passaria como rigor. */
+    ['CONTRAPROVA: bundre deste estado com execucao aprovada e ACEITO',
+      ev(bundleBom).ok === true && ev(bundleBom).execucoesAprovadas === 1],
+    ['recusa NAO escreve o registro', (() => {
+      const antes = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      const r = registrar({ estado, destino: DESTINO_DE_CONTROLE,
+        bundle: { ambiente: { head: 'x'.repeat(40) }, execucoes: [] } });
+      const depois = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      return r.gravado === false && antes === depois;
+    })()],
+    /* [H01-REV-02] O caso que faltava: o caminho PERMISSIVO. O controle anterior so exercitava a
+       recusa, entao um veredito `{ ok: true }` injetado escreveria sem nada verificado e nada
+       falharia. Nao ha mais como injetar veredito — so insumo. */
+    ['nao existe caminho que injete o VEREDITO, so o insumo', (() => {
+      const antes = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      /* Estado com HEAD impossivel: a checagem REAL tem de reprovar. Se `evidencia` ainda fosse
+         honrada, o `{ ok: true }` abaixo gravaria assim mesmo. A primeira versao deste controle usou
+         o estado corrente, cuja evidencia e valida — entao ele nao distinguia as duas situacoes. */
+      const estadoImpossivel = { ...estado, baseHead: 'q'.repeat(40) };
+      const r = registrar({ estado: estadoImpossivel, destino: DESTINO_DE_CONTROLE,
+        evidencia: { ok: true, execucoesAprovadas: 99 } });
+      const depois = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      /* `evidencia` nao e mais parametro: e ignorado, e o veredito real (bundle de outro HEAD ou
+         ausente) manda. Se algum dia voltar a ser aceito, este controle quebra. */
+      return r.gravado === false && antes === depois;
+    })()],
+    /* O caminho que ESCREVE, exercitado — e a prova de que `destino` e APLICADO, nao so aceito.
+       Sem este controle, `destino` podia ser aceito e ignorado (a escrita indo para producao) e os
+       dois controles acima passariam assim mesmo, porque ambos recusam antes de escrever. Foi
+       exatamente o que aconteceu na primeira versao. */
+    ['escrita bem-sucedida vai para o DESTINO pedido, nao para producao', (() => {
+      const antes = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      const alvo = join(mkdtempSync(join(tmpdir(), 'st-dst-')), 'r.json');
+      const bom = { ambiente: { head: estado.baseHead }, execucoes: [{ id: 'a', estado: 'PASS', exitCode: 0 }] };
+      const r = registrar({ estado, bundle: bom, destino: alvo });
+      const depois = existsSync(REGISTRO) ? sha(REGISTRO) : null;
+      return r.gravado === true && existsSync(alvo) && antes === depois;
+    })()],
+    ['bundle fornecido com execucao aprovada e HEAD certo e ACEITO — mas calculado, nao declarado',
+      evidenciaDoEstadoAtual({
+        bundle: { ambiente: { head: 'z'.repeat(40) }, execucoes: [{ id: 'a', estado: 'PASS', exitCode: 0 }] },
+        headAtual: 'z'.repeat(40)
+      }).ok === true]
+  ];
+  const evFalhos = casosEvidencia.filter(([, ok]) => !ok).map(([r]) => r);
+
   console.log('AdmAi Delivery — stale check  [Wave P0]');
   console.log(`  registro : ${registro ? REGISTRO.replace(RAIZ, '') : 'AUSENTE'}`);
   console.log(`  base agora : ${estado.baseBranch} @ ${String(estado.baseHead).slice(0, 12)}`);
@@ -230,8 +359,10 @@ export function executar(modo) {
   console.log(`  controles negativos : ${sabotagens.length - negFalhos.length}/${sabotagens.length}` +
     (negFalhos.length ? ` — NAO detectou: ${negFalhos.join('; ')}` : ''));
   console.log(`  controle positivo   : ${positivo.veredito === 'FRESH' ? 'estado identico aceito como FRESH' : `REJEITOU: ${positivo.falhas.join('; ')}`}`);
+  console.log(`  ST-EVID-01 (registro exige execucao DESTE estado): ${casosEvidencia.length - evFalhos.length}/${casosEvidencia.length}` +
+    (evFalhos.length ? ` — falhou: ${evFalhos.join('; ')}` : ''));
 
-  const instrumentoIntegro = negFalhos.length === 0 && positivo.veredito === 'FRESH';
+  const instrumentoIntegro = negFalhos.length === 0 && positivo.veredito === 'FRESH' && evFalhos.length === 0;
   if (!instrumentoIntegro) {
     console.log('  INSTRUMENTO_COMPROMETIDO — nao use este resultado como evidencia');
     return 2;
@@ -247,5 +378,5 @@ export function executar(modo) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(flagDesconhecida(process.argv.slice(2)) ?? executar(process.argv[2]));
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar(process.argv[2]));
 }

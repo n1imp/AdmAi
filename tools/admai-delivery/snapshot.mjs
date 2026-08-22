@@ -22,6 +22,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { flagsDoModulo, recusarDesconhecida } from './cli.mjs';
 
 export const RAIZ = new URL('../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 
@@ -131,16 +132,11 @@ export function avaliarSnapshot({ estado, esperado }) {
  * a mesma saida do modo padrao, entao o chamador acreditava ter pedido outro modo. Corrigi essa
  * classe no `evidence-bundle`, depois no `write-set-gate` — e aqui ela seguia de pe.
  */
-export const FLAGS = Object.freeze([]);
+/** [H-01.9] Acesso ao disco DECLARADO, nunca presumido pelo nome. Nao escreve: observa o repositorio. */
+export const MODO_DE_ACESSO = 'READ_ONLY';
 
-export function flagDesconhecida(argv = []) {
-  const fora = argv.filter((a) => a.startsWith('--')).map((a) => a.split('=')[0])
-    .filter((a) => !FLAGS.includes(a));
-  if (!fora.length) return null;
-  console.log(`FLAG_DESCONHECIDA — ${fora.join(', ')}`);
-  console.log(`  reconhecidas: ${FLAGS.join(', ') || '(nenhuma; este modulo nao aceita flag)'}`);
-  return 2;
-}
+/** [H-01.3] Derivado da fonte: allowlist literal ja removeu uma capacidade real. */
+export const FLAGS = flagsDoModulo(import.meta.url);
 
 export function executar() {
   const estado = observarRepositorio();
@@ -196,5 +192,5 @@ export function executar() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(flagDesconhecida(process.argv.slice(2)) ?? executar());
+  process.exit(recusarDesconhecida(process.argv.slice(2), FLAGS) ?? executar());
 }
