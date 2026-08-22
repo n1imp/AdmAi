@@ -1,6 +1,6 @@
 {
   "schema": "admai.delivery.evidence-bundle/1",
-  "geradoEm": "2026-08-22T02:06:40.874Z",
+  "geradoEm": "2026-08-22T02:31:56.899Z",
   "wave": "P0",
   "feature": "DELIVERY_HARNESS_BOOTSTRAP",
   "fechaGate": true,
@@ -34,7 +34,7 @@
     "node": "v24.18.0",
     "plataforma": "win32",
     "branch": "fix/seguranca-criticos",
-    "head": "109d4b35e3c16563c03b874a949d295bfc452ba2",
+    "head": "7ae57f42f4d4ea1eb2855ee9306d8345ecfeaecd",
     "config": {
       "DATABASE_URL": "ABSENT"
     },
@@ -45,41 +45,41 @@
       "id": "bot:unit",
       "estado": "PASS",
       "exitCode": 0,
-      "duracaoMs": 34704,
-      "saidaFinal": " Test Files  43 passed (43)\n      Tests  406 passed (406)\n   Start at  22:41:55\n   Duration  32.74s (transform 2.77s, setup 0ms, import 43.39s, tests 26.63s, environment 15ms)"
+      "duracaoMs": 32645,
+      "saidaFinal": " Test Files  43 passed (43)\n      Tests  406 passed (406)\n   Start at  23:16:07\n   Duration  30.91s (transform 2.69s, setup 0ms, import 38.77s, tests 24.48s, environment 13ms)"
     },
     {
       "id": "painel:unit",
       "estado": "PASS",
       "exitCode": 0,
-      "duracaoMs": 69375,
-      "saidaFinal": " Test Files  31 passed (31)\n      Tests  157 passed (157)\n   Start at  22:42:30\n   Duration  67.78s (transform 2.92s, setup 21.17s, import 20.15s, tests 35.28s, environment 99.21s)"
+      "duracaoMs": 59120,
+      "saidaFinal": " Test Files  31 passed (31)\n      Tests  157 passed (157)\n   Start at  23:16:39\n   Duration  57.70s (transform 2.56s, setup 17.60s, import 17.85s, tests 29.49s, environment 85.94s)"
     },
     {
       "id": "bot:lint",
       "estado": "PASS",
       "exitCode": 0,
-      "duracaoMs": 3594,
+      "duracaoMs": 3534,
       "saidaFinal": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment\\chaveiro-bot\\test\\integration\\idor.test.js\n  91:11  warning  'tecnico' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars\n\n✖ 6 problems (0 errors, 6 warnings)"
     },
     {
       "id": "painel:lint",
       "estado": "PASS",
       "exitCode": 0,
-      "duracaoMs": 4774,
+      "duracaoMs": 5326,
       "saidaFinal": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment\\chaveiro-painel\\src\\pages\\NovoServico.jsx\n  46:6  warning  React Hook useEffect has a missing dependency: 'track'. Either include it or remove the dependency array  react-hooks/exhaustive-deps\n\n✖ 12 problems (0 errors, 12 warnings)"
     },
     {
       "id": "bot:integration",
       "estado": "PASS",
       "exitCode": 0,
-      "duracaoMs": 724466,
+      "duracaoMs": 817621,
       "saidaFinal": "\nLoaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.prisma."
     }
   ],
   "afirmacoes": [
     {
-      "texto": "branch fix/seguranca-criticos em 109d4b35e3c1",
+      "texto": "branch fix/seguranca-criticos em 7ae57f42f4d4",
       "provenance": "OBSERVED"
     },
     {

@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GAP-ONB-01",
-  "titulo": "Cobertura do aceite de convite — P0, fluxo central: sem ele o produto e monousuario na pratica",
+  "sliceId": "P0_ACCEPTANCE/EVIDENCE-FINAL",
+  "titulo": "Evidence FRESH no HEAD 7ae57f4, com paywall e aceite de convite provados",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "VALIDATED",
-  "declaradoEm": "2026-08-22T02:08:25.551Z",
+  "declaradoEm": "2026-08-22T02:31:56.490Z",
   "baseCommitPorLane": {
-    "HARNESS": "109d4b35e3c16563c03b874a949d295bfc452ba2"
+    "HARNESS": "7ae57f42f4d4ea1eb2855ee9306d8345ecfeaecd"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "HEAD estavel em 109d4b3 desde antes desta declaracao. Commit e mutacao da referencia e fica na fronteira da rodada, nao no meio — foi o que invalidou o baseline da rodada anterior.",
+  "notaDeMetodo": "Commit ANTES da declaracao, nao no meio da rodada. Foi o que invalidou o baseline de GAP-BILL-01/DESENHO-REAL.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -223,6 +223,7 @@
       "chaveiro-bot/test/integration/bugs_regressao.test.js": "da1489ee64bda1e2056bed25b052717287b123fa55586d5987597b85fea0b0b0",
       "chaveiro-bot/test/integration/cadastro_otp.test.js": "c7cc91d71a195e51482abaca715e01505213e96fd080522a25ca70972d52c1ce",
       "chaveiro-bot/test/integration/conta_2fa_bruteforce.test.js": "a4acd8bf559321ff5a4010b2d3255f2b7f383754a7d9648fc627b672d4e57c93",
+      "chaveiro-bot/test/integration/convite_aceite.test.js": "a74dda6f069a517c8f94b66806d782c209c9ff19e7b8b9f4a91b3bd53b7a5b36",
       "chaveiro-bot/test/integration/dashboard_groupby.test.js": "33830049de27d2e999f8622c8c930e3ef644125572e7144cea5e4d3349dd5232",
       "chaveiro-bot/test/integration/documentos.test.js": "cc2be7b629d47507a7da93571abc69d18a90d8cab8f59b918c3cb87b83c5dafa",
       "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js": "138eb85441b2724d6cb1b982cba3b42ea6bbaa9c1ea8777b7be9063c5b59692d",
@@ -528,8 +529,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "1d154086c1603638d0b099cffa037556a7eb38b6cc709f219b4d85163af80fd4",
-      "docs/eos-v2/WRITE_SET.json": "75f53fb42974a09d0063ed98af4b118c117c75d1ac2e10fc4e7540ff2aabaf1a",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "10ea9a9da56c5feccce3c9fd6e7ca700533ee145c948e550ee61ec1abc2549c8",
+      "docs/eos-v2/WRITE_SET.json": "cae3dfe88a7cd4b8af0cbd733bd1822e2ec65a5a9322afebc350d8f391fcbcde",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b27f62810f6e2778b48284b9113e402447fc2ee1e81ec2e5148e8903c16bccfc",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -568,7 +569,7 @@
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
       "tools/admai-delivery/feature-graph.mjs": "cbe9cf6d1723ef3d2fe409447d499b00173d38369b835ae819ae3b151e808ce4",
-      "tools/admai-delivery/feature-registry.mjs": "4c5f024f55694db375d2d9274698e893363f35ad4e9baf306c8aba3cf91bff70",
+      "tools/admai-delivery/feature-registry.mjs": "2f804336276220b29de860443e60f98ee3d24ea37480af323bf0f402c32d71bf",
       "tools/admai-delivery/gate.mjs": "d2da91323a73e35ad2ee4e3b500ff9b64b5ec5e3f52005dfda7bea098c859253",
       "tools/admai-delivery/metric/availability.mjs": "a37aa3e26b414acbc5193a33eab1e82effa21c21c93d72474e553670c50e6a50",
       "tools/admai-delivery/metric/calculate.mjs": "6be5516e804560931f21d2d6031fee44fa5c1cb86ec3b7027cc762009bfea748",
@@ -648,23 +649,23 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/convite_aceite.test.js",
+      "caminho": "docs/eos-v2/EVIDENCE_BUNDLE.json",
       "precisao": "BOUNDED",
-      "proposito": "prova que o convidado ENTRA, com o papel e a empresa certos, e que convite morto e recusado",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "artefato MUTATING do evidence-bundle",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "400f822ce34de3844555bfd49fa7c9447db8c6447f89a2df24768f08f4a5d2eb",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/feature-registry.mjs",
+      "caminho": "docs/eos-v2/VERIFICATION_RECORD.json",
       "precisao": "BOUNDED",
-      "proposito": "reavaliar a aceitacao de ONBOARDING",
+      "proposito": "artefato MUTATING do stale-check --registrar",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "4c5f024f55694db375d2d9274698e893363f35ad4e9baf306c8aba3cf91bff70",
+      "shaNaDeclaracao": "1d154086c1603638d0b099cffa037556a7eb38b6cc709f219b4d85163af80fd4",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T02:08:26.466Z",
+  "validadoEm": "2026-08-22T02:31:56.720Z",
   "validadoPor": "write-set-gate.mjs"
 }
