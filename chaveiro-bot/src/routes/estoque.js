@@ -8,6 +8,8 @@ import { movimentarEstoque } from '../services/estoque.js';
 import { conferirMagicBytes } from '../utils/upload.js';
 import { uploadComFallback } from '../services/storage.js';
 import { requireAuth, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
+import { podeProprio } from '../services/permissoes.js';
+import { requireAssinaturaAtiva } from '../middlewares/assinatura.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -29,6 +31,53 @@ const imagemUrlSchema = z
   )
   .optional()
   .nullable();
+
+/**
+ * Catálogo MÍNIMO para quem registra serviço.  [GAP-EST-03]
+ *
+ * POR QUE UMA ROTA NOVA EM VEZ DE ABRIR `GET /materiais`
+ *   `D-EST-02` tornou alcançável a baixa de estoque na aprovação: o funcionário DECLARA o material
+ *   e o gestor, ao aprovar, é quem dá a baixa. Só que o funcionário não conseguia declarar nada —
+ *   o seletor do painel consome `GET /materiais`, que exige `estoque:ver`, e `PRESET_FUNCIONARIO`
+ *   zera todos os módulos de empresa. A capacidade existia no backend e nenhuma tela a alcançava.
+ *
+ *   Conceder `estoque:ver` resolveria o 403 e criaria coisa pior: aquele payload carrega
+ *   `precoUnit`, `precoVenda`, `estoqueMinimo`, `quantidadeAtual` e a contagem de uso — custo,
+ *   margem e inventário. Quem precisa escolher "fechadura tetra" não precisa saber quanto ela
+ *   custou nem quantas restam.
+ *
+ *   Então o corte é por NECESSIDADE, não por papel: id para referenciar, nome para reconhecer,
+ *   unidade para quantificar. Nada mais sai daqui.
+ *
+ * O QUE ESTA ROTA NÃO É
+ *   Não é autorização. O registro do serviço revalida cada `materialId` contra o tenant em
+ *   `servicos.js:197-200`, e continua sendo lá que a decisão vale — o cliente pode mandar
+ *   qualquer id, e manda mesmo, porque nada impede. A rota só evita que a tela peça ao usuário
+ *   para adivinhar.
+ */
+router.get(
+  '/me/materiais-servico',
+  requireAssinaturaAtiva,
+  (req, res, next) =>
+    podeProprio(req.user, 'registrar_servico')
+      ? next()
+      : res.status(403).json({ erro: 'Sem permissão para registrar serviço' }),
+  async (req, res) => {
+    try {
+      /* `req.db` é o cliente escopado por tenant. Usar o `prisma` global aqui devolveria o
+         catálogo de todas as empresas — e o campo `nome` sozinho já entregaria o que a
+         concorrente compra. */
+      const materiais = await req.db.material.findMany({
+        select: { id: true, nome: true, unidade: true },
+        orderBy: { nome: 'asc' },
+      });
+      res.json(materiais);
+    } catch (erro) {
+      logger.error('Erro GET /me/materiais-servico', { erro: erro.message });
+      res.status(500).json({ erro: 'Erro interno' });
+    }
+  }
+);
 
 router.get('/materiais', requirePermissao('estoque', 'ver'), async (req, res) => {
   try {

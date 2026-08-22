@@ -119,12 +119,39 @@ router.get('/me', async (req, res) => {
   }
 });
 
-router.get('/me/permissoes', (req, res) => {
-  res.json({
-    papel: req.user.papel,
-    admin: req.user.admin,
-    permissoes: req.user.permissoesEfetivas,
-  });
+/**
+ * Contexto de capacidade do usuário logado. Sem gate de permissão de propósito: é a rota que diz
+ * ao cliente o que ele pode fazer, e negá-la a alguém seria negar-lhe saber os próprios limites.
+ *
+ * `aprovacaoServico` entrou aqui por `D-EST-03`.  [GAP-EST-03]
+ *   Não é dado administrativo vazando: é o REGIME sob o qual o próprio usuário opera, e ele já o
+ *   observa na prática — os serviços que registra nascem `pendente` e aparecem assim na tela dele.
+ *   A tela precisa do fato ANTES de desenhar: com aprovação ligada o funcionário pode declarar
+ *   material; desligada, `servicos.js` recusa com `materiais_nao_permitidos`. Sem saber, a tela ou
+ *   esconde uma capacidade que existe, ou oferece uma que será recusada depois de preenchida.
+ *
+ *   Lido a cada requisição, nunca do JWT: o dono pode virar a chave a qualquer momento, e um token
+ *   emitido antes carregaria o regime errado até expirar.
+ *
+ *   Isto NÃO é autorização. Quem decide se o material entra continua sendo `servicos.js`, com o
+ *   valor lido do banco na hora — o cliente pode mentir sobre este campo e não muda nada.
+ */
+router.get('/me/permissoes', async (req, res) => {
+  try {
+    const empresa = await req.db.empresa.findUnique({
+      where: { id: req.user.empresaId },
+      select: { aprovacaoServico: true },
+    });
+    res.json({
+      papel: req.user.papel,
+      admin: req.user.admin,
+      permissoes: req.user.permissoesEfetivas,
+      aprovacaoServico: empresa?.aprovacaoServico ?? false,
+    });
+  } catch (erro) {
+    logger.error('Erro GET /me/permissoes', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
 });
 
 const metricasQuerySchema = z.object({
@@ -427,7 +454,7 @@ router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
            O que a LGPD pede e demonstrar QUEM pediu, QUANDO e SOBRE O QUE; nada disso precisa do
            dado pessoal em si. */
         depois: { escopo: 'empresa', usuariosAfetados: afetados },
-        ip: req.ip
+        ip: req.ip,
       });
 
       await apagarEmpresaEmCascata(empresaId);
@@ -446,7 +473,7 @@ router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
       entidade: 'Usuario',
       entidadeId: usuario.id,
       depois: { escopo: 'usuario' },
-      ip: req.ip
+      ip: req.ip,
     });
 
     await prisma.usuario.delete({ where: { id: usuario.id } });

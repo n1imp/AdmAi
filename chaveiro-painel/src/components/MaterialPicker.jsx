@@ -11,7 +11,16 @@ import api, { formatarMoeda } from '../lib/api.js';
 //
 // Contrato com o pai (inalterado): `value` é o array atual de seleção e
 // `onChange` recebe a nova seleção no formato [{ materialId, quantidade, nome }].
-export default function MaterialPicker({ value = [], onChange }) {
+//
+// `fonte` escolhe DE ONDE vem o catálogo, e existe por causa do RBAC.  [GAP-EST-03]
+//   O gestor lê `/materiais`, que exige `estoque:ver` e devolve custo, margem e saldo.
+//   O funcionário NÃO tem essa permissão — e não deve ter: precisa escolher um item, não
+//   conhecer o inventário. Ele lê `/me/materiais-servico`, que devolve só id, nome e unidade.
+//   Sem este parâmetro, o seletor na tela do funcionário renderizava e tomava 403.
+//
+//   O componente não muda de comportamento conforme a fonte: `precoVenda` já era opcional na
+//   renderização (`!= null`), então o payload menor some da tela sem nenhum ramo novo.
+export default function MaterialPicker({ value = [], onChange, fonte = '/materiais' }) {
   const [materiais, setMateriais] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
@@ -32,7 +41,7 @@ export default function MaterialPicker({ value = [], onChange }) {
     setCarregando(true);
     setErro(false);
     api
-      .get('/materiais')
+      .get(fonte)
       .then(({ data }) => {
         if (ativoEfeito) setMateriais(Array.isArray(data) ? data : []);
       })
@@ -45,7 +54,7 @@ export default function MaterialPicker({ value = [], onChange }) {
     return () => {
       ativoEfeito = false;
     };
-  }, [tentativa]);
+  }, [tentativa, fonte]);
 
   // Fecha o dropdown ao clicar fora.
   useEffect(() => {

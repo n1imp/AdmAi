@@ -1,8 +1,8 @@
 {
   "schema": "admai.delivery.verification-record/2",
-  "registradoEm": "2026-08-22T03:07:49.997Z",
+  "registradoEm": "2026-08-22T14:47:04.472Z",
   "aviso": "Capturado no momento da VERIFICACAO. O stale check compara isto com o estado no momento da INTEGRACAO.",
-  "baseHead": "6d990c60212ad5e0439ecd37174253bbb0daea84",
+  "baseHead": "ff6679b2ab98c66df3062e75e40cb88ce46f0c3e",
   "baseBranch": "fix/seguranca-criticos",
   "fingerprints": {
     "tools/eos/layout.mjs": "1eebcdc0c9e0acdff9ecb780db660473882251878056f244e9c7f11905850c4f",

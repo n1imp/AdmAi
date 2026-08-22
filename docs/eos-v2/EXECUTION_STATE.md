@@ -1178,3 +1178,123 @@ variável, concatenação de strings, `require(n)` com expressão (R8); comentá
 pega, e forma legítima do repositório não pode ser marcada como desconhecida — inclusive a palavra
 "import" em prosa de comentário, que existe de fato no cabeçalho de `index.mjs` e seria o falso
 positivo mais provável.
+
+
+---
+
+## 6h — `P1 ACCEPTANCE SWEEP` e os gaps reais de release
+
+Mesmo método do sweep P0: resolver o critério a partir do que já existe, ler o que a suíte dirigida
+**de fato** cobre, e chamar de gap a diferença. Sem escrever requisito novo.
+
+### Quadro de aceitação
+
+| Prioridade | Total | `DONE` | `PARTIAL` | `BLOCKED` | `DESCONHECIDA` |
+|---|---|---|---|---|---|
+| `P0_RELEASE_BLOCKER` | 11 | 11 | 0 | 0 | 0 |
+| `P1_MVP_REQUIRED` | 11 | 8 | 2 | 1 | 0 |
+| `P2_POST_LAUNCH` | 5 | 0 | 0 | 0 | 5 |
+
+P2 permanece `DESCONHECIDA` por declaração, não por descuido: o mandato era P0, o P1 foi extensão, e
+inventar aceitação para o que ninguém avaliou seria pior que registrar o desconhecido.
+
+### Dois critérios que EU tinha declarado errado
+
+Não foram gaps do produto — foram defeitos do instrumento, e a diferença importa porque um critério
+errado mede o caminho errado e reprova código correto.
+
+- **`ESTOQUE`** dizia "baixa ao **concluir** serviço". O gatilho real é registro/aprovação; conclusão
+  não dispara nada.
+- **`PONTO`** exigia "banco de horas" por esse nome e "antifraude" sem dizer o quê. O banco de horas
+  existe como `calcularDia`/`resumoMes`; o antifraude real é `BatidaPonto.em` ser timestamp do
+  **servidor** mais geo/selfie capturados para conferência — não rejeição automática, que o
+  repositório não implementa e exigir seria inventar requisito.
+
+`OBSERVABILIDADE` lia `NAO_INICIADO` tendo `/health`, logger com redação e Sentry montados: a entrada
+não declarava artefato nenhum e o status deriva do que se declara. Feature subdeclarada lendo como
+não iniciada é observação falsa. O registry ganhou os campos `u` (suíte de unidade, separada da de
+integração de propósito) e `s` (módulo de `services`/`utils`/`config`, porque backend nem sempre é
+rota).
+
+### Quatro gaps `VERIFICATION` abertos e fechados na mesma frente
+
+`aprovacao_rejeicao_estoque.test.js` (10), `health_operacional.test.js` (6) e
+`inbound_idempotencia.test.js` (7) — 23 casos contra PostgreSQL real, controle positivo antes do
+negativo em todos.
+
+- **`GAP-APV-01`** fechado: rejeição tinha só o negativo cross-tenant. Um endpoint que recusasse
+  **toda** rejeição passaria naquele teste.
+- **`GAP-WPP-01`** fechado, com dois limites registrados em vez de escondidos: a guarda é
+  **fail-open** sem Redis, e evento sem `key.id` a pula inteira — que é justamente como a suíte
+  antiga montava os eventos, então aquela linha nunca havia sido executada.
+- **`GAP-OBS-01`** fechado: `/health` não tinha teste nenhum, e é dele que o `HEALTHCHECK` do
+  Dockerfile depende. O ramo degradado nunca roda sozinho, porque em teste o banco está sempre de pé.
+- **`GAP-EST-01`** fechou a parte de verificação e **abriu** o que ela escondia — ver abaixo.
+
+### `GAP-EST-02` — o gap funcional que só apareceu ao escrever o teste
+
+A baixa de estoque na **aprovação** é inalcançável pela API. `servicos.js:269` exige serviço
+`pendente` **com** materiais, e nenhum caminho produz essa combinação: funcionário pode ficar
+`pendente` mas tem `materiais` forçado a `[]`; gestor pode mandar material mas nasce `ativo`;
+`/aprovar` não lê corpo. O comentário da própria rota manda "registre-os na aprovação" — caminho que
+a aprovação não oferece.
+
+A suíte de unidade passava porque testa a função, e a função está certa. Errado é o caminho que
+deveria chamá-la — e só integração revela isso.
+
+### `D-EST-02` — decisão material, em consenso com o Codex Decisor
+
+Thread `01a0278a-aae2-7bd1-bb35-13c67519170d`. Posição do Claude: opção B (funcionário declara
+materiais no registro, baixa continua na aprovação). Veredito: `DISCORDO`, aceitando B **com duas
+restrições** — ambas fechando furo que o Claude não tinha visto:
+
+1. Materiais do funcionário **só** quando `empresa.aprovacaoServico` estiver ligada. Sem isso o
+   serviço nasce `ativo` e `servicos.js:231` daria baixa por ação do próprio funcionário, sem gestor
+   nenhum no caminho. B incondicional **reduzia** proteção.
+2. Transição `pendente → ativo` **atômica** (`updateMany` filtrando `{ id, empresaId, status:
+   'pendente' }`), porque tornar `L269` alcançável expõe uma corrida de dupla aprovação já existente
+   — duas aprovações concorrentes dariam duas baixas.
+
+Claude aceitou a alternativa; consenso formado sem árbitro. Escopo: `servicos.js` e a suíte
+correspondente. Sem schema, sem migration, sem RBAC, sem tocar em `services/estoque.js`.
+
+**Não fechado por esta decisão:** `NovoServicoFuncionario.jsx` não envia `materiais`. O fluxo do
+painel continua aberto; isto fecha a alcançabilidade pela API.
+
+### Fila real de release
+
+| Gap | Impacto | Feature | Estado |
+|---|---|---|---|
+| `GAP-EST-02` | `FUNCTIONAL` | `ESTOQUE` | em correção sob `D-EST-02` |
+| `GAP-OBS-02` | `OPERATIONAL` | `OBSERVABILIDADE` | aberto |
+| `GAP-STG-01` | `EXTERNAL_BLOCKER` | `STAGING` | **exige decisão do usuário** |
+
+`GAP-STG-01` é `BLOCKED` por **autoridade**, não por dificuldade: "deploy reproduzível" e "rollback
+provado" exigem executar deploy e promoção de ambiente, que a instrução vigente não autoriza. Não
+dividi a feature para arrancar um pedaço executável — um checklist escrito sem execução seria
+documento, não prova.
+
+### Defeito do próprio instrumento, registrado sem reconstrução
+
+`ADMAI-P1-SWEEP` foi declarada, verificada `MATCH` e **não está no histórico**: `declarar.mjs`
+sobrescrevia declaração viva sem arquivar. Um gate cujo registro pode ser apagado pela próxima
+escrita não é registro. A recorrência foi fechada (arquiva antes, e recusa se não conseguir); a
+lacuna histórica **não** foi reconstruída.
+
+
+### Dois erros de processo desta rodada, registrados sem suavizar
+
+**Editei `servicos.js` com a bateria de integração rodando.** Vitest importa cada arquivo de teste
+quando chega nele: suítes que importaram antes da escrita viram um código, as de depois viram outro.
+O resultado daquela corrida não era evidência de nada. Foi descartado e a bateria reiniciada — não
+aproveitado "porque a mudança era cosmética". Cosmético não é argumento de verificação.
+
+**A bateria seguinte deu 1 falha em 270**, em `me_metricas.test.js`, no caso multi-tenant. O cursor
+apontava a linha do `it(` — assinatura de **timeout**, não de asserção. `testTimeout` é 20s e os
+helpers desse arquivo são pesados de bcrypt: isolado, 4 casos levam 74s. A corrida que falhou levou
+1023s; a seguinte, limpa, 878s.
+
+Reexecutado: **40 arquivos, 270 testes, exit 0**. Portanto a falha era flake sob carga — carga que
+esta frente aumentou. Não é "nada": uma suíte que cai 1 em 2 execuções sob carga é fragilidade real
+de verificação, e fica registrada com a assinatura exata para não ser redescoberta como mistério.
+Não foi corrigida aqui porque corrigir `testTimeout` ou os helpers é escopo próprio.

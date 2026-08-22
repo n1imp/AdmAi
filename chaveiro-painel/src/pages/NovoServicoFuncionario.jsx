@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, ArrowRight } from 'lucide-react';
 import api, { formatarMoeda } from '../lib/api.js';
@@ -6,6 +6,7 @@ import { formatarMoedaInput, moedaParaNumero } from '../lib/moeda.js';
 import { useFormPersist } from '../hooks/useFormPersist.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { Field, Button } from '../components/ui/index.js';
+import MaterialPicker from '../components/MaterialPicker.jsx';
 import { useToast } from '../components/Toast.jsx';
 
 const LOCAIS_OPCOES = ['Casa do cliente', 'Contrato', 'Ponto da loja', 'Outro'];
@@ -18,6 +19,7 @@ const FORM_INICIAL = {
   valorMaterial: '',
   clienteNome: '',
   clienteTelefone: '',
+  materiais: [],
 };
 
 // FO3 mobile-first: o registro do funcionário em campo, em etapas curtas com progresso,
@@ -34,6 +36,33 @@ export default function NovoServicoFuncionario() {
   const [enviando, setEnviando] = useState(false);
   const [passo, setPasso] = useState(1);
   const [erros, setErros] = useState({});
+
+  /* O seletor de material só aparece quando a empresa EXIGE aprovação.  [GAP-EST-03]
+     Sem aprovação o serviço do funcionário nasce `ativo`, e aí a baixa sairia sem nenhum gestor
+     no caminho — por isso o backend recusa com `materiais_nao_permitidos`. Mostrar o campo nesse
+     caso ofereceria uma capacidade que seria negada depois de preenchida.
+     `null` é o terceiro estado, e é ele que evita o flash: enquanto o contexto não chegou, não se
+     desenha nem se esconde. Um `false` inicial faria o campo piscar em toda abertura da tela. */
+  const [exigeAprovacao, setExigeAprovacao] = useState(null);
+
+  useEffect(() => {
+    let vivo = true;
+    api
+      .get('/me/permissoes')
+      .then(({ data }) => {
+        if (vivo) setExigeAprovacao(Boolean(data?.aprovacaoServico));
+      })
+      /* Falha de contexto esconde o campo. O backend é quem decide de verdade; oferecer o seletor
+         "no escuro" trocaria um campo ausente por uma submissão recusada. */
+      .catch(() => {
+        if (vivo) setExigeAprovacao(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  const materiaisSelecionados = Array.isArray(form.materiais) ? form.materiais : [];
 
   const valorCobradoNum = moedaParaNumero(form.valorCobrado);
   const valorMaterialNum = moedaParaNumero(form.valorMaterial);
@@ -91,6 +120,15 @@ export default function NovoServicoFuncionario() {
 
     setEnviando(true);
     try {
+      /* Normaliza a quantidade aqui, e não no componente: o `MaterialPicker` guarda o texto
+         digitado (aceita vírgula) para não brigar com o teclado do usuário no meio da edição. */
+      const materiais = materiaisSelecionados
+        .map((m) => ({
+          materialId: m.materialId,
+          quantidade: parseFloat(String(m.quantidade).replace(',', '.')),
+        }))
+        .filter((m) => Number.isFinite(m.quantidade) && m.quantidade > 0);
+
       const { data } = await api.post('/servicos', {
         local: form.local,
         descricao: form.descricao,
@@ -99,6 +137,10 @@ export default function NovoServicoFuncionario() {
         clienteNome: form.clienteNome || null,
         clienteTelefone: form.clienteTelefone || null,
         endereco: form.endereco || null,
+        /* Só vai a chave quando há o que mandar E o regime permite. Mandar `[]` numa empresa sem
+           aprovação é inofensivo hoje (o backend só recusa lista não vazia), mas depender disso
+           seria depender de um detalhe do outro lado. */
+        ...(exigeAprovacao && materiais.length > 0 ? { materiais } : {}),
       });
 
       clearForm();
@@ -222,6 +264,22 @@ export default function NovoServicoFuncionario() {
                     controlClassName="tnum"
                   />
                 </div>
+
+                {exigeAprovacao === true && (
+                  <div className="panel-field">
+                    <span className="panel-field__label">Materiais do catálogo</span>
+                    {/* `fonte` aponta para a leitura mínima: o funcionário não tem `estoque:ver`,
+                        e não precisa — id, nome e unidade bastam para escolher. */}
+                    <MaterialPicker
+                      fonte="/me/materiais-servico"
+                      value={materiaisSelecionados}
+                      onChange={(materiais) => atualizar('materiais', materiais)}
+                    />
+                    <p className="panel-field__hint">
+                      Informe o que foi usado. A baixa no estoque acontece quando o gestor aprovar.
+                    </p>
+                  </div>
+                )}
 
                 <div className="bg-accent-400/10 border border-accent-400/30 rounded-lg p-4 flex items-center justify-between">
                   <div>

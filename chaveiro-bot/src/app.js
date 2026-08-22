@@ -199,6 +199,27 @@ export function criarApp() {
 
   app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
   app.use((erro, req, res, next) => {
+    // ── Erro do CLIENTE não é falha da aplicação ─────────────────────────────── [D-OBS-03]
+    // Antes tudo virava 500 e ia para o rastreador. Corpo JSON malformado, corpo acima de 10mb
+    // ou charset inválido — todos culpa de quem chamou — inflavam a taxa de erro do servidor e
+    // enchiam o painel de eventos não acionáveis. O sinal deixava de distinguir "o AdmAi
+    // quebrou" de "alguém mandou lixo", e é esse sinal que decide se alguém investiga.
+    //
+    // O discriminador é `expose`, NÃO o status sozinho. `http-errors` (usado pelo body-parser)
+    // marca `expose: true` no que é seguro contar ao cliente. Mas neste repositório há três
+    // lugares que copiam status ALHEIO para a exceção — `whatsapp/evolution-client.js:33`,
+    // `whatsapp/cloud-client.js:35` e `oauth.js:22`. Confiar só em `status` faria um 403 do
+    // provedor do WhatsApp ser devolvido como erro do cliente E suprimido da captura: uma falha
+    // de integração real desaparecendo justamente do lugar onde se procura falha.
+    const candidato = erro.status ?? erro.statusCode;
+    const ehDoCliente =
+      erro.expose === true && Number.isInteger(candidato) && candidato >= 400 && candidato <= 499;
+
+    if (ehDoCliente) {
+      // Genérico de propósito: `erro.message` do parser vaza trecho do corpo recebido.
+      return res.status(candidato).json({ erro: 'Requisição inválida' });
+    }
+
     logger.error('Erro não tratado', { erro: erro.message, [JA_ENVIADO_AO_SENTRY]: true });
     capturarErro(erro, {
       feature: 'http',

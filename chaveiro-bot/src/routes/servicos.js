@@ -163,36 +163,43 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
     const ehFuncionario = req.user.papel === 'funcionario';
     let tecnico;
     let materiais = dados.materiais;
+    let status = 'ativo';
     if (ehFuncionario) {
       if (!req.user.tecnicoId)
         return res.status(400).json({ erro: 'Sua conta não está vinculada a um técnico' });
       tecnico = await prisma.tecnico.findUnique({ where: { id: req.user.tecnicoId } });
       if (!tecnico) return res.status(400).json({ erro: 'Técnico não encontrado' });
-      // Funcionário não movimenta estoque (a baixa acontece só na aprovação). Antes os
-      // materiais eram zerados em SILÊNCIO: o app respondia 201, o técnico via sucesso, e
-      // os itens simplesmente não existiam — sem vínculo, sem baixa, com o estoque
-      // divergindo do real sem nenhum sinal. Melhor recusar explicitamente.
-      if (Array.isArray(materiais) && materiais.length > 0) {
+      // O status precisa ser decidido ANTES dos materiais, porque é ele que diz se existe um
+      // gestor no caminho. Estava decidido depois, e por isso o funcionário nunca conseguia
+      // declarar material nenhum — deixando INALCANÇÁVEL a baixa da aprovação logo abaixo, que
+      // exige serviço `pendente` COM materiais. O comentário antigo mandava "registre-os na
+      // aprovação" e a aprovação não oferecia esse caminho. [D-EST-02]
+      const emp = await prisma.empresa.findUnique({
+        where: { id: empresaId },
+        select: { aprovacaoServico: true },
+      });
+      if (emp?.aprovacaoServico) status = 'pendente';
+
+      // Funcionário DECLARA o material; quem o BAIXA do estoque é a aprovação. Sem aprovação
+      // habilitada não há gestor no caminho: o serviço nasceria `ativo` e a baixa sairia por
+      // ação do próprio funcionário. Por isso a recusa continua valendo nesse caso — aceitar
+      // sempre reduziria proteção em vez de fechar um buraco.
+      //
+      // A recusa é EXPLÍCITA por história: antes os materiais eram zerados em silêncio, o app
+      // respondia 201, o técnico via sucesso, e os itens simplesmente não existiam — sem vínculo,
+      // sem baixa, com o estoque divergindo do real sem nenhum sinal.
+      if (status !== 'pendente' && materiais.length > 0) {
         return res.status(400).json({
-          erro: 'Materiais não podem ser informados neste fluxo; registre-os na aprovação.',
+          erro: 'Materiais só podem ser informados quando a empresa exige aprovação de serviço.',
           codigo: 'materiais_nao_permitidos',
         });
       }
-      materiais = [];
     } else {
       if (!dados.tecnico) return res.status(400).json({ erro: 'Informe o técnico' });
       tecnico = await buscarOuCriarTecnico(dados.tecnico, empresaId);
     }
     const valorLiquido = dados.valorCobrado - dados.valorMaterial;
     const comissaoGerada = parseFloat((valorLiquido * (tecnico.comissao / 100)).toFixed(2));
-    let status = 'ativo';
-    if (ehFuncionario) {
-      const emp = await prisma.empresa.findUnique({
-        where: { id: empresaId },
-        select: { aprovacaoServico: true },
-      });
-      if (emp?.aprovacaoServico) status = 'pendente';
-    }
     const servico = await prisma.$transaction(async (tx) => {
       if (materiais.length > 0) {
         const ids = materiais.map((m) => m.materialId);
@@ -261,11 +268,20 @@ router.post(
       if (!servico) return res.status(404).json({ erro: 'Serviço não encontrado' });
       if (servico.status !== 'pendente')
         return res.status(409).json({ erro: 'Serviço não está pendente' });
+      // A transição é a REIVINDICAÇÃO do serviço, não um update cego. Enquanto a baixa era
+      // inalcançável isto não tinha consequência visível; ao torná-la alcançável, duas aprovações
+      // concorrentes do mesmo serviço pendente produziriam DUAS baixas do mesmo material. O
+      // `updateMany` filtrando por `status: 'pendente'` faz o banco eleger um único vencedor, e só
+      // ele movimenta estoque. O `empresaId` vai junto mesmo com a leitura já tendo vindo de
+      // `req.db`: a escrita não pode depender de o filtro de tenant ter sido aplicado antes. [D-EST-02]
+      let reivindicado = false;
       await prisma.$transaction(async (tx) => {
-        await tx.servico.update({
-          where: { id },
+        const reivindicacao = await tx.servico.updateMany({
+          where: { id, empresaId: req.user.empresaId, status: 'pendente' },
           data: { status: 'ativo', aprovadoPor: req.user.id, aprovadoEm: new Date() },
         });
+        if (reivindicacao.count === 0) return;
+        reivindicado = true;
         if (servico.materiais.length > 0) {
           await darBaixaPorServico(
             id,
@@ -275,6 +291,7 @@ router.post(
           );
         }
       });
+      if (!reivindicado) return res.status(409).json({ erro: 'Serviço não está pendente' });
       if (servico.clienteTelefone) {
         agendarAvaliacao({
           empresaId: req.user.empresaId,

@@ -63,12 +63,20 @@ export const SUITES = Object.freeze([
       { nome: 'Redis', deUrl: 'REDIS_URL', padrao: 'redis://localhost:6379', portaPadrao: 6379 }
     ],
     exigeAmbiente: 'PostgreSQL com migrations aplicadas + Redis',
-    /* MEDIDO, não estimado: 33 arquivos e 190 casos com `fileParallelism: false` e TRUNCATE entre
-       casos levam ~10min. O timeout padrao de 600s cortava a suite no fim e o resultado saia como
-       `NAO_EXECUTADA` por ETIMEDOUT — outro falso negativo, de causa diferente da pre-condicao.
-       Declarado aqui em vez de aumentar o padrao global: suite unitaria travada por 20min seria
+    /* MEDIDO, não estimado, e RE-MEDIDO quando a suite cresceu.
+       Primeira medicao: 33 arquivos e 190 casos com `fileParallelism: false` e TRUNCATE entre
+       casos levavam ~10min, e o padrao de 600s cortava a suite no fim, devolvendo `NAO_EXECUTADA`
+       por ETIMEDOUT — falso negativo de causa diferente da pre-condicao. Dai 1.200.000ms.
+       Segunda medicao: a suite passou a 40 arquivos e 270 casos. Corridas isoladas levaram 878s,
+       964s e 1023s, e sob o orquestrador a de 1.200.000ms estourou — o mesmo falso negativo
+       voltando pela mesma porta, so que agora com 42% mais casos disputando a mesma margem.
+       Um numero declarado como "medido" precisa ser re-medido quando o que ele mede muda; deixar
+       o valor velho seria manter uma medicao que ja nao descreve nada. O limite abaixo da ~2,3x
+       sobre a pior corrida observada. NAO e afrouxar limite para fazer teste passar: a suite passa
+       em 878s; o que falhava era a captura da evidencia dela.
+       Declarado aqui em vez de aumentar o padrao global: suite unitaria travada por 40min seria
        espera cara, e o numero pertence a esta suite. */
-    timeoutMs: 1_200_000,
+    timeoutMs: 2_400_000,
     /* LIMITE DECLARADO, medido na pratica: quando o timeout do `spawnSync` dispara com
        `shell: true`, o Windows encerra o `cmd.exe` e NAO a arvore — o vitest continua rodando e
        vira orfao. E o mesmo padrao do incidente dos quatro runners, por outra porta. O guarda de

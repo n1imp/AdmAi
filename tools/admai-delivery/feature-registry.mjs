@@ -93,6 +93,12 @@ export const CAMPOS_DO_GAP = Object.freeze([
  * gap aberto é contradição. E gap sem `requiredBehavior`/`currentBehavior` não permite agir — diz
  * que algo falta sem dizer o quê.
  */
+/* Classes de impacto de release. Enumeracao fechada: um gap cujo impacto nao pertence a esta lista
+   nao e classificavel, e nao classificavel nao entra em fila de priorizacao. */
+export const IMPACTOS = Object.freeze([
+  'FUNCTIONAL', 'SECURITY', 'COMMERCIAL', 'VERIFICATION', 'OPERATIONAL', 'UX', 'EXTERNAL_BLOCKER'
+]);
+
 export function violacoesDeAceitacao(f) {
   const fora = [];
   const acc = f.acceptance ?? 'DESCONHECIDA';
@@ -109,8 +115,16 @@ export function violacoesDeAceitacao(f) {
     fora.push(`${f.featureId}: DONE com ${gaps.length} gap(s) aberto(s)`);
   }
   for (const g of gaps) {
-    const faltando = CAMPOS_DO_GAP.filter((c) => typeof g[c] !== 'string' || g[c].trim().length < 3);
+    /* `releaseImpact` sai da heuristica de comprimento e passa a ser validado contra a taxonomia.
+       O piso de 3 caracteres reprovava `UX`, que e classe legitima, e ao mesmo tempo deixava passar
+       qualquer palavra inventada de 3 letras. Comprimento nunca foi o criterio certo para um campo
+       enumerado — so para os campos em prosa, onde continua valendo. */
+    const prosa = CAMPOS_DO_GAP.filter((c) => c !== 'releaseImpact');
+    const faltando = prosa.filter((c) => typeof g[c] !== 'string' || g[c].trim().length < 3);
     if (faltando.length) fora.push(`${f.featureId}/${g.id ?? '(sem id)'}: gap sem ${faltando.join(', ')}`);
+    if (!IMPACTOS.includes(g.releaseImpact)) {
+      fora.push(`${f.featureId}/${g.id ?? '(sem id)'}: releaseImpact fora da taxonomia (${g.releaseImpact})`);
+    }
   }
   return fora;
 }
@@ -144,9 +158,28 @@ export function observarProduto() {
     modelos: new Set([...schema.matchAll(/^model\s+(\w+)/gm)].map((m) => m[1])),
     rotas: new Set(lista('chaveiro-bot/src/routes', (f) => f.endsWith('.js'))),
     services: new Set(lista('chaveiro-bot/src/services', () => true)),
+    /* Backend nem sempre e rota ou middleware. `OBSERVABILIDADE` lia como NAO_INICIADO tendo
+       `/health`, logger com redacao e Sentry no repo — o status deriva do que a entrada DECLARA, e
+       nao havia campo capaz de declarar modulo de `utils`/`config`. Feature subdeclarada lendo
+       como nao iniciada e observacao falsa, nao conservadorismo. */
+    modulos: new Set([
+      ...lista('chaveiro-bot/src/services', (f) => f.endsWith('.js')),
+      ...lista('chaveiro-bot/src/utils', (f) => f.endsWith('.js')),
+      ...lista('chaveiro-bot/src/config', (f) => f.endsWith('.js'))
+    ]),
     middlewares: new Set(lista('chaveiro-bot/src/middlewares', (f) => f.endsWith('.js'))),
     paginas: new Set(lista('chaveiro-painel/src/pages', (f) => f.endsWith('.jsx'))),
     suites: new Set(lista('chaveiro-bot/test/integration', (f) => f.endsWith('.test.js'))),
+    /* Conjunto SEPARADO de proposito. Juntar unidade com integracao faria uma prova com client
+       mockado satisfazer um criterio sobre comportamento de sistema — e e exatamente essa
+       diferenca que GAP-EST-01 e GAP-WPP-01 afirmam. Separado, o registry consegue citar a
+       evidencia de unidade que realmente existe sem deixa-la passar por integracao. */
+    suitesUnidade: new Set([
+      ...lista('chaveiro-bot/src/services/__tests__', (f) => f.endsWith('.test.js')),
+      ...lista('chaveiro-bot/src/routes/__tests__', (f) => f.endsWith('.test.js')),
+      ...lista('chaveiro-bot/src/utils/__tests__', (f) => f.endsWith('.test.js')),
+      ...lista('chaveiro-bot/src/config/__tests__', (f) => f.endsWith('.test.js'))
+    ]),
     integracaoAprovada,
     headDoBundle: bundle?.ambiente?.head ?? null
   };
@@ -165,8 +198,8 @@ export function observarProduto() {
  * forjar a âncora em vez de nomeá-la.
  */
 const F = (area, id, name, description,
-  { b = [], m = [], f = [], t = [], p, releaseRequired, acceptance, blocker, acc = 'DESCONHECIDA', gaps = [] }) =>
-  ({ area, featureId: id, name, description, b, m, f, t, priority: p, releaseRequired,
+  { b = [], m = [], f = [], t = [], u = [], s = [], p, releaseRequired, acceptance, blocker, acc = 'DESCONHECIDA', gaps = [] }) =>
+  ({ area, featureId: id, name, description, b, m, f, t, u, s, priority: p, releaseRequired,
     acceptanceCriteria: acceptance, blockerReason: blocker ?? null,
     /* JULGAMENTO, ao lado de `priority`. Default `DESCONHECIDA`: o sweep é quem preenche. */
     acceptance: acc, gaps });
@@ -220,15 +253,98 @@ export const FEATURES = Object.freeze([
       acceptance: 'ciclo Serviço (com cliente capturado no próprio registro) -> Execução -> Conclusão provado ponta a ponta',
       acc: 'DONE' }),
   F('Serviços', 'APROVACOES', 'Aprovação e rejeição', 'Fluxo de aprovação de serviço pelo gestor',
-    { f: ['Aprovacoes.jsx'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
-      acceptance: 'aprovar e rejeitar com efeito em comissão e financeiro' }),
+    { f: ['Aprovacoes.jsx'],
+      t: ['e2e_rbac_ponto.test.js', 'idor_escrita_cross_tenant.test.js', 'aprovacao_rejeicao_estoque.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      acceptance: 'aprovar e rejeitar com efeito em comissão e financeiro',
+      /* APROVAR esta provado ponta a ponta: `e2e_rbac_ponto` percorre funcionario -> servico
+         pendente -> aprovacao contabilizando comissao, e a rota (servicos.js:250) faz a transicao
+         pendente->ativo com `aprovadoPor`/`aprovadoEm` e dispara a baixa de estoque.
+         REJEITAR nao. A unica cobertura de `/servicos/:id/rejeitar` e o negativo cross-tenant
+         (idor_escrita_cross_tenant.test.js:171): prova que a empresa B NAO rejeita servico da A.
+         Controle negativo sem positivo e exatamente o padrao que o paragrafo 12 proibe — um
+         endpoint que recusasse TODA rejeicao passaria nesse teste.
+         GAP-APV-01 FECHADO. `aprovacao_rejeicao_estoque.test.js` da o positivo que faltava:
+         rejeicao legitima devolve 200, grava `rejeitado` e `aprovadoPor`; rejeitar de novo devolve
+         409 e id inexistente devolve 404 (a rota distingue "outra pessoa ja resolveu" de "nao
+         existe", e o teste impede o colapso dos dois em 404 de voltar); e servico rejeitado nao
+         pode ser aprovado depois.
+         O efeito em comissao ja estava decidido na camada de calculo: `metricas/calculo.js` carrega
+         no fixture um servico `rejeitado` com comissao, justamente para provar que ele nao entra no
+         agregado. */
+      acc: 'DONE' }),
   F('Técnicos', 'TECNICOS', 'Técnicos e funcionários', 'Cadastro, acesso, permissões, serviços associados',
     { b: ['tecnicos.js'], f: ['Tecnicos.jsx', 'NovoTecnico.jsx', 'PerfilTecnico.jsx'], t: ['tecnico_criacao.test.js'],
       p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'criação, acesso e vínculo com serviço',
       acc: 'DONE' }),
   F('Estoque', 'ESTOQUE', 'Estoque e materiais', 'Materiais, movimentação, baixa, integração com serviço',
-    { b: ['estoque.js'], f: ['Estoque.jsx', 'Catalogo.jsx'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
-      acceptance: 'baixa automática ao concluir serviço, com movimentação rastreável' }),
+    { b: ['estoque.js'], f: ['Estoque.jsx', 'Catalogo.jsx', 'NovoServicoFuncionario.jsx'],
+      u: ['estoque.test.js'],
+      t: ['aprovacao_rejeicao_estoque.test.js', 'materiais_servico_funcionario.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      /* CRITERIO CORRIGIDO. A versao anterior dizia "ao concluir servico" e o gatilho real nao e a
+         conclusao: `darBaixaPorServico` roda no REGISTRO com materiais (servicos.js:232,
+         servico.js:59) e na APROVACAO do servico pendente (servicos.js:270). Descrever o gatilho
+         errado faria o criterio medir um caminho que nao existe. */
+      acceptance: 'baixa automática ao registrar/aprovar serviço com material, com movimentação rastreável',
+      /* Implementado e coberto em UNIDADE com o client mockado: delta atomico que nao zera o que
+         outro gravou, saldo nunca negativo, material de outro tenant tratado como inexistente,
+         tolerancia a falha por item. A movimentacao fica em `MovimentacaoEstoque` e e listavel em
+         `GET /estoque/movimentacoes` (estoque.js:249).
+         GAP-EST-01 FECHADO no que era verificacao: `aprovacao_rejeicao_estoque.test.js` prova
+         contra PostgreSQL real que registrar servico com material decrementa o saldo (10 -> 7),
+         grava o vinculo `ServicoMaterial`, deixa a movimentacao de SAIDA rastreavel com
+         `saldoApos` e `servicoId`, e recusa material de outra empresa sem mexer no saldo dela.
+         E ABRIU o que a verificacao escondia: o ramo de baixa na APROVACAO nunca rodava. A suite
+         de unidade passava porque testa a funcao, e a funcao esta certa; errado era o caminho que
+         deveria chama-la — distincao que so integracao faz.
+
+         GAP-EST-02 FECHADO sob a decisao material D-EST-02, em consenso com o Codex Decisor
+         (thread 01a0278a-aae2-7bd1-bb35-13c67519170d). O funcionario passa a DECLARAR material; a
+         baixa continua sendo da aprovacao. Duas restricoes vieram do Decisor contra a posicao
+         inicial do Claude, e as duas fechavam furo real:
+           1. materiais do funcionario SO com `aprovacaoServico` ligada — sem ela o servico nasce
+              `ativo` e a baixa sairia por acao do proprio funcionario, sem gestor no caminho; a
+              versao incondicional REDUZIA protecao em vez de fechar buraco;
+           2. transicao `pendente -> ativo` por reivindicacao atomica (`updateMany` filtrando
+              `{ id, empresaId, status }`), porque tornar o ramo alcancavel expunha uma corrida de
+              dupla aprovacao que daria duas baixas do mesmo material.
+         15 casos, os 7 exigidos pelo Decisor inclusos. A atomicidade tem sonda de mutacao: com
+         `update` cego no lugar do `updateMany` filtrado, as duas aprovacoes concorrentes voltam
+         200 e o caso falha.
+
+         NAO fechado, e nao alegado como fechado: `NovoServicoFuncionario.jsx` nao envia
+         `materiais`. Isto fecha a alcancabilidade pela API, que era o escopo autorizado; o fluxo
+         do painel continua aberto.
+
+         GAP-EST-03 FECHADO, e o caminho para fecha-lo revelou um segundo bloqueio que eu nao
+         tinha visto. Poe o seletor na tela do funcionario nao bastava: `MaterialPicker` consome
+         `GET /materiais`, protegido por `estoque:ver`, e `PRESET_FUNCIONARIO` zera todos os
+         modulos de empresa. O seletor renderizaria e tomaria 403 — capacidade provada no backend,
+         inalcancavel por quem precisa dela. Quem apontou foi o Codex Decisor (D-EST-03).
+
+         Conceder a permissao resolveria o 403 e criaria coisa pior: aquele payload leva
+         `precoUnit`, `precoVenda`, `estoqueMinimo`, `quantidadeAtual` e contagem de uso — custo,
+         margem e inventario para quem so precisa escolher um item.
+
+         O usuario autorizou o corte por NECESSIDADE: `GET /me/materiais-servico`, sob assinatura
+         ativa e `podeProprio(registrar_servico)`, tenant-scoped, devolvendo id, nome e unidade.
+         `GET /materiais` segue 403 para funcionario, e ha caso dedicado que reprova se alguem
+         "resolver" isso concedendo a permissao. A assercao do payload compara CONJUNTO DE CHAVES,
+         nao ausencia campo a campo: campo novo no modelo reprova ate ser incluido de proposito.
+
+         `aprovacaoServico` passou a sair em `GET /me/permissoes` (D-EST-03 opcao A), lido do banco
+         a cada requisicao — do JWT, um token emitido antes da virada carregaria o regime errado
+         ate expirar. Isso NAO e autorizacao: quem decide continua sendo `servicos.js`, e ha dois
+         casos mandando `materialId` de outro tenant e inexistente direto no POST para provar que
+         a defesa que conta roda no servidor.
+
+         14 casos de integracao mais 6 no painel, incluindo o fluxo inteiro: contexto -> catalogo
+         -> registro `pendente` com vinculo e estoque INTACTO -> aprovacao -> baixa unica com
+         `servicoId`. O seletor fica escondido sem aprovacao e tambem quando o contexto falha —
+         campo ausente e frustracao, campo que aceita entrada e depois derruba o registro e
+         trabalho perdido em campo. */
+      acc: 'DONE' }),
   F('Financeiro', 'FINANCEIRO', 'Financeiro e comissão', 'Valor cobrado, custo de material, comissão, receita líquida',
     /* `metricas.test.js` entrou na evidencia durante o sweep: e ele que prova o CALCULO contra
        dataset conhecido, e o criterio pede calculo E politica. A declaracao anterior citava so a
@@ -241,18 +357,44 @@ export const FEATURES = Object.freeze([
   /* ---- Métricas e dashboard ---- */
   F('Dashboard', 'METRIC_FOUNDATION', 'Fundação de métricas', 'Contrato, registro, cálculo e exposição',
     { b: ['metricas.js'], f: ['Dashboard.jsx'], t: ['metricas.test.js', 'metricas_exposicao.test.js', 'me_metricas.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'número correto, autorizado e explicável' }),
+      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'número correto, autorizado e explicável',
+      /* Os tres termos do criterio tem suite dirigida propria, e nenhuma delas prova o mesmo:
+         CORRETO    `metricas.test.js` calcula contra dataset conhecido;
+         AUTORIZADO `metricas_exposicao.test.js` prova que o campo sensivel nao sai para quem nao pode;
+         EXPLICAVEL `me_metricas.test.js` fixa o contrato de resposta e o filtro de periodo, com
+                    periodo invalido recusado e isolamento multi-tenant. */
+      acc: 'DONE' }),
   F('Dashboard', 'METRIC_HUBS', 'Metric Hubs', 'Duas verticais com drilldown e segurança por campo',
     { f: ['MetricHub.jsx', 'MetricHubReceita.jsx', 'MetricHubShell.jsx'], t: ['metricas_campo_seguranca.test.js'],
       p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'hubs para as 8 métricas implementáveis' }),
   F('Dashboard', 'INDICADORES', 'Indicadores do gestor', 'Agregados e visão operacional',
     { f: ['GestorHome.jsx', 'MeuPainel.jsx'], t: ['gestor_indicadores.test.js', 'dashboard_groupby.test.js', 'aggregate_perfil_dashboard.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'agregados consistentes com os registros' }),
+      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'agregados consistentes com os registros',
+      /* `dashboard_groupby.test.js` monta dataset conhecido e confere escalares e os tres
+         agrupamentos (porTecnico, porLocal, evolucaoDiaria) contra ele, incluindo periodo vazio —
+         que e onde agregado costuma inventar linha. `gestor_indicadores` cobre resposta unica,
+         403 para funcionario e isolamento entre empresas. Consistencia com os registros e
+         exatamente o que a comparacao contra dataset conhecido decide. */
+      acc: 'DONE' }),
 
   /* ---- Ponto ---- */
   F('Ponto', 'PONTO', 'Registro de ponto', 'Batida, localização, selfie, antifraude, banco de horas',
-    { f: ['MeuPonto.jsx'], t: ['e2e_rbac_ponto.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
-      acceptance: 'batida com antifraude e banco de horas conferível' }),
+    { f: ['MeuPonto.jsx'], t: ['e2e_rbac_ponto.test.js'], u: ['ponto.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      /* CRITERIO PRECISADO, nao afrouxado. "Antifraude" ficava vago o bastante para ser lido como
+         rejeicao automatica de batida — que o repositorio nao implementa e que exigir seria
+         inventar requisito (paragrafo 10). O antifraude real e do desenho: `BatidaPonto.em` e
+         timestamp do SERVIDOR, entao o funcionario nao forja o horario, e lat/lng/precisao/selfieUrl
+         ficam gravados como prova para conferencia humana.
+         "Banco de horas" existe — nao com esse nome de campo, e sim como `calcularDia`/`resumoMes`
+         em services/ponto.js, gravando `totalMinutos`/`horaExtraMinutos`. */
+      acceptance: 'batida com horário do servidor e prova capturada (geo/selfie), banco de horas calculado por modalidade e conferível pelo gestor',
+      /* `ponto.test.js` cobre 17 casos: a maquina do dia nos quatro estados com timestamp do
+         servidor, dia ja completo sem regravar, e HE/saldo por modalidade (CLT 8h, meio periodo 6h,
+         12x36 12h, autonomo sem banco). `e2e_rbac_ponto` percorre o fluxo com selfie e geo.
+         Conferivel: `GET /tecnicos/:id/ponto/relatorio` sob `requirePermissao('ponto','ver')`, com
+         isolamento cross-tenant provado em `idor_leitura_cross_tenant`. */
+      acc: 'DONE' }),
 
   /* ---- Billing ---- */
   F('Billing', 'BILLING', 'Assinatura e trial', 'Trial, assinatura, enforcement, expiração e bloqueio',
@@ -271,21 +413,78 @@ export const FEATURES = Object.freeze([
 
   /* ---- Integrações ---- */
   F('WhatsApp', 'WHATSAPP', 'WhatsApp', 'Provider, webhooks, entrada, saída, filas, feature flags',
-    { b: ['whatsapp.js'], f: ['ConfiguracaoBot.jsx'], t: ['inbound_numero_unico.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'entrada e saída com idempotência e isolamento por empresa' }),
+    { b: ['whatsapp.js'], f: ['ConfiguracaoBot.jsx'],
+      t: ['inbound_numero_unico.test.js', 'inbound_idempotencia.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      acceptance: 'entrada e saída com idempotência e isolamento por empresa',
+      /* ENTRADA e SAIDA provadas juntas: `inbound_numero_unico` entra pelo webhook e verifica a
+         mensagem que SAI — saudacao com nome do tecnico, menu de desambiguacao com os nomes das
+         empresas, e a resposta "1" transicionando a sessao para a 1a empresa. Isolamento por
+         empresa e o proprio menu de desambiguacao: o mesmo numero em duas empresas precisa
+         escolher antes de registrar.
+         GAP-WPP-01 FECHADO. `inbound_idempotencia.test.js` reentrega o mesmo `key.id` e prova que
+         a segunda volta `duplicado: true`, nao chama o gateway de novo e nao avanca a sessao; que
+         id diferente com o mesmo texto PASSA (a guarda e por evento, nao por conteudo); e que a
+         chave `wa:<id>` e global, sem o jid.
+         Duas coisas ficaram registradas porque nao dava para prova-las sem expor:
+         a guarda e FAIL-OPEN — sem Redis, `marcarSeNovo` devolve true e a mensagem e processada;
+         a assercao central e `duplicado: true` justamente para o teste FALHAR nesse cenario em vez
+         de passar sem que exista idempotencia. E evento sem `key.id` pula a guarda inteira: e o
+         controle de sensibilidade do arquivo e, ao mesmo tempo, o limite real da protecao. */
+      acc: 'DONE' }),
   F('Google', 'GOOGLE_REVIEWS', 'Google Reviews', 'Conta Google, avaliações, análise',
     { b: ['google.js'], f: ['Avaliacoes.jsx'], t: ['billing_google_auth.test.js'],
       p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'coleta e análise de avaliações' }),
 
   /* ---- Documentos, notificações, config ---- */
   F('Documentos', 'DOCUMENTOS', 'Documentos e uploads', 'Upload, storage, documento de técnico',
-    { b: ['documentos.js'], f: ['Documentos.jsx'], t: ['documentos.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
-      acceptance: 'upload isolado por tenant e chave de storage não adivinhável' }),
+    { b: ['documentos.js'], f: ['Documentos.jsx'],
+      t: ['documentos.test.js', 'documentos_storage.test.js'], u: ['documentos-storage-key.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      acceptance: 'upload isolado por tenant e chave de storage não adivinhável',
+      /* Os dois termos tem prova separada, e essa separacao importa: `documentos.test.js` cobre o
+         ciclo CRUD, a validacao de MIME contra o conteudo real (data URI invalida e tipo
+         desconhecido recusados), posse e isolamento multi-tenant; a chave nao adivinhavel e
+         decidida por `documentos-storage-key.test.js`, porque isolamento por tenant no banco nao
+         protege objeto cujo caminho de storage seja derivavel.
+
+         ACEITACAO REVERTIDA de DONE para PARTIAL sobre evidencia nova, nao sobre mudanca de
+         criterio. `docs/GO_LIVE_CHECKLIST.md` A9 registra, do smoke test real de 2026-08-05,
+         `POST /me/documentos` respondendo 500 em PRODUCAO — o caminho principal de escrita da
+         feature. Declarar DONE com isso registrado no proprio repositorio seria exatamente a
+         aceitacao inferida que o milestone proibe.
+
+         A causa estava escrita aqui desde sempre: `server.js:53-58` avisa no boot que, com
+         `DOCUMENTOS_ENABLED=true` e storage configurado, bucket ausente faz o upload responder
+         500 — `uploadPrivado` lanca e nao ha fallback pro disco. O codigo esta CORRETO; o bucket
+         `documentos-tecnico` nao existe no projeto Supabase de producao.
+
+         E a razao de ninguem ter visto: `documentos.js:129` bifurca em `storageHabilitado()`, que
+         e falso em teste. Toda a suite entrava pelo disco. `documentos_storage.test.js` (10 casos)
+         fecha esse ramo — inclusive o caso exato do bucket ausente, a ausencia de linha orfa
+         quando o upload falha, e a recusa de fallback silencioso pro disco. Terceira ocorrencia
+         nesta frente da mesma classe: estrutura presente, caminho real nao exercitado. */
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-DOC-01',
+        claim: 'o bucket de documentos não existe em produção e o upload responde 500',
+        affectedUserFlow: 'funcionário anexa contrato ou documento pessoal pelo app',
+        evidence: 'docs/GO_LIVE_CHECKLIST.md A9 — smoke test real de 2026-08-05, POST /me/documentos → 500, reproduzível. Causa antecipada por server.js:53-58, que loga o aviso no boot. Nada no código cria o bucket; a provisão é a ferramenta já existente `npm run bucket:provision`',
+        requiredBehavior: 'o funcionário anexa um documento e ele sobe, fica listado e volta a abrir',
+        currentBehavior: 'o upload responde 500 em produção enquanto o bucket documentos-tecnico não for provisionado; em dev/test grava em disco e passa, o que escondeu o problema',
+        releaseImpact: 'FUNCTIONAL'
+      }] }),
   F('Notificações', 'NOTIFICACOES', 'Notificações', 'Notificação in-app e e-mail',
     { f: ['Notificacoes.jsx'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'entrega e leitura' }),
   F('Configurações', 'CONFIGURACOES', 'Configurações e preferências', 'Configuração da empresa e preferências do usuário',
     { f: ['Configuracao.jsx', 'Perfil.jsx'], t: ['preferencias.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
-      acceptance: 'preferências persistidas por usuário' }),
+      acceptance: 'preferências persistidas por usuário',
+      /* `preferencias.test.js`: round-trip, merge que preserva namespace vizinho (o defeito classico
+         e a gravacao de um namespace apagar o outro), isolamento por usuario e 401 sem sessao.
+         O criterio cobre a preferencia do USUARIO. A configuracao da EMPRESA aparece em
+         `Configuracao.jsx` mas nao tem criterio proprio declarado aqui — e nao invento um agora
+         (paragrafo 10); se for requisito de release, entra como feature com criterio proprio. */
+      acc: 'DONE' }),
 
   /* ---- Transversais ---- */
   F('Segurança', 'SEGURANCA', 'Segurança transversal', 'Takeover, disambiguação de login, regressões',
@@ -323,12 +522,89 @@ export const FEATURES = Object.freeze([
       acc: 'DONE' }),
   F('Admin', 'ADMIN', 'Administração', 'Rotas administrativas',
     { b: ['admin.js'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'operações administrativas isoladas' }),
-  F('Operação', 'OBSERVABILIDADE', 'Observabilidade', 'Métricas de runtime, logs, alertas',
-    { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'erro em produção é detectável sem acesso ao banco' }),
+  F('Operação', 'OBSERVABILIDADE', 'Observabilidade', 'Health check, logs estruturados com redação, captura de erro',
+    /* ENTRADA CORRIGIDA. Estava vazia e por isso o registry derivava NAO_INICIADO. O repositorio
+       tem, e sempre teve nesta frente:
+         `GET /health` (app.js:173) — SELECT 1 no banco, estado de shutdown, uptime e estado da
+            conexao do WhatsApp; 200 quando ok, 503 quando degradado ou desligando;
+         `utils/logger.js` — winston com `redigirSensiveis`, que redige chave sensivel em objeto
+            aninhado e nao redige `codigo` (a contraprova esta na suite);
+         `config/sentry.js` — captura opcional, so ativa com `SENTRY_DSN`, com scrub de
+            `event.user` e de headers, e o simbolo `JA_ENVIADO_AO_SENTRY` evitando evento dobrado;
+         `HEALTHCHECK` no Dockerfile e no compose, apontando para `/health`. */
+    { s: ['logger.js', 'sentry.js'],
+      u: ['logger.test.js', 'sentry.test.js', 'sentryTransport.test.js'],
+      t: ['health_operacional.test.js', 'erro_nao_tratado.test.js'],
+      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      acceptance: 'erro em produção é detectável sem acesso ao banco',
+    /* GAP-OBS-01 FECHADO. `health_operacional.test.js` cobre os tres estados e prova que sao
+       DISTINGUIVEIS: 200 `ok`, 503 `degraded` com `database: error` (forcando o `$queryRaw` a
+       falhar, porque em teste o banco esta sempre de pe e o ramo degradado nunca rodaria sozinho)
+       e 503 `shutting_down` sem tocar no banco. Cobre tambem que `/health` nao exige autenticacao —
+       401 ali faria o HEALTHCHECK reiniciar em laco uma aplicacao saudavel. */
+      /* GAP-OBS-02 FECHADO, e o enunciado dele estava LARGO DEMAIS. Eu declarei que a captura
+         "nunca foi executada"; na verdade `sentry.test.js` e `sentryTransport.test.js` ja provavam
+         ativacao por DSN, idempotencia, no-op inativo, enriquecimento por tenant e as quatro regras
+         do transporte. A entrada e que nao declarava essas suites — mesmo defeito de subdeclaracao
+         que fazia esta feature ler NAO_INICIADO.
+
+         O que realmente faltava, e agora existe:
+           `beforeSend` — 4 casos, com controle positivo primeiro (o evento CONTINUA saindo; um
+              scrub que devolvesse `null` daria privacidade perfeita e observabilidade zero), e
+              verificacao pelo TEXTO INTEIRO do evento, porque apagar a chave do cabecalho e deixar
+              o valor em outro campo passaria numa assercao por chave;
+           `erro_nao_tratado.test.js` — 7 casos ponta a ponta pelo Express: JSON malformado alcanca
+              o handler global, o log sai MARCADO (senao o mesmo erro vira dois eventos e a contagem
+              que decide plantao fica corrompida), o contexto carrega rota e metodo, a resposta nao
+              vaza stack, e a aplicacao segue atendendo depois.
+
+         ACHADO AO ESCREVER: rota desconhecida devolve 401, nao 404, porque `requireAuth` do
+         accountRouter vem antes do 404 final. Melhor assim — 404 para anonimo revelaria quais
+         rotas existem. Eu tinha assumido 404 e estava errado.
+
+         NAO fechado e NAO alegado: presenca de `SENTRY_DSN` em producao (GO_LIVE A8). Isso e
+         configuracao de ambiente, nao aceitacao de feature — pela mesma regra, AUTH_LOGIN nao fica
+         refem de "o JWT_SECRET esta setado no Railway". Vai para o checklist operacional.
+
+         GAP-OBS-03 FECHADO sob a decisao material D-OBS-03, em consenso com o Codex Decisor
+         (thread 01a029bc-f42a-7c23-bd23-bb9b0d8903c9). O handler global passou a distinguir erro
+         do CLIENTE de falha da APLICACAO: 4xx responde generico, sem log de erro e sem captura;
+         todo o resto segue 500 com log marcado e captura.
+
+         O discriminador NAO e `status`, e essa foi a correcao do Decisor sobre a minha proposta.
+         Verifiquei de forma independente: `whatsapp/evolution-client.js:33`,
+         `whatsapp/cloud-client.js:35` e `oauth.js:22` copiam status ALHEIO para a excecao. Com
+         `status` sozinho, um 403 do provedor de WhatsApp seria devolvido como erro do cliente E
+         sumiria do rastreador — falha de integracao real desaparecendo de onde se procura falha.
+         `expose: true` vem do `http-errors`, que e o que o body-parser usa, e ninguem o poe a mao
+         neste repositorio. Sonda de mutacao: removida a exigencia de `expose`, a contraprova falha
+         com 403 no lugar de 500.
+
+         NAO alegado: presenca de `SENTRY_DSN` em producao (GO_LIVE A8). Configuracao de ambiente
+         nao e aceitacao de feature — pela mesma regra, AUTH_LOGIN nao ficaria refem de "o
+         JWT_SECRET esta setado no Railway". Segue no checklist operacional. */
+      acc: 'DONE' }),
   F('Operação', 'E2E', 'Testes E2E', 'Fluxo completo do usuário em navegador',
     { p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'fluxo Cliente->Serviço->Financeiro em navegador' }),
   F('Operação', 'STAGING', 'Staging e prontidão', 'Ambiente de homologação e checklist de produção',
-    { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'deploy reproduzível e rollback provado' })
+    { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'deploy reproduzível e rollback provado',
+      /* BLOCKED por AUTORIDADE, nao por dificuldade tecnica — e a distincao importa, porque
+         blocker tecnico eu resolveria sozinho. "Deploy reproduzivel" e "rollback provado" exigem
+         executar deploy e promocao de ambiente, e a instrucao vigente diz textualmente que push,
+         merge remoto, deploy e promocao de ambiente NAO estao autorizados.
+         Nao dividi a feature para arrancar dela um pedaco executavel: o criterio e sobre o deploy
+         acontecer e ser desfeito, e um checklist escrito sem execucao seria documento, nao prova. */
+      blocker: 'exige deploy e promoção de ambiente, ambos fora da autorização vigente (D2 do usuário)',
+      acc: 'BLOCKED',
+      gaps: [{
+        id: 'GAP-STG-01',
+        claim: 'não existe ambiente de homologação nem rollback executado',
+        affectedUserFlow: 'colocar uma versão no ar e conseguir voltar atrás quando ela quebra',
+        evidence: 'Dockerfile e docker-compose.yml descrevem o runtime, mas nenhum deploy foi executado nesta frente e não há registro de rollback; a instrução vigente não autoriza push, merge remoto, deploy nem promoção de ambiente',
+        requiredBehavior: 'subir a versão em homologação de forma reproduzível e provar que o rollback devolve o estado anterior',
+        currentBehavior: 'a imagem builda localmente; o deploy nunca aconteceu e o rollback nunca foi exercitado',
+        releaseImpact: 'EXTERNAL_BLOCKER'
+      }] })
 ]);
 
 /* ------------------------------------------------------------------ *
@@ -343,11 +619,12 @@ export const FEATURES = Object.freeze([
  */
 export function estadoDe(feature, obs) {
   const temB = (feature.b.length > 0 && feature.b.every((x) => obs.rotas.has(x)))
-    || ((feature.m ?? []).length > 0 && feature.m.every((x) => obs.middlewares.has(x)));
+    || ((feature.m ?? []).length > 0 && feature.m.every((x) => obs.middlewares.has(x)))
+    || ((feature.s ?? []).length > 0 && feature.s.every((x) => obs.modulos.has(x)));
   const temF = feature.f.length > 0 && feature.f.every((x) => obs.paginas.has(x));
   const temT = feature.t.length > 0 && feature.t.every((x) => obs.suites.has(x));
 
-  const backendStatus = (feature.b.length === 0 && (feature.m ?? []).length === 0)
+  const backendStatus = (feature.b.length === 0 && (feature.m ?? []).length === 0 && (feature.s ?? []).length === 0)
     ? 'NAO_APLICAVEL' : (temB ? 'PRESENTE' : 'AUSENTE');
   const frontendStatus = feature.f.length === 0 ? 'NAO_APLICAVEL' : (temF ? 'PRESENTE' : 'AUSENTE');
   const testStatus = feature.t.length === 0
@@ -411,6 +688,14 @@ export function derivarRegistry(obs = observarProduto(), features = FEATURES) {
  * Controles
  * ------------------------------------------------------------------ */
 
+/* Fixture de gap valido para as contraprovas. Era montado inline com 'texto suficiente' em TODOS
+   os campos — inclusive `releaseImpact`, que agora e enumerado. Um fixture que nao satisfaz as
+   proprias regras faz a contraprova reprovar por defeito dela mesma, e nao do que ela mede. */
+const gapCompleto = () => ({
+  ...Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente'])),
+  releaseImpact: 'FUNCTIONAL'
+});
+
 export function controlesDoRegistry() {
   const base = {
     rotas: new Set(['x.js']), paginas: new Set(['X.jsx']), suites: new Set(['x.test.js']),
@@ -466,13 +751,13 @@ export function controlesDoRegistry() {
     ['aceitacao fora da taxonomia REPROVA',
       violacoesDeAceitacao({ featureId: 'X', acceptance: 'QUASE' }).length > 0],
     ['gap sem requiredBehavior REPROVA', (() => {
-      const g = Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']));
+      const g = gapCompleto();
       delete g.requiredBehavior;
       return violacoesDeAceitacao({ featureId: 'X', acceptance: 'PARTIAL', gaps: [g] })
         .some((v) => v.includes('requiredBehavior'));
     })()],
     ['gap sem currentBehavior REPROVA', (() => {
-      const g = Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']));
+      const g = gapCompleto();
       delete g.currentBehavior;
       return violacoesDeAceitacao({ featureId: 'X', acceptance: 'PARTIAL', gaps: [g] })
         .some((v) => v.includes('currentBehavior'));
@@ -481,7 +766,19 @@ export function controlesDoRegistry() {
     ['CONTRAPROVA: gap COMPLETO com PARTIAL nao reprova',
       violacoesDeAceitacao({
         featureId: 'X', acceptance: 'PARTIAL',
-        gaps: [Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']))]
+        gaps: [gapCompleto()]
+      }).length === 0],
+    ['releaseImpact fora da taxonomia reprova',
+      violacoesDeAceitacao({
+        featureId: 'X', acceptance: 'PARTIAL',
+        gaps: [{ ...gapCompleto(), releaseImpact: 'INVENTADO' }]
+      }).some((v) => v.includes('releaseImpact'))],
+    /* A regressao que originou o controle: `UX` tem 2 caracteres e era reprovado pelo piso de
+       comprimento, que nunca foi criterio para campo enumerado. */
+    ['CONTRAPROVA: UX, com duas letras, e aceito',
+      violacoesDeAceitacao({
+        featureId: 'X', acceptance: 'PARTIAL',
+        gaps: [{ ...gapCompleto(), releaseImpact: 'UX' }]
       }).length === 0],
     ['CONTRAPROVA: DONE sem gap nao reprova',
       violacoesDeAceitacao({ featureId: 'X', acceptance: 'DONE', gaps: [] }).length === 0],
@@ -498,7 +795,9 @@ export function controlesDoRegistry() {
       const o = observarProduto();
       return FEATURES.every((x) =>
         x.b.every((y) => o.rotas.has(y)) && (x.m ?? []).every((y) => o.middlewares.has(y))
-        && x.f.every((y) => o.paginas.has(y)) && x.t.every((y) => o.suites.has(y)));
+        && x.f.every((y) => o.paginas.has(y)) && x.t.every((y) => o.suites.has(y))
+        && (x.u ?? []).every((y) => o.suitesUnidade.has(y))
+        && (x.s ?? []).every((y) => o.modulos.has(y)));
     })()]
   ];
 }
