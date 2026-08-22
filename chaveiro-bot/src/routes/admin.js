@@ -477,6 +477,22 @@ router.post('/lgpd/anonimizar-cliente', adminOnly, async (req, res) => {
       servicos: servicos.count,
       avaliacoes: avaliacoes.count,
     });
+
+    /* [GAP-AUD-01] O pedido de anonimizacao e uma operacao sobre dado pessoal, e a LGPD exige
+       DEMONSTRAR o atendimento ao titular. Demonstrar exige registro.
+
+       O telefone NAO entra no registro. Ele e justamente o dado que se acabou de remover das
+       tabelas; guarda-lo aqui faria a trilha preservar o que a operacao existe para apagar. O que
+       se registra e o efeito: quem pediu, quando, e quantas linhas foram afetadas — suficiente para
+       provar o atendimento sem reconstituir o titular. */
+    await registrarAudit({
+      empresaId: req.user.empresaId,
+      usuarioId: req.user.id,
+      acao: 'lgpd.cliente_anonimizado',
+      entidade: 'Cliente',
+      depois: { servicosAnonimizados: servicos.count, avaliacoesAnonimizadas: avaliacoes.count },
+      ip: req.ip,
+    });
     res.json({
       ok: true,
       servicosAnonimizados: servicos.count,

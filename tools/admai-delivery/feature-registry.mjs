@@ -294,21 +294,13 @@ export const FEATURES = Object.freeze([
       acceptance: 'vetores conhecidos barrados com negativo que os nomeie',
       acc: 'DONE' }),
   F('LGPD', 'LGPD', 'LGPD e privacidade', 'Exclusão de conta, autoexclusão, termos e privacidade',
-    { f: ['Privacidade.jsx', 'Termos.jsx', 'Cookies.jsx'], t: ['lgpd.test.js', 'autoexclusao_conta.test.js'],
+    { f: ['Privacidade.jsx', 'Termos.jsx', 'Cookies.jsx'],
+      t: ['lgpd.test.js', 'autoexclusao_conta.test.js', 'auditoria_dado_pessoal.test.js'],
       p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'exclusão efetiva e rastreável',
-      acc: 'PARTIAL',
-      gaps: [{
-        id: 'GAP-LGPD-01',
-        claim: 'A exclusao e EFETIVA e provada, mas nao e RASTREAVEL: nao ha registro de quem excluiu o que e quando.',
-        affectedUserFlow: 'Titular pede exclusao; o dado some corretamente. Se depois alguem perguntar quando, por ordem de quem e o que exatamente foi apagado, nao ha o que responder.',
-        /* CORRECAO: a versao anterior dizia que AUDITORIA estava NAO_INICIADO e que "nenhuma
-           dessas operacoes gera registro". A trilha EXISTE e funciona — para ciclo de vida de
-           usuario. O que e verdade e mais estreito, e por isso mais util. */
-        evidence: 'lgpd.test.js prova anonimizacao de PII com escopo por tenant; autoexclusao_conta.test.js prova cascata, senha incorreta, admin nao-unico e codigo de confirmacao. A trilha de auditoria existe (services/auditoria.js, modelo AuditLog, 5 chamadas) mas NENHUMA cobre estas operacoes: nao ha registrarAudit em account.js nem em /lgpd/anonimizar-cliente.',
-        requiredBehavior: 'Operacao de exclusao ou anonimizacao gera entrada de auditoria com ator, acao, alvo e momento, consultavel e isolada por tenant.',
-        currentBehavior: 'A exclusao acontece e e verificada. Nao ha trilha.',
-        releaseImpact: 'Risco legal: LGPD exige demonstrar o atendimento ao titular, e demonstrar exige registro. Depende de GAP-AUD-01 — estender a trilha existente as operacoes de dado pessoal, nao construir auditoria do zero.'
-      }] }),
+      /* GAP-LGPD-01 FECHADO por GAP-AUD-01. A exclusao ja era EFETIVA e provada; o que faltava era
+         ser RASTREAVEL. Agora as operacoes sobre dado pessoal deixam trilha com ator, acao, escopo
+         e momento — sem preservar o dado. */
+      acc: 'DONE' }),
   /* CORRECAO de uma afirmacao minha. Esta linha saia como `NAO_INICIADO` porque nao declarava
      ancora nenhuma — e a feature TEM implementacao: `services/auditoria.js`, o modelo `AuditLog` e
      cinco chamadas de `registrarAudit` cobrindo o ciclo de vida de usuario (`convite.enviado`,
@@ -316,18 +308,19 @@ export const FEATURES = Object.freeze([
      "Nao declarei ancora" nao e "nao existe": o registry mede o que a linha aponta, e a linha
      estava incompleta. */
   F('Auditoria', 'AUDITORIA', 'Auditoria', 'AuditLog das operações sensíveis',
-    { b: ['admin.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
+    { b: ['admin.js'], t: ['auditoria_dado_pessoal.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
       acceptance: 'operação sensível gera registro consultável, com ator, ação, alvo e momento',
-      acc: 'PARTIAL',
-      gaps: [{
-        id: 'GAP-AUD-01',
-        claim: 'A trilha cobre o ciclo de vida de USUARIO e nao cobre exclusao/anonimizacao de dado pessoal, que e onde a exigencia legal aperta.',
-        affectedUserFlow: 'Titular pede exclusao; o dado some. Ninguem consegue demonstrar depois quem executou, quando e sobre o que.',
-        evidence: 'registrarAudit e chamado em 5 pontos, todos de ciclo de vida de usuario. Nenhuma chamada em account.js, onde vivem DELETE /me/conta e o fluxo de exclusao; nenhuma em /lgpd/anonimizar-cliente. Nenhuma suite de integracao exercita AuditLog.',
-        requiredBehavior: 'Exclusao de conta e anonimizacao de cliente geram entrada com ator, acao, alvo e momento, isolada por tenant e consultavel.',
-        currentBehavior: 'Trilha existe e funciona para usuario; as operacoes de dado pessoal passam sem registro.',
-        releaseImpact: 'Sustenta GAP-LGPD-01. Sem isto, a conformidade e afirmavel mas nao demonstravel.'
-      }] }),
+      /* GAP-AUD-01 FECHADO. A trilha ja cobria ciclo de vida de usuario; foi estendida as duas
+         operacoes de dado pessoal que faltavam — DELETE /me/conta (nos dois desfechos) e
+         /lgpd/anonimizar-cliente.
+         A restricao que decidiu o desenho: o registro NAO carrega o dado que a operacao apagou.
+         Guardar o e-mail excluido ou o telefone anonimizado faria a trilha preservar exatamente o
+         que a operacao existe para remover — o sistema ficaria MENOS conforme por ter auditoria.
+         Registra-se ator, acao, escopo, momento e contagem.
+         7 casos, e provado que morde: incluir o telefone no registro reprova o caso da ausencia de
+         PII. Tambem provado que o registro SOBREVIVE a cascata que apaga a empresa — se morresse
+         junto, a demonstracao morreria com o que precisa demonstrar. */
+      acc: 'DONE' }),
   F('Admin', 'ADMIN', 'Administração', 'Rotas administrativas',
     { b: ['admin.js'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'operações administrativas isoladas' }),
   F('Operação', 'OBSERVABILIDADE', 'Observabilidade', 'Métricas de runtime, logs, alertas',

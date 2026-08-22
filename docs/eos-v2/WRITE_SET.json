@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "P0_ACCEPTANCE/EVIDENCE-FINAL",
-  "titulo": "Evidence FRESH no HEAD 7ae57f4, com paywall e aceite de convite provados",
+  "sliceId": "GAP-AUD-01",
+  "titulo": "Estender a trilha de auditoria as operacoes de dado pessoal — destrava GAP-LGPD-01",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "VALIDATED",
-  "declaradoEm": "2026-08-22T02:31:56.490Z",
+  "declaradoEm": "2026-08-22T02:38:10.195Z",
   "baseCommitPorLane": {
-    "HARNESS": "7ae57f42f4d4ea1eb2855ee9306d8345ecfeaecd"
+    "HARNESS": "0bebffb17f503ea393e22fd7fd9c871220a44b7b"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Commit ANTES da declaracao, nao no meio da rodada. Foi o que invalidou o baseline de GAP-BILL-01/DESENHO-REAL.",
+  "notaDeMetodo": "Restricao que decide o desenho: o registro NAO pode conter o dado pessoal que a operacao apagou, senao a trilha derrota a exclusao. Registra-se escopo, ator, momento e contagem — nunca o PII.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -523,14 +523,14 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/EVIDENCE_BUNDLE.json": "400f822ce34de3844555bfd49fa7c9447db8c6447f89a2df24768f08f4a5d2eb",
+      "docs/eos-v2/EVIDENCE_BUNDLE.json": "8f7fa3cf893b2c9be0ea974b05d3fcf97e30bc418cbeff79cf9909eb461cc4cc",
       "docs/eos-v2/EXECUTION_STATE.md": "40ecfe69a434c4c5d5e7de3ab156fa32b2d9b5c863abfb3ab5ecfdb1c6f90d67",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/VERIFICATION_RECORD.json": "1d154086c1603638d0b099cffa037556a7eb38b6cc709f219b4d85163af80fd4",
-      "docs/eos-v2/WRITE_SET.json": "cae3dfe88a7cd4b8af0cbd733bd1822e2ec65a5a9322afebc350d8f391fcbcde",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b27f62810f6e2778b48284b9113e402447fc2ee1e81ec2e5148e8903c16bccfc",
+      "docs/eos-v2/VERIFICATION_RECORD.json": "81b8b223a63c7eaa7be7858751b5159f4f7765f566b0ad0dc2cb8133560b4a6a",
+      "docs/eos-v2/WRITE_SET.json": "9c2dfc8d228b657706d02fbb1be1473f6b40275ab3e88623a150525acd53aeb7",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "7f79ec8c6a2113b3f350c6cdfeb8d9884d3e5c7ffcbf12181e61fec28ec15cf0",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -649,23 +649,41 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/EVIDENCE_BUNDLE.json",
+      "caminho": "chaveiro-bot/src/routes/account.js",
       "precisao": "BOUNDED",
-      "proposito": "artefato MUTATING do evidence-bundle",
+      "proposito": "DELETE /me/conta passa a registrar auditoria nos dois desfechos (empresa em cascata e conta unica)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "400f822ce34de3844555bfd49fa7c9447db8c6447f89a2df24768f08f4a5d2eb",
+      "shaNaDeclaracao": "9e3d8945426991cf604cc70cc971d0e0788ef3a5ed3b772abde04d51ecbc7570",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/VERIFICATION_RECORD.json",
+      "caminho": "chaveiro-bot/src/routes/admin.js",
       "precisao": "BOUNDED",
-      "proposito": "artefato MUTATING do stale-check --registrar",
+      "proposito": "/lgpd/anonimizar-cliente passa a registrar auditoria",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1d154086c1603638d0b099cffa037556a7eb38b6cc709f219b4d85163af80fd4",
+      "shaNaDeclaracao": "0e38e7f1469dfb307e38dd8d8d94e5af91d0481316eb34d879c46d8a837cced1",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/auditoria_dado_pessoal.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prova que a operacao gera registro E que o registro nao carrega PII",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "tools/admai-delivery/feature-registry.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "reavaliar AUDITORIA e LGPD",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2f804336276220b29de860443e60f98ee3d24ea37480af323bf0f402c32d71bf",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T02:31:56.720Z",
+  "validadoEm": "2026-08-22T02:38:10.545Z",
   "validadoPor": "write-set-gate.mjs"
 }

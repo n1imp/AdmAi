@@ -34,6 +34,7 @@ import { gerarCodigos } from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
 import { requireAssinaturaAtiva } from '../middlewares/assinatura.js';
+import { registrar as registrarAudit } from '../services/auditoria.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
@@ -411,6 +412,24 @@ router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
     });
     const apagaEmpresa = usuario.admin && adminsAtivos <= 1;
     if (apagaEmpresa) {
+      /* [GAP-AUD-01] O registro vem ANTES da cascata: depois dela o `usuario.id` nao existe mais e
+         a contagem de afetados fica inderivavel. Registrar o que se vai apagar exige olhar antes de
+         apagar. */
+      const afetados = await prisma.usuario.count({ where: { empresaId } });
+      await registrarAudit({
+        empresaId,
+        usuarioId: usuario.id,
+        acao: 'conta.excluida',
+        entidade: 'Empresa',
+        entidadeId: empresaId,
+        /* SEM PII. Guardar e-mail, telefone ou nome aqui faria a trilha PRESERVAR exatamente o dado
+           que a exclusao existe para remover — a auditoria derrotaria a operacao que ela audita.
+           O que a LGPD pede e demonstrar QUEM pediu, QUANDO e SOBRE O QUE; nada disso precisa do
+           dado pessoal em si. */
+        depois: { escopo: 'empresa', usuariosAfetados: afetados },
+        ip: req.ip
+      });
+
       await apagarEmpresaEmCascata(empresaId);
       logger.info('conta_excluida_empresa', { userId: usuario.id, empresaId });
       return res.json({
@@ -419,6 +438,17 @@ router.delete('/me/conta', exclusaoContaLimiter, async (req, res) => {
         mensagem: 'Conta e empresa excluídas permanentemente',
       });
     }
+    /* [GAP-AUD-01] Idem: antes da exclusao, e sem PII. */
+    await registrarAudit({
+      empresaId,
+      usuarioId: usuario.id,
+      acao: 'conta.excluida',
+      entidade: 'Usuario',
+      entidadeId: usuario.id,
+      depois: { escopo: 'usuario' },
+      ip: req.ip
+    });
+
     await prisma.usuario.delete({ where: { id: usuario.id } });
     logger.info('conta_excluida_usuario', { userId: usuario.id, empresaId });
     return res.json({ ok: true, escopo: 'usuario', mensagem: 'Conta excluída permanentemente' });
