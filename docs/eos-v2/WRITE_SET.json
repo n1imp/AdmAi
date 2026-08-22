@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GAP-AUD-01",
-  "titulo": "Estender a trilha de auditoria as operacoes de dado pessoal — destrava GAP-LGPD-01",
+  "sliceId": "P0_ACCEPTANCE/EVIDENCE-6d990c6",
+  "titulo": "Evidence FRESH no HEAD com paywall, aceite de convite e trilha de dado pessoal",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "VALIDATED",
-  "declaradoEm": "2026-08-22T02:38:10.195Z",
+  "declaradoEm": "2026-08-22T03:07:48.856Z",
   "baseCommitPorLane": {
-    "HARNESS": "0bebffb17f503ea393e22fd7fd9c871220a44b7b"
+    "HARNESS": "6d990c60212ad5e0439ecd37174253bbb0daea84"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Restricao que decide o desenho: o registro NAO pode conter o dado pessoal que a operacao apagou, senao a trilha derrota a exclusao. Registra-se escopo, ator, momento e contagem — nunca o PII.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -121,8 +120,8 @@
       "chaveiro-bot/src/routes/__tests__/billing.test.js": "0e4ce27e8a995066ba530e3e0ab713cb57f38df8f2a87a04530339cb3e8ad9a8",
       "chaveiro-bot/src/routes/__tests__/documentos-storage-key.test.js": "d6e66e57c6fbb1e607db31d81bb2ae935ebe12d5c770c39305875f6e05091a99",
       "chaveiro-bot/src/routes/__tests__/tecnicos-foto-perfil.test.js": "fd791eb3e1d266e178e9f2d2274a88bf8ab12ad40c311ea5ce17213d3d079e55",
-      "chaveiro-bot/src/routes/account.js": "9e3d8945426991cf604cc70cc971d0e0788ef3a5ed3b772abde04d51ecbc7570",
-      "chaveiro-bot/src/routes/admin.js": "0e38e7f1469dfb307e38dd8d8d94e5af91d0481316eb34d879c46d8a837cced1",
+      "chaveiro-bot/src/routes/account.js": "b9a6103c052977bfba92357f2452c4a986b1d80cccf26eef5cdea422c0c0301b",
+      "chaveiro-bot/src/routes/admin.js": "50eee45d055325d21a10406b5c406d679c04639ba1e09ea6c6c23b8752728a79",
       "chaveiro-bot/src/routes/api.js": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
       "chaveiro-bot/src/routes/auth.js": "a1b5c5300a45c0555e62009d3c3734bb019c9eac7f6f5ccfd5c42e03d063afe6",
       "chaveiro-bot/src/routes/billing.js": "6d00c4661ae8d7703c6656b8ed07659c203f2186e69a54d880a3708d7541e3da",
@@ -216,6 +215,7 @@
       "chaveiro-bot/src/workers/inbound-worker.js": "f2ea9d8e47a8212ba206a841858b229feff27a1c2fc705169a5a98f7ff8d055c",
       "chaveiro-bot/test/integration/aggregate_perfil_dashboard.test.js": "db23229d3bd2413f0f5b4ed2d4cec0407833538fbc4a8ec76ee8365248f82e77",
       "chaveiro-bot/test/integration/assinatura_cadastro.test.js": "8e07ac491984ee2b42b5ce51b342c7e8b0240c6f621686816189a9f4d23e3cf2",
+      "chaveiro-bot/test/integration/auditoria_dado_pessoal.test.js": "e968c0d40de49fb6afdd32abc0fde51e6fd56d465a61ab343c23a30cd917c758",
       "chaveiro-bot/test/integration/auth.test.js": "4654c7b07530cd3a469b4d8b7af4759843e331dc38aa57e50f5d2f022da9fc4e",
       "chaveiro-bot/test/integration/autoexclusao_conta.test.js": "e3334350fcbd07aa2af75d0c6cdeac8bea5bc8c5355cd81330b2d5a3dd9e1929",
       "chaveiro-bot/test/integration/billing_access_audit.test.js": "ffafd11e2af3ef6fdf4ec6117d9461f38650e3046642f21367932b7a17cd2c94",
@@ -529,8 +529,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "81b8b223a63c7eaa7be7858751b5159f4f7765f566b0ad0dc2cb8133560b4a6a",
-      "docs/eos-v2/WRITE_SET.json": "9c2dfc8d228b657706d02fbb1be1473f6b40275ab3e88623a150525acd53aeb7",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "7f79ec8c6a2113b3f350c6cdfeb8d9884d3e5c7ffcbf12181e61fec28ec15cf0",
+      "docs/eos-v2/WRITE_SET.json": "2d35a3fe26e7cdf0593ea2ffe84093bfe7c0bbe33babee4bcb5a5c191264b16c",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b20a83fec3d62462ffcb9b82b1937f6c27c1fb44b4a152cced339b7c70ac1682",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -569,7 +569,7 @@
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
       "tools/admai-delivery/feature-graph.mjs": "cbe9cf6d1723ef3d2fe409447d499b00173d38369b835ae819ae3b151e808ce4",
-      "tools/admai-delivery/feature-registry.mjs": "2f804336276220b29de860443e60f98ee3d24ea37480af323bf0f402c32d71bf",
+      "tools/admai-delivery/feature-registry.mjs": "e2174fa01c7b31f5978543849e0e829e80236324f6e49ab07745f360ad372693",
       "tools/admai-delivery/gate.mjs": "d2da91323a73e35ad2ee4e3b500ff9b64b5ec5e3f52005dfda7bea098c859253",
       "tools/admai-delivery/metric/availability.mjs": "a37aa3e26b414acbc5193a33eab1e82effa21c21c93d72474e553670c50e6a50",
       "tools/admai-delivery/metric/calculate.mjs": "6be5516e804560931f21d2d6031fee44fa5c1cb86ec3b7027cc762009bfea748",
@@ -649,41 +649,23 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/account.js",
+      "caminho": "docs/eos-v2/EVIDENCE_BUNDLE.json",
       "precisao": "BOUNDED",
-      "proposito": "DELETE /me/conta passa a registrar auditoria nos dois desfechos (empresa em cascata e conta unica)",
+      "proposito": "artefato MUTATING",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9e3d8945426991cf604cc70cc971d0e0788ef3a5ed3b772abde04d51ecbc7570",
+      "shaNaDeclaracao": "8f7fa3cf893b2c9be0ea974b05d3fcf97e30bc418cbeff79cf9909eb461cc4cc",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/admin.js",
+      "caminho": "docs/eos-v2/VERIFICATION_RECORD.json",
       "precisao": "BOUNDED",
-      "proposito": "/lgpd/anonimizar-cliente passa a registrar auditoria",
+      "proposito": "artefato MUTATING",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0e38e7f1469dfb307e38dd8d8d94e5af91d0481316eb34d879c46d8a837cced1",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/auditoria_dado_pessoal.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "prova que a operacao gera registro E que o registro nao carrega PII",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/feature-registry.mjs",
-      "precisao": "BOUNDED",
-      "proposito": "reavaliar AUDITORIA e LGPD",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "2f804336276220b29de860443e60f98ee3d24ea37480af323bf0f402c32d71bf",
+      "shaNaDeclaracao": "81b8b223a63c7eaa7be7858751b5159f4f7765f566b0ad0dc2cb8133560b4a6a",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T02:38:10.545Z",
+  "validadoEm": "2026-08-22T03:07:49.091Z",
   "validadoPor": "write-set-gate.mjs"
 }
