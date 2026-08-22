@@ -33,6 +33,7 @@ import {
 import { gerarCodigos } from '../services/codigosRecuperacao.js';
 import { canonizarTelefone } from '../services/parser.js';
 import { enviarMensagem } from '../services/whatsapp/gateway.js';
+import { requireAssinaturaAtiva } from '../middlewares/assinatura.js';
 import { requireAuth, senhaProvisoria } from '../middlewares/auth.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
@@ -131,7 +132,10 @@ const metricasQuerySchema = z.object({
   fim: z.string().optional(),
 });
 
-router.get('/me/metricas', async (req, res) => {
+/* [GAP-BILL-01] Estas duas servem DADO DE PRODUTO e vivem num router que fica de fora da guarda
+   global (o `account` precisa continuar livre por causa de `/me`, LGPD e 2FA). Entao a guarda vem
+   por rota, explicitamente. */
+router.get('/me/metricas', requireAssinaturaAtiva, async (req, res) => {
   try {
     if (!podeProprio(req.user, 'ver_metricas'))
       return res.status(403).json({ erro: 'Sem permissão' });
@@ -222,7 +226,7 @@ router.get('/me/metricas', async (req, res) => {
   }
 });
 
-router.get('/me/servicos', async (req, res) => {
+router.get('/me/servicos', requireAssinaturaAtiva, async (req, res) => {
   try {
     if (!podeProprio(req.user, 'ver_metricas') && !podeProprio(req.user, 'registrar_servico')) {
       return res.status(403).json({ erro: 'Sem permissão' });

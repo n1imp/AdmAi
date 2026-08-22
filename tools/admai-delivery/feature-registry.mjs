@@ -65,8 +65,55 @@ export const ESTADOS = Object.freeze([
   'DEFERIDO'
 ]);
 
-/** Estado que exige julgamento humano de aceitacao. Nunca sai deste script. */
+/** Estado que exige julgamento humano de aceitacao. Nunca sai da DERIVACAO. */
 export const EXIGE_JULGAMENTO = Object.freeze(['DONE']);
+
+/**
+ * Aceitação — dimensão DECLARADA, não derivada.
+ *
+ * `status` responde "o que existe no repositório?" e é observação. `acceptance` responde "isto serve
+ * para release?" e é julgamento, exatamente como `priority`. Misturar os dois foi o que produziu a
+ * primeira versão inflada deste arquivo.
+ *
+ * `DESCONHECIDA` é o default, e é o único estado que o milestone `ADMAI_P0_ACCEPTANCE_COMPLETE` não
+ * admite ao final: desconhecido não é aprovado nem reprovado, e deixá-lo passar seria a mesma
+ * omissão que `UNKNOWN_DIFFERENCE` virando "nenhum bloqueio".
+ */
+export const ACEITACOES = Object.freeze(['DONE', 'PARTIAL', 'BLOCKED', 'DESCONHECIDA']);
+
+/** Campos obrigatórios de um gap. Gap sem eles não diz o que falta — diz que algo falta. */
+export const CAMPOS_DO_GAP = Object.freeze([
+  'id', 'claim', 'affectedUserFlow', 'evidence', 'requiredBehavior', 'currentBehavior', 'releaseImpact'
+]);
+
+/**
+ * Coerência entre aceitação e gaps. PURA — as sabotagens atravessam aqui.
+ *
+ * `PARTIAL` sem gap é exatamente a frase que a diretiva proíbe: *"precisa de melhorias"*. `DONE` com
+ * gap aberto é contradição. E gap sem `requiredBehavior`/`currentBehavior` não permite agir — diz
+ * que algo falta sem dizer o quê.
+ */
+export function violacoesDeAceitacao(f) {
+  const fora = [];
+  const acc = f.acceptance ?? 'DESCONHECIDA';
+  if (!ACEITACOES.includes(acc)) {
+    fora.push(`${f.featureId}: aceitacao fora da taxonomia (${acc})`);
+    return fora;
+  }
+
+  const gaps = f.gaps ?? [];
+  if ((acc === 'PARTIAL' || acc === 'BLOCKED') && gaps.length === 0) {
+    fora.push(`${f.featureId}: ${acc} sem gap nomeado — "precisa de melhorias" nao e diagnostico`);
+  }
+  if (acc === 'DONE' && gaps.length > 0) {
+    fora.push(`${f.featureId}: DONE com ${gaps.length} gap(s) aberto(s)`);
+  }
+  for (const g of gaps) {
+    const faltando = CAMPOS_DO_GAP.filter((c) => typeof g[c] !== 'string' || g[c].trim().length < 3);
+    if (faltando.length) fora.push(`${f.featureId}/${g.id ?? '(sem id)'}: gap sem ${faltando.join(', ')}`);
+  }
+  return fora;
+}
 export const PRIORIDADES = Object.freeze([
   'P0_RELEASE_BLOCKER', 'P1_MVP_REQUIRED', 'P2_POST_LAUNCH', 'P3_FUTURE'
 ]);
@@ -117,46 +164,80 @@ export function observarProduto() {
  * `PARCIAL` por não ter âncora — e a alternativa seria apontá-la para uma rota qualquer, que é
  * forjar a âncora em vez de nomeá-la.
  */
-const F = (area, id, name, description, { b = [], m = [], f = [], t = [], p, releaseRequired, acceptance, blocker }) =>
+const F = (area, id, name, description,
+  { b = [], m = [], f = [], t = [], p, releaseRequired, acceptance, blocker, acc = 'DESCONHECIDA', gaps = [] }) =>
   ({ area, featureId: id, name, description, b, m, f, t, priority: p, releaseRequired,
-    acceptanceCriteria: acceptance, blockerReason: blocker ?? null });
+    acceptanceCriteria: acceptance, blockerReason: blocker ?? null,
+    /* JULGAMENTO, ao lado de `priority`. Default `DESCONHECIDA`: o sweep é quem preenche. */
+    acceptance: acc, gaps });
 
 export const FEATURES = Object.freeze([
   /* ---- Identidade / SaaS ---- */
   F('Identidade', 'AUTH_LOGIN', 'Login e sessão', 'Autenticação, refresh token, sessão de usuário',
-    { b: ['auth.js'], f: ['Login.jsx'], t: ['auth.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
-      acceptance: 'login, refresh e expiração de sessão provados por suíte dirigida' }),
+    { b: ['auth.js'], f: ['Login.jsx'], t: ['auth.test.js', 'refresh_rotacao_sessao.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      acceptance: 'login, refresh e expiração de sessão provados por suíte dirigida',
+      /* GAP-AUTH-01 FECHADO. `refresh_rotacao_sessao.test.js`: 12 casos, com controle POSITIVO
+         primeiro (renovacao legitima funciona e o token renovado autentica), depois rotacao
+         (token usado morre, cookie novo difere, um registro sai e um entra sem derrubar as outras
+         sessoes), expiracao, usuario inativo, cookie ausente, cookie inexistente, logout e
+         isolamento entre usuarios. Provado que MORDE: removida a linha da rotacao, falham
+         exatamente os dois casos de rotacao. */
+      acc: 'DONE' }),
   F('Identidade', 'AUTH_2FA', '2FA e recuperação', 'TOTP, códigos de recuperação, anti-bruteforce',
     { b: ['auth.js'], f: ['Seguranca.jsx', 'RecuperarSenha.jsx'], t: ['conta_2fa_bruteforce.test.js', 'recuperacao_2fa.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'bruteforce barrado e recuperação provada' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'bruteforce barrado e recuperação provada',
+      acc: 'DONE' }),
   F('Identidade', 'MULTI_TENANCY', 'Multi-tenancy', 'Isolamento por empresa em toda leitura e escrita',
     { b: ['api.js'], t: ['rls.test.js', 'idor_leitura_cross_tenant.test.js', 'idor_escrita_cross_tenant.test.js', 'vazamento_colecao_cross_tenant.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'nenhum vetor material de leitura, escrita ou coleção cruza tenant' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'nenhum vetor material de leitura, escrita ou coleção cruza tenant',
+      acc: 'DONE' }),
   F('Identidade', 'RBAC', 'RBAC e permissões', 'Dono, Gestor, Funcionário; requirePermissao no backend',
     { b: ['api.js'], f: ['Usuarios.jsx'], t: ['rbac_privilege_escalation.test.js', 'e2e_rbac_ponto.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'escalação de privilégio barrada no backend' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'escalação de privilégio barrada no backend',
+      acc: 'DONE' }),
   F('Identidade', 'ONBOARDING', 'Cadastro e convite', 'Cadastro com OTP, convite de usuário, verificação de e-mail',
     { b: ['account.js'], f: ['ConviteAceitar.jsx', 'VerificarEmail.jsx', 'MagicLink.jsx'],
       t: ['cadastro_otp.test.js', 'troca_email_confirmacao.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
-      acceptance: 'fluxo completo de entrada de empresa e de usuário convidado' }),
+      acceptance: 'fluxo completo de entrada de empresa e de usuário convidado',
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-ONB-01',
+        claim: 'O aceite de convite nao tem cobertura: so o caso NEGATIVO de convite existe.',
+        affectedUserFlow: 'Dono convida um gestor; o convidado abre o link e tenta entrar. Nada prova que ele consegue.',
+        evidence: 'GET /convite/:token e POST /convite/:token/aceitar em src/routes/auth.js:614 e :637; a pagina ConviteAceitar.jsx existe; a unica suite que menciona convite e rbac_privilege_escalation.test.js, e apenas para provar que gestor NAO convida alguem como dono.',
+        requiredBehavior: 'Convite valido e aceito e cria o usuario com o papel certo na empresa certa; convite expirado, ja usado ou de outra empresa e recusado.',
+        currentBehavior: 'Cadastro por OTP e troca de e-mail provados. O caminho do convidado tem implementacao e pagina, sem nenhuma prova de que funciona.',
+        releaseImpact: 'Entrada de usuario e o segundo fluxo mais critico depois do login: sem ele o produto e monousuario na pratica.'
+      }] }),
 
   /* ---- Núcleo operacional ---- */
   F('Serviços', 'SERVICOS_CRUD', 'Serviços', 'Criação, edição, status, execução, conclusão e histórico',
     { b: ['servicos.js'], f: ['Servicos.jsx', 'NovoServico.jsx', 'MeusServicos.jsx'],
       t: ['servico_atual.test.js', 'servicos_keyset.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
-      acceptance: 'ciclo Cliente -> Serviço -> Execução -> Conclusão provado ponta a ponta' }),
+      /* Criterio CORRIGIDO no sweep. A versao anterior pedia "ciclo Cliente -> Servico -> ...", e
+         NAO EXISTE entidade Cliente: o cliente e capturado como `clienteNome`/`clienteTelefone` no
+         proprio `Servico` (schema.prisma:138-140). Pedir CRUD de Cliente seria inventar requisito
+         que o repositorio nao sustenta. */
+      acceptance: 'ciclo Serviço (com cliente capturado no próprio registro) -> Execução -> Conclusão provado ponta a ponta',
+      acc: 'DONE' }),
   F('Serviços', 'APROVACOES', 'Aprovação e rejeição', 'Fluxo de aprovação de serviço pelo gestor',
     { f: ['Aprovacoes.jsx'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
       acceptance: 'aprovar e rejeitar com efeito em comissão e financeiro' }),
   F('Técnicos', 'TECNICOS', 'Técnicos e funcionários', 'Cadastro, acesso, permissões, serviços associados',
     { b: ['tecnicos.js'], f: ['Tecnicos.jsx', 'NovoTecnico.jsx', 'PerfilTecnico.jsx'], t: ['tecnico_criacao.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'criação, acesso e vínculo com serviço' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'criação, acesso e vínculo com serviço',
+      acc: 'DONE' }),
   F('Estoque', 'ESTOQUE', 'Estoque e materiais', 'Materiais, movimentação, baixa, integração com serviço',
     { b: ['estoque.js'], f: ['Estoque.jsx', 'Catalogo.jsx'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
       acceptance: 'baixa automática ao concluir serviço, com movimentação rastreável' }),
   F('Financeiro', 'FINANCEIRO', 'Financeiro e comissão', 'Valor cobrado, custo de material, comissão, receita líquida',
-    { f: ['Reparticao.jsx'], t: ['metricas_campo_seguranca.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
-      acceptance: 'cálculo correto e política por campo aplicada no backend' }),
+    /* `metricas.test.js` entrou na evidencia durante o sweep: e ele que prova o CALCULO contra
+       dataset conhecido, e o criterio pede calculo E politica. A declaracao anterior citava so a
+       politica por campo, o que subdeclarava a evidencia existente. */
+    { f: ['Reparticao.jsx'], t: ['metricas_campo_seguranca.test.js', 'metricas.test.js'],
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      acceptance: 'cálculo correto e política por campo aplicada no backend',
+      acc: 'DONE' }),
 
   /* ---- Métricas e dashboard ---- */
   F('Dashboard', 'METRIC_FOUNDATION', 'Fundação de métricas', 'Contrato, registro, cálculo e exposição',
@@ -178,7 +259,16 @@ export const FEATURES = Object.freeze([
   F('Billing', 'BILLING', 'Assinatura e trial', 'Trial, assinatura, enforcement, expiração e bloqueio',
     { b: ['billing.js'], t: ['billing_access_audit.test.js', 'assinatura_cadastro.test.js', 'billing_google_auth.test.js'],
       p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
-      acceptance: 'veredito BILLING_GATE definido e enforcement provado nas rotas que ele deve barrar' }),
+      acceptance: 'veredito BILLING_GATE definido e enforcement provado nas rotas que ele deve barrar',
+      /* GAP-BILL-01 FECHADO. Decisao do usuario: trial -> paywall. `middlewares/assinatura.js`
+         implementa o enforcement, montado em `api.js` numa posicao FAIL-CLOSED: depois de auth,
+         account e billing (que atendem e retornam antes), e antes de tudo que e produto. Router
+         novo nasce protegido.
+         O audit inverteu: onde exigia "nenhuma rota bloqueou", exige "nenhuma rota de produto
+         passou" — e ganhou a familia PAYWALL_EXCESSIVO, que prova que pagar, ver-se e sair
+         continuam funcionando. Veredito agora: BILLING_GATE_PRESENT.
+         Suite completa: 35 arquivos, 225 testes, nenhuma regressao. */
+      acc: 'DONE' }),
 
   /* ---- Integrações ---- */
   F('WhatsApp', 'WHATSAPP', 'WhatsApp', 'Provider, webhooks, entrada, saída, filas, feature flags',
@@ -201,10 +291,22 @@ export const FEATURES = Object.freeze([
   /* ---- Transversais ---- */
   F('Segurança', 'SEGURANCA', 'Segurança transversal', 'Takeover, disambiguação de login, regressões',
     { m: ['auth.js'], t: ['seguranca.test.js', 'takeover_reset_pin.test.js', 'login_disambiguacao_leak.test.js', 'idor.test.js', 'bugs_regressao.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'vetores conhecidos barrados com negativo que os nomeie' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      acceptance: 'vetores conhecidos barrados com negativo que os nomeie',
+      acc: 'DONE' }),
   F('LGPD', 'LGPD', 'LGPD e privacidade', 'Exclusão de conta, autoexclusão, termos e privacidade',
     { f: ['Privacidade.jsx', 'Termos.jsx', 'Cookies.jsx'], t: ['lgpd.test.js', 'autoexclusao_conta.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'exclusão efetiva e rastreável' }),
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'exclusão efetiva e rastreável',
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-LGPD-01',
+        claim: 'A exclusao e EFETIVA e provada, mas nao e RASTREAVEL: nao ha registro de quem excluiu o que e quando.',
+        affectedUserFlow: 'Titular pede exclusao; o dado some corretamente. Se depois alguem perguntar quando, por ordem de quem e o que exatamente foi apagado, nao ha o que responder.',
+        evidence: 'lgpd.test.js prova anonimizacao de PII com escopo por tenant; autoexclusao_conta.test.js prova cascata, senha incorreta, admin nao-unico e codigo de confirmacao. O modelo AuditLog existe no schema e a feature AUDITORIA esta NAO_INICIADO — nenhuma dessas operacoes gera registro.',
+        requiredBehavior: 'Operacao de exclusao ou anonimizacao gera entrada de auditoria com ator, acao, alvo e momento, consultavel e isolada por tenant.',
+        currentBehavior: 'A exclusao acontece e e verificada. Nao ha trilha.',
+        releaseImpact: 'Risco legal: LGPD exige demonstrar o atendimento ao titular, e demonstrar exige registro. Depende de AUDITORIA, que e P1 e NAO_INICIADO.'
+      }] }),
   F('Auditoria', 'AUDITORIA', 'Auditoria', 'AuditLog das operações sensíveis',
     { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'operação sensível gera registro consultável' }),
   F('Admin', 'ADMIN', 'Administração', 'Rotas administrativas',
@@ -261,6 +363,7 @@ export function estadoDe(feature, obs) {
     provaDe: testStatus === 'EXECUTADA_APROVADA' ? 'EXECUCAO' : 'PRESENCA',
     execucaoRef: testStatus === 'EXECUTADA_APROVADA' ? 'bot:integration' : null,
     prioridadeProvenance: 'JULGAMENTO',
+    acceptanceProvenance: 'JULGAMENTO',
     evidenceRefs: [
       ...feature.t.filter((x) => obs.suites.has(x)).map((x) => `chaveiro-bot/test/integration/${x}`),
       ...(testStatus === 'EXECUTADA_APROVADA' ? ['docs/eos-v2/EVIDENCE_BUNDLE.json#bot:integration'] : [])
@@ -281,6 +384,13 @@ export function derivarRegistry(obs = observarProduto(), features = FEATURES) {
        o que muda entre eles e quanta evidencia ja existe, nao se estao prontos. */
     p0: mvp.filter((l) => l.priority === 'P0_RELEASE_BLOCKER'),
     p0SemSuiteAprovada: mvp.filter((l) => l.priority === 'P0_RELEASE_BLOCKER' && l.status !== 'SUITE_APROVADA'),
+    /* Gate do milestone: DESCONHECIDA entre os P0 e o unico estado inadmissivel ao final. */
+    p0Desconhecidos: mvp.filter((l) => l.priority === 'P0_RELEASE_BLOCKER'
+      && (l.acceptance ?? 'DESCONHECIDA') === 'DESCONHECIDA'),
+    aceitacao: Object.fromEntries(ACEITACOES.map((a) =>
+      [a, mvp.filter((l) => (l.acceptance ?? 'DESCONHECIDA') === a).length])),
+    violacoesDeAceitacao: linhas.flatMap((l) => violacoesDeAceitacao(l)),
+    todosOsGaps: linhas.flatMap((l) => (l.gaps ?? []).map((g) => ({ ...g, featureId: l.featureId, area: l.area }))),
     integracaoAprovada: obs.integracaoAprovada
   };
 }
@@ -332,6 +442,40 @@ export function controlesDoRegistry() {
       estadoDe(f, { ...base, integracaoAprovada: false }).provaDe === 'PRESENCA'],
     ['prioridade sai marcada como JULGAMENTO, nao observacao',
       estadoDe(f, base).prioridadeProvenance === 'JULGAMENTO'],
+    ['aceitacao tambem sai marcada como JULGAMENTO',
+      estadoDe(f, base).acceptanceProvenance === 'JULGAMENTO'],
+    /* ---- Coerencia entre aceitacao e gaps ---- */
+    ['PARTIAL sem gap REPROVA — "precisa de melhorias" nao e diagnostico',
+      violacoesDeAceitacao({ featureId: 'X', acceptance: 'PARTIAL', gaps: [] }).length > 0],
+    ['BLOCKED sem gap REPROVA',
+      violacoesDeAceitacao({ featureId: 'X', acceptance: 'BLOCKED', gaps: [] }).length > 0],
+    ['DONE com gap aberto REPROVA',
+      violacoesDeAceitacao({ featureId: 'X', acceptance: 'DONE', gaps: [{ id: 'G' }] }).length > 0],
+    ['aceitacao fora da taxonomia REPROVA',
+      violacoesDeAceitacao({ featureId: 'X', acceptance: 'QUASE' }).length > 0],
+    ['gap sem requiredBehavior REPROVA', (() => {
+      const g = Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']));
+      delete g.requiredBehavior;
+      return violacoesDeAceitacao({ featureId: 'X', acceptance: 'PARTIAL', gaps: [g] })
+        .some((v) => v.includes('requiredBehavior'));
+    })()],
+    ['gap sem currentBehavior REPROVA', (() => {
+      const g = Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']));
+      delete g.currentBehavior;
+      return violacoesDeAceitacao({ featureId: 'X', acceptance: 'PARTIAL', gaps: [g] })
+        .some((v) => v.includes('currentBehavior'));
+    })()],
+    /* CONTRAPROVA: sem ela, "reprovar todo gap" passaria como rigor. */
+    ['CONTRAPROVA: gap COMPLETO com PARTIAL nao reprova',
+      violacoesDeAceitacao({
+        featureId: 'X', acceptance: 'PARTIAL',
+        gaps: [Object.fromEntries(CAMPOS_DO_GAP.map((c) => [c, 'texto suficiente']))]
+      }).length === 0],
+    ['CONTRAPROVA: DONE sem gap nao reprova',
+      violacoesDeAceitacao({ featureId: 'X', acceptance: 'DONE', gaps: [] }).length === 0],
+    ['DESCONHECIDA e o default de toda feature nao avaliada',
+      estadoDe({ ...f, acceptance: undefined }, base).acceptance === undefined
+      || ACEITACOES.includes(estadoDe(f, base).acceptance ?? 'DESCONHECIDA')],
     ['todo estado emitido pertence a taxonomia derivavel',
       ESTADOS.includes(estadoDe(f, base).status)],
     ['`DONE` nao pertence a taxonomia derivavel', !ESTADOS.includes('DONE')],
@@ -366,6 +510,24 @@ export function executar(argv = []) {
   console.log(`  BLOQUEADO      : ${r.bloqueado}`);
   console.log(`  DONE           : 0   — nao derivavel; exige julgamento de aceitacao`);
   console.log('');
+  console.log('ACEITACAO (JULGAMENTO declarado, nao observacao):');
+  for (const a of ACEITACOES) console.log(`  ${a.padEnd(14)} : ${r.aceitacao[a]}`);
+  console.log(`  P0 com aceitacao DESCONHECIDA : ${r.p0Desconhecidos.length}` +
+    (r.p0Desconhecidos.length ? ` (${r.p0Desconhecidos.map((l) => l.featureId).join(', ')})` : ''));
+  console.log(`  ADMAI_P0_ACCEPTANCE_COMPLETE  : ${r.p0Desconhecidos.length === 0 ? 'ALCANCADO' : 'NAO — desconhecido nao e aprovado nem reprovado'}`);
+  if (r.todosOsGaps.length) {
+    console.log('');
+    console.log(`GAPS NOMEADOS (${r.todosOsGaps.length}):`);
+    for (const g of r.todosOsGaps) {
+      console.log(`  ${g.id.padEnd(14)} [${g.featureId}] ${g.claim}`);
+      console.log(`    fluxo afetado : ${g.affectedUserFlow}`);
+      console.log(`    deveria       : ${g.requiredBehavior}`);
+      console.log(`    hoje          : ${g.currentBehavior}`);
+      console.log(`    impacto       : ${g.releaseImpact}`);
+      console.log(`    evidencia     : ${g.evidence}`);
+    }
+  }
+  console.log('');
   console.log(`P0 RELEASE BLOCKERS: ${r.p0.length} no total, ${r.p0SemSuiteAprovada.length} sem sequer suite aprovada`);
   for (const l of r.p0) {
     console.log(`  ${l.featureId.padEnd(18)} ${l.status.padEnd(15)} b=${String(l.backendStatus).padEnd(13)} f=${String(l.frontendStatus).padEnd(13)} t=${l.testStatus}`);
@@ -380,6 +542,10 @@ export function executar(argv = []) {
   console.log(`  evidencia de execucao : ${r.integracaoAprovada ? 'bot:integration APROVADA' : 'AUSENTE — nada alcanca SUITE_APROVADA'}`);
   console.log(`  controles do registry : ${casos.length - falhos.length}/${casos.length}`);
   for (const x of falhos) console.log(`    FAIL  ${x}`);
+  if (r.violacoesDeAceitacao.length) {
+    console.log(`  COERENCIA DE ACEITACAO: ${r.violacoesDeAceitacao.length} violacao(oes)`);
+    for (const v of r.violacoesDeAceitacao) console.log(`    ! ${v}`);
+  }
   console.log('');
   console.log('  LEITURA CORRETA DESTE QUADRO:');
   console.log('    SUITE_APROVADA = as pecas existem e as propriedades COBERTAS PELA SUITE se sustentam.');
@@ -387,7 +553,7 @@ export function executar(argv = []) {
   console.log('    que a suite cobre e o que o acceptanceCriteria pede E o trabalho restante.');
   console.log('    Prioridade e JULGAMENTO declarado, nao derivacao do codigo.');
 
-  if (falhos.length) {
+  if (falhos.length || r.violacoesDeAceitacao.length) {
     console.log('  INSTRUMENTO_COMPROMETIDO — o registry nao se sustenta');
     return 2;
   }
