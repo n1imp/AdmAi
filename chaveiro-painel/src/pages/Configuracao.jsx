@@ -5,6 +5,7 @@ import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { featureAtiva } from '../lib/featureFlags.js';
 
 // Página de configurações no padrão SaaS: conta, segurança, integrações.
 // Estoque/Materiais saíram daqui — agora são abas próprias.
@@ -29,14 +30,20 @@ const SECOES = [
         cor: 'text-accent-300',
         bg: 'bg-accent-400/10',
       },
-      {
-        to: '/configuracao/notificacoes',
-        icon: Bell,
-        titulo: 'Notificações',
-        sub: 'Alertas de estoque e resumos',
-        cor: 'text-indigo-300',
-        bg: 'bg-indigo-400/10',
-      },
+      /* Notificações está DIFERIDA neste release. O item some junto com a rota — esconder só o
+         link deixaria a tela a um deep-link de distância. [SCOPE-F3] */
+      ...(featureAtiva('NOTIFICACOES')
+        ? [
+            {
+              to: '/configuracao/notificacoes',
+              icon: Bell,
+              titulo: 'Notificações',
+              sub: 'Alertas de estoque e resumos',
+              cor: 'text-indigo-300',
+              bg: 'bg-indigo-400/10',
+            },
+          ]
+        : []),
     ],
   },
   {

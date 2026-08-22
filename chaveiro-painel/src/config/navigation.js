@@ -19,6 +19,7 @@ import {
   UserCog,
   FileText,
 } from 'lucide-react';
+import { featureAtiva } from '../lib/featureFlags.js';
 
 // Manifesto único de navegação (F2 / PR2 + PR4). Fonte única de verdade para
 // BottomNav (mobile), Sidebar (desktop) e "Mais". Cada papel recebe uma experiência
@@ -94,7 +95,7 @@ const DONO = {
       icon: Star,
       mobile: 'more',
       group: 'Visão',
-      guard: { modulo: 'avaliacoes' },
+      guard: { modulo: 'avaliacoes', feature: 'GOOGLE_REVIEWS' },
     },
     {
       to: '/materiais',
@@ -219,7 +220,7 @@ const GESTOR = {
       icon: Star,
       mobile: 'more',
       group: 'Acompanhamento',
-      guard: { modulo: 'avaliacoes' },
+      guard: { modulo: 'avaliacoes', feature: 'GOOGLE_REVIEWS' },
     },
     {
       to: '/configuracao',
@@ -341,6 +342,10 @@ export const MAX_PRIMARY = 4;
 
 function permite(guard, ctx) {
   if (!guard || guard.sempre) return true;
+  /* `feature` vem ANTES da permissão: capacidade diferida não existe neste release, então nem
+     chega a ser questão de quem pode. Ordem invertida deixaria o item aparecer para quem tem a
+     permissão de uma feature que não foi lançada. [SCOPE-F3] */
+  if (guard.feature && !featureAtiva(guard.feature)) return false;
   if (guard.proprio) return ctx.podeProprio(guard.proprio);
   if (guard.modulo) return ctx.pode(guard.modulo, guard.acao ?? 'ver');
   return true;

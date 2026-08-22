@@ -87,3 +87,41 @@ describe('buildNavigation — PR2 + PR4', () => {
     expect(tos(nav.primary)).toContain('/configuracao/perfil');
   });
 });
+
+/**
+ * Escopo de release na navegação.  [SCOPE-F3]
+ *
+ * `dono` tem TODAS as permissões (`pode: () => true`). É de propósito: o item some porque a
+ * capacidade foi diferida, não porque falta permissão. Testar com um papel restrito confundiria as
+ * duas causas e passaria mesmo se a flag não existisse.
+ */
+describe('features diferidas não aparecem na navegação', () => {
+  it('/avaliacoes some para o dono, que pode tudo', () => {
+    const nav = buildNavigation(dono);
+    const todos = [...tos(nav.primary), ...moreTos(nav), ...desktopTos(nav)];
+    expect(todos).not.toContain('/avaliacoes');
+  });
+
+  it('CONTRAPROVA: /configuracao/usuarios PERMANECE — ADMIN entra no release', () => {
+    /* Sem esta asserção, "esconder tudo" passaria como escopo fechado. A gestão de usuários é
+       suporte direto a RBAC e continua visível por decisão explícita. */
+    const nav = buildNavigation(dono);
+    const todos = [...tos(nav.primary), ...moreTos(nav), ...desktopTos(nav)];
+    expect(todos).toContain('/configuracao/usuarios');
+  });
+
+  it('CONTRAPROVA: a navegação do dono continua cheia — nada além do diferido saiu', () => {
+    const nav = buildNavigation(dono);
+    const todos = [...tos(nav.primary), ...moreTos(nav), ...desktopTos(nav)];
+    for (const rota of [
+      '/',
+      '/servicos',
+      '/aprovacoes',
+      '/tecnicos',
+      '/estoque',
+      '/configuracao',
+    ]) {
+      expect(todos, `${rota} sumiu junto`).toContain(rota);
+    }
+  });
+});

@@ -16,6 +16,7 @@ import DashboardWidgets from './DashboardWidgets.jsx';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import WelcomeCard from '../components/WelcomeCard.jsx';
+import { featureAtiva } from '../lib/featureFlags.js';
 import { startTour } from '../components/TourGuide.jsx';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 
@@ -236,7 +237,7 @@ export default function Dashboard() {
             <KpiCard
               label="Receita Líquida"
               valor={formatarMoeda(dados.receitaLiquida)}
-              hubEm="/metricas/faturamento-liquido"
+              {...(featureAtiva('METRIC_HUBS') ? { hubEm: '/metricas/faturamento-liquido' } : {})}
               icon={Wallet}
               cor="green"
               variacao={comp.receitaLiquida}
@@ -259,7 +260,7 @@ export default function Dashboard() {
               icon={ClipboardList}
               cor="blue"
               variacao={comp.totalServicos}
-              hubEm="/metricas/servicos-concluidos"
+              {...(featureAtiva('METRIC_HUBS') ? { hubEm: '/metricas/servicos-concluidos' } : {})}
             />
             <KpiCard
               label="Ticket Médio"

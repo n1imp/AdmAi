@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/Toast.jsx';
 import PanelScope from './components/ui/PanelScope.jsx';
+import { featureAtiva } from './lib/featureFlags.js';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import { RequireAuth, RequirePermissao } from './components/Guards.jsx';
 import BottomNav from './components/BottomNav.jsx';
@@ -111,30 +112,40 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           {/* Rota por Hub implementado, não `/metricas/:metricId`: das 8 métricas, 6 ainda não
               têm Hub, e uma rota curinga renderizaria página quebrada para elas. */}
-          <Route
-            path="/metricas/faturamento-liquido"
-            element={
-              <RequireAuth>
-                <RequirePermissao modulo="financeiro" acao="ver">
-                  <Layout>
-                    <MetricHubReceita />
-                  </Layout>
-                </RequirePermissao>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/metricas/servicos-concluidos"
-            element={
-              <RequireAuth>
-                <RequirePermissao modulo="servicos" acao="ver">
-                  <Layout>
-                    <MetricHub />
-                  </Layout>
-                </RequirePermissao>
-              </RequireAuth>
-            }
-          />
+          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+          {featureAtiva('METRIC_HUBS') && (
+            <Route
+              path="/metricas/faturamento-liquido"
+              element={
+                <RequireAuth>
+                  <RequirePermissao modulo="financeiro" acao="ver">
+                    <Layout>
+                      <MetricHubReceita />
+                    </Layout>
+                  </RequirePermissao>
+                </RequireAuth>
+              }
+            />
+          )}
+          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+          {featureAtiva('METRIC_HUBS') && (
+            <Route
+              path="/metricas/servicos-concluidos"
+              element={
+                <RequireAuth>
+                  <RequirePermissao modulo="servicos" acao="ver">
+                    <Layout>
+                      <MetricHub />
+                    </Layout>
+                  </RequirePermissao>
+                </RequireAuth>
+              }
+            />
+          )}
           <Route
             path="/servicos"
             element={
@@ -195,16 +206,21 @@ function AppContent() {
               </RequireAuth>
             }
           />
-          <Route
-            path="/avaliacoes"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Avaliacoes />
-                </Layout>
-              </RequireAuth>
-            }
-          />
+          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+          {featureAtiva('GOOGLE_REVIEWS') && (
+            <Route
+              path="/avaliacoes"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Avaliacoes />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+          )}
           <Route
             path="/meu-ponto"
             element={
@@ -331,16 +347,21 @@ function AppContent() {
               </RequireAuth>
             }
           />
-          <Route
-            path="/configuracao/notificacoes"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Notificacoes />
-                </Layout>
-              </RequireAuth>
-            }
-          />
+          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+          {featureAtiva('NOTIFICACOES') && (
+            <Route
+              path="/configuracao/notificacoes"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Notificacoes />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+          )}
           <Route
             path="/configuracao/whatsapp"
             element={

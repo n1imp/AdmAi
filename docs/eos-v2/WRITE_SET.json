@@ -1,27 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "RUNTIME-RECONCILIACAO",
-  "titulo": "Registry ganha a dimensao RUNTIME, e DONE user-facing passa a exigi-la",
+  "sliceId": "SCOPE-F3-FLAGS",
+  "titulo": "Retira METRIC_HUBS, GOOGLE_REVIEWS e NOTIFICACOES do release, de forma reversivel",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "VALIDATED",
-  "declaradoEm": "2026-08-22T17:31:37.901Z",
+  "declaradoEm": "2026-08-22T19:28:06.568Z",
   "baseCommitPorLane": {
-    "HARNESS": "3e5a2db7e0ddfe3b0bcff8480a248c2bfe541c77"
+    "HARNESS": "7eb5ea11cf636b71a74c61ecce652b9660527c21"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Ate agora todo DONE repousava em suite de integracao. O criterio vigente exige implementacao + testes + runtime correto + fluxo observavel. Sem um campo para runtime, o Registry nao conseguia nem expressar a diferenca — e foi por isso que ele afirmou aceitacao numa dimensao nunca medida. Valores derivados de observacao real: fluxo critico executado pelo produto (aprovacao -> baixa -> comissao -> dashboard) e RBAC exercitado nos tres papeis.",
+  "notaDeMetodo": "Decisao do usuario: POST_MVP + USER_REACHABLE = INVALID_RELEASE_STATE. A flag cobre navegacao, disponibilidade de rota, pontos de entrada e deep-link. Sem apagar implementacao. `src/config/navigation.js` ja e fonte unica de navegacao com `guard` por item — o gancho entra ali, nao espalhado. ADMIN /configuracao/usuarios PERMANECE visivel, e ha controle que reprova se sumir.",
   "baselinePorLane": {
     "HARNESS": {
-      "chaveiro-bot/scripts/__tests__/seed-demo.test.js": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
-      "chaveiro-bot/scripts/seed-demo.mjs": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
-      "chaveiro-painel/e2e/capturar.mjs": "9c7d1e572073df610355cf3551ee8b51c8e684925dfecfb78fe4e7eb9ff842e5",
-      "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
-      "chaveiro-painel/src/lib/__tests__/jwt.test.js": "082f2d45dfca68abbdba8ebb815f782589fe95f244fe3a94566888afd0800ce6",
-      "chaveiro-painel/src/lib/__tests__/primeiroAcesso.test.js": "88958dada1eee3c56c2e03cdaa9587af10f81bf7192f78323a06845858c87e63",
-      "chaveiro-painel/src/lib/jwt.js": "98870afd5e5b8bbbdf565d503d862fcbc35fa080ce24bf6158dc55aedaa5cf0f",
-      "chaveiro-painel/src/lib/primeiroAcesso.js": "70c9362172f9e9ffab4db3cbd156eda2197762311eb38e35ff4cb117792e40fc",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -95,6 +87,7 @@
       "chaveiro-bot/railway.json": "52a096a722987c3946e711362abfff4ce1743c0bba7a437e348dc88ba3084a80",
       "chaveiro-bot/scripts/__tests__/audit-gate.test.js": "31a2b0d448a230b1a618f81315cddb9e2a49a532691950c6544b8746166d9e3f",
       "chaveiro-bot/scripts/__tests__/backfill-uploads.test.js": "06958c0e453f9fbe9284c6a6de3f1e05d36301183f8753e8d54c721918d9ae72",
+      "chaveiro-bot/scripts/__tests__/seed-demo.test.js": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
       "chaveiro-bot/scripts/audit-allowlist.json": "c6477fee9a944634f3579f95a5f50e1925cf830f95bcd04f12617ce1fdff1320",
       "chaveiro-bot/scripts/audit-gate-helpers.mjs": "8dadf1871387a61477360e497e6841aef2f02f0f6c414b9ab01bf1e0cb1aa720",
       "chaveiro-bot/scripts/audit-gate.mjs": "aaffd4b4e04f64abffb5fe16c1015a628ca762e640cf008a48f2a500f49c6064",
@@ -103,6 +96,7 @@
       "chaveiro-bot/scripts/backup-uploads.sh": "39c2ebaeb48eba062ff357a2ac5aa2e9130a768c4e234f842988d9c6fe16e222",
       "chaveiro-bot/scripts/provision-bucket-documentos.mjs": "7f2f853e30725f8e3f84f4a60acd79d098241c111038a33006edd865617a828b",
       "chaveiro-bot/scripts/restore-uploads.sh": "d63bd2d4b579f071b4074030ba730b9406b788ec6af4861a21bc77bce3e9bcfe",
+      "chaveiro-bot/scripts/seed-demo.mjs": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
       "chaveiro-bot/scripts/smoke-pooler.mjs": "359b8cf59844294359d11c56ed279fc804efadbb3497d6b4d7c1ce5f8c9d3690",
       "chaveiro-bot/scripts/smoke-storage.mjs": "2d50ac7c7ce580f1dafaf0fcb22a383d37c8d186efd4129be2314bb5604bbef7",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "ddc187cf4ee430ee0421262ca8425c81d1b626fb096066925506cece9df10e91",
@@ -332,6 +326,8 @@
       "chaveiro-painel/capacitor.config.json": "1de68d379bc9ca2555072a2105149fd686173b8837c3c759349579f1c1d81ad9",
       "chaveiro-painel/e2e/.gitignore": "ba5a0c3e12f6c74b37dbeb5cec6bb6c5be72f44062cdc9f5866eb022c9ecc913",
       "chaveiro-painel/e2e/README.md": "79845a3f619d91cdd8b47b9eb2abb7e281ac8b57d13b01a46b6268e894284164",
+      "chaveiro-painel/e2e/capturar.mjs": "9c7d1e572073df610355cf3551ee8b51c8e684925dfecfb78fe4e7eb9ff842e5",
+      "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
       "chaveiro-painel/index.html": "5387bf4d8b461c06acc3d7a37041d279b895773f13fafd38b96e054817c4c226",
@@ -406,13 +402,17 @@
       "chaveiro-painel/src/hooks/useWidgetPrefs.js": "97c80c31ac93704bd990e1717c503d7f2b906a8ce63b4db2b8b5475cd5f4dd6b",
       "chaveiro-painel/src/index.css": "c4f42a5acb95836d5c769d2783cb2e3f7f66db8e21ffc4d44220f149db61c6df",
       "chaveiro-painel/src/lib/__tests__/api.test.js": "c0932aaca5ffd7bb89a2df989e8aab0b0de5a84c02e9f2664d96c14a650e7c3f",
+      "chaveiro-painel/src/lib/__tests__/jwt.test.js": "082f2d45dfca68abbdba8ebb815f782589fe95f244fe3a94566888afd0800ce6",
+      "chaveiro-painel/src/lib/__tests__/primeiroAcesso.test.js": "88958dada1eee3c56c2e03cdaa9587af10f81bf7192f78323a06845858c87e63",
       "chaveiro-painel/src/lib/__tests__/senha.test.js": "0023e631f440e01ef576b6e30736f0378751aed053aa11ec3089d6926af83f07",
       "chaveiro-painel/src/lib/api.js": "e96927768b4cd1a8320953c3909ed873e91ee6e10f238e62ee0c4d89ec7a8ba2",
       "chaveiro-painel/src/lib/cookiePolicy.js": "cb96b21e3917ace6e1bbbbc013b8489b638950cc6ccfce626caacbdb99eca30f",
       "chaveiro-painel/src/lib/crispBootstrap.js": "0a0e1a8e9071f5d67b134548aae2059a632ec982f4f0e489a9bb9de59a14fd29",
+      "chaveiro-painel/src/lib/jwt.js": "98870afd5e5b8bbbdf565d503d862fcbc35fa080ce24bf6158dc55aedaa5cf0f",
       "chaveiro-painel/src/lib/legal.js": "8fb4d6df60c9d05814ebd4aadb8f94ea68208fe7e132242062a06e3b82f98418",
       "chaveiro-painel/src/lib/moeda.js": "9c8444f4a636d6d982f4b7e15eff1a062e26817c3a2628bb0fb45482775aee3f",
       "chaveiro-painel/src/lib/monitoring.js": "200879cf0f1ab1d1fe366e4c74c53e5b22e52782da250fca34b9f38bd2c8a542",
+      "chaveiro-painel/src/lib/primeiroAcesso.js": "70c9362172f9e9ffab4db3cbd156eda2197762311eb38e35ff4cb117792e40fc",
       "chaveiro-painel/src/lib/senha.js": "a96a55525b437fdd9d7e32443462469532d03eb64fe32af012ef2c7c4dd8ef51",
       "chaveiro-painel/src/main.jsx": "b7c51d66cdcec87069d158e04b2c7dec9a336c6daea58c1ba9a323674abff893",
       "chaveiro-painel/src/pages/Ajuda.jsx": "4845446d9cea3041ab96909039879a969ffc3859d8091347950fbeb6825c8b0f",
@@ -544,8 +544,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "908070d6bb0df3a2ae55b0b838b632db3b12aec15e7ba19df6e718abb56e4df9",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "d5ec68d188a7f115ae3e536049402d9fe1a9df3f8686e3c11c674c4505a3828c",
+      "docs/eos-v2/WRITE_SET.json": "da660d5b32b1fd3d1c8220f8d51b69a94d3d294b5932c706d654784a16ffb83f",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "37fa7543e6f80394881af562a4b71673a6f5daf7b06fb13ea7fed8e5910bc6ec",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -584,7 +584,7 @@
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
       "tools/admai-delivery/feature-graph.mjs": "cbe9cf6d1723ef3d2fe409447d499b00173d38369b835ae819ae3b151e808ce4",
-      "tools/admai-delivery/feature-registry.mjs": "7a76b7bac94715d85e15fe338aba890643143b5d2ab04f1babaf2bd54d00c31e",
+      "tools/admai-delivery/feature-registry.mjs": "d106b031388741b3d95cd2a0cccade5fd44085b26393176832d76231505af3d5",
       "tools/admai-delivery/gate.mjs": "d2da91323a73e35ad2ee4e3b500ff9b64b5ec5e3f52005dfda7bea098c859253",
       "tools/admai-delivery/metric/availability.mjs": "a37aa3e26b414acbc5193a33eab1e82effa21c21c93d72474e553670c50e6a50",
       "tools/admai-delivery/metric/calculate.mjs": "6be5516e804560931f21d2d6031fee44fa5c1cb86ec3b7027cc762009bfea748",
@@ -597,7 +597,7 @@
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
-      "tools/admai-delivery/write-set-gate.mjs": "e1166e5711e196cb73ff0be7f5e2fdfcf51d3ecf2041ba8232a4f18cbe1ab95a",
+      "tools/admai-delivery/write-set-gate.mjs": "9d3313c33057afb0abe35849db7f47a876e1d7742afe3040a796cf728203cee3",
       "tools/codex-policy/README.md": "a8eecbfd6e54a00738c65e82d5b6f663eb89a1d7f1c1cea00d4d893b77ba0047",
       "tools/codex-policy/agent-governance.test.mjs": "94b3f9165f5137b3ca4bda6cb0d8f5e8378004a47ca7df67d289470c9e3ac2aa",
       "tools/codex-policy/approval-policy.mjs": "a2a750f65515178551ef097b527370b94efbb4f888be87fa01fd173306722c25",
@@ -664,14 +664,68 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/feature-registry.mjs",
+      "caminho": "chaveiro-painel/src/lib/featureFlags.js",
       "precisao": "BOUNDED",
-      "proposito": "campo runtime, controle que impede DONE user-facing sem runtime PASS, e valores observados",
+      "proposito": "fonte unica das flags, diferidas desligadas por padrao",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/__tests__/featureFlags.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "controles do default e da leitura de ambiente",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/config/navigation.js",
+      "precisao": "BOUNDED",
+      "proposito": "item de navegacao pode declarar flag; buildNavigation filtra",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7a76b7bac94715d85e15fe338aba890643143b5d2ab04f1babaf2bd54d00c31e",
+      "shaNaDeclaracao": "f5b02178db2e972d01459663d6e6e9801a47b5b86e4945043321d16e16ee6bfe",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/config/__tests__/navigation.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prova que as diferidas somem da navegacao e ADMIN permanece",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9410c871d3552ed37666a7a2b1205775c837ffeb473cad3958767e1c68760c25",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/App.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "rota de feature diferida nao existe: deep-link nao alcanca",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7195181505a46eb5e9c6d01dddf2a5e230b56cd34430f3ac236b670e0db1a2ca",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Dashboard.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "KpiCard sem hubEm quando o hub esta diferido",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f42f08e76f30ee95ff975195861b3949814b20745cb652444fe6f464c153d4f9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Configuracao.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "entrada de notificacoes some quando diferida",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1f91e4ec1727f927916b325c8102d1da0bd884365604c47064b2a0a2829a0cd7",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T17:31:38.285Z",
+  "validadoEm": "2026-08-22T19:28:07.863Z",
   "validadoPor": "write-set-gate.mjs"
 }

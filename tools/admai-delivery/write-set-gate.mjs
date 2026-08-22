@@ -580,6 +580,35 @@ export function arquivar(caminho = ARTEFATO, historico = HISTORICO) {
     };
   }
 
+  /* [SCOPE-F0] Rearquivar a MESMA declaração é no-op.
+     `arquivar()` recomputa a comparação (logo abaixo, e por bom motivo). Só que a comparação
+     depende do HEAD: a guarda [R25-02] devolve `UNKNOWN_DIFFERENCE` quando a base andou, porque
+     "diferença contra o baseline" deixa de significar "escrita desta rodada". Então uma rodada
+     fechada em `MATCH` virava `UNKNOWN_DIFFERENCE` só por ser arquivada de novo depois de um
+     commit — e como entrada bloqueante é preservada ([R27-03]/[R28-02], regra certa), cada
+     rearquivamento ACUMULAVA um bloqueio inventado.
+
+     Foi a origem comum de três: `SAFE-MIG-01#rearquivado-1`, `GAP-UI-02#rearquivado-1` e
+     `MVP-20-22/EVIDENCIA`. Reconciliar um a um trataria o sintoma.
+
+     Identidade estável: `sliceId` + `declaradoEm`. Declaração nova da mesma fatia recebe outro
+     `declaradoEm` e continua arquivando normalmente — inclusive com sufixo, quando houver entrada
+     preservada. Nada aqui afrouxa as guardas existentes: o PRIMEIRO arquivamento segue mecânico,
+     nada é sobrescrito, e nenhuma violação registrada é apagada. */
+  /* `declaradoEm` precisa EXISTIR nos dois lados. Comparar sem isso fazia `undefined === undefined`
+     casar, e uma declaração sem timestamp virava "já arquivada" contra qualquer entrada antiga
+     homônima — o no-op engolia um arquivamento legítimo. O controle de convivência do [R27-03]
+     pegou isso na hora, que é exatamente o que ele existe para fazer. */
+  const jaArquivadaIgual =
+    typeof decl.declaradoEm === 'string' &&
+    decl.declaradoEm.length > 0 &&
+    hist.declaracoes.some(
+      (d) => String(d.sliceId).split('#')[0] === decl.sliceId && d.declaradoEm === decl.declaradoEm
+    );
+  if (jaArquivadaIgual) {
+    return { arquivado: false, motivo: 'ja arquivada — mesma declaracao, nada a recomputar', total: hist.declaracoes.length };
+  }
+
   /* [R25-01] Arquivar EXECUTA a comparação e a persiste. Antes ela era opcional: `--comparar` era um
      modo que eu podia esquecer de rodar, e o fechamento gravava a declaração sem confronto nenhum.
      É a mesma causa sistêmica do R24-07 — comparação que depende de alguém lembrar — sobrevivendo
@@ -1353,6 +1382,36 @@ export function executar(argv = []) {
           arquivar(decl, hist);
           const ids = JSON.parse(readFileSync(hist, 'utf8')).declaracoes.map((d) => d.sliceId);
           return new Set(ids).size === ids.length;
+        })()],
+        /* [SCOPE-F0] Rearquivar a MESMA declaração recomputava a comparação. Sob HEAD movido, a
+           guarda [R25-02] devolve `UNKNOWN_DIFFERENCE`, e como classe bloqueante é preservada, o
+           rearquivamento MINTAVA um bloqueio que nunca existiu. Três nasceram assim. */
+        ['rearquivar a MESMA declaração é no-op', (() => {
+          writeFileSync(hist, '{"declaracoes":[]}');
+          gravarDecl({ ...declBoa, declaradoEm: '2026-01-01T00:00:00.000Z' });
+          arquivar(decl, hist);
+          const depoisDoPrimeiro = JSON.parse(readFileSync(hist, 'utf8')).declaracoes.length;
+          const r = arquivar(decl, hist);
+          const ids = JSON.parse(readFileSync(hist, 'utf8')).declaracoes.map((d) => d.sliceId);
+          /* Nem cresce, nem ganha sufixo: o histórico fica idêntico. */
+          return depoisDoPrimeiro === 1 && ids.length === 1 && r.arquivado === false
+            && !ids.some((i) => String(i).includes('#'));
+        })()],
+        /* CONTRAPROVA obrigatória: sem ela, "arquivar nunca faz nada" passaria como idempotência —
+           e o registro deixaria de existir, que é falha muito pior que duplicata. */
+        ['CONTRAPROVA: declaração NOVA da mesma fatia continua sendo arquivada', (() => {
+          writeFileSync(hist, '{"declaracoes":[]}');
+          gravarDecl({ ...declBoa, declaradoEm: '2026-01-01T00:00:00.000Z' });
+          arquivar(decl, hist);
+          gravarDecl({ ...declBoa, declaradoEm: '2026-02-02T00:00:00.000Z' });
+          const r = arquivar(decl, hist);
+          const d = JSON.parse(readFileSync(hist, 'utf8')).declaracoes;
+          /* O que prova a contraprova é o `declaradoEm` NOVO ter chegado ao histórico. A primeira
+             versão exigia duas linhas e falhava: entrada anterior NÃO bloqueante é substituída, uma
+             linha por fatia, pelo [R27-03]. A regra estava certa; a asserção é que estava errada —
+             e contar linhas mediria a política de substituição, não a idempotência. */
+          return r.arquivado === true
+            && d.some((x) => x.declaradoEm === '2026-02-02T00:00:00.000Z');
         })()],
         /* [R28-03] Histórico malformado devolvia `[]` — a afirmação mais forte a partir da
            estrutura mais desconhecida. Irmão do R27-02, que eu corrigi só em `arquivar()`. */
