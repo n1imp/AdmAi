@@ -40,7 +40,10 @@ export function KpiCard({ label, valor, icon: Icon, cor = 'accent', variacao, hu
         <Icon size={20} strokeWidth={1.8} />
       </div>
       <div className="min-w-0">
-        <p className="kpi-label truncate">{label}</p>
+        {/* Sem `truncate`: cortar o rótulo esconde QUAL número está sendo mostrado, que é a
+            única coisa que o rótulo faz. Quebra em até duas linhas quando não couber —
+            os cards da grade esticam juntos, então o alinhamento se mantém. [GAP-UI-03] */}
+        <p className="kpi-label line-clamp-2">{label}</p>
         <div className="flex items-baseline gap-2">
           <p className="kpi-value text-2xl mt-0.5">{valor}</p>
           {variacao !== undefined && <Variacao valor={variacao} />}

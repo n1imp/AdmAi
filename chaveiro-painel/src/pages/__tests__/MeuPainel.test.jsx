@@ -81,6 +81,59 @@ describe('<MeuPainel> — F9/M1 desempenho por período', () => {
     await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/me/metricas?periodo=hoje'));
   });
 
+  /* ── GAP-UI-04 ──────────────────────────────────────────────────────────────
+     Dois defeitos de LEITURA, não de dado. O card mostra `receitaLiquida` sob o rótulo "Meta do
+     mês": sem meta definida ele afirmava que a meta era o próprio resultado, e o texto abaixo
+     dizia que não havia meta. E `comissaoGanha` e `saldoPendente` são métricas distintas que
+     coincidem enquanto nada foi repassado — dois cards de "Comissão" com o mesmo número levam a
+     somar. Os casos abaixo fixam os DOIS estados de cada um. */
+
+  it('SEM meta: o rótulo diz o que o número é, e não o chama de meta', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        ...METRICAS,
+        tecnico: { ...METRICAS.tecnico, metaMensal: null },
+        mesAtual: { receitaLiquida: 260, comissao: 52, meta: null, progressoMeta: null },
+      },
+    });
+    render(<MeuPainel />);
+
+    expect(await screen.findByText(/Receita líquida do mês/i)).toBeInTheDocument();
+    /* A contradição fixada: não pode existir "Meta do mês" na mesma tela que "Sem meta definida". */
+    expect(screen.queryByText('Meta do mês')).not.toBeInTheDocument();
+    expect(screen.getByText(/Sem meta definida/i)).toBeInTheDocument();
+  });
+
+  it('COM meta: volta a ser meta, com o alvo ao lado', async () => {
+    mockGet.mockResolvedValue({ data: METRICAS });
+    render(<MeuPainel />);
+
+    /* Contraprova do caso acima: o rótulo "Meta do mês" não sumiu do produto — ele passou a
+       depender de haver meta. Sem esta asserção, apagá-lo de vez também passaria. */
+    expect(await screen.findByText('Meta do mês')).toBeInTheDocument();
+    expect(screen.queryByText(/Sem meta definida/i)).not.toBeInTheDocument();
+  });
+
+  it('comissão: mostra a composição quando já houve repasse', async () => {
+    mockGet.mockResolvedValue({ data: METRICAS }); // ganha 800, recebido 500, pendente 300
+    render(<MeuPainel />);
+
+    /* Sem isto, os dois cards de comissão ficam sem relação visível e o técnico soma 800+300. */
+    expect(await screen.findByText(/já recebeu/i)).toBeInTheDocument();
+    expect(screen.getByText(/Total gerado no período/i)).toBeInTheDocument();
+  });
+
+  it('comissão: quando nada foi repassado, diz isso em vez de repetir o número em silêncio', async () => {
+    mockGet.mockResolvedValue({
+      data: { ...METRICAS, comissaoGanha: 52, totalRecebido: 0, saldoPendente: 52 },
+    });
+    render(<MeuPainel />);
+
+    /* O estado do runtime observado: ganha 52, recebido 0, pendente 52 — dois cards com R$ 52,00
+       e nenhuma pista de que são a mesma comissão vista de dois ângulos. */
+    expect(await screen.findByText(/nada foi repassado ainda/i)).toBeInTheDocument();
+  });
+
   it('mostra estado vazio quando não há serviços no período', async () => {
     mockGet.mockResolvedValue({
       data: {

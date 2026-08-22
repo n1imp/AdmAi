@@ -17,6 +17,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, normalize, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { acharChrome, conectar } from './cdp.mjs';
 
 const RAIZ = dirname(fileURLToPath(import.meta.url));
 const DIST = join(RAIZ, '..', 'dist');
@@ -123,55 +124,7 @@ function subirServidor() {
   });
 }
 
-// ── Chrome cross-plataforma ──────────────────────────────────────────────────
-function acharChrome() {
-  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH))
-    return process.env.CHROME_PATH;
-  const c = [
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/usr/bin/google-chrome',
-    '/usr/bin/google-chrome-stable',
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
-  ].find((p) => existsSync(p));
-  if (!c) throw new Error('Chrome não encontrado. Defina CHROME_PATH.');
-  return c;
-}
-
-async function conectar(url) {
-  const socket = new WebSocket(url);
-  const pend = new Map();
-  let seq = 0;
-  await new Promise((ok, err) => {
-    socket.addEventListener('open', ok, { once: true });
-    socket.addEventListener('error', err, { once: true });
-  });
-  const ouvintes = new Map();
-  socket.addEventListener('message', (ev) => {
-    const m = JSON.parse(String(ev.data));
-    if (m.id && pend.has(m.id)) {
-      const p = pend.get(m.id);
-      pend.delete(m.id);
-      m.error ? p.reject(new Error(m.error.message)) : p.resolve(m.result);
-    } else if (m.method && ouvintes.has(m.method)) {
-      ouvintes.get(m.method).forEach((fn) => fn(m.params));
-    }
-  });
-  return {
-    send(method, params = {}) {
-      const id = ++seq;
-      socket.send(JSON.stringify({ id, method, params }));
-      return new Promise((ok, err) => pend.set(id, { resolve: ok, reject: err }));
-    },
-    on(method, fn) {
-      if (!ouvintes.has(method)) ouvintes.set(method, []);
-      ouvintes.get(method).push(fn);
-    },
-    close: () => socket.close(),
-  };
-}
+// Chrome + CDP: ver `e2e/cdp.mjs` (extraído daqui para o capturador reusar).
 
 const fakeToken = (p) => `e30.${Buffer.from(JSON.stringify(p)).toString('base64')}.e2e`;
 

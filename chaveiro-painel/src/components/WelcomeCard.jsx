@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { superficieAtual, avisarMudanca, EVENTO_MUDOU } from '../lib/primeiroAcesso.js';
 import { useNavigate } from 'react-router-dom';
 import { QrCode, ClipboardList, BarChart3, BookOpen, X } from 'lucide-react';
 
@@ -12,14 +13,25 @@ const ACOES = [
 
 export default function WelcomeCard({ onVerTutorial }) {
   const navigate = useNavigate();
-  // Se já foi visto, nasce oculto e não renderiza nada.
-  const [visivel, setVisivel] = useState(() => !localStorage.getItem(STORAGE_KEY));
+  /* Não basta "ainda não foi visto": tem de ser a VEZ dele. Enquanto o consentimento estiver
+     pendente, este card fica fora da tela — decidir sobre rastreamento embaixo de um card de
+     boas-vindas não é decidir. A ordem mora em `lib/primeiroAcesso.js`. [GAP-UI-02] */
+  const [visivel, setVisivel] = useState(() => superficieAtual() === 'boas-vindas');
+
+  /* Reavalia quando o consentimento é resolvido, para o card aparecer logo em seguida em vez de
+     exigir recarga da página. */
+  useEffect(() => {
+    const reavaliar = () => setVisivel(superficieAtual() === 'boas-vindas');
+    window.addEventListener(EVENTO_MUDOU, reavaliar);
+    return () => window.removeEventListener(EVENTO_MUDOU, reavaliar);
+  }, []);
 
   if (!visivel) return null;
 
   function dispensar() {
     localStorage.setItem(STORAGE_KEY, '1');
     setVisivel(false);
+    avisarMudanca();
   }
 
   return (

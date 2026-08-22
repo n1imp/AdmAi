@@ -1,17 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/api.js';
+import { decodeJWT } from '../lib/jwt.js';
 import { useAnalyticsIdentify, analyticsReset } from '../hooks/useAnalytics.js';
 
 const AuthContext = createContext(null);
 
-export function decodeJWT(token) {
-  try {
-    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(b64));
-  } catch {
-    return null;
-  }
-}
+/* Reexportado para não quebrar quem já importava daqui. A implementação foi para `lib/jwt.js`
+   porque `atob` sozinho lê bytes como caracteres e corrompia todo nome não-ASCII. [GAP-UI-01] */
+export { decodeJWT };
 
 // Verifica se o token salvo expirou (payload.exp em segundos).
 export function tokenExpirado() {

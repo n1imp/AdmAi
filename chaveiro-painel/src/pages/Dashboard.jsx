@@ -84,14 +84,11 @@ export default function Dashboard() {
     };
   }, [buscar]);
 
-  // Auto-start do tour de onboarding na primeira visita ao Painel.
-  // Espera os KPIs renderizarem (carregando=false) para que os alvos existam no
-  // DOM; startTour respeita o flag `chaveiro_tour_done`, então não insiste.
-  useEffect(() => {
-    if (carregando) return;
-    const t = setTimeout(() => startTour({ navigate }), 600);
-    return () => clearTimeout(t);
-  }, [carregando, navigate]);
+  /* O tour NÃO auto-inicia mais. [GAP-UI-02]
+     Ele abria 600ms após os KPIs renderizarem — em cima do card de boas-vindas e do banner de
+     cookies, que apareciam ao mesmo tempo. Pior: o botão principal do card é "VER TUTORIAL", que
+     inicia este mesmo tour. A ação era oferecida e executada sozinha.
+     Agora é opt-in: pelo card, ou por Ajuda. O recurso continua; a interrupção sai. */
 
   const { containerRef, isRefreshing } = usePullToRefresh(buscar);
   const comp = dados?.comparativo ?? {};

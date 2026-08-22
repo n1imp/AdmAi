@@ -95,6 +95,20 @@ export const CAMPOS_DO_GAP = Object.freeze([
  */
 /* Classes de impacto de release. Enumeracao fechada: um gap cujo impacto nao pertence a esta lista
    nao e classificavel, e nao classificavel nao entra em fila de priorizacao. */
+/**
+ * Observação de RUNTIME, ao lado de `acceptance`. Terceira dimensão, e ela existe por um motivo
+ * concreto: todo `DONE` deste Registry foi concedido sobre suíte de integração, e o critério de
+ * release exige `implementação + testes + runtime correto + fluxo observável`. Sem um campo para
+ * isso, o instrumento não conseguia nem EXPRESSAR a diferença — então afirmava aceitação numa
+ * dimensão que ninguém tinha medido.
+ *
+ *   PASS        observado no produto rodando, com o fluxo exercitado de verdade
+ *   FAIL        observado e não funciona
+ *   NA          não tem superfície observável (contrato transversal, política)
+ *   NOT_TESTED  ainda não olhado — e isto NÃO é PASS
+ */
+export const RUNTIMES = Object.freeze(['PASS', 'FAIL', 'NA', 'NOT_TESTED']);
+
 export const IMPACTOS = Object.freeze([
   'FUNCTIONAL', 'SECURITY', 'COMMERCIAL', 'VERIFICATION', 'OPERATIONAL', 'UX', 'EXTERNAL_BLOCKER'
 ]);
@@ -114,6 +128,17 @@ export function violacoesDeAceitacao(f) {
   if (acc === 'DONE' && gaps.length > 0) {
     fora.push(`${f.featureId}: DONE com ${gaps.length} gap(s) aberto(s)`);
   }
+  /* A regra que fecha o buraco: feature com tela NÃO chega a DONE sem ter sido vista rodando.
+     `f.length > 0` é o que distingue user-facing de contrato transversal — quem tem página tem
+     como ser observado, e por isso deve ser. [RUNTIME-RECONCILIACAO] */
+  const temTela = (f.f ?? []).length > 0;
+  if (acc === 'DONE' && temTela && f.runtime !== 'PASS') {
+    fora.push(`${f.featureId}: DONE com tela mas runtime=${f.runtime ?? 'ausente'} — SUITE_APROVADA != DONE`);
+  }
+  if (f.runtime && !RUNTIMES.includes(f.runtime)) {
+    fora.push(`${f.featureId}: runtime fora da taxonomia (${f.runtime})`);
+  }
+
   for (const g of gaps) {
     /* `releaseImpact` sai da heuristica de comprimento e passa a ser validado contra a taxonomia.
        O piso de 3 caracteres reprovava `UX`, que e classe legitima, e ao mesmo tempo deixava passar
@@ -198,8 +223,10 @@ export function observarProduto() {
  * forjar a âncora em vez de nomeá-la.
  */
 const F = (area, id, name, description,
-  { b = [], m = [], f = [], t = [], u = [], s = [], p, releaseRequired, acceptance, blocker, acc = 'DESCONHECIDA', gaps = [] }) =>
+  { b = [], m = [], f = [], t = [], u = [], s = [], p, releaseRequired, acceptance, blocker,
+    acc = 'DESCONHECIDA', gaps = [], runtime = 'NOT_TESTED', papeis = [] }) =>
   ({ area, featureId: id, name, description, b, m, f, t, u, s, priority: p, releaseRequired,
+    runtime, papeis,
     acceptanceCriteria: acceptance, blockerReason: blocker ?? null,
     /* JULGAMENTO, ao lado de `priority`. Default `DESCONHECIDA`: o sweep é quem preenche. */
     acceptance: acc, gaps });
@@ -207,7 +234,7 @@ const F = (area, id, name, description,
 export const FEATURES = Object.freeze([
   /* ---- Identidade / SaaS ---- */
   F('Identidade', 'AUTH_LOGIN', 'Login e sessão', 'Autenticação, refresh token, sessão de usuário',
-    { b: ['auth.js'], f: ['Login.jsx'], t: ['auth.test.js', 'refresh_rotacao_sessao.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+    { b: ['auth.js'], f: ['Login.jsx'], t: ['auth.test.js', 'refresh_rotacao_sessao.test.js'], p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true,
       acceptance: 'login, refresh e expiração de sessão provados por suíte dirigida',
       /* GAP-AUTH-01 FECHADO. `refresh_rotacao_sessao.test.js`: 12 casos, com controle POSITIVO
          primeiro (renovacao legitima funciona e o token renovado autentica), depois rotacao
@@ -218,20 +245,33 @@ export const FEATURES = Object.freeze([
       acc: 'DONE' }),
   F('Identidade', 'AUTH_2FA', '2FA e recuperação', 'TOTP, códigos de recuperação, anti-bruteforce',
     { b: ['auth.js'], f: ['Seguranca.jsx', 'RecuperarSenha.jsx'], t: ['conta_2fa_bruteforce.test.js', 'recuperacao_2fa.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'bruteforce barrado e recuperação provada',
-      acc: 'DONE' }),
+      p: 'P0_RELEASE_BLOCKER', runtime: 'NOT_TESTED', papeis: [], releaseRequired: true,
+      acceptance: 'bruteforce barrado e recuperação provada',
+      /* REBAIXADO pela reconciliacao de runtime. `POST /me/2fa/setup` foi observado devolvendo
+         segredo e otpauthUrl, mas ATIVAR e depois LOGAR com o codigo nao foi exercitado — e e o
+         login com 2FA que decide se a feature serve. Observar meio fluxo e observar meio fluxo. */
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-2FA-RT',
+        claim: 'ativação do 2FA e login com código nunca foram exercitados no produto',
+        affectedUserFlow: 'dono ativa 2FA e volta a entrar na conta no dia seguinte',
+        evidence: 'runtime: POST /me/2fa/setup devolve 200 com secret e otpauthUrl; nenhuma observação de ativação nem de login subsequente com TOTP',
+        requiredBehavior: 'ativar 2FA, sair, e entrar de novo usando o código do autenticador',
+        currentBehavior: 'a suíte cobre bruteforce e recuperação; o caminho feliz completo não foi visto rodando',
+        releaseImpact: 'VERIFICATION'
+      }] }),
   F('Identidade', 'MULTI_TENANCY', 'Multi-tenancy', 'Isolamento por empresa em toda leitura e escrita',
     { b: ['api.js'], t: ['rls.test.js', 'idor_leitura_cross_tenant.test.js', 'idor_escrita_cross_tenant.test.js', 'vazamento_colecao_cross_tenant.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'nenhum vetor material de leitura, escrita ou coleção cruza tenant',
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true, acceptance: 'nenhum vetor material de leitura, escrita ou coleção cruza tenant',
       acc: 'DONE' }),
   F('Identidade', 'RBAC', 'RBAC e permissões', 'Dono, Gestor, Funcionário; requirePermissao no backend',
     { b: ['api.js'], f: ['Usuarios.jsx'], t: ['rbac_privilege_escalation.test.js', 'e2e_rbac_ponto.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'escalação de privilégio barrada no backend',
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true, acceptance: 'escalação de privilégio barrada no backend',
       acc: 'DONE' }),
   F('Identidade', 'ONBOARDING', 'Cadastro e convite', 'Cadastro com OTP, convite de usuário, verificação de e-mail',
     { b: ['account.js'], f: ['ConviteAceitar.jsx', 'VerificarEmail.jsx', 'MagicLink.jsx'],
       t: ['cadastro_otp.test.js', 'troca_email_confirmacao.test.js', 'convite_aceite.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono'], releaseRequired: true,
       acceptance: 'fluxo completo de entrada de empresa e de usuário convidado',
       /* GAP-ONB-01 FECHADO. `convite_aceite.test.js`: 10 casos exercitando o endpoint REAL de
          criacao e capturando o token do e-mail mockado — ler o hash do banco e forjar um token
@@ -245,7 +285,7 @@ export const FEATURES = Object.freeze([
   /* ---- Núcleo operacional ---- */
   F('Serviços', 'SERVICOS_CRUD', 'Serviços', 'Criação, edição, status, execução, conclusão e histórico',
     { b: ['servicos.js'], f: ['Servicos.jsx', 'NovoServico.jsx', 'MeusServicos.jsx'],
-      t: ['servico_atual.test.js', 'servicos_keyset.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      t: ['servico_atual.test.js', 'servicos_keyset.test.js'], p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true,
       /* Criterio CORRIGIDO no sweep. A versao anterior pedia "ciclo Cliente -> Servico -> ...", e
          NAO EXISTE entidade Cliente: o cliente e capturado como `clienteNome`/`clienteTelefone` no
          proprio `Servico` (schema.prisma:138-140). Pedir CRUD de Cliente seria inventar requisito
@@ -255,7 +295,7 @@ export const FEATURES = Object.freeze([
   F('Serviços', 'APROVACOES', 'Aprovação e rejeição', 'Fluxo de aprovação de serviço pelo gestor',
     { f: ['Aprovacoes.jsx'],
       t: ['e2e_rbac_ponto.test.js', 'idor_escrita_cross_tenant.test.js', 'aprovacao_rejeicao_estoque.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['gestor'], releaseRequired: true,
       acceptance: 'aprovar e rejeitar com efeito em comissão e financeiro',
       /* APROVAR esta provado ponta a ponta: `e2e_rbac_ponto` percorre funcionario -> servico
          pendente -> aprovacao contabilizando comissao, e a rota (servicos.js:250) faz a transicao
@@ -275,13 +315,13 @@ export const FEATURES = Object.freeze([
       acc: 'DONE' }),
   F('Técnicos', 'TECNICOS', 'Técnicos e funcionários', 'Cadastro, acesso, permissões, serviços associados',
     { b: ['tecnicos.js'], f: ['Tecnicos.jsx', 'NovoTecnico.jsx', 'PerfilTecnico.jsx'], t: ['tecnico_criacao.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'criação, acesso e vínculo com serviço',
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'funcionario'], releaseRequired: true, acceptance: 'criação, acesso e vínculo com serviço',
       acc: 'DONE' }),
   F('Estoque', 'ESTOQUE', 'Estoque e materiais', 'Materiais, movimentação, baixa, integração com serviço',
     { b: ['estoque.js'], f: ['Estoque.jsx', 'Catalogo.jsx', 'NovoServicoFuncionario.jsx'],
       u: ['estoque.test.js'],
       t: ['aprovacao_rejeicao_estoque.test.js', 'materiais_servico_funcionario.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true,
       /* CRITERIO CORRIGIDO. A versao anterior dizia "ao concluir servico" e o gatilho real nao e a
          conclusao: `darBaixaPorServico` roda no REGISTRO com materiais (servicos.js:232,
          servico.js:59) e na APROVACAO do servico pendente (servicos.js:270). Descrever o gatilho
@@ -350,14 +390,14 @@ export const FEATURES = Object.freeze([
        dataset conhecido, e o criterio pede calculo E politica. A declaracao anterior citava so a
        politica por campo, o que subdeclarava a evidencia existente. */
     { f: ['Reparticao.jsx'], t: ['metricas_campo_seguranca.test.js', 'metricas.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor'], releaseRequired: true,
       acceptance: 'cálculo correto e política por campo aplicada no backend',
       acc: 'DONE' }),
 
   /* ---- Métricas e dashboard ---- */
   F('Dashboard', 'METRIC_FOUNDATION', 'Fundação de métricas', 'Contrato, registro, cálculo e exposição',
     { b: ['metricas.js'], f: ['Dashboard.jsx'], t: ['metricas.test.js', 'metricas_exposicao.test.js', 'me_metricas.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'número correto, autorizado e explicável',
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['dono', 'funcionario'], releaseRequired: true, acceptance: 'número correto, autorizado e explicável',
       /* Os tres termos do criterio tem suite dirigida propria, e nenhuma delas prova o mesmo:
          CORRETO    `metricas.test.js` calcula contra dataset conhecido;
          AUTORIZADO `metricas_exposicao.test.js` prova que o campo sensivel nao sai para quem nao pode;
@@ -366,10 +406,10 @@ export const FEATURES = Object.freeze([
       acc: 'DONE' }),
   F('Dashboard', 'METRIC_HUBS', 'Metric Hubs', 'Duas verticais com drilldown e segurança por campo',
     { f: ['MetricHub.jsx', 'MetricHubReceita.jsx', 'MetricHubShell.jsx'], t: ['metricas_campo_seguranca.test.js'],
-      p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'hubs para as 8 métricas implementáveis' }),
+      p: 'P2_POST_LAUNCH', runtime: 'NOT_TESTED', papeis: [], releaseRequired: false, acceptance: 'hubs para as 8 métricas implementáveis' }),
   F('Dashboard', 'INDICADORES', 'Indicadores do gestor', 'Agregados e visão operacional',
     { f: ['GestorHome.jsx', 'MeuPainel.jsx'], t: ['gestor_indicadores.test.js', 'dashboard_groupby.test.js', 'aggregate_perfil_dashboard.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'agregados consistentes com os registros',
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['dono', 'funcionario'], releaseRequired: true, acceptance: 'agregados consistentes com os registros',
       /* `dashboard_groupby.test.js` monta dataset conhecido e confere escalares e os tres
          agrupamentos (porTecnico, porLocal, evolucaoDiaria) contra ele, incluindo periodo vazio —
          que e onde agregado costuma inventar linha. `gestor_indicadores` cobre resposta unica,
@@ -380,7 +420,7 @@ export const FEATURES = Object.freeze([
   /* ---- Ponto ---- */
   F('Ponto', 'PONTO', 'Registro de ponto', 'Batida, localização, selfie, antifraude, banco de horas',
     { f: ['MeuPonto.jsx'], t: ['e2e_rbac_ponto.test.js'], u: ['ponto.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['funcionario'], releaseRequired: true,
       /* CRITERIO PRECISADO, nao afrouxado. "Antifraude" ficava vago o bastante para ser lido como
          rejeicao automatica de batida — que o repositorio nao implementa e que exigir seria
          inventar requisito (paragrafo 10). O antifraude real e do desenho: `BatidaPonto.em` e
@@ -399,7 +439,7 @@ export const FEATURES = Object.freeze([
   /* ---- Billing ---- */
   F('Billing', 'BILLING', 'Assinatura e trial', 'Trial, assinatura, enforcement, expiração e bloqueio',
     { b: ['billing.js'], t: ['billing_access_audit.test.js', 'assinatura_cadastro.test.js', 'billing_google_auth.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true,
       acceptance: 'veredito BILLING_GATE definido e enforcement provado nas rotas que ele deve barrar',
       /* GAP-BILL-01 FECHADO. Decisao do usuario: trial -> paywall. `middlewares/assinatura.js`
          implementa o enforcement, montado em `api.js` numa posicao FAIL-CLOSED: depois de auth,
@@ -415,7 +455,7 @@ export const FEATURES = Object.freeze([
   F('WhatsApp', 'WHATSAPP', 'WhatsApp', 'Provider, webhooks, entrada, saída, filas, feature flags',
     { b: ['whatsapp.js'], f: ['ConfiguracaoBot.jsx'],
       t: ['inbound_numero_unico.test.js', 'inbound_idempotencia.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'NOT_TESTED', papeis: [], releaseRequired: true,
       acceptance: 'entrada e saída com idempotência e isolamento por empresa',
       /* ENTRADA e SAIDA provadas juntas: `inbound_numero_unico` entra pelo webhook e verifica a
          mensagem que SAI — saudacao com nome do tecnico, menu de desambiguacao com os nomes das
@@ -431,16 +471,25 @@ export const FEATURES = Object.freeze([
          a assercao central e `duplicado: true` justamente para o teste FALHAR nesse cenario em vez
          de passar sem que exista idempotencia. E evento sem `key.id` pula a guarda inteira: e o
          controle de sensibilidade do arquivo e, ao mesmo tempo, o limite real da protecao. */
-      acc: 'DONE' }),
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-WPP-RT',
+        claim: 'o fluxo de WhatsApp nunca foi observado no produto rodando',
+        affectedUserFlow: 'técnico manda mensagem no WhatsApp e o serviço aparece no painel',
+        evidence: 'a suíte chama rotearMensagemInbound direto, sem passar por webhook; no runtime local o robô fica inerte e não há provider conectado para exercitar a ponta',
+        requiredBehavior: 'mensagem real entra pelo webhook e vira serviço visível no painel',
+        currentBehavior: 'coberto por suíte, não observado em runtime — o gateway depende de provider externo indisponível localmente',
+        releaseImpact: 'VERIFICATION'
+      }] }),
   F('Google', 'GOOGLE_REVIEWS', 'Google Reviews', 'Conta Google, avaliações, análise',
     { b: ['google.js'], f: ['Avaliacoes.jsx'], t: ['billing_google_auth.test.js'],
-      p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'coleta e análise de avaliações' }),
+      p: 'P2_POST_LAUNCH', runtime: 'NOT_TESTED', papeis: [], releaseRequired: false, acceptance: 'coleta e análise de avaliações' }),
 
   /* ---- Documentos, notificações, config ---- */
   F('Documentos', 'DOCUMENTOS', 'Documentos e uploads', 'Upload, storage, documento de técnico',
     { b: ['documentos.js'], f: ['Documentos.jsx'],
       t: ['documentos.test.js', 'documentos_storage.test.js'], u: ['documentos-storage-key.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'FAIL', papeis: ['dono', 'funcionario'], releaseRequired: true,
       acceptance: 'upload isolado por tenant e chave de storage não adivinhável',
       /* Os dois termos tem prova separada, e essa separacao importa: `documentos.test.js` cobre o
          ciclo CRUD, a validacao de MIME contra o conteudo real (data URI invalida e tipo
@@ -475,9 +524,9 @@ export const FEATURES = Object.freeze([
         releaseImpact: 'FUNCTIONAL'
       }] }),
   F('Notificações', 'NOTIFICACOES', 'Notificações', 'Notificação in-app e e-mail',
-    { f: ['Notificacoes.jsx'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'entrega e leitura' }),
+    { f: ['Notificacoes.jsx'], p: 'P2_POST_LAUNCH', runtime: 'PASS', papeis: ['dono', 'funcionario'], releaseRequired: false, acceptance: 'entrega e leitura' }),
   F('Configurações', 'CONFIGURACOES', 'Configurações e preferências', 'Configuração da empresa e preferências do usuário',
-    { f: ['Configuracao.jsx', 'Perfil.jsx'], t: ['preferencias.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
+    { f: ['Configuracao.jsx', 'Perfil.jsx'], t: ['preferencias.test.js'], p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: ['dono', 'gestor'], releaseRequired: true,
       acceptance: 'preferências persistidas por usuário',
       /* `preferencias.test.js`: round-trip, merge que preserva namespace vizinho (o defeito classico
          e a gravacao de um namespace apagar o outro), isolamento por usuario e 401 sem sessao.
@@ -489,13 +538,13 @@ export const FEATURES = Object.freeze([
   /* ---- Transversais ---- */
   F('Segurança', 'SEGURANCA', 'Segurança transversal', 'Takeover, disambiguação de login, regressões',
     { m: ['auth.js'], t: ['seguranca.test.js', 'takeover_reset_pin.test.js', 'login_disambiguacao_leak.test.js', 'idor.test.js', 'bugs_regressao.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono', 'gestor', 'funcionario'], releaseRequired: true,
       acceptance: 'vetores conhecidos barrados com negativo que os nomeie',
       acc: 'DONE' }),
   F('LGPD', 'LGPD', 'LGPD e privacidade', 'Exclusão de conta, autoexclusão, termos e privacidade',
     { f: ['Privacidade.jsx', 'Termos.jsx', 'Cookies.jsx'],
       t: ['lgpd.test.js', 'autoexclusao_conta.test.js', 'auditoria_dado_pessoal.test.js'],
-      p: 'P0_RELEASE_BLOCKER', releaseRequired: true, acceptance: 'exclusão efetiva e rastreável',
+      p: 'P0_RELEASE_BLOCKER', runtime: 'PASS', papeis: ['dono'], releaseRequired: true, acceptance: 'exclusão efetiva e rastreável',
       /* GAP-LGPD-01 FECHADO por GAP-AUD-01. A exclusao ja era EFETIVA e provada; o que faltava era
          ser RASTREAVEL. Agora as operacoes sobre dado pessoal deixam trilha com ator, acao, escopo
          e momento — sem preservar o dado. */
@@ -507,7 +556,7 @@ export const FEATURES = Object.freeze([
      "Nao declarei ancora" nao e "nao existe": o registry mede o que a linha aponta, e a linha
      estava incompleta. */
   F('Auditoria', 'AUDITORIA', 'Auditoria', 'AuditLog das operações sensíveis',
-    { b: ['admin.js'], t: ['auditoria_dado_pessoal.test.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
+    { b: ['admin.js'], t: ['auditoria_dado_pessoal.test.js'], p: 'P1_MVP_REQUIRED', runtime: 'NOT_TESTED', papeis: [], releaseRequired: true,
       acceptance: 'operação sensível gera registro consultável, com ator, ação, alvo e momento',
       /* GAP-AUD-01 FECHADO. A trilha ja cobria ciclo de vida de usuario; foi estendida as duas
          operacoes de dado pessoal que faltavam — DELETE /me/conta (nos dois desfechos) e
@@ -521,7 +570,7 @@ export const FEATURES = Object.freeze([
          junto, a demonstracao morreria com o que precisa demonstrar. */
       acc: 'DONE' }),
   F('Admin', 'ADMIN', 'Administração', 'Rotas administrativas',
-    { b: ['admin.js'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'operações administrativas isoladas' }),
+    { b: ['admin.js'], p: 'P2_POST_LAUNCH', runtime: 'NOT_TESTED', papeis: [], releaseRequired: false, acceptance: 'operações administrativas isoladas' }),
   F('Operação', 'OBSERVABILIDADE', 'Observabilidade', 'Health check, logs estruturados com redação, captura de erro',
     /* ENTRADA CORRIGIDA. Estava vazia e por isso o registry derivava NAO_INICIADO. O repositorio
        tem, e sempre teve nesta frente:
@@ -535,7 +584,7 @@ export const FEATURES = Object.freeze([
     { s: ['logger.js', 'sentry.js'],
       u: ['logger.test.js', 'sentry.test.js', 'sentryTransport.test.js'],
       t: ['health_operacional.test.js', 'erro_nao_tratado.test.js'],
-      p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      p: 'P1_MVP_REQUIRED', runtime: 'PASS', papeis: [], releaseRequired: true,
       acceptance: 'erro em produção é detectável sem acesso ao banco',
     /* GAP-OBS-01 FECHADO. `health_operacional.test.js` cobre os tres estados e prova que sao
        DISTINGUIVEIS: 200 `ok`, 503 `degraded` com `database: error` (forcando o `$queryRaw` a
@@ -585,9 +634,9 @@ export const FEATURES = Object.freeze([
          JWT_SECRET esta setado no Railway". Segue no checklist operacional. */
       acc: 'DONE' }),
   F('Operação', 'E2E', 'Testes E2E', 'Fluxo completo do usuário em navegador',
-    { p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'fluxo Cliente->Serviço->Financeiro em navegador' }),
+    { p: 'P2_POST_LAUNCH', runtime: 'NA', papeis: [], releaseRequired: false, acceptance: 'fluxo Cliente->Serviço->Financeiro em navegador' }),
   F('Operação', 'STAGING', 'Staging e prontidão', 'Ambiente de homologação e checklist de produção',
-    { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'deploy reproduzível e rollback provado',
+    { p: 'P1_MVP_REQUIRED', runtime: 'NA', papeis: [], releaseRequired: true, acceptance: 'deploy reproduzível e rollback provado',
       /* BLOCKED por AUTORIDADE, nao por dificuldade tecnica — e a distincao importa, porque
          blocker tecnico eu resolveria sozinho. "Deploy reproduzivel" e "rollback provado" exigem
          executar deploy e promocao de ambiente, e a instrucao vigente diz textualmente que push,

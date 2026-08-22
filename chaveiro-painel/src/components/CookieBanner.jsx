@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { avisarMudanca } from '../lib/primeiroAcesso.js';
 import { Link } from 'react-router-dom';
 import { Cookie } from 'lucide-react';
 
@@ -19,6 +20,8 @@ export default function CookieBanner() {
   function aceitar(opcao) {
     localStorage.setItem(CHAVE, opcao);
     setOculto(true);
+    /* Libera a próxima superfície da sequência sem exigir recarga. [GAP-UI-02] */
+    avisarMudanca();
   }
 
   if (oculto) return null;

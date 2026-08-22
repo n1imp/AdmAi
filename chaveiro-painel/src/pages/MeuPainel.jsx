@@ -56,7 +56,10 @@ function KpiCard({ label, valor, icon: Icon, cor = 'accent' }) {
         <Icon size={20} strokeWidth={1.8} />
       </div>
       <div className="min-w-0">
-        <p className="kpi-label truncate">{label}</p>
+        {/* Sem `truncate`: cortar o rótulo esconde QUAL número está sendo mostrado, que é a
+            única coisa que o rótulo faz. Quebra em até duas linhas quando não couber —
+            os cards da grade esticam juntos, então o alinhamento se mantém. [GAP-UI-03] */}
+        <p className="kpi-label line-clamp-2">{label}</p>
         <p className="kpi-value text-2xl mt-0.5">{valor}</p>
       </div>
     </div>
@@ -226,14 +229,23 @@ export default function MeuPainel() {
                 <p className="font-display text-4xl font-bold text-white tracking-tight mt-1 tnum">
                   {formatarMoeda(dados.saldoPendente)}
                 </p>
-                <p className="text-muted text-xs mt-1">aguardando repasse</p>
+                {/* Mostra a COMPOSIÇÃO, não só o saldo. `saldoPendente` é
+                    `comissaoGanha - totalRecebido`: quando nada foi repassado os dois números são
+                    iguais, e dois cards de "Comissão" com o mesmo valor lado a lado levam o
+                    técnico a somar. Dizer de quanto vem, e quanto já saiu, desfaz a leitura
+                    errada sem esconder nenhuma das duas métricas. [GAP-UI-04] */}
+                <p className="text-muted text-xs mt-1">
+                  {dados.totalRecebido > 0
+                    ? `de ${formatarMoeda(dados.comissaoGanha)} — já recebeu ${formatarMoeda(dados.totalRecebido)}`
+                    : 'aguardando repasse · nada foi repassado ainda'}
+                </p>
               </div>
               <div className="w-12 h-12 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center text-accent-300 shrink-0">
                 <Wallet size={24} strokeWidth={1.8} />
               </div>
             </div>
             <KpiCard
-              label="Comissão ganha"
+              label="Total gerado no período"
               valor={formatarMoeda(dados.comissaoGanha)}
               icon={HandCoins}
               cor="indigo"
@@ -258,7 +270,11 @@ export default function MeuPainel() {
                   <Target size={18} strokeWidth={1.8} />
                 </div>
                 <div>
-                  <p className="kpi-label">Meta do mês</p>
+                  {/* O rótulo depende de HAVER meta. O número grande é sempre a receita líquida
+                      do mês; chamá-lo de "Meta do mês" sem meta definida afirmava que a meta era
+                      o próprio resultado — e o texto logo abaixo dizia que não havia meta. O dado
+                      estava certo, o rótulo é que mentia sobre o que ele é. [GAP-UI-04] */}
+                  <p className="kpi-label">{temMeta ? 'Meta do mês' : 'Receita líquida do mês'}</p>
                   <p className="font-display text-lg font-bold text-white leading-tight tnum">
                     {formatarMoeda(mes.receitaLiquida)}
                     {temMeta && (

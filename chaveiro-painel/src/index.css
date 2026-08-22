@@ -129,8 +129,12 @@
   .kpi-value {
     @apply font-display text-3xl font-bold leading-none tracking-tight tnum;
   }
+  /* `tracking` decorativo custa largura: em 11px maiúsculo, 0.14em soma ~14% ao rótulo, e é o
+     que fazia "RECEITA LÍQUIDA" não caber num card de meia tela em 360px. Em telas pequenas o
+     espaçamento cede; a partir de `sm` ele volta. A FONTE não muda — encolher texto para caber é
+     trocar um problema de layout por um de legibilidade. [GAP-UI-03] */
   .kpi-label {
-    @apply text-[11px] text-muted font-semibold uppercase tracking-[0.14em];
+    @apply text-[11px] text-muted font-semibold uppercase tracking-[0.04em] sm:tracking-[0.14em];
   }
 
   /* Rótulo de seção técnico (com tracejado de acento) */
