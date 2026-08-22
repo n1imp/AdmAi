@@ -197,18 +197,17 @@ export const FEATURES = Object.freeze([
       acc: 'DONE' }),
   F('Identidade', 'ONBOARDING', 'Cadastro e convite', 'Cadastro com OTP, convite de usuário, verificação de e-mail',
     { b: ['account.js'], f: ['ConviteAceitar.jsx', 'VerificarEmail.jsx', 'MagicLink.jsx'],
-      t: ['cadastro_otp.test.js', 'troca_email_confirmacao.test.js'], p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
+      t: ['cadastro_otp.test.js', 'troca_email_confirmacao.test.js', 'convite_aceite.test.js'],
+      p: 'P0_RELEASE_BLOCKER', releaseRequired: true,
       acceptance: 'fluxo completo de entrada de empresa e de usuário convidado',
-      acc: 'PARTIAL',
-      gaps: [{
-        id: 'GAP-ONB-01',
-        claim: 'O aceite de convite nao tem cobertura: so o caso NEGATIVO de convite existe.',
-        affectedUserFlow: 'Dono convida um gestor; o convidado abre o link e tenta entrar. Nada prova que ele consegue.',
-        evidence: 'GET /convite/:token e POST /convite/:token/aceitar em src/routes/auth.js:614 e :637; a pagina ConviteAceitar.jsx existe; a unica suite que menciona convite e rbac_privilege_escalation.test.js, e apenas para provar que gestor NAO convida alguem como dono.',
-        requiredBehavior: 'Convite valido e aceito e cria o usuario com o papel certo na empresa certa; convite expirado, ja usado ou de outra empresa e recusado.',
-        currentBehavior: 'Cadastro por OTP e troca de e-mail provados. O caminho do convidado tem implementacao e pagina, sem nenhuma prova de que funciona.',
-        releaseImpact: 'Entrada de usuario e o segundo fluxo mais critico depois do login: sem ele o produto e monousuario na pratica.'
-      }] }),
+      /* GAP-ONB-01 FECHADO. `convite_aceite.test.js`: 10 casos exercitando o endpoint REAL de
+         criacao e capturando o token do e-mail mockado — ler o hash do banco e forjar um token
+         provaria a minha reimplementacao do hash, nao o produto.
+         Controle POSITIVO primeiro (descreve, aceita, sessao serve), depois empresa e papel
+         corretos, consumo unico, expirado, token inventado, senha fraca que NAO consome o convite,
+         e isolamento entre empresas. Provado que MORDE: removida a marcacao de `aceitoEm`, falha
+         exatamente o caso de consumo unico. */
+      acc: 'DONE' }),
 
   /* ---- Núcleo operacional ---- */
   F('Serviços', 'SERVICOS_CRUD', 'Serviços', 'Criação, edição, status, execução, conclusão e histórico',
@@ -302,13 +301,33 @@ export const FEATURES = Object.freeze([
         id: 'GAP-LGPD-01',
         claim: 'A exclusao e EFETIVA e provada, mas nao e RASTREAVEL: nao ha registro de quem excluiu o que e quando.',
         affectedUserFlow: 'Titular pede exclusao; o dado some corretamente. Se depois alguem perguntar quando, por ordem de quem e o que exatamente foi apagado, nao ha o que responder.',
-        evidence: 'lgpd.test.js prova anonimizacao de PII com escopo por tenant; autoexclusao_conta.test.js prova cascata, senha incorreta, admin nao-unico e codigo de confirmacao. O modelo AuditLog existe no schema e a feature AUDITORIA esta NAO_INICIADO — nenhuma dessas operacoes gera registro.',
+        /* CORRECAO: a versao anterior dizia que AUDITORIA estava NAO_INICIADO e que "nenhuma
+           dessas operacoes gera registro". A trilha EXISTE e funciona — para ciclo de vida de
+           usuario. O que e verdade e mais estreito, e por isso mais util. */
+        evidence: 'lgpd.test.js prova anonimizacao de PII com escopo por tenant; autoexclusao_conta.test.js prova cascata, senha incorreta, admin nao-unico e codigo de confirmacao. A trilha de auditoria existe (services/auditoria.js, modelo AuditLog, 5 chamadas) mas NENHUMA cobre estas operacoes: nao ha registrarAudit em account.js nem em /lgpd/anonimizar-cliente.',
         requiredBehavior: 'Operacao de exclusao ou anonimizacao gera entrada de auditoria com ator, acao, alvo e momento, consultavel e isolada por tenant.',
         currentBehavior: 'A exclusao acontece e e verificada. Nao ha trilha.',
-        releaseImpact: 'Risco legal: LGPD exige demonstrar o atendimento ao titular, e demonstrar exige registro. Depende de AUDITORIA, que e P1 e NAO_INICIADO.'
+        releaseImpact: 'Risco legal: LGPD exige demonstrar o atendimento ao titular, e demonstrar exige registro. Depende de GAP-AUD-01 — estender a trilha existente as operacoes de dado pessoal, nao construir auditoria do zero.'
       }] }),
+  /* CORRECAO de uma afirmacao minha. Esta linha saia como `NAO_INICIADO` porque nao declarava
+     ancora nenhuma — e a feature TEM implementacao: `services/auditoria.js`, o modelo `AuditLog` e
+     cinco chamadas de `registrarAudit` cobrindo o ciclo de vida de usuario (`convite.enviado`,
+     `usuario.criado`, `usuario.desativado`, `usuario.excluido`, `usuario.permissoes_alteradas`).
+     "Nao declarei ancora" nao e "nao existe": o registry mede o que a linha aponta, e a linha
+     estava incompleta. */
   F('Auditoria', 'AUDITORIA', 'Auditoria', 'AuditLog das operações sensíveis',
-    { p: 'P1_MVP_REQUIRED', releaseRequired: true, acceptance: 'operação sensível gera registro consultável' }),
+    { b: ['admin.js'], p: 'P1_MVP_REQUIRED', releaseRequired: true,
+      acceptance: 'operação sensível gera registro consultável, com ator, ação, alvo e momento',
+      acc: 'PARTIAL',
+      gaps: [{
+        id: 'GAP-AUD-01',
+        claim: 'A trilha cobre o ciclo de vida de USUARIO e nao cobre exclusao/anonimizacao de dado pessoal, que e onde a exigencia legal aperta.',
+        affectedUserFlow: 'Titular pede exclusao; o dado some. Ninguem consegue demonstrar depois quem executou, quando e sobre o que.',
+        evidence: 'registrarAudit e chamado em 5 pontos, todos de ciclo de vida de usuario. Nenhuma chamada em account.js, onde vivem DELETE /me/conta e o fluxo de exclusao; nenhuma em /lgpd/anonimizar-cliente. Nenhuma suite de integracao exercita AuditLog.',
+        requiredBehavior: 'Exclusao de conta e anonimizacao de cliente geram entrada com ator, acao, alvo e momento, isolada por tenant e consultavel.',
+        currentBehavior: 'Trilha existe e funciona para usuario; as operacoes de dado pessoal passam sem registro.',
+        releaseImpact: 'Sustenta GAP-LGPD-01. Sem isto, a conformidade e afirmavel mas nao demonstravel.'
+      }] }),
   F('Admin', 'ADMIN', 'Administração', 'Rotas administrativas',
     { b: ['admin.js'], p: 'P2_POST_LAUNCH', releaseRequired: false, acceptance: 'operações administrativas isoladas' }),
   F('Operação', 'OBSERVABILIDADE', 'Observabilidade', 'Métricas de runtime, logs, alertas',

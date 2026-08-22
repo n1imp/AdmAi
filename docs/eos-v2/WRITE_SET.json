@@ -1,21 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GAP-BILL-01/DESENHO-REAL",
-  "titulo": "Redeclaracao com o desenho que a implementacao revelou: guarda unica fail-closed",
+  "sliceId": "GAP-ONB-01",
+  "titulo": "Cobertura do aceite de convite — P0, fluxo central: sem ele o produto e monousuario na pratica",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "VALIDATED",
-  "declaradoEm": "2026-08-22T01:41:07.976Z",
+  "declaradoEm": "2026-08-22T02:08:25.551Z",
   "baseCommitPorLane": {
-    "HARNESS": "e3a0f55cccc542638926263bb0a4b8cac7baefcb"
+    "HARNESS": "109d4b35e3c16563c03b874a949d295bfc452ba2"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "A declaracao anterior descrevia um desenho abandonado. Esta descreve o que existe. Ela nao repara a violacao anterior — cobre daqui para a frente.",
+  "notaDeMetodo": "HEAD estavel em 109d4b3 desde antes desta declaracao. Commit e mutacao da referencia e fica na fronteira da rodada, nao no meio — foi o que invalidou o baseline da rodada anterior.",
   "baselinePorLane": {
     "HARNESS": {
-      "chaveiro-bot/src/middlewares/assinatura.js": "38fd5287ad5ff805a4b6651412fa829057f0d2b49f7d83b280e2ea714156fba4",
-      "chaveiro-bot/test/integration/refresh_rotacao_sessao.test.js": "63d7f5d62405f7aa72bbce4c96511c078395541bdf7269aef7e0c18833dd334e",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -115,6 +113,7 @@
       "chaveiro-bot/src/db/tenant.js": "1b4ef5afc11a8a96427fbf70ab551a4c0db1c83c798a98dd50932f04ec27831f",
       "chaveiro-bot/src/instrument.js": "08bee70a57ad0778c68dffba29f89216256f597f0fdbb9125f01da28407058ea",
       "chaveiro-bot/src/middlewares/__tests__/rateLimiters.test.js": "29db25bc2565c3d38d55f6138152bb593ccb5a107a5ae865757ae04e15bf20e0",
+      "chaveiro-bot/src/middlewares/assinatura.js": "38fd5287ad5ff805a4b6651412fa829057f0d2b49f7d83b280e2ea714156fba4",
       "chaveiro-bot/src/middlewares/auth.js": "07d62ea45045b36418babdf6025e0d219d3f27ac25b348f174e4d778b5382183",
       "chaveiro-bot/src/middlewares/rateLimiters.js": "cb6fe5e5b0c62f2ef75375aba9f3816317fd1878b13256e71720e73fab749bff",
       "chaveiro-bot/src/queues/email.js": "52a84db79eb3151cffc6a7b8dd842051438d6d8cfd9f17c50bc1dbe98f498384",
@@ -243,6 +242,7 @@
       "chaveiro-bot/test/integration/preferencias.test.js": "2bbb9d62d5e004fbd961b2af90f1ca7741c5bd6c01af7fa30d305b611296fd03",
       "chaveiro-bot/test/integration/rbac_privilege_escalation.test.js": "8038d818d7b920ce6bd25ba980723ada391d2e668076f7f8b8aae0fd64dfb84d",
       "chaveiro-bot/test/integration/recuperacao_2fa.test.js": "344ca6ee4fe6519c62e6841942e2058e3bc2d94de5f52af48a8a2fa0e5c3f69e",
+      "chaveiro-bot/test/integration/refresh_rotacao_sessao.test.js": "63d7f5d62405f7aa72bbce4c96511c078395541bdf7269aef7e0c18833dd334e",
       "chaveiro-bot/test/integration/rls.test.js": "e2ca5f68066d9a667a9d4db1a65dd3e0053ddd173cbd0469073e57163f248906",
       "chaveiro-bot/test/integration/seguranca.test.js": "69b43cd7206f9be7f006b752d5050f858f335c0b8809b826e9776a0cf0430f1c",
       "chaveiro-bot/test/integration/servico_atual.test.js": "21a481cf594dea41705189cae8fd5735602f5ff3befdf74346725fcae68fe72a",
@@ -522,14 +522,14 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/EVIDENCE_BUNDLE.json": "44b18f646b8c21bfd8e5de081e50ce54588c1e513a87659d1c4e1a394909ce7d",
+      "docs/eos-v2/EVIDENCE_BUNDLE.json": "400f822ce34de3844555bfd49fa7c9447db8c6447f89a2df24768f08f4a5d2eb",
       "docs/eos-v2/EXECUTION_STATE.md": "40ecfe69a434c4c5d5e7de3ab156fa32b2d9b5c863abfb3ab5ecfdb1c6f90d67",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/VERIFICATION_RECORD.json": "d6bd2ba9ed724c56a79162e5d652e072ae5254795c7d710ae6fe0ca1d43e092a",
-      "docs/eos-v2/WRITE_SET.json": "be63c6f1aaad193c99c035d68ca62af240c0a2fa38247ede8d0eb85d676ee3f4",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "877edc5cf36d6a937916cb94b963cf3f2b3525b86ba0dad310c32825c348398a",
+      "docs/eos-v2/VERIFICATION_RECORD.json": "1d154086c1603638d0b099cffa037556a7eb38b6cc709f219b4d85163af80fd4",
+      "docs/eos-v2/WRITE_SET.json": "75f53fb42974a09d0063ed98af4b118c117c75d1ac2e10fc4e7540ff2aabaf1a",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "10ea9a9da56c5feccce3c9fd6e7ca700533ee145c948e550ee61ec1abc2549c8",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -648,78 +648,23 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/api.js",
+      "caminho": "chaveiro-bot/test/integration/convite_aceite.test.js",
       "precisao": "BOUNDED",
-      "proposito": "guarda unica montada entre billing e os routers de produto",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/account.js",
-      "precisao": "BOUNDED",
-      "proposito": "guarda por rota em /me/servicos e /me/metricas, que servem dado de produto num router isento",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9e3d8945426991cf604cc70cc971d0e0788ef3a5ed3b772abde04d51ecbc7570",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/middlewares/assinatura.js",
-      "precisao": "BOUNDED",
-      "proposito": "o middleware",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "38fd5287ad5ff805a4b6651412fa829057f0d2b49f7d83b280e2ea714156fba4",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/billing_access_audit.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "audit invertido",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ffafd11e2af3ef6fdf4ec6117d9461f38650e3046642f21367932b7a17cd2c94",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "proposito": "prova que o convidado ENTRA, com o papel e a empresa certos, e que convite morto e recusado",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "tools/admai-delivery/feature-registry.mjs",
       "precisao": "BOUNDED",
-      "proposito": "BILLING -> DONE",
+      "proposito": "reavaliar a aceitacao de ONBOARDING",
       "existiaNaDeclaracao": true,
       "shaNaDeclaracao": "4c5f024f55694db375d2d9274698e893363f35ad4e9baf306c8aba3cf91bff70",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/EVIDENCE_BUNDLE.json",
-      "precisao": "BOUNDED",
-      "proposito": "artefato MUTATING",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "44b18f646b8c21bfd8e5de081e50ce54588c1e513a87659d1c4e1a394909ce7d",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/VERIFICATION_RECORD.json",
-      "precisao": "BOUNDED",
-      "proposito": "artefato MUTATING",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "d6bd2ba9ed724c56a79162e5d652e072ae5254795c7d710ae6fe0ca1d43e092a",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T01:41:08.249Z",
+  "validadoEm": "2026-08-22T02:08:26.466Z",
   "validadoPor": "write-set-gate.mjs"
 }
