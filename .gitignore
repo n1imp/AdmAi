@@ -89,3 +89,7 @@ coverage/
 
 # ── Quarentena (revisão manual antes de apagar de vez) ────────
 _quarentena/
+
+# Saida de captura do inventario de release: evidencia, nao fonte.
+# Fica fora do diff para que rodar a observacao nao produza escrita nao declarada.
+chaveiro-painel/telas/

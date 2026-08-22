@@ -45851,9 +45851,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Inventario de release fechado: 49 superficies, zero NOT_INVENTORIED, 26/26 controles. Quatro superficies foram DESCOBERTAS pela observacao (dois estados por token, boas-vindas e tour), o que so aparece abrindo a tela. Nove achados compartilhados, um por causa. Duas classificacoes anteriores foram CORRIGIDAS por evidencia nova: /termos e /privacidade estavam KEEP e servem ao publico um aviso de modelo juridico nao validado.",
       "declaradoEm": "2026-08-22T21:00:12.567Z"
+    },
+    {
+      "sliceId": "SCOPE-F2C-CABECALHO",
+      "titulo": "Promover ausencia de h1 a achado compartilhado; tirar saida de captura do caminho do gate",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Cabecalho ausente promovido de cinco achados locais para GAP-UX-CABECALHO-01, aplicando ao proprio inventario a regra que ele impoe. .gitignore fecha a causa estrutural do UNDECLARED_WRITE das rodadas anteriores. Corrigido tambem estilo: prettier rodou sem a config do repositorio no commit anterior e converteu 827 aspas simples em duplas.",
+      "declaradoEm": "2026-08-22T21:21:55.544Z"
     }
   ],
-  "geradoEm": "2026-08-22T21:16:47.087Z",
+  "geradoEm": "2026-08-22T21:25:31.501Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

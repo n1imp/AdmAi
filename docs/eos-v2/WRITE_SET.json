@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SCOPE-F2C-INVENTARIO",
-  "titulo": "Inventario completo: 28 classificadas, 4 superficies descobertas, achados compartilhados",
+  "sliceId": "SCOPE-F2C-CABECALHO",
+  "titulo": "Promover ausencia de h1 a achado compartilhado; tirar saida de captura do caminho do gate",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-22T21:00:12.567Z",
+  "declaradoEm": "2026-08-22T21:21:55.544Z",
   "baseCommitPorLane": {
-    "HARNESS": "f578288c963f7048db73dfd8c529fdf29f00f072"
+    "HARNESS": "4830414cbc0ac8cc27d28bde8b6dd85e77c9fd14"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Classificacao derivada de observacao em runtime nos quatro viewports e nos quatro papeis, com sonda deterministica gravada junto das capturas. Causa repetida vira UM achado compartilhado com conjunto de superficies afetadas, nunca um GAP por tela.",
+  "notaDeMetodo": "Cinco superficies de auth sem h1 e causa repetida, e a regra do inventario e REPEATED_CROSS_SURFACE_DEFECT -> ONE_SHARED_FINDING. Deixa-las como cinco locais violaria a regra que este registry existe para impor. O .gitignore fecha a causa estrutural do UNDECLARED_WRITE: evidencia de captura e artefato, nao fonte, e nao deve entrar no diff do repositorio.",
   "baselinePorLane": {
     "HARNESS": {
       "chaveiro-painel/telas/inventario-boasvindas/dono__home__1440x900.jpg": "a03a2a437ade224ec005ca01152fe643ef4c90cf843ccc31deef828f49f854a6",
@@ -731,8 +731,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "4a8153018ff1573782f9df16e7a0558d4547d27653499ca859d88dc95f1db95c",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "e538573daf0c3314ae3b7996165916adb0a66d288a4def1b0c7cddecf9981862",
+      "docs/eos-v2/WRITE_SET.json": "b21438aa395d7e923e648cdef0d7b7fdc6ede88197a68d7b391eb87fad612195",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "1adb381578c3d0a0644a0ab30330a31d8beab2279e100594712685ca56ea5ff4",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -781,7 +781,7 @@
       "tools/admai-delivery/run-state.mjs": "db4c10880fbb3cfc11461923402054cec8614e6acc7fb97de199cb351cc5b7dc",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "5bad5df4a850764166e0d96b6e5ca9e04e71d340e09a99fa182031ebd9c0dea0",
+      "tools/admai-delivery/surface-registry.mjs": "dcc1e923e67f33b4833233fb39e54209295422e4c97dfb7bbae84a62c41781c9",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -854,13 +854,22 @@
       "lane": "HARNESS",
       "caminho": "tools/admai-delivery/surface-registry.mjs",
       "precisao": "BOUNDED",
-      "proposito": "proveniencia, viewports, achados compartilhados e as 32 classificacoes",
+      "proposito": "GAP-UX-CABECALHO-01 e ajuste das razoes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5bad5df4a850764166e0d96b6e5ca9e04e71d340e09a99fa182031ebd9c0dea0",
+      "shaNaDeclaracao": "dcc1e923e67f33b4833233fb39e54209295422e4c97dfb7bbae84a62c41781c9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": ".gitignore",
+      "precisao": "BOUNDED",
+      "proposito": "ignorar chaveiro-painel/telas — saida de captura",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "92d6675c40c378435b8dcbfdbce63217787a53fcce7bc5225dde515a93b915cc",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-22T21:00:12.855Z",
+  "validadoEm": "2026-08-22T21:21:55.841Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -869,6 +878,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Inventario de release fechado: 49 superficies, zero NOT_INVENTORIED, 26/26 controles. Quatro superficies foram DESCOBERTAS pela observacao (dois estados por token, boas-vindas e tour), o que so aparece abrindo a tela. Nove achados compartilhados, um por causa. Duas classificacoes anteriores foram CORRIGIDAS por evidencia nova: /termos e /privacidade estavam KEEP e servem ao publico um aviso de modelo juridico nao validado.",
+  "nota": "Cabecalho ausente promovido de cinco achados locais para GAP-UX-CABECALHO-01, aplicando ao proprio inventario a regra que ele impoe. .gitignore fecha a causa estrutural do UNDECLARED_WRITE das rodadas anteriores. Corrigido tambem estilo: prettier rodou sem a config do repositorio no commit anterior e converteu 827 aspas simples em duplas.",
   "aviso": "Declaracao ENCERRADA."
 }
