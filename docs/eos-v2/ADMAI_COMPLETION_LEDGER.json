@@ -2126,11 +2126,12 @@
       "status": "DEFERRED_BY_SCOPE",
       "blockerRefs": [],
       "findingRefs": [
-        "Gate 6 adversarial rodada 1-3, thread 01a02fb6"
+        "D-GATE6-CODEX-UNAVAILABLE"
       ],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Guard fecha assinatura persistida (incl. paused); a corrida pre-webhook permanece — reconhecida pelo Codex como P2 aceitavel apos registro formal."
+        "Guard fecha assinatura persistida (incl. paused); a corrida pre-webhook permanece — reconhecida pelo Codex como P2 aceitavel apos registro formal.",
+        "Gate 6 adversarial thread 01a02fb6 (rodadas 1-3): guard fecha assinatura persistida (incl. paused); corrida pre-webhook reconhecida como P2 aceitavel apos registro formal."
       ],
       "attemptCount": 0,
       "lastAttempt": "2026-08-23T22:51:56.000Z",
