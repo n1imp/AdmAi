@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SCOPE-F2F-CONSENT",
-  "titulo": "GAP-UX-CONSENT-01: reservar espaco real para o consentimento",
+  "sliceId": "SCOPE-F2G-VARREDURA",
+  "titulo": "Sonda mede oclusao PERMANENTE, e varredura do conjunto afetado",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T01:14:04.291Z",
+  "declaradoEm": "2026-08-23T01:46:12.578Z",
   "baseCommitPorLane": {
-    "HARNESS": "df3b0d0d33b6220e1df7039f60a316dab79d3437"
+    "HARNESS": "ac603443582d96189057a2df349cf1700760c505"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Uma causa, um dono. O banner mede a propria altura e publica em --admai-consent-h; a navegacao inferior publica --admai-nav-h; o utilitario min-h-dvh, usado por 13 superficies, passa a descontar a altura medida. Nada de offset fixo: a altura varia com viewport, quebra de linha, traducao e escala de fonte.",
+  "notaDeMetodo": "Oclusao a scroll-0 confunde 'abaixo da dobra' com 'inalcancavel'. O contrato de aceite exige PAGE_CRITICAL_ACTIONS_INTERACTABLE, que e a segunda. A sonda passa a rolar o elemento ate a vista e refazer o hit-test — medida mais severa, nao mais frouxa.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -347,9 +347,9 @@
       "chaveiro-painel/src/components/BackHeader.jsx": "dfccec548d5dadd4f48aca242522196ac008b3b8943daedf01b78217ad659c9c",
       "chaveiro-painel/src/components/BancoHoras.jsx": "11024dbe37645211f1d543472daf41afa0f9835f755e03b0215116540e96cb23",
       "chaveiro-painel/src/components/BotoesSociais.jsx": "999e5a3113512ad8580ec7ad3ed86032c9f7fe203afa162386fe250bedabb0ce",
-      "chaveiro-painel/src/components/BottomNav.jsx": "cf40928569219cd3ec2ccdf85635730b157076013d420be5d0d7a320d5df7c89",
+      "chaveiro-painel/src/components/BottomNav.jsx": "deb2ac29b7d7730dd6b1843b2a927b65142e80fff1060467f2ec7fcd0c974fa5",
       "chaveiro-painel/src/components/CapturaSelfie.jsx": "6d880415c4fb221c7dcaa8a32b0feb4d52f0281d8d5c494e714ff16245bb55e3",
-      "chaveiro-painel/src/components/CookieBanner.jsx": "e5824e16cda788945ad9cfa56216a34210a2d8c597ac6b1a21b6d39070dd9b59",
+      "chaveiro-painel/src/components/CookieBanner.jsx": "97a10ea6086dd30fadfa6b8a29d8fe6e47aaac9dfc14e4d0ca7047b616c69138",
       "chaveiro-painel/src/components/ErroBanner.jsx": "e57ac69087a5db14d4367d8144b826d152f30664a57607d4ffcb0591c59f52df",
       "chaveiro-painel/src/components/ErrorBoundary.jsx": "808ebe4cdd5f3df3aef7b991c7a0b60a39e12d6728d80980edfdc00f04f0f796",
       "chaveiro-painel/src/components/EstadoVazio.jsx": "e88a2522f8dfc665801aaadbd7e4e2cb8d74997cce65c47c0bebb0e80bdd3141",
@@ -364,6 +364,7 @@
       "chaveiro-painel/src/components/TourGuide.jsx": "00eb45c07cb93376ab0cc4982cc526d85d20c0d55e953851856c3bc2870a2636",
       "chaveiro-painel/src/components/WelcomeCard.jsx": "6719ef24e2a0f2ca5e0deef8b16b74f4ff30c5f300c47dff5c898b94a811a5b3",
       "chaveiro-painel/src/components/Wizard.jsx": "5d31afe2419e12d45145405fe2465a0ab17750ae8aaed1e5df6eaa5a583285d0",
+      "chaveiro-painel/src/components/__tests__/CookieBanner.test.jsx": "62c156df1b852de2f8d6d8feed32f9d4dbad0475153781a50b59fe21ed9ba260",
       "chaveiro-painel/src/components/__tests__/EstadoVazio.test.jsx": "d8da48d6366095e6b2550db2d87c96d86f4df7d845ed9385018f227a0d7eaa61",
       "chaveiro-painel/src/components/__tests__/Guards.test.jsx": "b9f18c41ae15e11cd03fb13a428b5d35062ac172310fb21d86b08c249cd5377f",
       "chaveiro-painel/src/components/__tests__/MaterialPicker.qtd.test.jsx": "6c72f473e7ec252155920ba868afbd96143d64d888c3ca19ed4c820b8ad8d3ce",
@@ -400,7 +401,7 @@
       "chaveiro-painel/src/hooks/useOffline.js": "3604eaad1f76e46c8069b48579a472528945f261a1b4c71a1f69735b340feed2",
       "chaveiro-painel/src/hooks/usePullToRefresh.js": "0b3e5ca14d804e7b4b673887b7d159d24a60a67b1977f321777d4a03e2323795",
       "chaveiro-painel/src/hooks/useWidgetPrefs.js": "97c80c31ac93704bd990e1717c503d7f2b906a8ce63b4db2b8b5475cd5f4dd6b",
-      "chaveiro-painel/src/index.css": "c4f42a5acb95836d5c769d2783cb2e3f7f66db8e21ffc4d44220f149db61c6df",
+      "chaveiro-painel/src/index.css": "d9ce8428fcdf21c0dab57f7ae3e257e907303012009cdc5c534503eec5c392dc",
       "chaveiro-painel/src/lib/__tests__/api.test.js": "c0932aaca5ffd7bb89a2df989e8aab0b0de5a84c02e9f2664d96c14a650e7c3f",
       "chaveiro-painel/src/lib/__tests__/featureFlags.test.js": "d912746eccc44e56bf39cc3ea3bb3c92e87f7587ace401a0ca4519c68a20e60d",
       "chaveiro-painel/src/lib/__tests__/jwt.test.js": "082f2d45dfca68abbdba8ebb815f782589fe95f244fe3a94566888afd0800ce6",
@@ -547,8 +548,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "f6666f25689a98ae3dba371257888f22751eec84408fda2edf3432b5437b5519",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "76568350907d15e6314cd05651db81d5eb20c9081652283995815c1155085ef2",
+      "docs/eos-v2/WRITE_SET.json": "e5a77c07c3ff3959c36788210f2b50bbc1e9abfe4d5af7b648ac2191c8675fad",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "1c2284a2c03103ffffe2bf25b5f3d0ca07e9f0ae7cb76406a38226d69f68e58f",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1087,6 +1088,19 @@
       "chaveiro-painel/telas/inventario/anonimo__verificar-email__360x800.jpg": "122270:1787431322712",
       "chaveiro-painel/telas/inventario/anonimo__verificar-email__390x844.jpg": "128701:1787431343688",
       "chaveiro-painel/telas/inventario/sonda-anonimo.json": "22962:1787431390156",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login-modo-cadastrar__1440x900.jpg": "93368:1787448623650",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login-modo-cadastrar__1920x1080.jpg": "108542:1787448633245",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login-modo-cadastrar__360x800.jpg": "144524:1787448602486",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login-modo-cadastrar__390x844.jpg": "166053:1787448614507",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login__1440x900.jpg": "88439:1787448620840",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login__1920x1080.jpg": "97336:1787448630185",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login__360x800.jpg": "144963:1787448598301",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__login__390x844.jpg": "150143:1787448609664",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__recuperar-senha__1440x900.jpg": "38929:1787448626916",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__recuperar-senha__1920x1080.jpg": "42522:1787448636147",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__recuperar-senha__360x800.jpg": "121091:1787448605671",
+      "chaveiro-painel/telas/pos-consent-anon/anonimo__recuperar-senha__390x844.jpg": "128609:1787448617975",
+      "chaveiro-painel/telas/pos-consent-anon/sonda-anonimo.json": "13924:1787448636188",
       "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__1440x900.jpg": "81198:1787445626977",
       "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__1920x1080.jpg": "92177:1787445632679",
       "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__360x800.jpg": "176960:1787445615290",
@@ -1104,42 +1118,15 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/CookieBanner.jsx",
+      "caminho": "chaveiro-painel/e2e/capturar.mjs",
       "precisao": "BOUNDED",
-      "proposito": "medir altura, publicar variavel, sentar acima da navegacao",
+      "proposito": "ocluidoPermanente por hit-test apos scrollIntoView",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e5824e16cda788945ad9cfa56216a34210a2d8c597ac6b1a21b6d39070dd9b59",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/BottomNav.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "publicar --admai-nav-h",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "cf40928569219cd3ec2ccdf85635730b157076013d420be5d0d7a320d5df7c89",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/index.css",
-      "precisao": "BOUNDED",
-      "proposito": "min-h-dvh desconta o espaco reservado",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c4f42a5acb95836d5c769d2783cb2e3f7f66db8e21ffc4d44220f149db61c6df",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/__tests__/CookieBanner.test.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "positivo, negativo e sabotagem",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "shaNaDeclaracao": "56cecdc2fe829bc9a93ddf61226a7d20d0cbb2033f4c02743a64712e9d039c45",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T01:14:06.329Z",
+  "validadoEm": "2026-08-23T01:46:12.879Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1148,6 +1135,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "GAP-UX-CONSENT-01, primeira metade: o banner mede a propria altura via ResizeObserver e publica --admai-consent-h; BottomNav publica --admai-nav-h e o banner senta acima dela; min-h-dvh (13 cascas) desconta a altura medida; body ganha padding-bottom equivalente. Runtime em 360x800: scrollHeight 940 -> 1186 (+246, exatamente a altura medida) e o botao de submissao do login sai de inalcancavel para alcancavel por hit-test. Varredura das 35 superficies fica na fatia seguinte.",
+  "nota": "Sonda passa a medir oclusao PERMANENTE (hit-test apos scrollIntoView), que e a medida do contrato de aceite. Contraprova: sabotando as duas regras de CSS o /login acusa 6/6/3/0 permanentes; com a correcao, 0 em todos. Varredura dos quatro papeis: 117 oclusoes a scroll-0 (esperado em pagina longa) e 15 PERMANENTES restantes, todas do mesmo tipo — botao flutuante , que e ele proprio fixed, e o rodape do painel dentro de main, que tem rolagem propria e nao recebe o padding do body.",
   "aviso": "Declaracao ENCERRADA."
 }

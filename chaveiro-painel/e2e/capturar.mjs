@@ -90,6 +90,8 @@ export const EXPRESSAO_SONDA = `(() => {
   /* OCLUSÃO por hit-test. Só conta quando quem intercepta é um elemento fixo/sticky que NÃO é
      ancestral do alvo — sobreposição legítima (ícone dentro do próprio botão) não é defeito. */
   const ocluidos = [];
+  const ocluidosPermanentes = [];
+  const rolagemOriginal = window.scrollY;
   for (const el of interativos) {
     const r = el.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -97,10 +99,26 @@ export const EXPRESSAO_SONDA = `(() => {
     const topo = document.elementFromPoint(cx, cy);
     if (!topo || el.contains(topo) || topo.contains(el)) continue;
     const culpado = fixos.find((f) => f === topo || f.contains(topo));
-    if (culpado) {
-      ocluidos.push({ alvo: txt(el) || el.tagName, por: txt(culpado).slice(0, 45) || culpado.className });
+    if (!culpado) continue;
+    const registro = { alvo: txt(el) || el.tagName, por: txt(culpado).slice(0, 45) || culpado.className };
+    ocluidos.push(registro);
+
+    /* OCLUSAO PERMANENTE — a medida que o contrato de aceite realmente pede.
+       Coberto na posicao inicial pode significar so "abaixo da dobra", que e normal em pagina
+       longa. O defeito de verdade e o elemento que continua coberto DEPOIS de rolado ate a
+       vista: ai nenhuma rolagem o alcanca, e a acao esta perdida. Foi essa a diferenca que
+       apareceu no /login em 360px — o botao de submissao caia numa faixa de 246px que o curso
+       de rolagem nao cobria.
+       Medida MAIS severa, nao mais frouxa: um elemento so sai daqui se ficar de fato alcancavel. */
+    el.scrollIntoView({ block: 'center' });
+    const r2 = el.getBoundingClientRect();
+    const topo2 = document.elementFromPoint(r2.left + r2.width / 2, r2.top + r2.height / 2);
+    if (topo2 && !el.contains(topo2) && !topo2.contains(el)
+        && fixos.some((f) => f === topo2 || f.contains(topo2))) {
+      ocluidosPermanentes.push(registro);
     }
   }
+  window.scrollTo(0, rolagemOriginal);
 
   /* ALVO DE TOQUE. 44px é o mínimo de WCAG 2.5.5 / HIG; só se mede no mobile, onde o dedo é o
      ponteiro. No desktop um link de 16px é normal e apontá-lo seria ruído. */
@@ -130,6 +148,7 @@ export const EXPRESSAO_SONDA = `(() => {
     telas: +(doc.scrollHeight / H).toFixed(1),
     interativos: interativos.length,
     ocluidos,
+    ocluidosPermanentes,
     alvosPequenos: alvosPequenos.slice(0, 8),
     qtdAlvosPequenos: alvosPequenos.length,
     truncados: truncados.slice(0, 6),

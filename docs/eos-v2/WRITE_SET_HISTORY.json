@@ -45935,9 +45935,23 @@
       "bloqueiaIntegracao": false,
       "nota": "GAP-UX-CONSENT-01, primeira metade: o banner mede a propria altura via ResizeObserver e publica --admai-consent-h; BottomNav publica --admai-nav-h e o banner senta acima dela; min-h-dvh (13 cascas) desconta a altura medida; body ganha padding-bottom equivalente. Runtime em 360x800: scrollHeight 940 -> 1186 (+246, exatamente a altura medida) e o botao de submissao do login sai de inalcancavel para alcancavel por hit-test. Varredura das 35 superficies fica na fatia seguinte.",
       "declaradoEm": "2026-08-23T01:14:04.291Z"
+    },
+    {
+      "sliceId": "SCOPE-F2G-VARREDURA",
+      "titulo": "Sonda mede oclusao PERMANENTE, e varredura do conjunto afetado",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Sonda passa a medir oclusao PERMANENTE (hit-test apos scrollIntoView), que e a medida do contrato de aceite. Contraprova: sabotando as duas regras de CSS o /login acusa 6/6/3/0 permanentes; com a correcao, 0 em todos. Varredura dos quatro papeis: 117 oclusoes a scroll-0 (esperado em pagina longa) e 15 PERMANENTES restantes, todas do mesmo tipo — botao flutuante , que e ele proprio fixed, e o rodape do painel dentro de main, que tem rolagem propria e nao recebe o padding do body.",
+      "declaradoEm": "2026-08-23T01:46:12.578Z"
     }
   ],
-  "geradoEm": "2026-08-23T01:45:49.754Z",
+  "geradoEm": "2026-08-23T01:52:45.760Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
