@@ -51223,7 +51223,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "Gate 6 R3: fecha as duas janelas de corrida — corte EXATO (tolerancia de 1s movida p/ tokenAindaValido na leitura do JWT), refresh guard criadoEm<=corte (boundary inclusivo com contraprova que morde), rotacao ATOMICA (tx rele corte fresco + delete condicional count===1 + create), /me/senha reemite refresh na tx, resetarPin/usuarios apagam refresh. Helpers de refresh centralizados em services/auth.js. 9/9 + 39 regressao; teste que mascarava a janela (setTimeout) removido.",
-      "declaradoEm": "2026-08-23T22:14:39.579Z"
+      "declaradoEm": "2026-08-23T22:14:39.579Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao GATE6-CORRECOES-R3",
+        "justificativa": "A declaracao listou services/auth.js para tokenAindaValido, mas a decisao de centralizar os helpers de refresh (criarRefreshEmTx/setRefreshCookie/COOKIE_OPTS_REFRESH) tambem caiu em services/auth.js — surgiu durante a escrita, ao evitar duplicar a criacao de refresh entre routes/auth.js e account.js (a alternativa, setRefreshCookie local em routes, nao era importavel por account.js). Conteudo provado (9/9 + 39 regressao, boundary morde) e commitado (366165e); services/auth.js JA estava na declaracao — o UNDECLARED foi na verdade a AMPLITUDE do que mudou nele, nao um arquivo novo.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Refatoracao que MOVE codigo entre arquivos declara todos os arquivos de origem e destino do movimento, mesmo que a intencao inicial fosse tocar so um."
+      }
     }
   ],
   "geradoEm": "2026-08-23T22:27:02.557Z",
