@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE6-CORRECOES-R5",
-  "titulo": "Gate 6 rodada 5: lock DE FATO na rotacao + cortes capturados sob o lock",
+  "sliceId": "GATE6-LOCK-REGRESSAO",
+  "titulo": "Gate 6: teste determinístico que protege o FOR UPDATE contra regressao",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T23:08:33.608Z",
+  "declaradoEm": "2026-08-23T23:12:46.340Z",
   "baseCommitPorLane": {
-    "HARNESS": "35173c981d2bcaf01a46a127d383c5a8a25a8110"
+    "HARNESS": "86725308ecb05b38d270af15ad164a01c51f921e"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "A rodada 4 do Codex leu o codigo e achou que (1) minha edicao R4 do lock na rotacao NAO tinha pegado — a rotacao seguia sem lockUsuario; (2) os cortes de reset/me-senha/usuarios eram calculados ANTES do lock (um JWT concorrente com iatMs posterior a um corte velho sobreviveria); (3) o teste de rajada nao mordia. Correcao: rotacao agora faz pre-read(usuarioId)->lockUsuario->rele token+corte SOB o lock; os 3 cortes movidos para DEPOIS do await lockUsuario (resetarPin ja fazia). HONESTIDADE: o harness de integracao (supertest+Promise.all+pool) serializa transacoes — nenhum teste que escrevi morde o TOCTOU (confirmei removendo o lock e o count===1: rajada e dupla-rotacao continuaram passando). Reetiquetei esses como SMOKE; a garantia de concorrencia e por CONSTRUCAO (FOR UPDATE). O que MORDE, com contraprova: iatMs exato (JWT anterior ao corte -> 401) e boundary criadoEm<=corte.",
+  "notaDeMetodo": "O Codex confirmou a correcao tecnica; falta a regressao executavel do lock (protocolo: correcao de seguranca precisa de teste que falhe ao remover). Receita do proprio Codex: uma transacao segura a linha do usuario com FOR UPDATE; o /auth/refresh e disparado por OUTRA conexao e deve ESPERAR (nao completar) enquanto a linha esta travada. Promise.race prova a pendencia sem fingir concorrencia. Sabotagem: remover lockUsuario da rotacao faz o refresh completar de imediato -> teste falha.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -597,8 +597,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "1c8ed2f2bd4de9ab67d1c4170ab63d0bddd26a60bed400a87c8077dbb07e7356",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "6958362dc21a39642237f3071a0c561ebbf4c7edaea0af216a933e3434de51a2",
+      "docs/eos-v2/WRITE_SET.json": "74d485f20690cb298c2431c1b5ed67fa0be23da6e6956780a66f3ca4acbc2417",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5ee5b79810b0f9ff4768b342f3d8d19dca6052fc28e00da979d78f8eb95f1cf3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2525,58 +2525,23 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/auth.js",
+      "caminho": "chaveiro-bot/test/integration/gate6_lock_regressao.test.js",
       "precisao": "BOUNDED",
-      "proposito": "lock na rotacao + corte do reset sob o lock",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "f48cb87cf729719ce642150d17d5aa00a82b49a95d832cac796b4839cd13d57c",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/account.js",
-      "precisao": "BOUNDED",
-      "proposito": "/me/senha corte sob o lock",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "596a865bf3c131bedff646a8eb045f7eeb697734acc07e12df16e9514f6419ae",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/admin.js",
-      "precisao": "BOUNDED",
-      "proposito": "/usuarios corte sob o lock",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/gate6_correcoes.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "smokes honestos + provas de corte que mordem",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "027b977b56d6644b74d09c953e78e3cc969e60b5e1f64a7d82e3154d266fdc6f",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "proposito": "teste determinístico do lock da rotacao (2 conexoes)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T23:08:33.968Z",
+  "validadoEm": "2026-08-23T23:12:46.580Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Lock DE FATO na rotacao (pre-read->lockUsuario->rele sob o lock); cortes de reset/me-senha/usuarios movidos para DEPOIS do lock. Honestidade sobre o harness: supertest serializa transacoes, nenhum teste morde o TOCTOU (verificado removendo lock e count) — reetiquetados SMOKE; garantia por construcao (FOR UPDATE). Corte MORDE: iatMs exato + boundary. 12/12 + 39 regressao.",
+  "nota": "Regressao executavel do FOR UPDATE: transacao segura a linha do usuario, o /auth/refresh por outra conexao ESPERA (Promise.race prova a pendencia). Sabotagem CONFIRMADA: remover lockUsuario da rotacao faz o teste FALHAR (a rotacao completa sem esperar). Isola o lock de usuario (a tx nao toca refreshToken). Esta e a prova que o Codex exigiu.",
   "aviso": "Declaracao ENCERRADA."
 }

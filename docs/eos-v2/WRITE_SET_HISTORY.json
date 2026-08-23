@@ -51259,9 +51259,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Lock DE FATO na rotacao (pre-read->lockUsuario->rele sob o lock); cortes de reset/me-senha/usuarios movidos para DEPOIS do lock. Honestidade sobre o harness: supertest serializa transacoes, nenhum teste morde o TOCTOU (verificado removendo lock e count) — reetiquetados SMOKE; garantia por construcao (FOR UPDATE). Corte MORDE: iatMs exato + boundary. 12/12 + 39 regressao.",
       "declaradoEm": "2026-08-23T23:08:33.608Z"
+    },
+    {
+      "sliceId": "GATE6-LOCK-REGRESSAO",
+      "titulo": "Gate 6: teste determinístico que protege o FOR UPDATE contra regressao",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Regressao executavel do FOR UPDATE: transacao segura a linha do usuario, o /auth/refresh por outra conexao ESPERA (Promise.race prova a pendencia). Sabotagem CONFIRMADA: remover lockUsuario da rotacao faz o teste FALHAR (a rotacao completa sem esperar). Isola o lock de usuario (a tx nao toca refreshToken). Esta e a prova que o Codex exigiu.",
+      "declaradoEm": "2026-08-23T23:12:46.340Z"
     }
   ],
-  "geradoEm": "2026-08-23T23:09:08.267Z",
+  "geradoEm": "2026-08-23T23:20:34.375Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
