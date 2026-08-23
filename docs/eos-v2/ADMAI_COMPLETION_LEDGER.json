@@ -274,13 +274,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "ADMAI_RELEASE_EXECUTION_READY: PASS em 2026-08-23",
+        "EOS selftest 41/41 PASS · gate 121/121 · declarador 10/10 · ledger 4/4 · surfaces 28/28 · features 29/29",
+        "zero bloqueios de integracao · diff limpo · F0-01..10 DONE com evidencia individual"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:49:54.665Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
