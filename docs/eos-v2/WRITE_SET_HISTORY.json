@@ -48371,7 +48371,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": false,
       "nota": "Cluster homes: 5 correcoes + regressao de classe (alvos dependentes de estado) fechada na hora + flip de 6 classificacoes p/ KEEP com prova de sonda. REFINE 32->26.",
-      "declaradoEm": "2026-08-23T11:37:56.829Z"
+      "declaradoEm": "2026-08-23T11:37:56.829Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao SL-11",
+        "justificativa": "O commit da fatia saiu com a suite em 1 falha (MeuPainel.test asserindo o rotulo ANTIGO que a propria fatia renomeou) porque o encadeamento bash nao interrompia na falha. Teste atualizado e suite 233/233 no commit seguinte; alem disso a correcao do teste ficou FORA do conjunto declarado (ja fechado).",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Fechamento NUNCA encadeia commit atras de suite: rodar suite, LER o resultado, e so entao commitar. Teste que asserta string renomeada pela fatia entra na declaracao da fatia."
+      }
     }
   ],
   "geradoEm": "2026-08-23T11:45:03.441Z",
