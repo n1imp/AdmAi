@@ -28,6 +28,7 @@ import NovoServicoFuncionario from './pages/NovoServicoFuncionario.jsx';
 import Aprovacoes from './pages/Aprovacoes.jsx';
 import Mais from './pages/Mais.jsx';
 import Configuracao from './pages/Configuracao.jsx';
+import Assinatura from './pages/Assinatura.jsx';
 import Perfil from './pages/Perfil.jsx';
 import Seguranca from './pages/Seguranca.jsx';
 import Notificacoes from './pages/Notificacoes.jsx';
@@ -308,6 +309,16 @@ function AppContent() {
               <RequireAuth>
                 <Layout>
                   <Ajuda />
+                </Layout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/assinatura"
+            element={
+              <RequireAuth>
+                <Layout>
+                  <Assinatura />
                 </Layout>
               </RequireAuth>
             }

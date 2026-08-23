@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Bell, MessageCircle, Users, CreditCard, ShieldCheck } from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
@@ -50,12 +50,12 @@ const SECOES = [
     titulo: 'Integrações',
     cards: [
       {
+        to: '/configuracao/whatsapp',
         icon: MessageCircle,
         titulo: 'WhatsApp',
         sub: 'Registro e ponto pelo robô',
-        cor: 'text-muted',
-        bg: 'bg-dark-700',
-        breve: true,
+        cor: 'text-indigo-300',
+        bg: 'bg-indigo-400/10',
       },
     ],
   },
@@ -63,12 +63,12 @@ const SECOES = [
     titulo: 'Plano',
     cards: [
       {
+        to: '/assinatura',
         icon: CreditCard,
         titulo: 'Plano e cobrança',
         sub: 'Assinatura e faturas',
-        cor: 'text-muted',
-        bg: 'bg-dark-700',
-        breve: true,
+        cor: 'text-indigo-300',
+        bg: 'bg-indigo-400/10',
       },
     ],
   },
@@ -84,10 +84,14 @@ const CARD_USUARIOS = {
 };
 
 function CardLink({ card, onClick }) {
-  const { icon: Icon, titulo, sub, cor, bg, breve } = card;
+  const { to, icon: Icon, titulo, sub, cor, bg, breve } = card;
+  /* Card com destino é um LINK de verdade: o tour mira `a[href="/configuracao/whatsapp"]`
+     (que um <button onClick={navigate}> nunca satisfaz) e leitores de tela anunciam
+     navegação como navegação. Sem destino, continua botão. [SL-10] */
+  const Raiz = to ? Link : 'button';
   return (
-    <button
-      onClick={onClick}
+    <Raiz
+      {...(to ? { to } : { onClick })}
       className="card flex items-center gap-4 text-left active:scale-[0.98] transition-transform w-full"
     >
       <div
@@ -113,7 +117,7 @@ function CardLink({ card, onClick }) {
       >
         <polyline points="9 18 15 12 9 6" />
       </svg>
-    </button>
+    </Raiz>
   );
 }
 

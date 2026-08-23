@@ -797,15 +797,20 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-CONFIG-PROMESSA-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Pagina /assinatura (superficie minima, decisao do usuario): matriz status->motivo/acao com 17 unit; acao trialing discriminada por periodoFimEm (escrito SO pelo webhook, billing.js:136) — evita portal 400 no trial de cadastro E dupla assinatura no trial Stripe.",
+        "RISCO ANOTADO p/ Gate 6 adversarial (F6): criarCheckoutSession nao guarda contra assinatura viva existente — dupla assinatura possivel se chamado com customer ativo; a pagina evita o caminho, o backend nao impede.",
+        "Hub: cards navegaveis viraram Links reais; alvo do tour a[href=/configuracao/whatsapp] existe (unit); em breve zerado. GAP-UX-CONFIG-PROMESSA-01 CLOSED no registry (3 superficies).",
+        "Capturas reais das 3 superficies; painel 231/231."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:32:58.882Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

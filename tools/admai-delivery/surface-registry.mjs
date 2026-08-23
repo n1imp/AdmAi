@@ -413,6 +413,16 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'BILLING: decidir entre construir a superfície ou remover a promessa — as duas exigem ' +
         'decisão de produto, e nenhuma delas é trabalho de experiência visual',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'Decisão do usuário (2026-08-23): superfície MÍNIMA. /assinatura nasceu sobre os 3 ' +
+      'endpoints existentes (status por motivo + checkout/portal; trialing discrimina origem ' +
+      'por periodoFimEm — só o webhook Stripe o escreve). No hub, cards com destino viraram ' +
+      'LINKS reais: WhatsApp → /configuracao/whatsapp, Plano → /assinatura; "em breve" morreu.',
+    provaDeFechamento:
+      'Unit 17 (matriz status→motivo/ação, admin×não-admin, erro honesto) + 3 do hub (âncora ' +
+      'a[href="/configuracao/whatsapp"] que o tour mira EXISTE; zero "em breve"). Captura real: ' +
+      'trial do seed renderiza PERÍODO DE TESTE com ação correta. Painel 231/231.',
     nota:
       'BILLING tem backend montado e verificado em runtime, e ZERO superfície. Isso não é ' +
       '`REFINE` nem `REDESIGN`: é superfície ausente, e por isso vira pergunta de escopo em vez ' +
