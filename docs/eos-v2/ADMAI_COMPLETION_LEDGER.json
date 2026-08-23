@@ -1440,15 +1440,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "T-BILL-07"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "scripts/backfill-assinaturas.mjs: deteccao (empresas sem Assinatura), dry-run DEFAULT (provado: zero escrita), --aplicar transacional com skipDuplicates (concorrencia nao sobrescreve), politica parametrizada (trial-novo | trial-do-cadastro) porque inicio/duracao de trial e decisao de negocio.",
+        "Prova local completa: dry-run achou lacuna REAL pre-existente (empresa #1 do bootstrap local sem Assinatura) + a empresa de prova; --aplicar criou 2 trialing; segundo dry-run = 0; politica alternativa demonstra o caso trial-vencido. Prova limpa depois.",
+        "EXECUCAO EM PRODUCAO = D2 (Gate 5): o script avisa no proprio output; a escolha da politica tambem e do usuario."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:28:50.454Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

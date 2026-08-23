@@ -48547,9 +48547,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Split do /uploads concluido no padrao selfie: dir privado + rota autenticada (4/4 incl. anti-traversal) + imagem-com-Bearer no painel. Pre-requisito de WhatsApp-prod cumprido no codigo.",
       "declaradoEm": "2026-08-23T17:19:02.557Z"
+    },
+    {
+      "sliceId": "F6-BACKFILL",
+      "titulo": "Script backfill-assinaturas (T-BILL-07) com dry-run provado localmente; execucao real = D2",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Backfill T-BILL-07 com dry-run default provado (achou lacuna real no dev), aplicacao idempotente e politica parametrizada; producao e escolha de politica = D2 (Gate 5).",
+      "declaradoEm": "2026-08-23T17:26:38.273Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:25:10.691Z",
+  "geradoEm": "2026-08-23T17:28:52.437Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
