@@ -857,13 +857,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Badge de status: != aprovado -> != ativo (aprovacao grava ativo, servicos.js:285) — todo servico normal levava selo de alerta; unit novo morde (sabotagem falha).",
+        "MeusServicos: descricao principal em line-clamp-2 + title — truncados=0 medidos em 360/1440/1920 e captura VISTA em 1440 (clamp em acao).",
+        "/servicos 360: title + toque na linha abre detalhe (densidade deliberada, documentada no flip); 1440/1920 zero. Buscas ja recolhidas e formularios ja max-w-2xl (razoes mortas antes da fatia).",
+        "Flip de 4 classificacoes p/ KEEP; controle do registry pegou KEEP-sem-captura-vista e superficie nova sem classificacao (/assinatura) — ambos corrigidos; 28/28, ZERO_UNCLASSIFIED sim. REFINE 26->22. Painel 234/234 lido ANTES do commit."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:55:41.656Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

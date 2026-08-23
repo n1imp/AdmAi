@@ -72,7 +72,11 @@ function CardMeuServico({ servico, acao }) {
               {servico.local}
             </span>
           </div>
-          <p className="text-white text-sm font-medium truncate mt-1">{servico.descricao}</p>
+          {/* Linha PRINCIPAL do card: clamp de 2 linhas em vez de corte em 1 — a descrição é
+              o que identifica o serviço para quem trabalha em campo. [SL-12] */}
+          <p className="text-white text-sm font-medium line-clamp-2 mt-1" title={servico.descricao}>
+            {servico.descricao}
+          </p>
           {servico.endereco && (
             <p className="text-muted text-xs mt-1 flex items-center gap-1 truncate">
               <MapPin size={11} className="shrink-0" /> {servico.endereco}

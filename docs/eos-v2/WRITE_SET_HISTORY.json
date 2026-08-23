@@ -48379,9 +48379,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "Fechamento NUNCA encadeia commit atras de suite: rodar suite, LER o resultado, e so entao commitar. Teste que asserta string renomeada pela fatia entra na declaracao da fatia."
       }
+    },
+    {
+      "sliceId": "SL-12-SERVICOS",
+      "titulo": "Cluster servicos: badge que marcava TODO servico normal + descricoes truncadas",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Cluster servicos: badge de excecao corrigido (mordida provada), clamp na linha principal do tecnico, 4 flips p/ KEEP; controle KEEP-exige-captura honrado e /assinatura classificada. REFINE 26->22. Suite 234/234 lida antes do commit.",
+      "declaradoEm": "2026-08-23T11:50:40.608Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:45:03.441Z",
+  "geradoEm": "2026-08-23T11:55:45.469Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

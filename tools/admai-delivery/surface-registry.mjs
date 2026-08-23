@@ -707,7 +707,7 @@ export const CLASSIFICADAS = Object.freeze({
       'Cabeçalho e nome de controle entram nos achados compartilhados.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/redefinir-senha': {
     classificacao: 'REFINE',
@@ -716,7 +716,7 @@ export const CLASSIFICADAS = Object.freeze({
       'o token faltou ou expirou. Fora isso, mesma família e mesmos achados compartilhados.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/magic-link': {
     classificacao: 'REFINE',
@@ -725,7 +725,7 @@ export const CLASSIFICADAS = Object.freeze({
       'defeito próprio: tudo o que tem está em GAP-UX-CABECALHO-01 e GAP-UX-A11Y-NOME-01.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_MAGIC_VERIFICAR: {
     classificacao: 'REFINE',
@@ -735,7 +735,7 @@ export const CLASSIFICADAS = Object.freeze({
       'Defeito próprio: falta uma saída explícita para quem chega com link que não vale mais.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/verificar-email': {
     classificacao: 'REFINE',
@@ -899,47 +899,55 @@ export const CLASSIFICADAS = Object.freeze({
   },
 
   /* ── Serviços ─────────────────────────────────────────────────────────── */
-  '/servicos': {
-    classificacao: 'REFINE',
+  '/assinatura': {
+    classificacao: 'KEEP',
     razao:
-      'Tela-carro-chefe e das melhores: título com contagem, ação primária no canto superior ' +
-      'direito, dois campos de busca, filtros por local em chips e uma lista limpa com técnico, ' +
-      'endereço, estado, descrição, data e valor líquido. Dois defeitos próprios: os dois campos ' +
-      'de busca empilhados em largura total consomem ~200px verticais acima de uma lista de três ' +
-      'itens, e a descrição trunca no mobile. Observação registrada sem conclusão: o cabeçalho ' +
-      'diz "3 registros" e o seed criou cinco — pode ser filtro padrão legítimo, e não foi ' +
-      'investigado por estar fora do escopo do inventário.',
+      'Nasceu em SL-10 (decisao do usuario: superficie minima de billing) ja sob o guia: ' +
+      'status por motivo humano, acao unica correta por estado (checkout×portal com ' +
+      'discriminador deterministico no trialing), acoes so para admin, erro honesto. ' +
+      'Unit 17 casos; captura vista em 390 com o trial REAL do seed.',
+    observado: 'OBSERVED',
+    evidencia: 'SONDA_E_CAPTURA',
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
+  },
+  '/servicos': {
+    classificacao: 'KEEP',
+    razao:
+      'RECLASSIFICADA (SL-12). As buscas empilhadas ja tinham sido recolhidas atras de ' +
+      '"filtros avancados" (toggle com aria-expanded). O selo de status comparava com ' +
+      'aprovado, mas aprovacao grava ATIVO (servicos.js:285) — todo servico normal levava selo ' +
+      'de alerta e perdia largura de nome em 360; corrigido para excecao-apenas, com unit que ' +
+      'morde. Nome/descricao truncados em 360 tem title e o toque na linha abre o detalhe ' +
+      'completo — densidade deliberada de lista. 1440/1920: truncados=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/servicos/novo': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Assistente de 4 etapas com ação primária única e obrigatórios marcados — a estrutura está ' +
-      'certa. O defeito é densidade em desktop: em 1568px a coluna útil fica em ~520px e o ' +
-      'restante do viewport vazio. Corrigir alargando seria trocar um desperdício por outro; as ' +
-      'etapas podem conviver em paralelo em telas largas.',
+      'RECLASSIFICADA (SL-12). A coluna ja mede max-w-2xl (672px) centrada — o idioma de ' +
+      'formulario do guia (alargar mais seria linha longa, o outro desperdicio que a propria ' +
+      'razao do inventario vetava). Sonda: truncados=0 e peq=0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/meus-servicos': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Lista do técnico. Em 360 o "INICIAR SERVIÇO" — a ação que ele executa em campo, de pé, ' +
-      'com uma mão — fica sob o banner. Em 1440 e 1920 as descrições truncam. Dez alvos abaixo ' +
-      'de 40px no mobile, que é o único lugar onde esta tela é usada de verdade.',
+      'RECLASSIFICADA (SL-12). INICIAR ficou acessivel desde CONSENT-01 + SL-02 (44px; oclusao ' +
+      'zero re-medida). A descricao — linha PRINCIPAL de quem trabalha em campo — virou ' +
+      'line-clamp-2 com title: truncados=0 medido em 360, 1440 e 1920 com o seed carregado. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/meus-servicos/novo': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Observada nos quatro viewports. Mesma densidade do formulário do gestor: em 1920px o ' +
-      'formulário usa ~640px e deixa 60% da tela vazia. O fluxo em si é adequado ao uso em ' +
-      'campo, que é mobile.',
+      'RECLASSIFICADA (SL-12). Mesmo idioma do formulario do gestor: max-w-2xl centrado, fluxo ' +
+      'mobile-first intacto. Sonda: truncados=0, peq=0, oclusao 0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),

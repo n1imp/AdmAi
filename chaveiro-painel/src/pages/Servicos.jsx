@@ -40,19 +40,27 @@ function LinhaServico({ servico, onAbrir }) {
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-semibold text-white text-sm truncate">
+          <span
+            className="font-semibold text-white text-sm truncate"
+            title={servico.tecnico?.nome ?? undefined}
+          >
             {servico.tecnico?.nome ?? 'Sem técnico'}
           </span>
           <span className="badge bg-dark-700 text-muted border border-dark-600 shrink-0">
             {servico.local}
           </span>
-          {servico.status && servico.status !== 'aprovado' && (
+          {/* O selo marca EXCEÇÃO. O valor pós-aprovação é 'ativo' (servicos.js:285) — a
+              comparação antiga com 'aprovado' punha selo de alerta em todo serviço normal e
+              roubava largura do nome na linha de 360px. [SL-12] */}
+          {servico.status && servico.status !== 'ativo' && (
             <span className="badge bg-warning/15 text-warning border border-warning/30 shrink-0 capitalize">
               {servico.status}
             </span>
           )}
         </div>
-        <p className="text-muted text-xs truncate">{servico.descricao}</p>
+        <p className="text-muted text-xs truncate" title={servico.descricao}>
+          {servico.descricao}
+        </p>
         <p className="text-[11px] text-dark-500 mt-0.5 flex items-center gap-1 tnum">
           <Calendar size={11} /> {formatarData(servico.criadoEm)}
         </p>
