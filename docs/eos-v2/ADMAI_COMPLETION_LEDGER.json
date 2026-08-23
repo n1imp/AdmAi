@@ -1801,6 +1801,60 @@
       "nextAction": null,
       "revisitCondition": "provider Cloud em uso real OU aceitacao ponta real agendada",
       "snapshotRef": null
+    },
+    {
+      "workId": "FIX-IDEMP-PERDA",
+      "phase": "F0",
+      "domain": "billing",
+      "description": "Evento nao se perde quando o handler falha apos a marca de idempotencia (desmarcar-na-falha + timeouts no cliente Redis)",
+      "dependencies": [],
+      "priority": "P0",
+      "risk": "medio",
+      "authority": "CODEX_D1",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DONE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "D-F05-REV-01"
+      ],
+      "writeSetRef": "FIX-IDEMP-PERDA",
+      "evidenceRefs": [
+        "webhook_idempotencia_perda.test.js 6/6 com dupla sabotagem provada",
+        "consenso thread 01a02cf7"
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-23T05:34:42.774Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
+    },
+    {
+      "workId": "FIX-ESTOQUE-CORRIDA",
+      "phase": "F0",
+      "domain": "estoque",
+      "description": "Piso e saldoApos corretos sob concorrencia (lock de linha FOR UPDATE)",
+      "dependencies": [],
+      "priority": "P0",
+      "risk": "medio",
+      "authority": "CODEX_D1",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DONE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "D-F05-REV-01"
+      ],
+      "writeSetRef": "FIX-ESTOQUE-CORRIDA",
+      "evidenceRefs": [
+        "estoque_concorrencia.test.js 3/3 (6 execucoes) com sabotagem -11 capturada",
+        "commit cdc4a91"
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-23T05:34:42.775Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     }
   ]
 }

@@ -20,7 +20,7 @@ import { resolverMateriaisDoServico } from './catalogo.js';
 import { registrarServico, formatarData, formatarMoeda } from './servico.js';
 import { enviarMensagem } from './whatsapp/gateway.js';
 import { agendarAvaliacao, tentarCapturarResposta } from './avaliacao.js';
-import { marcarSeNovo } from './idempotencia.js';
+import { marcarSeNovo, desmarcar } from './idempotencia.js';
 
 const UPLOADS_DIR = path.resolve('./uploads');
 
@@ -62,6 +62,18 @@ export async function rotearMensagemInbound(evento) {
     return { tratado: false, duplicado: true };
   }
 
+  /* Marca-antes exige DESMARCAR-na-falha: sem isso, o retry do BullMQ (attempts 3, backoff)
+     reencontrava a marca, caía em "duplicado" e a mensagem morria por 24h — a fila retentava um
+     no-op. O rethrow é o que faz a fila retentar de verdade. [FIX-IDEMP-PERDA] */
+  try {
+    return await processarMensagemMarcada(msg);
+  } catch (erro) {
+    if (msg.id) await desmarcar(`wa:${msg.id}`);
+    throw erro;
+  }
+}
+
+async function processarMensagemMarcada(msg) {
   const jid = msg.remoteJid;
   const telefone = normalizarTelefone(jid);
   const responder = (texto) => enviarMensagem(jid, texto);

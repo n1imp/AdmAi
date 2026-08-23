@@ -9,7 +9,7 @@ import {
 import { enviarEmailRecibo, enviarEmailFalhaPagamento } from '../services/email.js';
 import { prisma } from '../db/prisma.js';
 import { logger } from '../utils/logger.js';
-import { marcarSeNovo } from '../services/idempotencia.js';
+import { marcarSeNovo, desmarcar } from '../services/idempotencia.js';
 
 // ── /api/billing/* ────────────────────────────────────────────────────────────
 
@@ -90,6 +90,11 @@ stripeWebhookRouter.post(
       await despacharEvento(evento);
       res.json({ recebido: true });
     } catch (e) {
+      /* A marca foi feita ANTES do despacho (dedup correta) — então a falha do handler precisa
+         DESMARCAR, senão o reenvio da Stripe cai em "duplicado" e o evento morre por 24h. O 500
+         abaixo é o que faz a Stripe reenviar; sem o DEL, o reenvio era descartado. Best-effort:
+         o erro original prevalece sobre qualquer falha do DEL. [FIX-IDEMP-PERDA] */
+      await desmarcar(`stripe:${evento.id}`);
       logger.error('stripe_webhook_erro', { tipo: evento.type, erro: e.message });
       res.status(500).json({ erro: 'Erro ao processar evento' });
     }

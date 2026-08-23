@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FIX-ESTOQUE-CORRIDA",
-  "titulo": "Piso de estoque e saldoApos corretos sob concorrencia (achado 3 do Revisor)",
+  "sliceId": "FIX-IDEMP-PERDA",
+  "titulo": "Evento nao se perde mais quando o handler falha depois da marca (achado 1)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T05:03:51.161Z",
+  "declaradoEm": "2026-08-23T05:20:05.959Z",
   "baseCommitPorLane": {
-    "HARNESS": "24556057d8692cfa991ef7cbe19a751fe05ae2aa"
+    "HARNESS": "cdc4a919793a689964bffc65dc0629156a3f29ad"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O increment fecha lost-update do SALDO, mas o piso Math.max e o saldoApos sao computados contra leitura STALE: duas saidas concorrentes de 7 sobre 10 dao saldo real -4 com ambos os ledgers dizendo 3. Correcao: lock de linha (SELECT FOR UPDATE) na mesma transacao; o clamp parcial — semantica existente — passa a valer contra o valor TRAVADO. Teste de concorrencia real com duas saidas paralelas.",
+  "notaDeMetodo": "Consenso com o Revisor (remedio menor): desmarcar-na-falha + timeouts explicitos no cliente (sem eles, fail-open nao e declaravel — a espera podia ser indefinida). Recepcao duravel adiada com gatilho registrado. Testes obrigatorios do proprio Revisor implementados contra Redis real.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -145,7 +145,7 @@
       "chaveiro-bot/src/services/__tests__/catalogo.test.js": "21687ad34ee03c8048feb47ada1834da07910139aabbf421b2573d7b762e22f6",
       "chaveiro-bot/src/services/__tests__/codigosRecuperacao.test.js": "dfb5c2affcedda63e290dccf7b7aa75645005d0662e29460f0176a0453905369",
       "chaveiro-bot/src/services/__tests__/confirmacaoExclusaoConta.test.js": "a8d7729f4ac6559675a5114687ca65096bfd38915b31fea1e413541fd256067d",
-      "chaveiro-bot/src/services/__tests__/estoque.test.js": "417ee550a18f3fcae18f7a30f21e64b8bfa6d64d6469c19f78a4ac5a594d54c5",
+      "chaveiro-bot/src/services/__tests__/estoque.test.js": "5449c944f5b6463066bc6ae6948ee6ed5a03647c0da7f19bfc3a66bb698eb6ba",
       "chaveiro-bot/src/services/__tests__/idempotencia.test.js": "1773694c996dc6b0d2a7170af3c5965854d5ec6f60f63c97abd36caab6d6e831",
       "chaveiro-bot/src/services/__tests__/identidade.test.js": "1f576c2f0a63c2fa05a13a57d8812ca6a38b2d7e7bcc8be4ebd0eb1de8bcfa95",
       "chaveiro-bot/src/services/__tests__/oauth.test.js": "3556db0997c7f216b0b55698901274cb86a3ecfe1c80ef78c5c47205716b2b1d",
@@ -170,7 +170,7 @@
       "chaveiro-bot/src/services/conversa.js": "35f4d4a4dd74af57eeb16489170036f3155f1b4a723eb7afc5e4a5a642adfa24",
       "chaveiro-bot/src/services/credenciais.js": "5e65acd0720a500038d5e5694b851e1af0abf52b8645e771b5053490dee60348",
       "chaveiro-bot/src/services/email.js": "e250e3fea2189fe659efe1a20ebd40627a971b5eb96e60abde5f209670d68e1e",
-      "chaveiro-bot/src/services/estoque.js": "a571eeebd88af4254ede114f7bbb4b69b6d1449c3c4c947f6b2375690d7846b7",
+      "chaveiro-bot/src/services/estoque.js": "9337b85824c88f786dcf373eff406738b4f14e5817ae7b47d0094fdcc844ae94",
       "chaveiro-bot/src/services/google/__tests__/analise.test.js": "cac808dc0b7ffeee09eb411db673d71d86984f4793900afe35762c4c6ec1fb5f",
       "chaveiro-bot/src/services/google/__tests__/businessClient.test.js": "545c4f6270ea627b99ab470c96c19a58811db87bb2c8cf2818a87d409b8c0f1a",
       "chaveiro-bot/src/services/google/analise.js": "8b0bb4e340d7204f03f473686a955dc378203537852ad83937e360aea1e4beb0",
@@ -234,6 +234,7 @@
       "chaveiro-bot/test/integration/documentos_storage.test.js": "939f94d5462f392efc57e4840edc1b5cf34a9fe6bad322bf9c7e22b167b8d84b",
       "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js": "138eb85441b2724d6cb1b982cba3b42ea6bbaa9c1ea8777b7be9063c5b59692d",
       "chaveiro-bot/test/integration/erro_nao_tratado.test.js": "2ca30bad5e8290ecdf5f1f0fa9c76d339d732491233bec53760fb4e6550d2127",
+      "chaveiro-bot/test/integration/estoque_concorrencia.test.js": "14865cb05029547430db9f1c0274ef6166d17008a44227fbfb5dd01e3695a100",
       "chaveiro-bot/test/integration/gestor_indicadores.test.js": "0adebbcb014107e2a02d86e9edf32a093654305ca6d9e106059322d9611c3687",
       "chaveiro-bot/test/integration/global-setup.js": "3e7802a361e68c221971811bc9777cd2b99f3c6b9197ceb39f289e96fb6aa7ec",
       "chaveiro-bot/test/integration/health_operacional.test.js": "5248c9727d38dc846fb828761b3f1f56f05570df924dbc69a474628b0e7a4bef",
@@ -556,8 +557,8 @@
       "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "cdfe5f9ab2162dc170c71a35213041cd8e04a809d61c3f2e538e346648c50a0b",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "ddad96f40740816eb331a02176767d9543b8b58d8cff3d6e165f45b4cd834d56",
+      "docs/eos-v2/WRITE_SET.json": "0e85ef4f00eadf6c06f025e85586cc79b86e653490c48da5e90b26bbe26ae5cb",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "085602aa828edd5dce93fdba27f314004fa84fd9387b61f96ba1b0d4b92e5a8e",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1752,39 +1753,50 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/estoque.js",
+      "caminho": "chaveiro-bot/src/services/idempotencia.js",
       "precisao": "BOUNDED",
-      "proposito": "lock de linha + saldo autoritativo",
+      "proposito": "desmarcar() best-effort + connectTimeout/commandTimeout",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a571eeebd88af4254ede114f7bbb4b69b6d1449c3c4c947f6b2375690d7846b7",
+      "shaNaDeclaracao": "896754cbba19ec6a570ff62a74e9a5cb1110003521976005f081c0092bf0d0fd",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/estoque_concorrencia.test.js",
+      "caminho": "chaveiro-bot/src/routes/billing.js",
       "precisao": "BOUNDED",
-      "proposito": "duas saidas paralelas: saldo final >= 0 e cadeia de ledger consistente",
+      "proposito": "desmarcar no catch antes do 500",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6d00c4661ae8d7703c6656b8ed07659c203f2186e69a54d880a3708d7541e3da",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/inbound.js",
+      "precisao": "BOUNDED",
+      "proposito": "desmarcar + rethrow apos a dedup, para o retry da fila executar",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "db42dd53b0bd8613ba937c4a859664a3bc495c12c9f21a179aa7e382aeaf638a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/webhook_idempotencia_perda.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "os testes obrigatorios do consenso, contra Redis real",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T05:03:51.430Z",
+  "validadoEm": "2026-08-23T05:20:06.232Z",
   "validadoPor": "write-set-gate.mjs",
-  "expansoesAutorizadas": [
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/__tests__/estoque.test.js",
-      "motivo": "o contrato interno mudou (findFirst -> $queryRaw FOR UPDATE) e os mocks unitarios seguem o contrato; expansao autorizada em vez de escrita nao declarada"
-    }
-  ],
-  "comparacao": "AUTHORIZED_EXPANSION",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Achado 3 do Revisor confirmado e corrigido: SELECT FOR UPDATE serializa movimentos do mesmo material; piso e saldoApos computados sob o lock; escrita do valor absoluto (correta sob lock). Sabotagem provou que o teste morde: logica antiga restaurada deu saldo real -11 com cadeia inconsistente capturada. Flake inicial era do MEU teste (sobre-especificava a ordem do escalonador — assert =4 assumia zero clamps); corrigido para propriedades independentes de intercalacao (conservacao exata + clamp so no chao), 6/6 verdes. Expansao autorizada: mocks unitarios seguiram o contrato novo. Unit 10/10; aprovacao_rejeicao 12/12.",
+  "nota": "Consenso do achado 1 aplicado: desmarcar-na-falha nos dois caminhos + timeouts explicitos. A sabotagem pegou um defeito NA MINHA correcao (enableOfflineQueue:false fazia a primeira marca de cada processo falhar aberta — dedup inexistente nas primeiras chamadas); removido com o porque gravado no codigo. Dupla sabotagem final: os dois caminhos mordem. 6/6 + inbound_idempotencia 7/7 + billing 7/7. Modos residuais do consenso documentados no proprio desmarcar().",
   "aviso": "Declaracao ENCERRADA."
 }
