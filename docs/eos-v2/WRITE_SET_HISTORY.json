@@ -48252,7 +48252,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "Dois achados CLOSED numa fatia: CABECALHO-01 (h1 de tarefa nas 7 superficies, inclusive estados de erro) e RODAPE-01 (main flex-col + mt-auto; gap 0 provado por CDP nas paginas curtas). Prettier por LISTA explicita, dentro da fatia.",
-      "declaradoEm": "2026-08-23T06:59:23.807Z"
+      "declaradoEm": "2026-08-23T06:59:23.807Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao SL-03 do programa aprovado",
+        "justificativa": "Uma causa: a declaracao omitiu tools/admai-delivery/surface-registry.mjs — a escrita de FECHAMENTO (status CLOSED + prova) que toda fatia que fecha achado faz, e que SL-01/SL-02 declararam. Ledger e WRITE_SET_* sao artefatos exemptos do gate. O conteudo esta provado e commitado (b905770): h1 nas 7 superficies via sonda, gap rodape->base 0 via CDP, pages 85/85, registry 28/28 controles.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Fatia que fecha achado declara surface-registry.mjs na PROPRIA declaracao — a escrita de fechamento e parte do trabalho, nao um extra."
+      }
     }
   ],
   "geradoEm": "2026-08-23T07:03:18.286Z",
