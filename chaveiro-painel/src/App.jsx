@@ -75,16 +75,11 @@ export default function App() {
   );
 }
 
-const PUBLIC_SURFACES = new Set(['/privacidade', '/termos', '/cookies']);
-
 function AppContent() {
-  const { user } = useAuth();
-  const { pathname } = useLocation();
-  const normalizedPath = pathname.replace(/\/+$/, '') || '/';
-  const isPublicSurface = PUBLIC_SURFACES.has(normalizedPath) || (normalizedPath === '/' && !user);
-
   return (
-    <PanelScope active={!isPublicSurface}>
+    /* Aurora em TUDO (decisao do usuario, 2026-08-23): a fronteira PUBLIC_SURFACES morreu —
+       Landing e paginas legais entram no mesmo escopo .panel-ui do produto. [SL-09] */
+    <PanelScope>
       <ToastProvider>
         <CookieBanner />
         <Routes>

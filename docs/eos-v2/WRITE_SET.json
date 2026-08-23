@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SL-08-IDENTIDADE-SOBRAS",
-  "titulo": "Sobras de ciano: hover dos preenchidos (classe compartilhada) + hover do tour",
+  "sliceId": "SL-09-LANDING-AURORA",
+  "titulo": "Aurora em tudo: morre a fronteira PUBLIC_SURFACES; title/description da face publica",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T11:11:35.904Z",
+  "declaradoEm": "2026-08-23T11:15:58.713Z",
   "baseCommitPorLane": {
-    "HARNESS": "ce9019a60ae48dc8dc9fd6f4bd24c800611b0a21"
+    "HARNESS": "80be8d48a6faee8c1657cd3358281f7a9617e64d"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Defeito de CLASSE, correcao na dona: panel-rollout.css remapeia hover:bg-accent-300 e hover:bg-accent-400/15 (4 usuarios: FAB, upload de Documentos, INICIAR e reabrir de MeusServicos) — espelhando o btn-primary:hover da casa (clareia para --panel-text). TourGuide (fora do escopo .panel-ui, CSS proprio do driver.js) troca o unico hex ciano remanescente pelo mesmo padrao. Prova: varredura grep zero ciano fora de tailwind/rollout + hover REAL do FAB via CDP (mouse move + computed style). Superficies convite/trocar-senha ja fechadas por SL-02/03 — auditadas, intocadas.",
+  "notaDeMetodo": "Decisao do usuario (2026-08-23): identidade Aurora em TODAS as superficies. A fronteira era UMA linha (PanelScope active={!isPublicSurface}); remove-la poe Landing e legais no escopo .panel-ui e o remap existente faz a conversao — zero CSS novo. Isso tambem converte /privacidade,/termos,/cookies (dona compartilhada); SL-14 apenas audita as legais. index.html: title 'AdmAi — Painel' e description panel-oriented viram a face publica com o copy REAL da Landing (titulos por rota = F6/useDocumentHead). Prova: captura antes/depois + cor computada do CTA e acentos por CDP; amostra Codex na revisao de lote do GATE-F2. EXPANSAO AUTORIZADA (antes de escrever): Landing.jsx — o CTA do hero e o do rodape sao barras de ~980px em desktop (w-full da base mobile-first, pre-existente no ciano, comparado por captura); correcao minima sm:w-auto na fatia que ja e dona da Landing, pois nenhuma outra fatia do plano cobre polimento da Landing e GATE-F3 exige zero REFINE.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -366,7 +366,7 @@
       "chaveiro-painel/src/components/Sidebar.jsx": "7c910c49352fee8e5cb49f585de201388d510584931655a3373ba39257dd1583",
       "chaveiro-painel/src/components/Skeleton.jsx": "22daaa01d2e3ba2c7572bae5f8eb1e3693a55db53a51dffe89353d6d99f28cbc",
       "chaveiro-painel/src/components/Toast.jsx": "2aa8623475b7bfe09aec8ec88539ef85ffe4f5bf823e864dd21f49c41d38dcc2",
-      "chaveiro-painel/src/components/TourGuide.jsx": "00eb45c07cb93376ab0cc4982cc526d85d20c0d55e953851856c3bc2870a2636",
+      "chaveiro-painel/src/components/TourGuide.jsx": "a6188bb97d3c95b652ae5e4a8ea6342d1e14e7e16ace19acf6bd3d2645fccd1f",
       "chaveiro-painel/src/components/WelcomeCard.jsx": "6719ef24e2a0f2ca5e0deef8b16b74f4ff30c5f300c47dff5c898b94a811a5b3",
       "chaveiro-painel/src/components/Wizard.jsx": "5d31afe2419e12d45145405fe2465a0ab17750ae8aaed1e5df6eaa5a583285d0",
       "chaveiro-painel/src/components/__tests__/CookieBanner.test.jsx": "41a2f0e2198b86d5a14c37f25a7a79c1b0bf15600d1eeb48b636ddbd7024115a",
@@ -493,7 +493,7 @@
       "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
       "chaveiro-painel/src/styles/panel-overlay.css": "760c67920d30cc9afda8f211d533f6c3c0c1d533e43089edb19921bd647dd68d",
       "chaveiro-painel/src/styles/panel-primitives.css": "cc30373e525a94ef77e506a56e6ca3d6acf62292e241592f7d82cbf6de9d1316",
-      "chaveiro-painel/src/styles/panel-rollout.css": "4f4a63362e74f22f9517afd0d6839c5a84050e24523672f04970800c7d99fb48",
+      "chaveiro-painel/src/styles/panel-rollout.css": "ce1188d00cbeb93f1274688630ff0bc651d64f764f6a3ea8f77dec73ff715265",
       "chaveiro-painel/src/styles/panel.css": "ef7d456ea29bc972f85796046e0e7ba7ed41faef8f6e44fe12500a5bcc46ddca",
       "chaveiro-painel/src/test/axe.js": "74547d3934177ffa8c8e4d74ecf5d3112c4f639a888e594d56d633934fad1782",
       "chaveiro-painel/src/test/setup.js": "fd0b71cff6bc469d16c98ee6a84811f50b9e77615920080d90d2ed6ae6f53945",
@@ -554,7 +554,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "d3e460126e95047a9d6118c0fb81ac7175884740cc0dfc8aa46c3110381200bd",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "8a009b64cacf07793d2cfd1ac0c25a33c1bc49e97773a5acee0403f02d2091f8",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -563,8 +563,8 @@
       "docs/eos-v2/RUN_STATE.json": "432148fac44166e52a6f99b63d4975672a480d31c4c0fcace6869afbfc159d2e",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "3558f662a158413356e068a72a35ca90099babca933c103ade96c75d939d7990",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "c2406ea2f6b807930ae157473bfcb4957cf75d75784114929121cc18674c1f5d",
+      "docs/eos-v2/WRITE_SET.json": "2132e49637d1ce94eb295f56ec63a19b8c68e560d37ac5379d22fb4265d8c404",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "769a7162553c311ab1a00bed6c7e082013651a46cdd70e3c25f40f6d46e5b63f",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2294,32 +2294,38 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/styles/panel-rollout.css",
+      "caminho": "chaveiro-painel/src/App.jsx",
       "precisao": "BOUNDED",
-      "proposito": "remap dos hovers de preenchido sem cobertura",
+      "proposito": "PanelScope sempre ativo; PUBLIC_SURFACES removido",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "4f4a63362e74f22f9517afd0d6839c5a84050e24523672f04970800c7d99fb48",
+      "shaNaDeclaracao": "523f12c4f2cc2cbb8ddc360c4bbfc444bc4d330154646d5989f947cc6f7574f2",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/TourGuide.jsx",
+      "caminho": "chaveiro-painel/index.html",
       "precisao": "BOUNDED",
-      "proposito": "hover do next-btn: ciano -> padrao do btn-primary",
+      "proposito": "title/description da face publica com copy real",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "00eb45c07cb93376ab0cc4982cc526d85d20c0d55e953851856c3bc2870a2636",
+      "shaNaDeclaracao": "5387bf4d8b461c06acc3d7a37041d279b895773f13fafd38b96e054817c4c226",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T11:11:36.164Z",
+  "validadoEm": "2026-08-23T11:15:58.942Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "expansoesAutorizadas": [
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Landing.jsx"
+    }
+  ],
+  "comparacao": "AUTHORIZED_EXPANSION",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Sobras de identidade: tour era o unico ciano renderizavel (corrigido); a classe hover era na verdade INERTE (contraprova CDP corrigiu o modelo do defeito) e o remap devolve feedback no padrao da casa. Hover real medido: base violeta -> #f8f9ff.",
+  "nota": "Aurora em tudo: fronteira PUBLIC_SURFACES morta (decisao do usuario); title/description da face publica com copy real; expansao autorizada (Landing.jsx, CTAs sm:w-auto) declarada antes da escrita. CDP: CTA e acentos violeta; 214/214.",
   "aviso": "Declaracao ENCERRADA."
 }

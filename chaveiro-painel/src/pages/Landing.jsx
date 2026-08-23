@@ -96,7 +96,7 @@ export default function Landing() {
             painel só. Feito para quem trabalha em campo.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button onClick={irParaBeta} className="btn-primary">
+            <button onClick={irParaBeta} className="btn-primary sm:w-auto sm:px-8">
               Participar do beta <ArrowRight size={16} />
             </button>
             <Link
@@ -155,7 +155,7 @@ export default function Landing() {
           Estamos abrindo vagas para um grupo pequeno de chaveiros. Crie sua conta e comece a
           registrar serviços hoje.
         </p>
-        <button onClick={irParaBeta} className="btn-primary mt-6 inline-flex">
+        <button onClick={irParaBeta} className="btn-primary mt-6 sm:w-auto sm:px-8">
           Criar minha conta <ArrowRight size={16} />
         </button>
       </section>

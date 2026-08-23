@@ -738,15 +738,20 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-IDENTIDADE-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Fronteira PUBLIC_SURFACES removida (1 linha): Landing + /privacidade,/termos,/cookies no escopo .panel-ui; CDP mede CTA rgb(196,181,253) e acento do hero violeta (antes ciano #22D3EE) — capturas antes/depois em telas/sl09-antes|sl09.",
+        "index.html: title AdmAi — Gestao para chaveiros + description com o copy REAL da Landing (por-rota fica para F6/useDocumentHead).",
+        "Expansao autorizada registrada ANTES da escrita: CTAs do hero/rodape eram barras de ~980px em desktop (pre-existente no ciano, provado por captura) -> sm:w-auto; hero confere visualmente em 1440.",
+        "Sonda da Landing: peq=0, overflowX=0, h1 ok nos 4 viewports. Painel 214/214. Amostra Codex: revisao de lote do GATE-F2."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:21:33.672Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
