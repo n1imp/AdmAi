@@ -48511,7 +48511,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "Perf: lazy nas paginas de grafico + fim do manualChunks de recharts (modulepreload anulava o lazy) — publico -44% de JS; orcamento e numeros no ledger; jornadas 9/9 como gate de regressao.",
-      "declaradoEm": "2026-08-23T16:12:49.740Z"
+      "declaradoEm": "2026-08-23T16:12:49.740Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao F6-01",
+        "justificativa": "A fatia rodou npm run build (parte declarada do METODO: build+preview+CDP) mas nao declarou chaveiro-painel/dist nos artefatos — os outputs do build (ignorados pelo git) sao exatamente a classe que a dimensao de artefatos existe para ver. Efeito de ENGENHARIA esperado e deterministico do proprio metodo declarado; nada fora do build foi escrito.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Fatia cujo metodo inclui npm run build declara chaveiro-painel/dist nos artefatos, sempre."
+      }
     }
   ],
   "geradoEm": "2026-08-23T16:23:14.437Z",
