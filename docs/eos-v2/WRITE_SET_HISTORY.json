@@ -48575,9 +48575,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Drill de backup/restore executado e verificado por tabela (27/27 identicas; zero erros); uploads byte a byte; runbook com os comandos provados; producao segue D2 (Q-010).",
       "declaradoEm": "2026-08-23T17:30:37.831Z"
+    },
+    {
+      "sliceId": "F6-RECONCILIACOES",
+      "titulo": "F6-08/09/10: research recon (verificacao), docs linha a linha, avaliacao F-MAR-071",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Tres reconciliacoes documentais: research zerado (verificacao), 29 linhas de GO_LIVE/LAUNCH com disposicao explicita, F-MAR-071 avaliado (pos-hoc mantido; provou pegar 3/3 violacoes).",
+      "declaradoEm": "2026-08-23T17:35:28.079Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:33:40.682Z",
+  "geradoEm": "2026-08-23T17:36:32.195Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

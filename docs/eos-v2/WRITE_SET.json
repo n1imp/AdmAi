@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F6-BACKUP-DRILL",
-  "titulo": "Drill local de backup/restore com verificacao por tabela + runbook atualizado",
+  "sliceId": "F6-RECONCILIACOES",
+  "titulo": "F6-08/09/10: research recon (verificacao), docs linha a linha, avaliacao F-MAR-071",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T17:30:37.831Z",
+  "declaradoEm": "2026-08-23T17:35:28.079Z",
   "baseCommitPorLane": {
-    "HARNESS": "9d0349fcd1382e936525ad1fc1a7dc7d9e0fae74"
+    "HARNESS": "a0a0f27b80f730a082d57b4d02b8c4f921cb53fa"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "pg_dump do admai_dev (dados reais locais) -> restore em banco descartavel admai_drill -> contagem POR TABELA comparada lado a lado (verificacao, nao fe) -> drop do drill. Runbook ganha a secao do drill com os comandos exatos. Uploads: backup tar dos dirs locais (uploads, uploads-ponto, uploads-evidencias) + restore em dir de prova + diff. PITR/backup de PRODUCAO segue D2 (Q-010, runbook ja documenta a lacuna).",
+  "notaDeMetodo": "F6-08 fecha por verificacao (registry ja zera UNKNOWN/FORGOTTEN; 2 DEFERRED com condicao). F6-09 materializa a reconciliacao LINHA A LINHA dos 29 itens abertos de GO_LIVE/LAUNCH em documento proprio referenciando cada linha (nunca duplicando) com disposicao em 4 baldes: D2-decisao, D2-provisionamento, PROVADO-LOCAL-pendente-prod, PLAY-STORE-externo. F6-10: avaliacao honesta — ponto de imposicao pre-escrita exigiria hook (vetado pela governanca deste fluxo); deteccao pos-hoc do gate provou pegar TODAS as violacoes da sessao (3 reconciliacoes), decisao registrada.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -540,7 +540,7 @@
       "docs/GO_LIVE_CHECKLIST.md": "8be3f32c7748faff92b4dc0615cd9f9b35acadb9d487d294e25d11cbb6b13bd3",
       "docs/LAUNCH_CHECKLIST.md": "2e511001db6fe204af3b232de64d2457e5dcccfbf0e2387e826cc127d07a2593",
       "docs/LAUNCH_PLAN.md": "f87eaeede4aceb293d0bf9b5c63c864122b3efd6f411fd3f300c7a195b203d00",
-      "docs/RUNBOOK.md": "66b9cd98d5161666c9da4bafc1f525bc3a7366aba008ba2b0aabd94cffda6efb",
+      "docs/RUNBOOK.md": "2ed76dcffa71c58e3a15facec5e3f115adb7649b732fe3459340649cbcd5745e",
       "docs/TESTPLAN.md": "59deea0d68da88f2d2d18e6131ca5748e45a7211ca74d07fa4a0ff30eb767de3",
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
@@ -584,7 +584,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "06b72aa0129cceb9725298071c204ac8187c704274b6084279cf342b68fd6f0e",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "497a28bb9a40607fd1d0b0ce8e8615bbef65bbf9bc63748ff100dad97742b4e6",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -593,8 +593,8 @@
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "c346ebe38e04de26b97aacc1efa50f2bad0b3024b226a8a7ac6170b05b8face9",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "94411405802834845f778387d0d38c4ed523cfb532e3688646bd43ffae3523fe",
+      "docs/eos-v2/WRITE_SET.json": "fdad0d89e8fee18e530d2fbb647999471e0cc0ee5a06f28311426abae9fb53f0",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "77cd68bde733a1a68590b8b918e54406fac2dee6a6c9a61219be976078d2ede9",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2515,15 +2515,15 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/RUNBOOK.md",
+      "caminho": "docs/eos-v2/DOCS_RECONCILIATION_F6.md",
       "precisao": "BOUNDED",
-      "proposito": "secao do drill com comandos provados",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "66b9cd98d5161666c9da4bafc1f525bc3a7366aba008ba2b0aabd94cffda6efb",
+      "proposito": "novo: tabela linha a linha com disposicoes",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T17:30:38.082Z",
+  "validadoEm": "2026-08-23T17:35:28.296Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -2532,6 +2532,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Drill de backup/restore executado e verificado por tabela (27/27 identicas; zero erros); uploads byte a byte; runbook com os comandos provados; producao segue D2 (Q-010).",
+  "nota": "Tres reconciliacoes documentais: research zerado (verificacao), 29 linhas de GO_LIVE/LAUNCH com disposicao explicita, F-MAR-071 avaliado (pos-hoc mantido; provou pegar 3/3 violacoes).",
   "aviso": "Declaracao ENCERRADA."
 }

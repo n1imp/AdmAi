@@ -1523,13 +1523,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Verificado: ADMAI_RESEARCH_RECOMMENDATION_REGISTRY.md com UNKNOWN/FORGOTTEN = 0 (a unica ocorrencia textual e a linha-resumo que declara zero); 2 DEFERRED reais (R-05 Anime.js, R-14 View Transitions) com condicao de revisita explicita."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:36:30.219Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1545,13 +1547,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "docs/eos-v2/DOCS_RECONCILIATION_F6.md: 29 itens abertos de GO_LIVE (16) + LAUNCH (13) com disposicao linha a linha em 4 baldes (D2-DECISAO, D2-PROVISIONAMENTO, PROVADO-LOCAL, EXTERNO); LAUNCH_PLAN e BUGLIST sem abertos. Nada sem dono — ZERO_FORGOTTEN_BLOCKER."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:36:30.220Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1567,15 +1571,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "F-MAR-071"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Avaliacao registrada em DOCS_RECONCILIATION_F6.md: imposicao pre-escrita exigiria hook (vetado pela governanca); a deteccao pos-hoc do gate pegou TODAS as 3 violacoes reais da sessao — mantida, com revisita se o fluxo ganhar CI proprio."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:36:30.220Z",
       "nextAction": "avaliar na F6; hooks continuam proibidos",
       "revisitCondition": null,
       "snapshotRef": null
