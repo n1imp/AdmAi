@@ -6,6 +6,7 @@ vi.mock('../../db/prisma.js', () => ({
   prisma: {
     material: { findFirst: vi.fn(), update: vi.fn() },
     movimentacaoEstoque: { create: vi.fn() },
+    $queryRaw: vi.fn(),
     $transaction: vi.fn((fn) => fn(globalThis.__clienteMock)),
   },
 }));
@@ -16,6 +17,9 @@ import { movimentarEstoque, darBaixaPorServico } from '../estoque.js';
 
 function clienteFake({ material }) {
   return {
+    /* [FIX-ESTOQUE-CORRIDA] A leitura virou `$queryRaw ... FOR UPDATE` (lock de linha): o mock
+       devolve ARRAY, como o queryRaw real — vazio quando o material nao pertence ao tenant. */
+    $queryRaw: vi.fn().mockResolvedValue(material ? [material] : []),
     material: {
       findFirst: vi.fn().mockResolvedValue(material),
       update: vi.fn().mockResolvedValue({}),
@@ -47,10 +51,12 @@ describe('movimentarEstoque — isolamento por empresaId (F6)', () => {
       movimentarEstoque({ materialId: 99, empresaId: 7, tipo: 'saida', quantidade: 1 }, client)
     ).rejects.toThrow('Material não encontrado');
 
-    // O empresaId precisa estar no where — sem isso o material vazaria entre tenants.
-    expect(client.material.findFirst).toHaveBeenCalledWith({
-      where: { id: 99, empresaId: 7 },
-    });
+    // O empresaId precisa estar na CONSULTA — sem isso o material vazaria entre tenants.
+    // Template taggeado: chamada = (strings, ...valores); os valores interpolados carregam
+    // materialId e empresaId, e e isso que o isolamento exige.
+    const valores = client.$queryRaw.mock.calls[0].slice(1);
+    expect(valores).toContain(99);
+    expect(valores).toContain(7);
     expect(client.material.update).not.toHaveBeenCalled();
   });
 
@@ -60,14 +66,16 @@ describe('movimentarEstoque — isolamento por empresaId (F6)', () => {
       { materialId: 5, empresaId: 7, tipo: 'saida', quantidade: 4 },
       client
     );
-    // B7: a gravação precisa ser um DELTA atômico, não o valor lido. Com
-    // `quantidadeAtual: 6` (read-modify-write), duas baixas simultâneas de 4 sobre 10
-    // liam ambas 10 e escreviam ambas 6 — saldo 6 em vez de 2, com as duas linhas do
-    // histórico afirmando o mesmo saldoApos. Asserir o `increment` é o que trava a
-    // regressão; asserir o número final voltaria a aceitar a versão sujeita a lost update.
+    // [FIX-ESTOQUE-CORRIDA] O contrato mudou DE NOVO, e desta vez a forma da escrita deixou de
+    // ser o guard: a leitura agora e FOR UPDATE (lock de linha), entao gravar o valor absoluto
+    // computado sob o lock e correto — o increment da versao anterior fechava lost-update do
+    // saldo, mas o piso e o saldoApos continuavam contra leitura stale (duas saidas de 7 sobre
+    // 10 davam saldo real -4 com dois ledgers dizendo 3). O guard REAL de concorrencia mora em
+    // test/integration/estoque_concorrencia.test.js, que exercita duas saidas paralelas de
+    // verdade; aqui se assere o calculo sob o valor travado.
     expect(client.material.update).toHaveBeenCalledWith({
       where: { id: 5 },
-      data: { quantidadeAtual: { increment: -4 } },
+      data: { quantidadeAtual: 6 },
     });
     expect(r.material.quantidadeAtual).toBe(6);
   });
@@ -78,10 +86,10 @@ describe('movimentarEstoque — isolamento por empresaId (F6)', () => {
       { materialId: 5, empresaId: 7, tipo: 'saida', quantidade: 100 },
       client
     );
-    // Saldo 2 e pedido de 100 → desconta só os 2 disponíveis, ainda como delta.
+    // Saldo 2 e pedido de 100 → clamp no zero, computado sob o lock.
     expect(client.material.update).toHaveBeenCalledWith({
       where: { id: 5 },
-      data: { quantidadeAtual: { increment: -2 } },
+      data: { quantidadeAtual: 0 },
     });
   });
 
@@ -93,7 +101,7 @@ describe('movimentarEstoque — isolamento por empresaId (F6)', () => {
     );
     expect(client.material.update).toHaveBeenCalledWith({
       where: { id: 5 },
-      data: { quantidadeAtual: { increment: 3 } },
+      data: { quantidadeAtual: 13 },
     });
   });
 
@@ -123,7 +131,9 @@ describe('darBaixaPorServico — propaga o tenant (F6)', () => {
   it('repassa o empresaId na leitura de cada material', async () => {
     const client = clienteFake({ material: { id: 5, quantidadeAtual: 10, empresaId: 7 } });
     await darBaixaPorServico(42, [{ materialId: 5, quantidade: 1 }], 7, client);
-    expect(client.material.findFirst).toHaveBeenCalledWith({ where: { id: 5, empresaId: 7 } });
+    const valores = client.$queryRaw.mock.calls[0].slice(1);
+    expect(valores).toContain(5);
+    expect(valores).toContain(7);
   });
 
   it('é tolerante a falha por item (não derruba o registro do serviço)', async () => {

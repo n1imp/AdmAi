@@ -46132,9 +46132,37 @@
       "bloqueiaIntegracao": false,
       "nota": "F1 completo. Registry: 14 recomendacoes, todas com desfecho (6 ADOPTED ja-existentes, 1 ADAPTED, 4 REJECTED com evidencia, 2 DEFERRED com condicao, 1 NOT_APPLICABLE, zero FORGOTTEN) — a limitacao de acesso as fontes JS-heavy registrada como evidencia. Guia: tokens/primitives/motion consolidados + as tres decisoes que faltavam (lg=1024 como fronteira de modo; --panel-data-* como fonte da paleta; Aurora em tudo com plano de conversao) + pilha fixa como contrato + piso de a11y que a sonda mede.",
       "declaradoEm": "2026-08-23T04:56:35.474Z"
+    },
+    {
+      "sliceId": "F2-SONDA-LISTAS",
+      "titulo": "Sonda lista os controles sem nome (campo ADITIVO)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Campo aditivo semNomeLista na sonda — fechado antes das correcoes do Revisor para nao misturar fatias. As correcoes de F0.5 (revisao Codex CORRECOES_NECESSARIAS, thread 01a02cf7) entram como fatias proprias: estoque, idempotencia, comissao.",
+      "declaradoEm": "2026-08-23T04:59:39.567Z"
+    },
+    {
+      "sliceId": "FIX-ESTOQUE-CORRIDA",
+      "titulo": "Piso de estoque e saldoApos corretos sob concorrencia (achado 3 do Revisor)",
+      "estado": "CLOSED",
+      "comparacao": "AUTHORIZED_EXPANSION",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Achado 3 do Revisor confirmado e corrigido: SELECT FOR UPDATE serializa movimentos do mesmo material; piso e saldoApos computados sob o lock; escrita do valor absoluto (correta sob lock). Sabotagem provou que o teste morde: logica antiga restaurada deu saldo real -11 com cadeia inconsistente capturada. Flake inicial era do MEU teste (sobre-especificava a ordem do escalonador — assert =4 assumia zero clamps); corrigido para propriedades independentes de intercalacao (conservacao exata + clamp so no chao), 6/6 verdes. Expansao autorizada: mocks unitarios seguiram o contrato novo. Unit 10/10; aprovacao_rejeicao 12/12.",
+      "declaradoEm": "2026-08-23T05:03:51.161Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:58:44.456Z",
+  "geradoEm": "2026-08-23T05:19:35.016Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

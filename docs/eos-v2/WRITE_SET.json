@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F1-DESIGN-FOUNDATIONS",
-  "titulo": "Research registry + design guide consolidando o que existe",
+  "sliceId": "FIX-ESTOQUE-CORRIDA",
+  "titulo": "Piso de estoque e saldoApos corretos sob concorrencia (achado 3 do Revisor)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:56:35.474Z",
+  "declaradoEm": "2026-08-23T05:03:51.161Z",
   "baseCommitPorLane": {
-    "HARNESS": "4a3ff2e59918dea28a8bc045609228e0c4207b62"
+    "HARNESS": "24556057d8692cfa991ef7cbe19a751fe05ae2aa"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "REFERENCE != COPY: as fontes viram principios aplicados aos NOSSOS tokens, nunca colagem. Fontes JS-heavy inacessiveis a fetch estatico — registrado como evidencia de acesso, com avaliacao por catalogo conhecido. Toda recomendacao termina com desfecho; nenhuma FORGOTTEN.",
+  "notaDeMetodo": "O increment fecha lost-update do SALDO, mas o piso Math.max e o saldoApos sao computados contra leitura STALE: duas saidas concorrentes de 7 sobre 10 dao saldo real -4 com ambos os ledgers dizendo 3. Correcao: lock de linha (SELECT FOR UPDATE) na mesma transacao; o clamp parcial — semantica existente — passa a valer contra o valor TRAVADO. Teste de concorrencia real com duas saidas paralelas.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -327,7 +327,7 @@
       "chaveiro-painel/capacitor.config.json": "1de68d379bc9ca2555072a2105149fd686173b8837c3c759349579f1c1d81ad9",
       "chaveiro-painel/e2e/.gitignore": "ba5a0c3e12f6c74b37dbeb5cec6bb6c5be72f44062cdc9f5866eb022c9ecc913",
       "chaveiro-painel/e2e/README.md": "79845a3f619d91cdd8b47b9eb2abb7e281ac8b57d13b01a46b6268e894284164",
-      "chaveiro-painel/e2e/capturar.mjs": "c4bcbb6424db1fa9b027046d23b166243e95509ba76e610589d49847c6bd7b6e",
+      "chaveiro-painel/e2e/capturar.mjs": "af2009d22845da8d989814eead9f600d0a734d9e67808e3062a3d11ff9c39ac6",
       "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
@@ -538,6 +538,8 @@
       "docs/db/README.md": "9506be2b71dc1c692a9ae8a97e195e0cf8db3c1aec6318dd986d947372d1ae5c",
       "docs/db/STAGING_VALIDATION.md": "b8239c7af4df6e7319f5ba2ada03796da71425d3ec45689f0d43a92a878ed89b",
       "docs/decisions.md": "2c08af591ca8329fc949baaaa63065a79abd6f4773e6012ef956cd780dcaa873",
+      "docs/design/ADMAI_RELEASE_DESIGN_GUIDE.md": "d0f70372ff7b71ee978744ade5faac6b9a1c2402fdce4971dd1dab47b24a18a3",
+      "docs/design/ADMAI_RESEARCH_RECOMMENDATION_REGISTRY.md": "4757ed28006c4b32adee36275851b2310f14a43a677d933e235e862bbb1a4b41",
       "docs/eos-v2/.eos-run": "6a43d6d2f0a7cdf0a32354c91e36fe0cf8d1f2a6b2f6e10ca32be91e26b09f6b",
       "docs/eos-v2/01_LEGACY_EOS_FORENSICS.md": "e8d517003fe3ea2e71569c31bb568efccacfd76c5a61123bef1e1c4a4976aa8e",
       "docs/eos-v2/02_LEGACY_TO_V2_MAPPING.md": "44509490cb7cae4915a9f7a05c819dbe82f8788755d205bc29a682340f235aee",
@@ -545,7 +547,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a0def9c0a4f7dd8d8b6bd519dc9ae7d448228de1e45da8610b06401ab2130ef2",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "37f4fa62c20b0907a789962429e174eae6a7108333698c0120a4aeffd494efc1",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "c039544a7ae5193259e60d97f9b03b15fbdeb2c973e287ee9d6e87c30b812ea8",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -554,8 +556,8 @@
       "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "c43b61a3ecffb59d343bef29059242f5b40da6c089b2b8608cdf9bf5d2987d04",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "8ca7c94fe8d1962a9ca1c1440d67626ee27ef65967150d35d3d9792db24a3738",
+      "docs/eos-v2/WRITE_SET.json": "cdfe5f9ab2162dc170c71a35213041cd8e04a809d61c3f2e538e346648c50a0b",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "ddad96f40740816eb331a02176767d9543b8b58d8cff3d6e165f45b4cd834d56",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1742,35 +1744,47 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
+  "artefatos": [
+    "chaveiro-bot/uploads-docs",
+    "chaveiro-bot/uploads-ponto",
+    "chaveiro-bot/uploads"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/design/ADMAI_RESEARCH_RECOMMENDATION_REGISTRY.md",
+      "caminho": "chaveiro-bot/src/services/estoque.js",
       "precisao": "BOUNDED",
-      "proposito": "recomendacoes com desfecho e evidencia",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "lock de linha + saldo autoritativo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a571eeebd88af4254ede114f7bbb4b69b6d1449c3c4c947f6b2375690d7846b7",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/design/ADMAI_RELEASE_DESIGN_GUIDE.md",
+      "caminho": "chaveiro-bot/test/integration/estoque_concorrencia.test.js",
       "precisao": "BOUNDED",
-      "proposito": "guia consolidando tokens/primitives/motion/pilha-fixa + decisoes de breakpoint e paleta",
+      "proposito": "duas saidas paralelas: saldo final >= 0 e cadeia de ledger consistente",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:56:35.739Z",
+  "validadoEm": "2026-08-23T05:03:51.430Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "expansoesAutorizadas": [
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/estoque.test.js",
+      "motivo": "o contrato interno mudou (findFirst -> $queryRaw FOR UPDATE) e os mocks unitarios seguem o contrato; expansao autorizada em vez de escrita nao declarada"
+    }
+  ],
+  "comparacao": "AUTHORIZED_EXPANSION",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "F1 completo. Registry: 14 recomendacoes, todas com desfecho (6 ADOPTED ja-existentes, 1 ADAPTED, 4 REJECTED com evidencia, 2 DEFERRED com condicao, 1 NOT_APPLICABLE, zero FORGOTTEN) — a limitacao de acesso as fontes JS-heavy registrada como evidencia. Guia: tokens/primitives/motion consolidados + as tres decisoes que faltavam (lg=1024 como fronteira de modo; --panel-data-* como fonte da paleta; Aurora em tudo com plano de conversao) + pilha fixa como contrato + piso de a11y que a sonda mede.",
+  "nota": "Achado 3 do Revisor confirmado e corrigido: SELECT FOR UPDATE serializa movimentos do mesmo material; piso e saldoApos computados sob o lock; escrita do valor absoluto (correta sob lock). Sabotagem provou que o teste morde: logica antiga restaurada deu saldo real -11 com cadeia inconsistente capturada. Flake inicial era do MEU teste (sobre-especificava a ordem do escalonador — assert =4 assumia zero clamps); corrigido para propriedades independentes de intercalacao (conservacao exata + clamp so no chao), 6/6 verdes. Expansao autorizada: mocks unitarios seguiram o contrato novo. Unit 10/10; aprovacao_rejeicao 12/12.",
   "aviso": "Declaracao ENCERRADA."
 }
