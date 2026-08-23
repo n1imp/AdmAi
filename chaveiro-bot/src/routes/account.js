@@ -357,13 +357,11 @@ router.patch('/me/senha', async (req, res) => {
         .status(400)
         .json({ erro: 'A nova senha é muito fraca', requisitos: forca.requisitos });
     const senhaHash = await bcrypt.hash(novaSenha, 12);
-    const agora = new Date();
-    /* [Gate 6 R3] Corte EXATO (sem recuo) numa transação que também: (a) apaga TODOS os refresh
-       do usuário — mata as outras sessões; (b) cria um refresh NOVO (criadoEm > corte) para ESTA
-       sessão continuar. Sem isto, ou o corte recuado deixava refresh roubado recente sobreviver,
-       ou o usuário que troca a própria senha era deslogado no próximo /auth/refresh. */
+    /* [Gate 6 R3/R5] Transacao com LOCK que apaga todos os refresh (mata as outras sessoes) e
+       cria um refresh NOVO para ESTA sessao continuar. Corte capturado DEPOIS do lock. */
     const { atualizado, rawRefresh } = await prisma.$transaction(async (tx) => {
-      await lockUsuario(tx, req.user.id); // serializa com rotação concorrente [Gate 6 R4]
+      await lockUsuario(tx, req.user.id);
+      const agora = new Date();
       const u = await tx.usuario.update({
         where: { id: req.user.id },
         data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },

@@ -534,12 +534,11 @@ router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
 
     const bcrypt = await import('bcryptjs');
     const senhaHash = await bcrypt.default.hash(parse.data.novaSenha, 12);
-    const agora = new Date();
-    /* [Gate 6 R2] Mutação da senha + revogação dos refresh na MESMA transação — atômico, como
-       o revisor exigiu. O corte em tokenValidoApos já barra refresh antigos no /auth/refresh; o
-       delete é o cinturão (invalida imediatamente, sem esperar a próxima rotação). */
+    /* [Gate 6 R5] Corte capturado DEPOIS de adquirir o lock: se calculado antes, uma rotacao que
+       ja tem o lock poderia emitir um JWT com iatMs POSTERIOR a um corte "velho" e sobreviver. */
     await prisma.$transaction(async (tx) => {
-      await lockUsuario(tx, usuario.id); // serializa com rotação concorrente [Gate 6 R4]
+      await lockUsuario(tx, usuario.id);
+      const agora = new Date();
       await tx.usuario.update({
         where: { id: usuario.id },
         data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
@@ -748,6 +747,14 @@ router.post('/auth/refresh', async (req, res) => {
     let saida;
     try {
       saida = await prisma.$transaction(async (tx) => {
+        // Descobre o usuario do token (leitura leve), pega o LOCK da linha dele e so entao rele
+        // token+corte SOB o lock — serializa com qualquer troca de credencial concorrente. [R5]
+        const pre = await tx.refreshToken.findUnique({
+          where: { tokenHash },
+          select: { usuarioId: true },
+        });
+        if (!pre) return { status: 401, erro: 'Sessão expirada' };
+        await lockUsuario(tx, pre.usuarioId);
         const registro = await tx.refreshToken.findUnique({
           where: { tokenHash },
           include: { usuario: true },
@@ -755,7 +762,7 @@ router.post('/auth/refresh', async (req, res) => {
         if (!registro || registro.expiraEm < new Date())
           return { status: 401, erro: 'Sessão expirada' };
         if (!registro.usuario.ativo) return { status: 401, erro: 'Usuário inativo' };
-        const corte = registro.usuario.tokenValidoApos;
+        const corte = registro.usuario.tokenValidoApos; // fresco: lido sob o lock
         if (corte && registro.criadoEm <= corte) {
           await tx.refreshToken.deleteMany({ where: { usuarioId: registro.usuario.id } });
           return { status: 401, erro: 'Sessão expirada' };

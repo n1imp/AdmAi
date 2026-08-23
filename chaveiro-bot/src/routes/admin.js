@@ -318,15 +318,17 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
     if (senha) {
       data.senhaHash = await bcrypt.hash(senha, 12);
-      /* [Gate 6 R2] Trocar a senha de um usuário avança o corte — /auth/refresh passa a rejeitar
-         os refresh antigos dele (antes só senhaHash mudava e sessões roubadas sobreviviam). */
-      data.senhaAlteradaEm = new Date();
-      data.tokenValidoApos = new Date();
     }
     const r = await prisma.$transaction(async (tx) => {
-      /* [Gate 6 R4] Lock da linha do alvo: se o usuário trocar a própria senha concorrentemente
-         (ou uma rotação de refresh ocorrer), esta troca administrativa serializa com ela. */
+      /* [Gate 6 R4/R5] Lock serializa com a troca da propria senha / rotacao concorrente. O corte
+         e gravado DEPOIS do lock — senao um JWT concorrente com iatMs posterior a um corte velho
+         sobreviveria. */
       await lockUsuario(tx, id);
+      if (senha) {
+        const agora = new Date();
+        data.senhaAlteradaEm = agora;
+        data.tokenValidoApos = agora;
+      }
       const res = await tx.usuario.updateMany({
         /* [SEC-HB-03] Quando o guard decidiu com `antes.papel` (ator sem autoridade plena), a
          mutação exige que o papel AINDA seja aquele — promoção concorrente na janela

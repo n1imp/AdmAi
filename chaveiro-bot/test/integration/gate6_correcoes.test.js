@@ -282,7 +282,31 @@ describe('#3c revogação — JWT com corte exato (iatMs) e concorrência com lo
     expect(r.status).toBe(401);
   });
 
-  it('rajada: rotação e troca de senha concorrentes nunca deixam refresh anterior ao corte utilizável', async () => {
+  it('SMOKE dupla rotação do mesmo refresh: um vencedor (o harness serializa, não isola concorrência)', async () => {
+    // NOTA DE HONESTIDADE: supertest + Promise.all + pool do Prisma serializam as transações
+    // neste harness — removi o `count===1` da rotação e este teste continuou passando. Ele NÃO
+    // isola o delete condicional nem o lock; é smoke. A garantia de concorrência (FOR UPDATE +
+    // count) é por CONSTRUÇÃO. O que MORDE de verdade aqui é o corte: iatMs exato e criadoEm<=corte.
+    const { limparBanco } = await import('./helpers.js');
+    await limparBanco();
+    await request(app).post('/api/setup').send({
+      nome: 'Dona Dupla',
+      nomeEmpresa: 'Chaveiro Dupla',
+      username: 'donadupla',
+      senha: 'SenhaForte1!',
+    });
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'donadupla', password: 'SenhaForte1!' });
+    const cookie = login.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
+    const [a, b] = await Promise.all([
+      request(app).post('/api/auth/refresh').set('Cookie', cookie),
+      request(app).post('/api/auth/refresh').set('Cookie', cookie),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 401]);
+  });
+
+  it('SMOKE (não-determinístico) rotação × troca de senha: estado final revoga tudo o que precede o corte', async () => {
     const { prisma: db } = await import('./helpers.js');
     for (let i = 0; i < 5; i++) {
       const setup = await request(app)
@@ -311,10 +335,11 @@ describe('#3c revogação — JWT com corte exato (iatMs) e concorrência com lo
       // perdeu, deu 401. Em nenhum caso um refresh ANTERIOR ao corte pode continuar rotacionando:
       if (rot.status === 200) {
         const novoCookie = rot.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
-        // A troca de senha, ao adquirir o lock depois, apagou a árvore — o refresh da rotação
-        // não sobrevive a uma segunda rotação.
+        // Após o Promise.all a troca de senha JÁ terminou (avançou o corte e apagou a árvore).
+        // Logo, o refresh que a rotação emitiu — mesmo que a rotação tenha vencido a corrida —
+        // NÃO pode mais rotacionar: tem de ser 401. Aceitar 200 aqui seria o token sobrevivente.
         const seg = await request(app).post('/api/auth/refresh').set('Cookie', novoCookie);
-        expect([200, 401]).toContain(seg.status); // nunca 500; determinístico sob lock
+        expect(seg.status).toBe(401);
       }
       // o cookie ORIGINAL (anterior ao corte) jamais rotaciona depois da troca:
       const orig = await request(app).post('/api/auth/refresh').set('Cookie', cookie);

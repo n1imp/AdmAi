@@ -51245,9 +51245,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Gate 6 R4: lock de linha do usuario (SELECT FOR UPDATE) serializa a rotacao do /auth/refresh com as 4 trocas de credencial (reset, /me/senha, resetarPin agora transacional, /usuarios agora transacional) — fecha o TOCTOU que READ COMMITTED deixava. JWT ganha claim iatMs: tokenAindaValido compara em ms EXATO (contraprova morde: sem iatMs o token sobrevive ao corte), fim da janela de 1s que deixava JWT viver ate 1h pos-corte. 11/11 + 46 de regressao.",
       "declaradoEm": "2026-08-23T22:40:10.699Z"
+    },
+    {
+      "sliceId": "GATE6-CORRECOES-R5",
+      "titulo": "Gate 6 rodada 5: lock DE FATO na rotacao + cortes capturados sob o lock",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Lock DE FATO na rotacao (pre-read->lockUsuario->rele sob o lock); cortes de reset/me-senha/usuarios movidos para DEPOIS do lock. Honestidade sobre o harness: supertest serializa transacoes, nenhum teste morde o TOCTOU (verificado removendo lock e count) — reetiquetados SMOKE; garantia por construcao (FOR UPDATE). Corte MORDE: iatMs exato + boundary. 12/12 + 39 regressao.",
+      "declaradoEm": "2026-08-23T23:08:33.608Z"
     }
   ],
-  "geradoEm": "2026-08-23T22:51:28.402Z",
+  "geradoEm": "2026-08-23T23:09:08.267Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

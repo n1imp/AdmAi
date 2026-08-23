@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE6-CORRECOES-R4",
-  "titulo": "Gate 6 rodada 4: lock de usuario serializa rotacao×credencial + JWT com corte exato (iatMs)",
+  "sliceId": "GATE6-CORRECOES-R5",
+  "titulo": "Gate 6 rodada 5: lock DE FATO na rotacao + cortes capturados sob o lock",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T22:40:10.699Z",
+  "declaradoEm": "2026-08-23T23:08:33.608Z",
   "baseCommitPorLane": {
-    "HARNESS": "b1459361d764983eb5686e01c88de7a581c6aa63"
+    "HARNESS": "35173c981d2bcaf01a46a127d383c5a8a25a8110"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "A rodada 3 do Codex achou 3 pontos legitimos que eu subestimei: (1) TOCTOU real persiste — READ COMMITTED sem FOR UPDATE nao serializa rotacao com troca de credencial; (2) resetarPin e /usuarios NAO eram transacionais (dois autocommits); (3) o residual do JWT nao e 1s — a tolerancia deixava um JWT emitido ~1s antes do corte VIVER ate exp (1h, nao 15min). Correcao definitiva: (a) gerarJWT emite claim privado iatMs (ms); tokenAindaValido compara iatMs >= corte EXATO (sem tolerancia), com fallback tolerante so para tokens legados sem iatMs; (b) lockUsuario (SELECT FOR UPDATE) serializa a rotacao do /auth/refresh e TODAS as trocas de credencial (reset, /me/senha, resetarPin, /usuarios) pela mesma linha — resetarPin e /usuarios viram transacionais. Prova: JWT emitido antes do corte rejeitado imediatamente (nao sobrevive 1h); rotacao×troca concorrente em rajada nunca deixa refresh anterior ao corte utilizavel. Registrar tambem o P2 do checkout concorrente no ledger com revisitCondition (o Codex apontou que so estava no commit).",
+  "notaDeMetodo": "A rodada 4 do Codex leu o codigo e achou que (1) minha edicao R4 do lock na rotacao NAO tinha pegado — a rotacao seguia sem lockUsuario; (2) os cortes de reset/me-senha/usuarios eram calculados ANTES do lock (um JWT concorrente com iatMs posterior a um corte velho sobreviveria); (3) o teste de rajada nao mordia. Correcao: rotacao agora faz pre-read(usuarioId)->lockUsuario->rele token+corte SOB o lock; os 3 cortes movidos para DEPOIS do await lockUsuario (resetarPin ja fazia). HONESTIDADE: o harness de integracao (supertest+Promise.all+pool) serializa transacoes — nenhum teste que escrevi morde o TOCTOU (confirmei removendo o lock e o count===1: rajada e dupla-rotacao continuaram passando). Reetiquetei esses como SMOKE; a garantia de concorrencia e por CONSTRUCAO (FOR UPDATE). O que MORDE, com contraprova: iatMs exato (JWT anterior ao corte -> 401) e boundary criadoEm<=corte.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -125,10 +125,10 @@
       "chaveiro-bot/src/routes/__tests__/billing.test.js": "0e4ce27e8a995066ba530e3e0ab713cb57f38df8f2a87a04530339cb3e8ad9a8",
       "chaveiro-bot/src/routes/__tests__/documentos-storage-key.test.js": "d6e66e57c6fbb1e607db31d81bb2ae935ebe12d5c770c39305875f6e05091a99",
       "chaveiro-bot/src/routes/__tests__/tecnicos-foto-perfil.test.js": "fd791eb3e1d266e178e9f2d2274a88bf8ab12ad40c311ea5ce17213d3d079e55",
-      "chaveiro-bot/src/routes/account.js": "ef63c7e88d2fa04129dd4acd11d0ca5815abe3987d4172289fc8b14c3b56ba90",
-      "chaveiro-bot/src/routes/admin.js": "5916622f3bbb9475fe1d667c06d3e1eb35020894c9cfc5f525bc644b32571b09",
+      "chaveiro-bot/src/routes/account.js": "596a865bf3c131bedff646a8eb045f7eeb697734acc07e12df16e9514f6419ae",
+      "chaveiro-bot/src/routes/admin.js": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
       "chaveiro-bot/src/routes/api.js": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
-      "chaveiro-bot/src/routes/auth.js": "311fcaf99c7285171f8f7085a69a70551a87f2937d3f5fd2970e840aac9c842f",
+      "chaveiro-bot/src/routes/auth.js": "f48cb87cf729719ce642150d17d5aa00a82b49a95d832cac796b4839cd13d57c",
       "chaveiro-bot/src/routes/billing.js": "995f254a8f31fe9de516fd022afb34967ce79d7561e37396ddf6bdda1806a938",
       "chaveiro-bot/src/routes/documentos.js": "4d8ac0606d5722543c4731a38d50f101b7f146dcc2b23d6d87e2a02b456781b3",
       "chaveiro-bot/src/routes/estoque.js": "2d99713fe061b92bee1e28e74891e7547e112e141f36c9752365bfcbc98adc77",
@@ -162,7 +162,7 @@
       "chaveiro-bot/src/services/__tests__/totp.test.js": "3bed92ee174181153298eff9f372df98682d217f0b226bca78257b4c0a53bf59",
       "chaveiro-bot/src/services/agendador.js": "cbfc3b35decbc021ce348cb5df8d45e5245a4fb5821b3fffb448471949205275",
       "chaveiro-bot/src/services/auditoria.js": "4f1f8e0b31eb4b21dab412a3fadb474b87a24c622fdd5a9d149f30d3a9d0f432",
-      "chaveiro-bot/src/services/auth.js": "c595255258206019c6871353b52256c1973859bc3f18c296535ff0590bdd6800",
+      "chaveiro-bot/src/services/auth.js": "d32117eaacef9a9e0af549cd6bcbb81919377f9d607e8c6d12255b4bb5586362",
       "chaveiro-bot/src/services/avaliacao.js": "7a50e02e4873e81834b8e78478ebbc60cd6e222febe554dff035b7290008dbf9",
       "chaveiro-bot/src/services/billing.js": "75cc01e61171d23d9000cdb15e56a995a22091a1133c5dc41736deb8eb0aadaf",
       "chaveiro-bot/src/services/bootstrap.js": "e92af907aa8b57c6389afb93d24b9ec73fda9340ff2f2a13f25c5acee2ee10fe",
@@ -170,7 +170,7 @@
       "chaveiro-bot/src/services/codigosRecuperacao.js": "af708a97b72f60eb7bd622d01c7d3825fa8a8927808a551628c1f9bd43b1e690",
       "chaveiro-bot/src/services/confirmacaoExclusaoConta.js": "2621c535a06e8b8e90e6c7ee4ce51fceb470393302ff171ab4084cfbb2d22b9b",
       "chaveiro-bot/src/services/conversa.js": "35f4d4a4dd74af57eeb16489170036f3155f1b4a723eb7afc5e4a5a642adfa24",
-      "chaveiro-bot/src/services/credenciais.js": "35000f1cb1df8d3e576335d7b8d0c0d6e9b05fb1037b39f3f9ca66fde1e9cd53",
+      "chaveiro-bot/src/services/credenciais.js": "0e12f3b530b9cfe4fa1fbd9cb4924239d6fb263ff3dda67139c2c80df3637451",
       "chaveiro-bot/src/services/email.js": "e250e3fea2189fe659efe1a20ebd40627a971b5eb96e60abde5f209670d68e1e",
       "chaveiro-bot/src/services/estoque.js": "9337b85824c88f786dcf373eff406738b4f14e5817ae7b47d0094fdcc844ae94",
       "chaveiro-bot/src/services/google/__tests__/analise.test.js": "cac808dc0b7ffeee09eb411db673d71d86984f4793900afe35762c4c6ec1fb5f",
@@ -240,7 +240,7 @@
       "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js": "138eb85441b2724d6cb1b982cba3b42ea6bbaa9c1ea8777b7be9063c5b59692d",
       "chaveiro-bot/test/integration/erro_nao_tratado.test.js": "2ca30bad5e8290ecdf5f1f0fa9c76d339d732491233bec53760fb4e6550d2127",
       "chaveiro-bot/test/integration/estoque_concorrencia.test.js": "14865cb05029547430db9f1c0274ef6166d17008a44227fbfb5dd01e3695a100",
-      "chaveiro-bot/test/integration/gate6_correcoes.test.js": "9e506913879716e5c782573373a9af8e2b65a464322f4367449d98891212b105",
+      "chaveiro-bot/test/integration/gate6_correcoes.test.js": "027b977b56d6644b74d09c953e78e3cc969e60b5e1f64a7d82e3154d266fdc6f",
       "chaveiro-bot/test/integration/gestor_indicadores.test.js": "0adebbcb014107e2a02d86e9edf32a093654305ca6d9e106059322d9611c3687",
       "chaveiro-bot/test/integration/global-setup.js": "3e7802a361e68c221971811bc9777cd2b99f3c6b9197ceb39f289e96fb6aa7ec",
       "chaveiro-bot/test/integration/health_operacional.test.js": "5248c9727d38dc846fb828761b3f1f56f05570df924dbc69a474628b0e7a4bef",
@@ -585,7 +585,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "34acf8f1144f331fa5062bfeb042be81aaab5eab2a0743769302bbc1ae2efb78",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "dacad600d2a2d30a06ee9d14c1c204211e1aeb9ed53c06fa5e64b7fda31d37ae",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -597,8 +597,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "b1c00bfbd83c67168c72eda7aa47dfc7c2980ace6dd87fb6fbdf29b0566956f1",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "1011e40de33edf95438bd8669298a8a19cea1a34e5b4a34b06018982a4e17c89",
+      "docs/eos-v2/WRITE_SET.json": "1c8ed2f2bd4de9ab67d1c4170ab63d0bddd26a60bed400a87c8077dbb07e7356",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "6958362dc21a39642237f3071a0c561ebbf4c7edaea0af216a933e3434de51a2",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2525,68 +2525,58 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/auth.js",
-      "precisao": "BOUNDED",
-      "proposito": "iatMs no gerarJWT; tokenAindaValido exato; lockUsuario",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c595255258206019c6871353b52256c1973859bc3f18c296535ff0590bdd6800",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/routes/auth.js",
       "precisao": "BOUNDED",
-      "proposito": "rotacao e /me/senha... nao, /me/senha e account. reset+rotacao com lock",
+      "proposito": "lock na rotacao + corte do reset sob o lock",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "311fcaf99c7285171f8f7085a69a70551a87f2937d3f5fd2970e840aac9c842f",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "f48cb87cf729719ce642150d17d5aa00a82b49a95d832cac796b4839cd13d57c",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/routes/account.js",
       "precisao": "BOUNDED",
-      "proposito": "/me/senha com lock",
+      "proposito": "/me/senha corte sob o lock",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ef63c7e88d2fa04129dd4acd11d0ca5815abe3987d4172289fc8b14c3b56ba90",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/credenciais.js",
-      "precisao": "BOUNDED",
-      "proposito": "resetarPin transacional com lock",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "35000f1cb1df8d3e576335d7b8d0c0d6e9b05fb1037b39f3f9ca66fde1e9cd53",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "596a865bf3c131bedff646a8eb045f7eeb697734acc07e12df16e9514f6419ae",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/routes/admin.js",
       "precisao": "BOUNDED",
-      "proposito": "/usuarios-senha transacional com lock",
+      "proposito": "/usuarios corte sob o lock",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5916622f3bbb9475fe1d667c06d3e1eb35020894c9cfc5f525bc644b32571b09",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/test/integration/gate6_correcoes.test.js",
       "precisao": "BOUNDED",
-      "proposito": "JWT rejeitado exato; rajada concorrente",
+      "proposito": "smokes honestos + provas de corte que mordem",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9e506913879716e5c782573373a9af8e2b65a464322f4367449d98891212b105",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "027b977b56d6644b74d09c953e78e3cc969e60b5e1f64a7d82e3154d266fdc6f",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
-  "validadoEm": "2026-08-23T22:40:10.917Z",
+  "validadoEm": "2026-08-23T23:08:33.968Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Gate 6 R4: lock de linha do usuario (SELECT FOR UPDATE) serializa a rotacao do /auth/refresh com as 4 trocas de credencial (reset, /me/senha, resetarPin agora transacional, /usuarios agora transacional) — fecha o TOCTOU que READ COMMITTED deixava. JWT ganha claim iatMs: tokenAindaValido compara em ms EXATO (contraprova morde: sem iatMs o token sobrevive ao corte), fim da janela de 1s que deixava JWT viver ate 1h pos-corte. 11/11 + 46 de regressao.",
+  "nota": "Lock DE FATO na rotacao (pre-read->lockUsuario->rele sob o lock); cortes de reset/me-senha/usuarios movidos para DEPOIS do lock. Honestidade sobre o harness: supertest serializa transacoes, nenhum teste morde o TOCTOU (verificado removendo lock e count) — reetiquetados SMOKE; garantia por construcao (FOR UPDATE). Corte MORDE: iatMs exato + boundary. 12/12 + 39 regressao.",
   "aviso": "Declaracao ENCERRADA."
 }
