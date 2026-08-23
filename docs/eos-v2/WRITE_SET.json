@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE-F2F3-CORRECOES",
-  "titulo": "Correcoes da revisao de lote (thread 01a02e9b): fronteira morta de verdade + viewports coerentes",
+  "sliceId": "F4-RUNTIME-ACCEPTANCE",
+  "titulo": "F4: aceitacao de runtime — 2FA loop, auditoria, documentos, paywall, mount-order, WhatsApp local",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T12:40:23.153Z",
+  "declaradoEm": "2026-08-23T12:49:27.007Z",
   "baseCommitPorLane": {
-    "HARNESS": "d208f6c92995949bb5f805138643f93d29979ea1"
+    "HARNESS": "736e2f27ce4fbe32cd4828fff360884987badbb8"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Achado 1: PanelScope mantinha a capacidade morta (active=false), o teste de Structure a exigia e o comentario do rollout afirmava a fronteira removida — o contrato preservava o que SL-09 matou. Achado 2: meu script de flip substituia a PRIMEIRA ocorrencia de vp(...) no arquivo, nao a da entrada-alvo — PASS caiu em entradas erradas e 17 KEEP ficaram com ISSUE. Reparo: auditoria de TODAS as entradas contra o baseline pre-flips do git + re-atribuicao de viewports a partir das MEDICOES desta sessao (sonda por superficie), medindo agora o que faltar.",
+  "notaDeMetodo": "So testes de integracao novos contra o stack REAL (Postgres teste + Redis): cada item do gate F4 vira arquivo proprio. Produto so muda se um teste achar defeito (expansao declarada antes). LGPD-matriz (F4-04) e por CDP no painel e fecha em rodada propria. EXPANSAO AUTORIZADA (antes de escrever): admin.js — a matriz F4-02 exige entidade em toda linha de auditoria e o call site de convite.enviado nao a gravava (unico dos 7 sem o campo); correcao de 1 linha no produto, achada pelo proprio teste de aceitacao.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -387,7 +387,7 @@
       "chaveiro-painel/src/components/ui/Field.jsx": "330e2f036e2ad5a4cb254d0159ebc9eb76ed5afc010018959b2e05d0d1d58e70",
       "chaveiro-painel/src/components/ui/Overlay.jsx": "6e06adae5c830f4d5fd96f76431431620ab019309642082c76bbad63d73b2171",
       "chaveiro-painel/src/components/ui/PageHeader.jsx": "ce0e3af3d5b2179e4e59edaf3c97bd25b8d2313e5b6f714bbfb14c522b62300e",
-      "chaveiro-painel/src/components/ui/PanelScope.jsx": "d2a3635d117d45f12a6daa75fe7ec9e27daf4a146355b15ed794756ada91ffaf",
+      "chaveiro-painel/src/components/ui/PanelScope.jsx": "272e4b6cb573d8ce90bac65b7e70cf2655c347467a9724eebed1a00a97e83930",
       "chaveiro-painel/src/components/ui/Surface.jsx": "fa85d6fe8910e7678aba1592d0462a6137b30dc73941a853fee1c175618fae3e",
       "chaveiro-painel/src/components/ui/__tests__/Button.axe.jsx": "77b770422149d316b81754d498d9e8a8c9d0b3b4433d1af56837ba7d3f410b6f",
       "chaveiro-painel/src/components/ui/__tests__/Button.test.jsx": "7637da78cac4578f4a679b33ffae26929735f7278201102234918cc48341032e",
@@ -395,7 +395,7 @@
       "chaveiro-painel/src/components/ui/__tests__/Field.test.jsx": "3dc8ce4b8d07035a4a03d9cb007255d4e418c185c2e2cb48b0bfefc7edc236e9",
       "chaveiro-painel/src/components/ui/__tests__/Motion.test.jsx": "f87ccc565a6c4f9cdbb881e99ed8ba24778846d38545e671d8e8b9cfded428b0",
       "chaveiro-painel/src/components/ui/__tests__/Overlay.test.jsx": "2cca31dc99ff8ecc31ff6cba07701c68427f87e84e222caaa3a88c1e570ff56f",
-      "chaveiro-painel/src/components/ui/__tests__/Structure.test.jsx": "16806be17287772caa7af6190f8e1bb8f2d9d44c0dd72a504431fe4c4a0eb8bf",
+      "chaveiro-painel/src/components/ui/__tests__/Structure.test.jsx": "deceadcd6224676a3c72b7e530dad19dfd143063990b45faefdc41b326fa6ad9",
       "chaveiro-painel/src/components/ui/index.js": "3d873e3b5fd081e629438086728a333bed530c6dcb865199572f971ba39b73fb",
       "chaveiro-painel/src/config/__tests__/navigation.test.js": "7f02c984ccead3157745dd1dc1d095246b4175ec35d2580400f787c926e0a269",
       "chaveiro-painel/src/config/navigation.js": "78844d13e6bb23c74569a6f6bb98f2a7b463ca8ae80c10a803e5b71a597c5db0",
@@ -499,7 +499,7 @@
       "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
       "chaveiro-painel/src/styles/panel-overlay.css": "760c67920d30cc9afda8f211d533f6c3c0c1d533e43089edb19921bd647dd68d",
       "chaveiro-painel/src/styles/panel-primitives.css": "cc30373e525a94ef77e506a56e6ca3d6acf62292e241592f7d82cbf6de9d1316",
-      "chaveiro-painel/src/styles/panel-rollout.css": "ce1188d00cbeb93f1274688630ff0bc651d64f764f6a3ea8f77dec73ff715265",
+      "chaveiro-painel/src/styles/panel-rollout.css": "5d5bc90d42139a08421f73db179c991dbf9f16f0e79d56f232e85061a05c6b3a",
       "chaveiro-painel/src/styles/panel.css": "ef7d456ea29bc972f85796046e0e7ba7ed41faef8f6e44fe12500a5bcc46ddca",
       "chaveiro-painel/src/test/axe.js": "74547d3934177ffa8c8e4d74ecf5d3112c4f639a888e594d56d633934fad1782",
       "chaveiro-painel/src/test/setup.js": "fd0b71cff6bc469d16c98ee6a84811f50b9e77615920080d90d2ed6ae6f53945",
@@ -560,17 +560,17 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "848fd38892ba20cfbc1f276699236ea005fd08e2f46be783879663bfafa7af5c",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "f6527364727630efeb0bd6661e9b74e6b7f31a1201c0e3e0b3e2ed52ca4be872",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RUN_STATE.json": "a3d7021ac0a003ebf648ecb9837eba3ec4fe4cbc38d189c1339d573cb4ca8bb2",
+      "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "0e39cb602de35ed6fd45acdd365d51c0934669433b232fc00c0dacca1018d18d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "16390c77e117a0f248497721550f1269e22bcd2ae8f9b95334965360247b64ca",
+      "docs/eos-v2/WRITE_SET.json": "41f2c6a4a7aca6f88c23c62035e66363fbac6b2505328cfcc40fb131e8267ab3",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "05207d472ea0d11b17c27496291ebba03c836aeb5ac5a5cbb0a5b8fd6a276d0a",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -620,7 +620,7 @@
       "tools/admai-delivery/run-state.mjs": "3139f7b4a4f91ddf92c19baf41fa732ba727131daa087b8c169bfea973857502",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "e06548da7dc735628db97bd09831c6beb767bccae729d3fdf9d00250dcd6d2a6",
+      "tools/admai-delivery/surface-registry.mjs": "c1f741abf97d5ccba354a209e5e5f456dc2763fd04032bf1ff0d78964bbd2dc2",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -2055,6 +2055,10 @@
       "chaveiro-painel/telas/sl13-antes/dono__configuracao-seguranca__1920x1080.jpg": "85787:1787486758799",
       "chaveiro-painel/telas/sl13-antes/dono__configuracao-seguranca__360x800.jpg": "152235:1787486750117",
       "chaveiro-painel/telas/sl13-antes/dono__configuracao-seguranca__390x844.jpg": "178465:1787486753166",
+      "chaveiro-painel/telas/sl13-antes/dono__configuracao-usuarios__1440x900.jpg": "63476:1787488983541",
+      "chaveiro-painel/telas/sl13-antes/dono__configuracao-usuarios__1920x1080.jpg": "67067:1787488986354",
+      "chaveiro-painel/telas/sl13-antes/dono__configuracao-usuarios__360x800.jpg": "153001:1787488977812",
+      "chaveiro-painel/telas/sl13-antes/dono__configuracao-usuarios__390x844.jpg": "165289:1787488980734",
       "chaveiro-painel/telas/sl13-antes/dono__estoque__1440x900.jpg": "67882:1787486235519",
       "chaveiro-painel/telas/sl13-antes/dono__estoque__1920x1080.jpg": "71386:1787486249129",
       "chaveiro-painel/telas/sl13-antes/dono__estoque__360x800.jpg": "171454:1787486206568",
@@ -2072,12 +2076,16 @@
       "chaveiro-painel/telas/sl13-antes/dono__tecnicos-novo__360x800.jpg": "155175:1787486200583",
       "chaveiro-painel/telas/sl13-antes/dono__tecnicos-novo__390x844.jpg": "171773:1787486215540",
       "chaveiro-painel/telas/sl13-antes/sonda-anonimo.json": "3076:1787486482845",
-      "chaveiro-painel/telas/sl13-antes/sonda-dono.json": "4352:1787486758808",
-      "chaveiro-painel/telas/sl13-antes/sonda-tecnico.json": "7816:1787486284214",
+      "chaveiro-painel/telas/sl13-antes/sonda-dono.json": "4191:1787488986372",
+      "chaveiro-painel/telas/sl13-antes/sonda-tecnico.json": "3891:1787488968294",
       "chaveiro-painel/telas/sl13-antes/tecnico__mais__1440x900.jpg": "58378:1787486278708",
       "chaveiro-painel/telas/sl13-antes/tecnico__mais__1920x1080.jpg": "61371:1787486284205",
       "chaveiro-painel/telas/sl13-antes/tecnico__mais__360x800.jpg": "152621:1787486267026",
       "chaveiro-painel/telas/sl13-antes/tecnico__mais__390x844.jpg": "160933:1787486273220",
+      "chaveiro-painel/telas/sl13-antes/tecnico__meu-ponto__1440x900.jpg": "62434:1787488965519",
+      "chaveiro-painel/telas/sl13-antes/tecnico__meu-ponto__1920x1080.jpg": "65653:1787488968286",
+      "chaveiro-painel/telas/sl13-antes/tecnico__meu-ponto__360x800.jpg": "143860:1787488959704",
+      "chaveiro-painel/telas/sl13-antes/tecnico__meu-ponto__390x844.jpg": "168967:1787488962629",
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__1440x900.jpg": "62245:1787486275987",
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__1920x1080.jpg": "65503:1787486281485",
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__360x800.jpg": "157231:1787486264100",
@@ -2424,56 +2432,78 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [
-    "chaveiro-painel/telas"
-  ],
+  "artefatos": [],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/ui/PanelScope.jsx",
+      "caminho": "chaveiro-bot/test/integration/conta_2fa_fluxo_completo.test.js",
       "precisao": "BOUNDED",
-      "proposito": "capacidade active removida — escopo incondicional",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "d2a3635d117d45f12a6daa75fe7ec9e27daf4a146355b15ed794756ada91ffaf",
+      "proposito": "F4-01: loop completo + corrida de codigo de backup",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/ui/__tests__/Structure.test.jsx",
+      "caminho": "chaveiro-bot/test/integration/auditoria_matriz_acoes.test.js",
       "precisao": "BOUNDED",
-      "proposito": "teste passa a exigir o escopo SEMPRE",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "16806be17287772caa7af6190f8e1bb8f2d9d44c0dd72a504431fe4c4a0eb8bf",
+      "proposito": "F4-02: 7 acoes -> linha de auditoria + invariantes",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/styles/panel-rollout.css",
+      "caminho": "chaveiro-bot/test/integration/documentos_fallback_local.test.js",
       "precisao": "BOUNDED",
-      "proposito": "comentario da fronteira corrigido",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ce1188d00cbeb93f1274688630ff0bc651d64f764f6a3ea8f77dec73ff715265",
+      "proposito": "F4-03: upload/listar/download own-only + negacoes",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/surface-registry.mjs",
+      "caminho": "chaveiro-bot/test/integration/paywall_402_motivos.test.js",
       "precisao": "BOUNDED",
-      "proposito": "viewports reconciliados com a medicao real",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e06548da7dc735628db97bd09831c6beb767bccae729d3fdf9d00250dcd6d2a6",
+      "proposito": "F4-05: matriz por motivo + allowlist viva",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/metricas_mount_order.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "F4-06: canario 401/402",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/whatsapp_local_hmac.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "F4-07: HMAC rejeita assinatura invalida; inbound simulado",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T12:40:23.427Z",
+  "validadoEm": "2026-08-23T12:49:27.248Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "expansoesAutorizadas": [
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/admin.js"
+    }
+  ],
+  "comparacao": "AUTHORIZED_EXPANSION",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Correcoes da revisao de lote: PanelScope sem capacidade morta (teste vira contrato novo), viewports reconciliados por auditoria contra baseline + 2 sondas novas. Codex APROVADO na rodada de evidencia; gates F2 e F3 fecham.",
+  "nota": "F4 runtime acceptance: 6 arquivos de teste novos (33 casos), 1 correcao de produto achada pelo proprio teste (entidade no convite.enviado, expansao declarada). Suite completa 53 arquivos / 348 testes verde. GATE-F4 DONE com BLOCKED_CAPABILITY explicito (WhatsApp ponta real) e Sentry anotado p/ staging.",
   "aviso": "Declaracao ENCERRADA."
 }

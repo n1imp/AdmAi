@@ -438,6 +438,7 @@ router.post('/usuarios/convidar', requirePermissao('usuarios', 'editar'), async 
       empresaId: req.user.empresaId,
       usuarioId: req.user.id,
       acao: 'convite.enviado',
+      entidade: 'ConviteUsuario',
       depois: { email: parse.data.email, papel: parse.data.papel },
       ip: req.ip,
     }).catch(() => {});

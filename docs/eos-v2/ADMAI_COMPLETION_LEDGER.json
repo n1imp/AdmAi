@@ -1006,15 +1006,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-2FA-RT"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "conta_2fa_fluxo_completo 2/2: loop inteiro pela API (setup->ativar->desafio->TOTP->sessao usavel->desativar->login direto; codigo errado 400 sem token) + corrida EV-056: mesmo backup code em paralelo elege UM vencedor (statuses [200,400], exatamente 1 usado no banco)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.435Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1030,13 +1032,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "auditoria_matriz_acoes 4/4: 6 acoes com linha completa (empresaId/usuarioId/acao/entidade/entidadeId/efeito/ip) + invariante auditoria-fora-do-ar nao derruba operacao + trilha da anonimizacao NAO preserva o dado removido. conta.excluida/cascata ja tinham arquivo proprio. Achado corrigido no produto: convite.enviado sem entidade (expansao declarada)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1052,15 +1056,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-DOC-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "documentos_fallback_local 2/2 (401 nos 4 endpoints sem token; download byte a byte identico ao upload) + 17 pre-existentes confirmados (CRUD own-only, posse 404, multi-tenant 404, RBAC 403, flag-off 404, magic-byte, ramo storage com bucket ausente). Bucket producao segue BLOCKED_EXTERNAL (GAP-DOC-01)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1078,13 +1084,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Matriz por CDP com IDs SINTETICOS (VITE_CRISP_ID fake + PostHog em blackhole 127.0.0.1:9199 — sem credencial real): SEM_ESCOLHA e necessary = zero rede de Crisp/PostHog e zero tag; all = tag crisp + client.crisp.chat contactado + PostHog contacta o host. A politica publicada (somente com consentimento) corresponde ao comportamento MEDIDO.",
+        "Sentry: sem DSN local — NAO MEDIDO (UNAVAILABLE != PASS); classificacao necessario e textual e fica anotada para verificacao em staging.",
+        "ACHADO NOVO: Google Fonts pre-consentimento -> item F6-FONTS-PRECONSENT criado."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T13:21:30.144Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1100,13 +1110,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "paywall_402_motivos 16/16: cada ramo de assinaturaDaAcesso vira caso (10 barrados com motivo especifico + acao; 4 liberados incl. cancelada-mas-paga) + allowlist viva (auth/billing/me/2fa respondem com assinatura morta). Conformidade D-12: 402 fail-closed decidido em F0-07, matriz fixa o comportamento."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1122,13 +1134,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "metricas_mount_order 3/3: /api/dashboard E /api/metricas — 401 sem token, 402 com assinatura morta, 200 com trial vivo (canario nao e falso-positivo). Protecao por POSICAO de mount agora tem teste que morre primeiro."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1144,15 +1158,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-WPP-RT"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "whatsapp_local_hmac 5/5: sem assinatura 401 e nada chega a fila; HMAC de outro segredo 401; corpo ADULTERADO com HMAC do original 401 (byte a byte); HMAC valida 200 + evento enfileirado; segredo ausente 401 fail-closed. Ponta real = BLOCKED_CAPABILITY no gate."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1176,13 +1192,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "F4-01..07 DONE (F4-04 por matriz CDP com IDs sinteticos). Suite de integracao COMPLETA verde: 53 arquivos, 348 testes (rodada em duas metades por limite de timeout; 1 arquivo flakou apenas na rodada imediatamente pos-kill de processo, com estado residual — duas reexecucoes limpas).",
+        "BLOCKED_CAPABILITY explicito: WhatsApp ponta real (provider conectado) — local prova HMAC + enfileiramento; a ponta viva depende de provider e fica na fronteira D2/externa.",
+        "Sentry nao medido localmente (sem DSN — UNAVAILABLE != PASS), anotado para staging. Achado novo da matriz: F6-FONTS-PRECONSENT criado."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T14:04:27.436Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -2005,6 +2025,30 @@
       "lastAttempt": null,
       "nextAction": null,
       "revisitCondition": "FINANCEIRO_AVANCADO entrar em escopo OU divergencia de centavos observada em conciliacao real",
+      "snapshotRef": null
+    },
+    {
+      "workId": "F6-FONTS-PRECONSENT",
+      "phase": "F6",
+      "domain": "produto",
+      "description": "Achado da matriz F4-04: fonts.googleapis.com/gstatic carregam PRE-consentimento (IP do usuario vai a terceiro antes de qualquer escolha; a politica nem menciona Google Fonts). Correcao: self-host das fontes (tambem ganho de performance) OU declarar na politica — decidir em F6.",
+      "dependencies": [],
+      "priority": "P2",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "READY",
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Matriz CDP F4-04: hostsExternos contem fonts.googleapis.com e fonts.gstatic.com nos TRES estados de consentimento, inclusive SEM_ESCOLHA."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": null,
+      "nextAction": "Em F6 (SEO/performance): self-host das fontes e re-medir a matriz.",
+      "revisitCondition": null,
       "snapshotRef": null
     }
   ]
