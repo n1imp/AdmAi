@@ -51287,9 +51287,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Forma final do proposal (Gate 6 APROVADO) — ja commitada em 2682410; declaracao retroativa para integridade do historico.",
       "declaradoEm": "2026-08-23T23:24:31.724Z"
+    },
+    {
+      "sliceId": "D2-AMENDMENT-RECLASS",
+      "titulo": "D2 amendment: LEGAL->DEFERRED_BY_D2, WhatsApp->POST_MVP, terminal ADMAI_RELEASE_CANDIDATE_READY",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "D2 amendment: LEGAL->DEFERRED_BY_D2 (finding preservado, NOT_ACCEPTED, nao PASS), WhatsApp->DEFERRED_BY_SCOPE/POST_MVP, novo estado DEFERRED_BY_D2 na taxonomia com regra de revisita, terminal ADMAI_RELEASE_CANDIDATE_READY.",
+      "declaradoEm": "2026-08-23T23:46:11.931Z"
     }
   ],
-  "geradoEm": "2026-08-23T23:24:33.820Z",
+  "geradoEm": "2026-08-23T23:48:07.984Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

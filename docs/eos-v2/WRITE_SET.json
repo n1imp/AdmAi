@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE6-FINALIZACAO-PROPOSAL",
-  "titulo": "Forma final do proposal apos Gate 6 APROVADO",
+  "sliceId": "D2-AMENDMENT-RECLASS",
+  "titulo": "D2 amendment: LEGAL->DEFERRED_BY_D2, WhatsApp->POST_MVP, terminal ADMAI_RELEASE_CANDIDATE_READY",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T23:24:31.724Z",
+  "declaradoEm": "2026-08-23T23:46:11.931Z",
   "baseCommitPorLane": {
-    "HARNESS": "2682410c02a23f92bf735f0d0c09351c52972316"
+    "HARNESS": "65dec56578cc2b99777d75643faf7b87e7002f71"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Edicao ja commitada (2682410): proposal reflete Gate 6 APROVADO, remove a pendencia de verificacao, atualiza o anexo do ledger. Declaracao retroativa para integridade do historico de write-set (o .md e a unica fonte nao-exempta; ledger/WRITE_SET sao ARTEFATOS_DO_GATE).",
+  "notaDeMetodo": "Duas decisoes soberanas do usuario: (1) GAP-LEGAL-MODELO-01 vira DEFERRED_BY_D2 preservando finding+evidence (NAO PASS, LEGAL_ACCEPTANCE=NOT_ACCEPTED), terminal passa de ADMAI_RELEASE_READY para ADMAI_RELEASE_CANDIDATE_READY ate resolucao juridica; (2) WhatsApp vira SUPERINTEGRATION POST_MVP / DEFERRED_BY_SCOPE, sai dos acceptance requirements, implementacao preservada atras de feature gating. So mexe no ledger/registry — reclassificacao, nao codigo.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -598,8 +598,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "ab019cd2121d6d22d8ed4fd1f27b26454c77d2e68b17a79944156e3d0676a75d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "7df1f4b0c146e88f69cae0c26abcdb9bc09a57e465d55d1c30543e471c959427",
+      "docs/eos-v2/WRITE_SET.json": "9fd6121be3f422d0408f29d95537f6e5ebc21e37fc306503cf76102f8a76af4b",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b69d5a97e2bf042225d698e3b4fb75e78f11908f3520fcd7bdd484c1adcc7fa9",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2526,23 +2526,32 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "forma final: Gate 6 APROVADO",
+      "proposito": "reclassificar LEGAL e WhatsApp; novo terminal",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
+      "shaNaDeclaracao": "7268f7325d0b3708d0f05669c6dcd8e55e65df4ee84e587ffb795914461412c7",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "tools/admai-delivery/surface-registry.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "GAP-LEGAL-MODELO-01 e WhatsApp: nota da reclassificacao D2",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c1f741abf97d5ccba354a209e5e5f456dc2763fd04032bf1ff0d78964bbd2dc2",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T23:24:31.973Z",
+  "validadoEm": "2026-08-23T23:46:12.239Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Forma final do proposal (Gate 6 APROVADO) — ja commitada em 2682410; declaracao retroativa para integridade do historico.",
+  "bloqueiaIntegracao": true,
+  "nota": "D2 amendment: LEGAL->DEFERRED_BY_D2 (finding preservado, NOT_ACCEPTED, nao PASS), WhatsApp->DEFERRED_BY_SCOPE/POST_MVP, novo estado DEFERRED_BY_D2 na taxonomia com regra de revisita, terminal ADMAI_RELEASE_CANDIDATE_READY.",
   "aviso": "Declaracao ENCERRADA."
 }

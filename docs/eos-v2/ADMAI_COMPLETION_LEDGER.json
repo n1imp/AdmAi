@@ -1717,17 +1717,21 @@
       "authority": "USER_D2",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_D2",
+      "status": "DEFERRED_BY_D2",
       "blockerRefs": [
         "GAP-LEGAL-MODELO-01"
       ],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "GAP-LEGAL-MODELO-01 PRESERVADO integralmente (finding + evidence): Termos e Privacidade sao modelo nao validado (aviso na pagina, campos entre colchetes, contato barbers-flow.com). LEGAL_ACCEPTANCE = NOT_ACCEPTED.",
+        "D2 amendment 2026-08-23: reclassificado de BLOCKED_D2 para DEFERRED_BY_D2 por decisao soberana do usuario — nao resolvido neste ciclo, sem inventar conteudo juridico. NUNCA convertido para PASS.",
+        "Consequencia: terminal do ciclo passa a ADMAI_RELEASE_CANDIDATE_READY (nao ADMAI_RELEASE_READY) ate resolucao juridica ou novo D2 amendment."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T23:47:28.756Z",
       "nextAction": "aplicar no ponto unico de injecao de textos (preparado na F3) e remover o aviso de modelo",
-      "revisitCondition": "usuario fornecer razao social, CNPJ, encarregado, e-mail, prazos e limite validados por advogado",
+      "revisitCondition": "Usuario fornecer conteudo juridico validado por advogado (razao social, CNPJ, DPO, e-mail, prazos) OU novo D2 amendment; entao GAP-LEGAL fecha e o terminal pode subir para ADMAI_RELEASE_READY.",
       "snapshotRef": null
     },
     {
@@ -1758,24 +1762,27 @@
       "workId": "D2-WPP-PROVIDER",
       "phase": "D2",
       "domain": "whatsapp",
-      "description": "Aceitacao ponta real do WhatsApp (provider indisponivel localmente)",
+      "description": "WHATSAPP_SUPERINTEGRATION (POST_MVP): classificado pelo usuario como superintegracao pos-MVP; fora dos acceptance requirements deste release.",
       "dependencies": [],
       "priority": "P1",
       "risk": "baixo",
       "authority": "EXTERNAL",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_EXTERNAL",
+      "status": "DEFERRED_BY_SCOPE",
       "blockerRefs": [
         "GAP-WPP-RT"
       ],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "D2 amendment 2026-08-23: WhatsApp REMOVIDO dos acceptance requirements do release atual. Implementacao existente preservada atras de feature gating (WHATSAPP_HABILITADO no bot; card /configuracao/whatsapp no painel).",
+        "Prova de nao-bloqueio do MVP: fatia D2-WPP-GATING (a seguir) demonstra que a ausencia do provider nao quebra core/startup/navigation/fluxo-obrigatorio/E2E."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
-      "nextAction": "rodar fluxo inbound real: mensagem -> servico -> resumo no grupo",
-      "revisitCondition": "provider Evolution ou Cloud conectado",
+      "lastAttempt": "2026-08-23T23:47:28.756Z",
+      "nextAction": "POST_MVP: conectar provider (Evolution/Cloud) quando a superintegracao for priorizada.",
+      "revisitCondition": "Decisao do usuario de promover a superintegracao WhatsApp (provider conectado) em ciclo POST_MVP.",
       "snapshotRef": null
     },
     {
@@ -2135,5 +2142,11 @@
       "revisitCondition": "Primeira assinatura duplicada observada, OU aumento de concorrencia/multiplos admins no checkout, OU antes de automatizar totalmente a cobranca.",
       "snapshotRef": null
     }
-  ]
+  ],
+  "terminal": {
+    "alvoDoCiclo": "ADMAI_RELEASE_CANDIDATE_READY",
+    "motivo": "D2 amendment 2026-08-23: LEGAL DEFERRED_BY_D2 (LEGAL_ACCEPTANCE=NOT_ACCEPTED) impede ADMAI_RELEASE_READY sob o contrato anterior; o candidato tecnico e o terminal ate resolucao juridica ou novo D2.",
+    "admai_release_ready": "BLOQUEADO por D2-LEGAL (DEFERRED_BY_D2)",
+    "atualizadoEm": "2026-08-23T23:47:28.756Z"
+  }
 }

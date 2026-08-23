@@ -486,6 +486,10 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
   },
   {
     id: 'GAP-LEGAL-MODELO-01',
+    notaD2:
+      'D2 amendment 2026-08-23: reclassificado como DEFERRED_BY_D2 no ledger (D2-LEGAL). ' +
+      'Finding e evidence PRESERVADOS; LEGAL_ACCEPTANCE=NOT_ACCEPTED; NUNCA convertido para ' +
+      'PASS. Terminal do ciclo: ADMAI_RELEASE_CANDIDATE_READY.',
     titulo:
       'Documentos legais públicos anunciam-se como modelo não validado, com dados de outro produto',
     causa:
