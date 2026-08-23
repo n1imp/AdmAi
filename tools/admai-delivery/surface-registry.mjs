@@ -888,7 +888,7 @@ export const CLASSIFICADAS = Object.freeze({
       'nao renderiza mais "Voltar" (showButtons por passo — botao que mentia). ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Serviços ─────────────────────────────────────────────────────────── */
@@ -1106,15 +1106,14 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/configuracao/seguranca': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Três blocos corretos — troca de senha, 2FA com interruptor, sessões ativas. Dois defeitos ' +
-      'próprios. (1) A lista de sessões mostra strings técnicas cruas: "curl/8.19.0", "::1", ' +
-      '"::ffff:127.0.0.1". Numa tela em que o usuário precisa decidir "esta sessão é minha?", ' +
-      'user-agent e IPv6 sem tradução não permitem decidir. (2) Em 1440 a coluna útil fica em ' +
-      '~540px de 1185 disponíveis, com os três blocos empilhados e metade da tela vazia. Sete ' +
-      'controles sem nome acessível, o maior número do inventário. Nota de método: as entradas ' +
-      '"curl" são artefato das MINHAS chamadas de verificação, não sujeira do produto.',
+      'RECLASSIFICADA (SL-14). A pergunta da tela — esta sessao e minha? — passou a ter ' +
+      'resposta: descreverDispositivo/formatarIp traduzem UA e IP (Chrome em Windows, ' +
+      'acesso local; ferramenta de linha de comando para curl; IPv4 mapeado perde o ' +
+      'prefixo ::ffff:), com 13 unit puros e captura VIVA conferida em 1440. Sete sem ' +
+      'nome: zerados em SL-01 (re-medido semNome=0). Coluna no idioma aceito do guia ' +
+      '(max-w-2xl centrado, precedente SL-04/12).',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),

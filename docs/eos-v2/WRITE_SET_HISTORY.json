@@ -48407,9 +48407,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Cluster operacao: 2 correcoes reais (KPI do perfil, convite com saida) + 19 flips com prova. Regressao propria (Link nao importado) pega pela sonda na mesma rodada. KEEP 46 / REFINE 3 / REDESIGN 1.",
       "declaradoEm": "2026-08-23T12:00:14.711Z"
+    },
+    {
+      "sliceId": "SL-14-SEGURANCA",
+      "titulo": "Seguranca: sessoes legiveis por humanos + coluna no idioma do guia; excecao D2 das legais",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Sessoes falam portugues (13 unit + captura viva), coluna no idioma do guia, flip de seguranca. Restam so as 2 legais (excecao D2) e /tecnicos (SL-15). 247/247.",
+      "declaradoEm": "2026-08-23T12:05:17.837Z"
     }
   ],
-  "geradoEm": "2026-08-23T12:04:04.214Z",
+  "geradoEm": "2026-08-23T12:07:59.883Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

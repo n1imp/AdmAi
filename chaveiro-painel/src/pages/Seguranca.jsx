@@ -26,6 +26,51 @@ const CORES_FORCA = {
   forte: { barra: 'bg-success', texto: 'text-success', label: 'Forte', n: 3 },
 };
 
+/**
+ * A pergunta da lista de sessões é "esta sessão é MINHA?" — e "curl/8.19.0" com "::ffff:127.0.0.1"
+ * não responde isso para ninguém. Tradução determinística, sem dependência nova:
+ * navegador + sistema para UAs reais, nome honesto para ferramentas, e IP legível. [SL-14]
+ */
+export function descreverDispositivo(userAgent) {
+  if (!userAgent) return 'Dispositivo desconhecido';
+  const ua = userAgent.toLowerCase();
+  if (/curl|wget|postman|httpie|python-requests|node-fetch|axios/.test(ua)) {
+    return 'Ferramenta de linha de comando';
+  }
+  const sistema = /iphone|ipad/.test(ua)
+    ? 'iPhone/iPad'
+    : /android/.test(ua)
+      ? 'Android'
+      : /windows/.test(ua)
+        ? 'Windows'
+        : /mac os x|macintosh/.test(ua)
+          ? 'Mac'
+          : /linux/.test(ua)
+            ? 'Linux'
+            : null;
+  const navegador = /edg\//.test(ua)
+    ? 'Edge'
+    : /opr\//.test(ua)
+      ? 'Opera'
+      : /firefox\//.test(ua)
+        ? 'Firefox'
+        : /chrome\//.test(ua)
+          ? 'Chrome'
+          : /safari\//.test(ua)
+            ? 'Safari'
+            : null;
+  if (navegador && sistema) return `${navegador} em ${sistema}`;
+  return navegador ?? sistema ?? 'Dispositivo desconhecido';
+}
+
+/** Loopback vira "acesso local"; IPv4 mapeado em IPv6 perde o prefixo; público fica cru (é o dado real). */
+export function formatarIp(ip) {
+  if (!ip) return '—';
+  const limpo = ip.replace(/^::ffff:/i, '');
+  if (limpo === '::1' || limpo === '127.0.0.1') return 'acesso local';
+  return limpo;
+}
+
 const REQUISITOS = [
   { chave: 'tamanho', label: 'Pelo menos 8 caracteres' },
   { chave: 'maiuscula', label: 'Uma letra maiúscula' },
@@ -347,7 +392,7 @@ export default function Seguranca() {
     <div className="flex flex-col h-full">
       <BackHeader titulo="Segurança" />
 
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8 flex flex-col gap-6 lg:max-w-xl">
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8 flex flex-col gap-6 lg:max-w-2xl">
         {erroCarregar && (
           <div
             role="alert"
@@ -453,12 +498,10 @@ export default function Seguranca() {
                         ) : (
                           <Monitor size={13} className="inline mr-1 text-muted" />
                         )}
-                        {!s.atual &&
-                          (s.userAgent?.split(' ').slice(0, 3).join(' ') ||
-                            'Dispositivo desconhecido')}
+                        {!s.atual && descreverDispositivo(s.userAgent)}
                       </p>
                       <p className="text-muted text-xs mt-0.5">
-                        {s.ip ?? '—'} · Último acesso:{' '}
+                        {formatarIp(s.ip)} · Último acesso:{' '}
                         {new Date(s.ultimaAtividadeEm).toLocaleDateString('pt-BR')}
                       </p>
                     </div>

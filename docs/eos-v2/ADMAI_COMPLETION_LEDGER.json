@@ -914,13 +914,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Sessoes legiveis: descreverDispositivo/formatarIp (13 unit puros; captura VIVA em 1440 mostra Este dispositivo/Chrome em Windows · acesso local no lugar de curl/::ffff:). Coluna max-w-2xl (idioma aceito, precedente SL-04/12). Sete sem-nome ja zerados em SL-01, re-medido.",
+        "Legais: /privacidade e /termos NAO flipam — GAP-LEGAL-MODELO-01 e D2 do usuario (decisao 2026-08-23: mantem bloqueado); ficam como excecao explicita do GATE-F3 com aviso de modelo integro na pagina.",
+        "Registry: KEEP 47 / REFINE 2 (só as legais D2) / REDESIGN 1 (/tecnicos, SL-15). Painel 247/247 lido antes do commit."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T12:07:56.613Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
