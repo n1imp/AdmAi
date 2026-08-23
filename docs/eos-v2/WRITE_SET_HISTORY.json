@@ -48490,7 +48490,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "SEO publico honesto (sem dominio nao se fabrica URL: sitemap/og:url gated) + fontes self-hosted fechando o achado pre-consentimento da matriz LGPD. Runtime provado: robots por rota fail-closed, zero fonts.google, titulos proprios. 251/251.",
-      "declaradoEm": "2026-08-23T14:33:35.924Z"
+      "declaradoEm": "2026-08-23T14:33:35.924Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao F6-02/F6-FONTS",
+        "justificativa": "Uma causa, reincidente da classe SL-01 (DashboardParts): a declaracao apontou src/pages/PaginaLegal.jsx, mas o componente vive em src/components/PaginaLegal.jsx — caminho declarado por palpite, nao verificado. O conteudo esta provado (runtime: robots por rota, titulos, zero fonts.google) e commitado (4b65eeb); o arquivo de pages/ nunca existiu nem foi tocado.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Antes de declarar, VERIFICAR cada caminho com ls/glob — declaracao nunca por memoria. Segunda ocorrencia da classe; se houver terceira, o declarador ganha validacao de existencia para arquivos nao marcados como a-criar."
+      }
     }
   ],
   "geradoEm": "2026-08-23T15:16:59.036Z",
