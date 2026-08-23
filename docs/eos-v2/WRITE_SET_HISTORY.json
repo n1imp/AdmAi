@@ -46062,9 +46062,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Completion Ledger materializado: 72 itens de todas as fontes (registries, backlog de hardening com revisitCondition copiada, EXECUTION_STATE, EVs, docs de release referenciados), taxonomia de 13 estados com schema condicional (BLOCKED_* exige blockerRefs+revisitCondition+nextAction; DEFERRED exige revisitCondition; DONE exige evidencia). CLI de leitura com --resumo/--validar/--por-fase/--selftest (11/11). JSON entrou em ARTEFATOS_DO_GATE — isencao visivel, identidade exata no selftest do gate (121/121). SKIP != FORGET agora e regra de schema, nao promessa.",
       "declaradoEm": "2026-08-23T04:32:13.562Z"
+    },
+    {
+      "sliceId": "F0-07-08-CONTRATO",
+      "titulo": "Contrato de seguranca reconciliado com o repo + bloco ops no EXECUTION_STATE",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Gates 5/6/7 do contrato de seguranca reconciliados com o estado VERIFICADO do repo (paywall montado na branch sem violar o gate — ativar = deploy = D2; script de backfill inexistente; divergencia D-12 402-vs-503 registrada e encaminhada para conformidade junto de F4-05, porque decisao de usuario prevalece). Bloco operacional com comandos canonicos no EXECUTION_STATE — inclui o registro de que tools/eos/cli.mjs nunca existiu.",
+      "declaradoEm": "2026-08-23T04:38:55.615Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:37:54.520Z",
+  "geradoEm": "2026-08-23T04:39:44.866Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

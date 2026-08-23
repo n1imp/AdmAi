@@ -1298,3 +1298,26 @@ Reexecutado: **40 arquivos, 270 testes, exit 0**. Portanto a falha era flake sob
 esta frente aumentou. Não é "nada": uma suíte que cai 1 em 2 execuções sob carga é fragilidade real
 de verificação, e fica registrada com a assinatura exata para não ser redescoberta como mistério.
 Não foi corrigida aqui porque corrigir `testTimeout` ou os helpers é escopo próprio.
+
+---
+
+## Bloco operacional — comandos canônicos do programa de release  [F0-08 · 2026-08-23]
+
+O programa `ADMAI_RELEASE_READY` (plano aprovado pelo usuário em 2026-08-23) é rastreado por
+`docs/eos-v2/ADMAI_COMPLETION_LEDGER.json` — julgamento declarado, item a item, com taxonomia de
+13 estados e `revisitCondition` obrigatória em tudo que bloqueia ou difere. Retomada de sessão
+começa por `--resumo`.
+
+| Operação | Comando |
+| --- | --- |
+| estado do programa | `node tools/admai-delivery/completion-ledger.mjs --resumo` (validar: `--validar`) |
+| selftest EOS | `node tools/eos/selftest/run.mjs` — **`tools/eos/cli.mjs` NUNCA existiu**; invocá-lo era hábito errado do agente |
+| selftest do gate | `node tools/admai-delivery/write-set-gate.mjs --selftest` |
+| declarar write set | `node tools/admai-delivery/write-set-declarar.mjs <spec.json>` (promovido do scratchpad em F0-01) |
+| fechar write set | `node tools/admai-delivery/write-set-declarar.mjs --fechar [--nota t] [--reconciliacao r.json]` |
+| captura + sonda | `CAPTURA_SENHA=... MSYS_NO_PATHCONV=1 node chaveiro-painel/e2e/capturar.mjs <destino> <papel:usuario> <rotas...>` |
+| seed demo | `ALLOW_DEMO_SEED=true node --env-file=.env scripts/seed-demo.mjs --seed` (em `chaveiro-bot/`; fail-closed) |
+| run state | `node tools/admai-delivery/run-state.mjs` (re-executar a cada gate de fase) |
+
+Efeito de runtime da aplicação (uploads-*) é classe própria e visível no gate desde `D-F0-02`
+(`AGENT_DECISIONS.md`) — não confundir com escrita do executor.
