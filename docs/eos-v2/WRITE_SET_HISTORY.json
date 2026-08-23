@@ -45865,9 +45865,45 @@
       "bloqueiaIntegracao": false,
       "nota": "Cabecalho ausente promovido de cinco achados locais para GAP-UX-CABECALHO-01, aplicando ao proprio inventario a regra que ele impoe. .gitignore fecha a causa estrutural do UNDECLARED_WRITE das rodadas anteriores. Corrigido tambem estilo: prettier rodou sem a config do repositorio no commit anterior e converteu 827 aspas simples em duplas.",
       "declaradoEm": "2026-08-22T21:21:55.544Z"
+    },
+    {
+      "sliceId": "SCOPE-F2D-ARTEFATO",
+      "titulo": "Ponto cego: escrita ignorada pelo Git e invisivel ao Observed Write Set",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Fatia que INTRODUZ a dimensao de artefatos ignorados. Nao pode alcancar MATCH porque foi declarada antes de a dimensao existir: seu baseline nao tem artefatosPorLane, e a regra nova falha fechada.",
+      "reconciliacao": {
+        "disposicao": "CLASSIFICACAO_INVALIDADA_POR_DEFEITO_DO_INSTRUMENTO",
+        "autorizadoPor": "Claude (writer) — dentro da missao SCOPE-F2D",
+        "justificativa": "A classe UNKNOWN_DIFFERENCE aqui nao descreve o repositorio: descreve o instrumento no momento da declaracao. O baseline foi congelado por um declarador que ainda nao computava artefatosPorLane, entao a dimensao esta indisponivel por construcao, e nao por escrita desconhecida. A escrita real desta fatia foi verificada na dimensao de fonte e esta declarada.",
+        "defeito": "observarSujos e shasDaLane usam --exclude-standard, entao toda escrita coberta por .gitignore era invisivel ao Observed Write Set. Controle negativo provou: arquivo no disco, git status com zero linhas, comparacao devolvendo OBSERVED_SUBSET.",
+        "correcao": "artefatosIgnorados + observarArtefatosDaLane + classe UNDECLARED_ARTIFACT_WRITE que bloqueia integracao; declarador passa a gravar artefatosPorLane; 11 controles novos, incluindo sabotagem contra o caminho real de deteccao.",
+        "provenance": "ORIGINAL_PRE_MUTATION"
+      },
+      "declaradoEm": "2026-08-23T00:10:00.349Z"
+    },
+    {
+      "sliceId": "SCOPE-F2D-CONTROLE",
+      "titulo": "Controle negativo e positivo do detector de artefato ignorado",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Controle negativo e positivo do detector de artefato ignorado, contra o caminho real. Registro em docs/eos-v2/CONTROLE_ARTEFATO.md.",
+      "declaradoEm": "2026-08-23T00:21:47.298Z"
     }
   ],
-  "geradoEm": "2026-08-22T21:25:31.501Z",
+  "geradoEm": "2026-08-23T00:24:31.469Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

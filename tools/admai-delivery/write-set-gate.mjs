@@ -66,8 +66,19 @@ export const PRECISOES = Object.freeze(['EXACT', 'BOUNDED', 'EXPECTED', 'UNKNOWN
 
 /** Classificação de `DECLARED × OBSERVED`. */
 export const CLASSES_DE_COMPARACAO = Object.freeze([
-  'MATCH', 'OBSERVED_SUBSET', 'AUTHORIZED_EXPANSION', 'UNDECLARED_WRITE', 'UNKNOWN_DIFFERENCE'
+  'MATCH', 'OBSERVED_SUBSET', 'AUTHORIZED_EXPANSION', 'UNDECLARED_WRITE',
+  'UNDECLARED_ARTIFACT_WRITE', 'UNKNOWN_DIFFERENCE'
 ]);
+
+/**
+ * Raízes ignoradas que NÃO se observa, e por quê.
+ *
+ * `node_modules` são 67.246 dos 67.666 arquivos ignorados deste repositório e não são efeito da
+ * tarefa: são efeito de `npm ci`. `.git` é o próprio versionamento. Tudo o mais que o Git ignora
+ * — capturas, uploads de runtime, coverage, dist, `.env` — É efeito colateral da tarefa e passa
+ * a ser observado.
+ */
+export const RAIZES_NAO_OBSERVADAS = Object.freeze(['node_modules', '.git']);
 
 const sha = (caminho) =>
   (existsSync(caminho) ? createHash('sha256').update(readFileSync(caminho)).digest('hex') : null);
@@ -127,6 +138,81 @@ export function shasDaLane(raiz = RAIZ) {
     }
   }
   return fora;
+}
+
+/**
+ * ARTEFATOS IGNORADOS PELO GIT — que continuam sendo efeito colateral no filesystem.
+ *
+ * O PONTO CEGO QUE ISTO FECHA
+ *   `shasDaLane` e `observarSujos` usam `--exclude-standard`. Enquanto essa era a única fonte de
+ *   observação, qualquer escrita coberta por `.gitignore` era invisível ao Write Set — e eu piorei
+ *   o problema na rodada anterior: acrescentei `chaveiro-painel/telas/` ao `.gitignore` para
+ *   "fechar a causa" de um `UNDECLARED_WRITE`, e o que fiz foi cegar o detector. Controle negativo
+ *   provou: arquivo escrito no disco, `git status` com zero linhas, comparação devolvendo
+ *   `OBSERVED_SUBSET`. `GIT_IGNORED != NOT_A_SIDE_EFFECT`.
+ *
+ *   Não descoberto por mim, mas descoberto por isto: `chaveiro-bot/uploads-docs` (107 arquivos) e
+ *   `uploads-ponto` (68) são escritas de RUNTIME do produto que nunca foram observáveis.
+ *
+ * NUNCA LÊ CONTEÚDO, e essa restrição é deliberada
+ *   A lista de ignorados inclui `.env` e `.env.test`. Hashear conteúdo traria segredo para a
+ *   memória do gate e para o baseline em disco. Aqui só se usa `statSync`: tamanho e mtime bastam
+ *   para detectar que houve escrita, e detectar é o trabalho. O contrato do repositório é
+ *   literal — nunca ler, expor, registrar ou versionar secrets.
+ *
+ * LIMITE QUE PERMANECE
+ *   mtime pode ser reescrito e tamanho pode coincidir. Isto detecta escrita acidental e não
+ *   declarada, que é o caso real; não detecta adversário que forje metadado. Fica declarado.
+ */
+export function artefatosIgnorados(raiz = RAIZ) {
+  let lista = [];
+  try {
+    lista = execFileSync(
+      'git', ['-C', raiz, 'ls-files', '-z', '--others', '--ignored', '--exclude-standard'],
+      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
+    ).split('\0').filter(Boolean);
+  } catch {
+    return null;   // indisponível é diferente de vazio, e vazio é a afirmação forte
+  }
+
+  const fora = {};
+  for (const caminho of lista) {
+    const partes = caminho.split('/');
+    if (partes.some((p) => RAIZES_NAO_OBSERVADAS.includes(p))) continue;
+    try {
+      const st = statSync(join(raiz, caminho));
+      fora[caminho] = st.isFile() ? `${st.size}:${Math.trunc(st.mtimeMs)}` : null;
+    } catch {
+      fora[caminho] = null;
+    }
+  }
+  return fora;
+}
+
+/** Diferença de artefatos ignorados contra o baseline: criados, alterados e removidos. */
+export function observarArtefatosDaLane(baselineArtefatos, raiz = RAIZ) {
+  if (!baselineArtefatos || typeof baselineArtefatos !== 'object' || Array.isArray(baselineArtefatos)) {
+    return { disponivel: false, motivo: 'DECLARACAO_SEM_BASELINE_DE_ARTEFATOS', observado: null };
+  }
+  const agora = artefatosIgnorados(raiz);
+  if (agora === null) return { disponivel: false, motivo: 'ARTEFATOS_ILEGIVEIS', observado: null };
+
+  const observado = new Set();
+  for (const [caminho, marca] of Object.entries(agora)) {
+    if (!(caminho in baselineArtefatos) || baselineArtefatos[caminho] !== marca) observado.add(caminho);
+  }
+  for (const caminho of Object.keys(baselineArtefatos)) {
+    if (!(caminho in agora)) observado.add(caminho);   // sumiu: apagado ou deixou de ser ignorado
+  }
+  return { disponivel: true, observado: [...observado].sort() };
+}
+
+/** Raízes de artefato que a declaração autoriza, qualificadas por lane. */
+export function artefatosDeclarados(decl) {
+  const lanes = lanesDaDeclaracao(decl);
+  const primeira = Object.keys(lanes)[0];
+  return (decl?.artefatos ?? []).map((a) =>
+    typeof a === 'string' ? qualificar(primeira, a) : qualificar(a.lane ?? primeira, a.raiz ?? a.caminho));
 }
 
 /**
@@ -258,10 +344,26 @@ export function observarEscritaDasLanes(decl) {
     };
   }
 
+  /* Baseline dos artefatos ignorados, por lane. Declaração antiga não tem: FALHA FECHADA.
+     Tratar ausência como "nenhum artefato escrito" seria a afirmação forte a partir do
+     desconhecimento total — e é exatamente o fail-open que este gate existe para não repetir. */
+  const artefatosPorLane = decl?.artefatosPorLane ?? null;
+
   const observado = [];
   const livroRazao = [];
   const ignoradosAgora = [];
+  const artefatosObservados = [];
+  let artefatosDisponivel = true;
+  let artefatosMotivo = null;
+
   for (const [nome, raiz] of Object.entries(lanes)) {
+    const a = observarArtefatosDaLane(artefatosPorLane?.[nome], raiz);
+    if (!a.disponivel) {
+      artefatosDisponivel = false;
+      artefatosMotivo = `${a.motivo} (${nome})`;
+    } else {
+      artefatosObservados.push(...a.observado.map((c) => qualificar(nome, c)));
+    }
     const r = observarEscritaDaLane({ baselineDaLane: porLane[nome], lane: raiz }, raiz);
     ignoradosAgora.push(...(r.ignoradosAgora ?? []).map((c) => qualificar(nome, c)));
     for (const c of r.observado) {
@@ -275,6 +377,7 @@ export function observarEscritaDasLanes(decl) {
   return {
     disponivel: true, observado: observado.sort(), livroRazao: livroRazao.sort(),
     ignoradosAgora: ignoradosAgora.sort(),
+    artefatosDisponivel, artefatosMotivo, artefatosObservados: artefatosObservados.sort(),
     escopo: Object.keys(lanes).length > 1 ? 'TODAS_AS_LANES_DECLARADAS' : 'LANE_UNICA',
     lanes: Object.keys(lanes)
   };
@@ -761,7 +864,11 @@ export function reconciliar({ sliceId, disposicao, autorizadoPor, justificativa,
  */
 /** Classes que travam integracao. `UNKNOWN_DIFFERENCE` entra: nao saber o que foi escrito e menos
  *  informacao que saber que houve escrita nao declarada, nao mais.  [R27-04] */
-export const CLASSES_QUE_BLOQUEIAM = Object.freeze(['UNDECLARED_WRITE', 'UNKNOWN_DIFFERENCE']);
+/* `UNDECLARED_ARTIFACT_WRITE` bloqueia igual: efeito colateral não declarado é não declarado,
+   e o Git não enxergar não muda o que aconteceu no filesystem. */
+export const CLASSES_QUE_BLOQUEIAM = Object.freeze([
+  'UNDECLARED_WRITE', 'UNDECLARED_ARTIFACT_WRITE', 'UNKNOWN_DIFFERENCE'
+]);
 
 export function disposicaoValida(rec) {
   const base = Boolean(rec) && DISPOSICOES.includes(rec.disposicao)
@@ -843,9 +950,30 @@ export function compararRodada(decl = lerDeclaracao()) {
     expansoesAutorizadas: (decl.expansoesAutorizadas ?? []).map((e) =>
       (typeof e === 'string' ? e : qualificar(e.lane, e.caminho)))
   });
+  /* ARTEFATOS IGNORADOS — a dimensão que não existia e por onde a escrita saía sem ser vista.
+     Precedência: `UNDECLARED_WRITE` em fonte continua sendo a classe mais forte; artefato só
+     decide a classe quando a fonte não acusou nada. Mas o campo aparece SEMPRE, porque isenção
+     que se vê é auditável e isenção que apaga não é — mesmo princípio de `livroRazao`. */
+  const artefatosNaoDeclarados = obs.artefatosDisponivel
+    ? (obs.artefatosObservados ?? []).filter((c) => {
+        const raizes = artefatosDeclarados(decl);
+        return !raizes.some((raiz) => c === raiz || c.startsWith(raiz.replace(/\/?$/, '/')));
+      })
+    : null;
+
+  const classe = !obs.artefatosDisponivel && r.classe !== 'UNDECLARED_WRITE'
+    ? 'UNKNOWN_DIFFERENCE'
+    : (artefatosNaoDeclarados?.length && !['UNDECLARED_WRITE', 'UNKNOWN_DIFFERENCE'].includes(r.classe)
+      ? 'UNDECLARED_ARTIFACT_WRITE'
+      : r.classe);
+
   return {
-    ...r, escopo: obs.escopo, lanes: obs.lanes, observado: obs.observado,
-    livroRazao: obs.livroRazao, ignoradosAgora: obs.ignoradosAgora
+    ...r, classe,
+    motivo: r.motivo ?? (obs.artefatosDisponivel ? undefined : obs.artefatosMotivo),
+    escopo: obs.escopo, lanes: obs.lanes, observado: obs.observado,
+    livroRazao: obs.livroRazao, ignoradosAgora: obs.ignoradosAgora,
+    artefatosObservados: obs.artefatosObservados ?? null,
+    artefatosNaoDeclarados
   };
 }
 
@@ -903,6 +1031,9 @@ export function executar(argv = []) {
     if (r.livroRazao?.length) console.log(`  livro-razao tocado (isento) : ${r.livroRazao.join(', ')}`);
     /* [H-01.11] Sair da listagem por virar ignorado nao e escrita, e nao pode sumir do relatorio. */
     if (r.ignoradosAgora?.length) console.log(`  passou a ser IGNORADO (nao houve escrita) : ${r.ignoradosAgora.join(', ')}`);
+    if (r.artefatosNaoDeclarados === null) console.log('  artefatos ignorados : SEM BASELINE — dimensao indisponivel');
+    else if (r.artefatosNaoDeclarados.length) console.log(`  ARTEFATO IGNORADO E NAO DECLARADO : ${r.artefatosNaoDeclarados.slice(0, 8).join(', ')}${r.artefatosNaoDeclarados.length > 8 ? ` (+${r.artefatosNaoDeclarados.length - 8})` : ''}`);
+    else if (r.artefatosObservados?.length) console.log(`  artefatos escritos e DECLARADOS : ${r.artefatosObservados.length} caminhos`);
     console.log('  LIMITE: diferenca liquida contra o baseline, nao historico de escritas.');
     console.log('    arquivo escrito e depois restaurado ao conteudo do baseline e invisivel aqui.');
     return r.classe === 'UNDECLARED_WRITE' || r.classe === 'UNKNOWN_DIFFERENCE' ? 1 : 0;
@@ -1177,6 +1308,82 @@ export function executar(argv = []) {
   writeFileSync(join(laneB, 'docs-eos-v2-WRITE_SET.json'), '{}');
   const vizinhoDoLedger = observarEscritaDasLanes(declMulti).observado;
 
+  /* ── ARTEFATO IGNORADO: o ponto cego, e a sabotagem que o prova ────────────
+     Repositorio sintetico com `.gitignore` real, para exercitar o CAMINHO REAL de deteccao —
+     `git ls-files --others --ignored` — e nao uma simulacao dele. Foi o ponto cego que deixou
+     ~130 capturas serem escritas sem declaracao e que eu piorei ao adicionar o diretorio ao
+     `.gitignore` achando que fechava a causa. */
+  const artefatoSintetico = (() => {
+    const dir = mkdtempSync(join(tmpdir(), 'ws-art-'));
+    execFileSync('git', ['-C', dir, 'init', '-q']);
+    execFileSync('git', ['-C', dir, 'config', 'user.email', 'a@b.c']);
+    execFileSync('git', ['-C', dir, 'config', 'user.name', 't']);
+    writeFileSync(join(dir, '.gitignore'), 'saida/\nnode_modules/\n');
+    mkdirSync(join(dir, 'saida'), { recursive: true });
+    writeFileSync(join(dir, 'saida', 'ja-existia.bin'), 'a');
+    mkdirSync(join(dir, 'node_modules', 'pacote'), { recursive: true });
+    writeFileSync(join(dir, 'node_modules', 'pacote', 'index.js'), 'ruido');
+
+    const base = artefatosIgnorados(dir);
+
+    // SABOTAGEM: escrita real, em caminho ignorado, sem declaracao.
+    writeFileSync(join(dir, 'saida', 'clandestino.bin'), 'b');
+    const depois = observarArtefatosDaLane(base, dir);
+
+    // O Git continua sem enxergar — e e por isso que a dimensao precisa existir.
+    // O `.gitignore` do proprio repo sintetico e nao rastreado e APARECE nos sujos; a afirmacao
+    // certa e sobre O CAMINHO, e nao sobre a lista inteira. Errei isso na primeira escrita.
+    const gitCego = !observarSujos(dir).has('saida/clandestino.bin');
+
+    // node_modules NAO entra: e efeito de `npm ci`, nao da tarefa.
+    const ignoraNodeModules = !Object.keys(base).some((c) => c.startsWith('node_modules/'));
+
+    // Alteracao de arquivo que JA existia tambem conta.
+    writeFileSync(join(dir, 'saida', 'ja-existia.bin'), 'aaaaaaaa');
+    const alterado = observarArtefatosDaLane(base, dir);
+
+    // Remocao conta.
+    rmSync(join(dir, 'saida', 'ja-existia.bin'), { force: true });
+    const removido = observarArtefatosDaLane(base, dir);
+
+    return { depois, gitCego, ignoraNodeModules, alterado, removido, base };
+  })();
+
+  const declSemArtefatos = { lanes: { A: laneA }, baselinePorLane: { A: {} }, entradas: [] };
+
+  const casosDeArtefato = [
+    /* O caso que faltava. Sem ele, escrita ignorada era escrita invisivel. */
+    ['SABOTAGEM: escrita em caminho ignorado E detectada',
+      artefatoSintetico.depois.observado.includes('saida/clandestino.bin')],
+    /* CONTRAPROVA do proprio controle: se o Git enxergasse, o teste nao provaria nada — ele
+       estaria medindo o caminho antigo em vez do novo. */
+    ['CONTRAPROVA: o Git realmente NAO enxerga esse caminho',
+      artefatoSintetico.gitCego],
+    ['alteracao de artefato ja existente e detectada',
+      artefatoSintetico.alterado.observado.includes('saida/ja-existia.bin')],
+    ['remocao de artefato e detectada',
+      artefatoSintetico.removido.observado.includes('saida/ja-existia.bin')],
+    /* Sem isto o baseline teria 67 mil entradas e a observacao ficaria inutilizavel. */
+    ['node_modules fica fora: e efeito de npm ci, nao da tarefa',
+      artefatoSintetico.ignoraNodeModules],
+    /* FALHA FECHADA: declaracao sem baseline de artefatos nao pode passar por "nada escrito". */
+    ['declaracao sem baseline de artefatos devolve indisponibilidade, nao vazio',
+      observarArtefatosDaLane(undefined, laneA).disponivel === false
+      && observarArtefatosDaLane(undefined, laneA).motivo === 'DECLARACAO_SEM_BASELINE_DE_ARTEFATOS'],
+    ['lane sem baseline de artefatos marca a dimensao indisponivel',
+      observarEscritaDasLanes(declSemArtefatos).artefatosDisponivel === false],
+    /* A raiz declarada e o que separa efeito autorizado de escrita clandestina. */
+    ['raiz de artefato declarada cobre o que esta abaixo dela',
+      artefatosDeclarados({ lanes: { A: laneA }, artefatos: ['saida'] }).join() === 'A::saida'],
+    ['UNDECLARED_ARTIFACT_WRITE esta na taxonomia e BLOQUEIA integracao',
+      CLASSES_DE_COMPARACAO.includes('UNDECLARED_ARTIFACT_WRITE')
+      && CLASSES_QUE_BLOQUEIAM.includes('UNDECLARED_ARTIFACT_WRITE')],
+    /* `.env` entra por CAMINHO e nunca por conteudo: detectar escrita nao pode virar leitura
+       de segredo. A marca gravada e `tamanho:mtime`, nunca sha do conteudo. */
+    ['artefato e marcado por metadado, nunca por conteudo',
+      Object.values(artefatoSintetico.base).every((m) => m === null || /^\d+:\d+$/.test(m))],
+  ];
+
   const casosMultiLane = [
     ['só o declarado mudou -> observado qualificado por lane',
       soDeclaradoMulti.observado.join() === 'A::alvo.txt'],
@@ -1284,6 +1491,9 @@ export function executar(argv = []) {
     ['CONTRAPROVA: HEAD correto deixa a comparação emitir classe real',
       compararRodada({
         lanes: { A: laneA }, baselinePorLane: { A: shasDaLane(laneA) },
+        /* Declaracao bem formada agora inclui o baseline de artefatos ignorados. Sem ele a
+           comparacao devolve UNKNOWN_DIFFERENCE, que e a falha fechada funcionando. */
+        artefatosPorLane: { A: artefatosIgnorados(laneA) },
         baseCommitPorLane: {
           A: execFileSync('git', ['-C', laneA, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
         },
@@ -1299,6 +1509,7 @@ export function executar(argv = []) {
       const declBoa = {
         sliceId: 'Y', estado: 'VALIDATED', lanes: { A: laneA },
         baselinePorLane: { A: shasDaLane(laneA) },
+        artefatosPorLane: { A: artefatosIgnorados(laneA) },
         baseCommitPorLane: { A: execFileSync('git', ['-C', laneA, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() },
         entradas: []
       };
@@ -1575,7 +1786,7 @@ export function executar(argv = []) {
   rmSync(laneA, { recursive: true, force: true });
   rmSync(laneB, { recursive: true, force: true });
 
-  for (const [rotulo, cond] of [...sabotagens, ...casosComparacao, ...casosRetroativos, ...casosObservacao, ...casosMultiLane]) {
+  for (const [rotulo, cond] of [...sabotagens, ...casosComparacao, ...casosRetroativos, ...casosObservacao, ...casosDeArtefato, ...casosMultiLane]) {
     check(rotulo, cond, 'controle falhou');
   }
 
