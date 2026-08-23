@@ -120,3 +120,43 @@ segredo vive no repositório.
 - **Painel Cloudflare:** [link do projeto]
 - **Painel Supabase:** [link do projeto]
 - **Segurança:** ver [SECURITY.md](../SECURITY.md)
+
+## Drill de backup/restore (provado localmente — F6-07, 2026-08-23)
+
+O procedimento abaixo foi EXECUTADO nesta data contra o Postgres local (container
+`admai-pg-test`, Postgres 16), com verificação por tabela — não é um roteiro teórico.
+
+### Banco (pg_dump → restore → verificação)
+
+```bash
+# 1. Dump custom-format do banco (dentro do container)
+docker exec admai-pg-test sh -c 'pg_dump -U "$POSTGRES_USER" -d admai_dev -F c -f /tmp/drill.dump'
+
+# 2. Banco descartável e restore
+docker exec admai-pg-test sh -c 'psql -U "$POSTGRES_USER" -d postgres -qc "CREATE DATABASE admai_drill;"'
+docker exec admai-pg-test sh -c 'pg_restore -U "$POSTGRES_USER" -d admai_drill --no-owner /tmp/drill.dump'
+
+# 3. VERIFICAÇÃO por tabela (origem × restaurado) — laço sobre pg_tables comparando count(*)
+#    Resultado do drill: 27 tabelas, todas as contagens idênticas, zero erros de restore.
+#    (Armadilha real encontrada: rodar pg_restore DUAS vezes no mesmo banco gera ~175 erros
+#    "already exists" — sempre restaurar em banco recém-criado.)
+
+# 4. Limpeza
+docker exec admai-pg-test sh -c 'psql -U "$POSTGRES_USER" -d postgres -qc "DROP DATABASE admai_drill;" && rm -f /tmp/drill.dump'
+```
+
+### Uploads (tar → restore → diff)
+
+```bash
+# No diretório chaveiro-bot (Git Bash/Windows exige --force-local por causa do "C:")
+tar --force-local -czf /caminho/backup/uploads-backup.tgz uploads uploads-ponto uploads-evidencias
+tar --force-local -xzf /caminho/backup/uploads-backup.tgz -C /caminho/restore
+diff -rq uploads /caminho/restore/uploads   # idem para uploads-ponto e uploads-evidencias
+# Resultado do drill: byte a byte idêntico nos três diretórios.
+```
+
+### O que este drill NÃO cobre (continua D2 — Q-010)
+
+Produção (Supabase Free) segue **sem backup automático** — ver §3 acima. O drill prova o
+PROCEDIMENTO e as ferramentas; a cobertura real de produção depende da decisão do usuário
+(upgrade Pro/PITR ou cron de `pg_dump` contra o pooler do Supabase).

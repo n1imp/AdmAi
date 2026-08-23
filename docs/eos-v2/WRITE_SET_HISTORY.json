@@ -48561,9 +48561,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Backfill T-BILL-07 com dry-run default provado (achou lacuna real no dev), aplicacao idempotente e politica parametrizada; producao e escolha de politica = D2 (Gate 5).",
       "declaradoEm": "2026-08-23T17:26:38.273Z"
+    },
+    {
+      "sliceId": "F6-BACKUP-DRILL",
+      "titulo": "Drill local de backup/restore com verificacao por tabela + runbook atualizado",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Drill de backup/restore executado e verificado por tabela (27/27 identicas; zero erros); uploads byte a byte; runbook com os comandos provados; producao segue D2 (Q-010).",
+      "declaradoEm": "2026-08-23T17:30:37.831Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:28:52.437Z",
+  "geradoEm": "2026-08-23T17:33:40.682Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1493,15 +1493,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "Q-010"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Drill EXECUTADO: pg_dump (custom) do admai_dev -> restore em admai_drill -> verificacao POR TABELA: 27 tabelas, todas as contagens identicas, zero erros de restore; armadilha real documentada (restore duplicado gera ~175 already-exists).",
+        "Uploads: tar dos 3 diretorios (incl. o novo uploads-evidencias) -> restore -> diff byte a byte identico (--force-local no Git Bash).",
+        "Runbook ganhou a secao do drill com os comandos provados. PITR/backup de PRODUCAO permanece D2 (Q-010) — o runbook ja documenta a lacuna do Free plan."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:33:38.677Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
