@@ -120,7 +120,7 @@ describe('<MeuPainel> — F9/M1 desempenho por período', () => {
 
     /* Sem isto, os dois cards de comissão ficam sem relação visível e o técnico soma 800+300. */
     expect(await screen.findByText(/já recebeu/i)).toBeInTheDocument();
-    expect(screen.getByText(/Total gerado no período/i)).toBeInTheDocument();
+    expect(screen.getByText(/Comissão gerada no período/i)).toBeInTheDocument();
   });
 
   it('comissão: quando nada foi repassado, diz isso em vez de repetir o número em silêncio', async () => {
