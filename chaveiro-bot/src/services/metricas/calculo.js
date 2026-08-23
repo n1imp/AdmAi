@@ -2,7 +2,7 @@
  * Camada de CÁLCULO das métricas.  [Metric Foundation · P7]
  *
  * O QUE ESTE MÓDULO ENTREGA
- *   Os oito cálculos das métricas hoje classificadas `AVAILABLE_NOW` por `availability.mjs`.
+ *   Os oito cálculos das métricas hoje classificadas `AVAILABLE_NOW` por `tools/admai-delivery/metric/availability.mjs` (na raiz do repositório, não neste diretório).
  *   Funções PURAS sobre linhas simples: recebem dados, devolvem resultado. Sem Prisma, sem rede,
  *   sem relógio — as mesmas linhas produzem sempre o mesmo número, e é isso que torna os testes
  *   determinísticos em vez de aproximados.

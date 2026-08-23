@@ -1,6 +1,6 @@
 {
   "schema": "admai.delivery.run-state/1",
-  "geradoEm": "2026-08-20T12:48:05.874Z",
+  "geradoEm": "2026-08-23T04:23:36.744Z",
   "aviso": "Gerado por tools/admai-delivery/run-state.mjs. Nao editar a mao: a proxima execucao sobrescreve.",
   "fonteDeVerdadeDoEos": "docs/eos-v2/EXECUTION_STATE.md (Planning Freeze) — este arquivo complementa, nao substitui",
   "declarado": {
@@ -76,9 +76,9 @@
   },
   "observado": {
     "branch": "fix/seguranca-criticos",
-    "head": "30bf5453d847c17d88197b11c93da965406be53c",
+    "head": "aa14e3b9886942a35a7b4327efac403e57121011",
     "diffCheckLimpo": true,
-    "arquivosDeProdutoModificados": 28,
+    "arquivosDeProdutoModificados": 1,
     "modelosPrisma": 26,
     "migrations": 27,
     "modelosAusentesParaWavesFuturas": [

@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-01-DECLARADOR",
-  "titulo": "Promove declarador/fechador do write set do scratchpad para tools/",
+  "sliceId": "F0-03-06-HIGIENE",
+  "titulo": "RUN_STATE regenerado + referencia a availability desambiguada",
   "lanes": {
-    "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
+    "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:06:47.103Z",
+  "declaradoEm": "2026-08-23T04:23:21.311Z",
   "baseCommitPorLane": {
-    "HARNESS": "621f3733356d6d66aee272dfcec930996de63359"
+    "HARNESS": "aa14e3b9886942a35a7b4327efac403e57121011"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O declarador vive no scratchpad da sessao, que morre com ela. Toda mutacao do programa depende dele — e o primeiro write set. LANES deixa de ser caminho absoluto hardcoded e passa a ser derivado da localizacao do modulo; o fechamento vira CLI de primeira classe com selftest contra caminhos injetados (nunca o livro-razao real).",
+  "notaDeMetodo": "RUN_STATE.json esta 24 commits atras do HEAD e o handoff manda regenerar antes de confiar em qualquer campo observado. Os comentarios de contrato.js e calculo.js dizem 'ver availability.mjs' sem caminho — o modulo vive em tools/admai-delivery/metric/, nao ao lado, e a exploracao desta sessao o deu por inexistente por causa disso.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -551,8 +551,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a481dc11ce0a831566ce89f518f201e57118b9feab9e3966fc7b35bc1cbb0767",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "a01af35d627a8bbb6a33eaf46fd81e60f1a5e03f216e50c17ee361a00d3fc85a",
+      "docs/eos-v2/WRITE_SET.json": "2d74f51b0a95ec1baf1e787c27e86895911ae1f093ddb9a1d0ac7fdc6ce6c0c9",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "7ecc06bba6595b17c7c35fcd4426b24ad2fc5a9c4814e17f64e9cd24dc20ed61",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -605,6 +605,7 @@
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
+      "tools/admai-delivery/write-set-declarar.mjs": "b5ae466e8906651d6eb7211740f406e51e7eae427420f04d1a425807f407d9f7",
       "tools/admai-delivery/write-set-gate.mjs": "8e5a53371d5135edcc508575e51bcc8938c22280087b1c1f3b90c12594e26915",
       "tools/codex-policy/README.md": "a8eecbfd6e54a00738c65e82d5b6f663eb89a1d7f1c1cea00d4d893b77ba0047",
       "tools/codex-policy/agent-governance.test.mjs": "94b3f9165f5137b3ca4bda6cb0d8f5e8378004a47ca7df67d289470c9e3ac2aa",
@@ -1740,15 +1741,33 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/write-set-declarar.mjs",
+      "caminho": "docs/eos-v2/RUN_STATE.json",
       "precisao": "BOUNDED",
-      "proposito": "declarar + fechar + selftest, padrao flagsDoModulo da casa",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "regenerado por run-state.mjs",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/contrato.js",
+      "precisao": "BOUNDED",
+      "proposito": "caminho completo na referencia",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b0daa7e8a86479373eabae213d607006fe5c2cded86e86070ad19614976fa8bb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/calculo.js",
+      "precisao": "BOUNDED",
+      "proposito": "caminho completo na referencia",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3aabefacf6416f420fcbebeb2f0fc7f1d5282c6b4b90cf07bca9a14c04cfefbd",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:06:47.808Z",
+  "validadoEm": "2026-08-23T04:23:21.690Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1757,6 +1776,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Declarador/fechador promovido do scratchpad para tools/admai-delivery. LANES derivadas da localizacao do modulo (EOS so se a worktree irma existir no disco); fechamento e modo de primeira classe com reconciliacao validada pelo gate; provenance segue a regra do gate — HEAD movido nunca produz ORIGINAL_PRE_MUTATION. Selftest 10/10 contra caminhos injetados; o proprio fechamento desta fatia foi executado pela ferramenta promovida (prova de bootstrap). Corrigido no caminho: lerValor escondia a flag numa variavel e --nota caia em FLAG_DESCONHECIDA — a allowlist derivada so enxerga literais.",
+  "nota": "RUN_STATE regenerado apos 24 commits de defasagem (handoff mandava nao confiar no campo observado antigo). Comentarios de contrato.js e calculo.js agora apontam o caminho completo de availability.mjs — a ambiguidade fez a exploracao desta sessao dar o modulo por inexistente.",
   "aviso": "Declaracao ENCERRADA."
 }

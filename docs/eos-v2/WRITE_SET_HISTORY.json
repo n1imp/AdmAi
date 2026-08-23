@@ -46020,9 +46020,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Declarador/fechador promovido do scratchpad para tools/admai-delivery. LANES derivadas da localizacao do modulo (EOS so se a worktree irma existir no disco); fechamento e modo de primeira classe com reconciliacao validada pelo gate; provenance segue a regra do gate — HEAD movido nunca produz ORIGINAL_PRE_MUTATION. Selftest 10/10 contra caminhos injetados; o proprio fechamento desta fatia foi executado pela ferramenta promovida (prova de bootstrap). Corrigido no caminho: lerValor escondia a flag numa variavel e --nota caia em FLAG_DESCONHECIDA — a allowlist derivada so enxerga literais.",
       "declaradoEm": "2026-08-23T04:06:47.103Z"
+    },
+    {
+      "sliceId": "F0-03-06-HIGIENE",
+      "titulo": "RUN_STATE regenerado + referencia a availability desambiguada",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "RUN_STATE regenerado apos 24 commits de defasagem (handoff mandava nao confiar no campo observado antigo). Comentarios de contrato.js e calculo.js agora apontam o caminho completo de availability.mjs — a ambiguidade fez a exploracao desta sessao dar o modulo por inexistente.",
+      "declaradoEm": "2026-08-23T04:23:21.311Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:14:37.251Z",
+  "geradoEm": "2026-08-23T04:26:06.598Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

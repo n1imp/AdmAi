@@ -39,7 +39,7 @@ export const CAMPOS_DA_METRICA = Object.freeze([
 ]);
 
 /**
- * Classificação de disponibilidade. DERIVADA do schema — ver `availability.mjs`.
+ * Classificação de disponibilidade. DERIVADA do schema — ver `tools/admai-delivery/metric/availability.mjs` (raiz do repositório; a exploração de 2026-08-23 procurou o módulo AO LADO deste arquivo e o deu por inexistente).
  * `INSUFFICIENT_DATA` e `DEFINITION_CONFLICT` são desfechos legítimos, não falhas a esconder.
  */
 export const CLASSES_DE_DISPONIBILIDADE = Object.freeze([
