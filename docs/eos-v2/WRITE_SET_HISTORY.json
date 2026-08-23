@@ -48630,7 +48630,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "Gate 6 adversarial: 3 bloqueantes + 1 P2 do Codex (thread 01a02fb6) VERIFICADOS e corrigidos — paywall cobre Google/WhatsApp, 2FA nao contornavel por magic-link/OAuth/phone2fa, reset revoga refresh, checkout recusa 2a assinatura. 6/6 novos + 33 de regressao (auth/billing/2fa). Dois auto-defeitos pegos pelos testes antes do commit (guard depois do getStripe; tipo de token errado).",
-      "declaradoEm": "2026-08-23T21:03:22.046Z"
+      "declaradoEm": "2026-08-23T21:03:22.046Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao GATE6-CORRECOES",
+        "justificativa": "A declaracao listou services/billing.js (o guard) mas o achado #4 tambem exigiu 1 hunk em routes/billing.js (traduzir ASSINATURA_JA_ATIVA em 409 em vez de 500) — parte inseparavel da mesma correcao, omitida na declaracao. Conteudo provado (6/6 + 33 regressao) e commitado (2f39055).",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Correcao que lanca erro tipado num servico declara TAMBEM o handler de rota que o traduz — os dois lados do contrato entram juntos na declaracao."
+      }
     }
   ],
   "geradoEm": "2026-08-23T21:43:15.201Z",
