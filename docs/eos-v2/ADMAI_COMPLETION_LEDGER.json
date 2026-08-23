@@ -2111,6 +2111,32 @@
       "nextAction": "Em F6 (SEO/performance): self-host das fontes e re-medir a matriz.",
       "revisitCondition": null,
       "snapshotRef": null
+    },
+    {
+      "workId": "P2-CHECKOUT-CONCORRENTE",
+      "phase": "F6",
+      "domain": "produto",
+      "description": "Cobranca dupla por duas Checkout Sessions abertas ANTES do 1o webhook: ambas veem stripeSubId=null e passam pelo guard. O vetor original (assinatura ja viva -> novo checkout) esta fechado; este residual exige idempotencia/estado de sessao pendente.",
+      "dependencies": [],
+      "priority": "P2",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": "CODEX",
+      "status": "DEFERRED_BY_SCOPE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "Gate 6 adversarial rodada 1-3, thread 01a02fb6"
+      ],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Guard fecha assinatura persistida (incl. paused); a corrida pre-webhook permanece — reconhecida pelo Codex como P2 aceitavel apos registro formal."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-23T22:51:56.000Z",
+      "nextAction": "Idempotencia por chave de sessao pendente OU checar sessions abertas no Stripe antes de criar.",
+      "revisitCondition": "Primeira assinatura duplicada observada, OU aumento de concorrencia/multiplos admins no checkout, OU antes de automatizar totalmente a cobranca.",
+      "snapshotRef": null
     }
   ]
 }
