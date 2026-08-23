@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SCOPE-F3A-RECONCILIACAO",
-  "titulo": "Reconcilia registries com a realidade pos-correcao",
+  "sliceId": "SCOPE-F3B-FREEZE",
+  "titulo": "Materializa ADMAI_SCOPE_FREEZE e o handoff do EOS",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T02:25:45.805Z",
+  "declaradoEm": "2026-08-23T02:29:00.002Z",
   "baseCommitPorLane": {
-    "HARNESS": "dbee623bea3b3766da92391bc2aff099a97fcf0e"
+    "HARNESS": "633a37f02be071aa1d758aff2aa8a3cacfb64d1e"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Dois achados compartilhados passam a CLOSED com prova; oito estados por viewport divergiam da medicao e sao corrigidos. Classificacoes KEEP/REFINE/REDESIGN permanecem: BUG_FIX != VISUAL_REDESIGN.",
+  "notaDeMetodo": "Numeros derivados dos registries em vez de digitados. SCOPE_CLOSED nao exige gap fechado: isso seria RELEASE_READY.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -549,8 +549,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "2bb908e0fe3cd89c32ef758a4b0a2ba348c79d434106b90834198ce12495719a",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "c4da7c18539322f8123b6394b68375e3821ee85046f453eb7f54ee68b465209b",
+      "docs/eos-v2/WRITE_SET.json": "afcddfc4fdb12023a8393428e5e4d9f4bed0c301e164bd08c4eecaa3cdaa4be0",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "450eaaeb6dab79f820a59fed08ba858e18111555a5dc2d7499098da6280be13a",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -599,7 +599,7 @@
       "tools/admai-delivery/run-state.mjs": "db4c10880fbb3cfc11461923402054cec8614e6acc7fb97de199cb351cc5b7dc",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "9124fc0d4f80fd87b3f177ea34739c408e6e9976863eb6bd7fa038fa141cc895",
+      "tools/admai-delivery/surface-registry.mjs": "f5cbb6aaae2f4b3951133617601ae88768621cc8abd48bd25df115ca609dd379",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -1741,15 +1741,24 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/surface-registry.mjs",
+      "caminho": "docs/agent-environment/ADMAI_SCOPE_FREEZE.md",
       "precisao": "BOUNDED",
-      "proposito": "status dos achados, estados por viewport e controle de fechamento",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9124fc0d4f80fd87b3f177ea34739c408e6e9976863eb6bd7fa038fa141cc895",
+      "proposito": "congelamento de escopo",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md",
+      "precisao": "BOUNDED",
+      "proposito": "handoff para retomar o EOS sem reabrir o AdmAi",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T02:25:46.311Z",
+  "validadoEm": "2026-08-23T02:29:00.492Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1758,6 +1767,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "GAP-UX-CONSENT-01 e GAP-UX-NAV-DIFERIDA-01 passam a CLOSED, cada um com correcao e prova de fechamento escritas — controle novo reprova CLOSED sem prova. Oito estados por viewport divergiam da medicao e foram corrigidos contra a varredura de 152 capturas com instrumento integro. Classificacoes KEEP/REFINE/REDESIGN inalteradas: BUG_FIX != VISUAL_REDESIGN.",
+  "nota": "ADMAI_SCOPE_FREEZE materializado com numeros derivados dos registries. ADMAI_SCOPE_CLOSED declarado: escopo conhecido e congelado, o que NAO e RELEASE_READY. EOS_NEXT_SESSION_HANDOFF materializado com DO_NOT_REOPEN_ADMAI_SCOPE_WITHOUT_D2. Zero slices do EOS despachadas.",
   "aviso": "Declaracao ENCERRADA."
 }
