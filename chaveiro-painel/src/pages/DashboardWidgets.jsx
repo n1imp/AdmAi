@@ -29,9 +29,10 @@ function WidgetTecnicos({ dados }) {
         <span className="w-5 h-px bg-accent-400" /> DESEMPENHO POR TÉCNICO
       </h2>
       {/* Gráfico decorativo: a lista abaixo é a alternativa textual (O-11). */}
-      <div className="card p-3 mb-3" aria-hidden="true">
+      <div className="card p-3 mb-3" aria-hidden="true" inert="">
         <ResponsiveContainer width="100%" height={dados.porTecnico.length * 48 + 20}>
           <BarChart
+            accessibilityLayer={false} /* focável-porém-oculto: ver LineChart abaixo [SL-01] */
             layout="vertical"
             data={dados.porTecnico}
             margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
@@ -84,9 +85,9 @@ function WidgetLocal({ dados }) {
         <MapPin size={14} className="text-accent-300" /> RECEITA POR LOCAL
       </h2>
       <div className="card p-3">
-        <div aria-hidden="true">
+        <div aria-hidden="true" inert="">
           <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
+            <PieChart accessibilityLayer={false} /* focável-porém-oculto [SL-01] */>
               <Pie
                 data={dados.porLocal}
                 dataKey="receita"
@@ -135,11 +136,16 @@ function WidgetEvolucao({ dados }) {
         <span className="w-5 h-px bg-accent-400" /> EVOLUÇÃO DIÁRIA
       </h2>
       <div className="card p-3">
-        <div aria-hidden="true">
+        <div aria-hidden="true" inert="">
           <ResponsiveContainer width="100%" height={160}>
             <LineChart
               data={dados.evolucaoDiaria}
               margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+              /* O wrapper já é aria-hidden com alternativa textual (O-11) — mas o recharts
+                 adicionava tabindex/role no svg, criando FOCÁVEL-PORÉM-OCULTO: o teclado parava
+                 num elemento que o leitor de tela não anuncia. Conteúdo escondido nunca pode
+                 receber foco. [SL-01] */
+              accessibilityLayer={false}
             >
               <CartesianGrid stroke="#262B34" strokeDasharray="3 3" />
               <XAxis
@@ -243,7 +249,7 @@ export default function DashboardWidgets({ dados }) {
                   aria-label={`Mover ${w.label} para cima`}
                   className={btnControle}
                 >
-                  <ArrowUp size={16} aria-hidden="true" />
+                  <ArrowUp size={16} aria-hidden="true" inert="" />
                 </button>
                 <button
                   type="button"
@@ -252,7 +258,7 @@ export default function DashboardWidgets({ dados }) {
                   aria-label={`Mover ${w.label} para baixo`}
                   className={btnControle}
                 >
-                  <ArrowDown size={16} aria-hidden="true" />
+                  <ArrowDown size={16} aria-hidden="true" inert="" />
                 </button>
                 <button
                   type="button"
@@ -262,9 +268,9 @@ export default function DashboardWidgets({ dados }) {
                   className={btnControle}
                 >
                   {ocultos.has(w.id) ? (
-                    <EyeOff size={16} aria-hidden="true" />
+                    <EyeOff size={16} aria-hidden="true" inert="" />
                   ) : (
-                    <Eye size={16} aria-hidden="true" />
+                    <Eye size={16} aria-hidden="true" inert="" />
                   )}
                 </button>
               </div>

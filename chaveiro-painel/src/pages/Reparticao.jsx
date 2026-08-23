@@ -77,8 +77,11 @@ export default function Reparticao() {
         <div className="card flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="kpi-label block mb-1.5">De</label>
+              <label htmlFor="reparticao-de" className="kpi-label block mb-1.5">
+                De
+              </label>
               <input
+                id="reparticao-de"
                 type="date"
                 value={inicio}
                 onChange={(e) => setInicio(e.target.value)}
@@ -86,8 +89,11 @@ export default function Reparticao() {
               />
             </div>
             <div>
-              <label className="kpi-label block mb-1.5">Até</label>
+              <label htmlFor="reparticao-ate" className="kpi-label block mb-1.5">
+                Até
+              </label>
               <input
+                id="reparticao-ate"
                 type="date"
                 value={fim}
                 onChange={(e) => setFim(e.target.value)}

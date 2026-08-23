@@ -85,6 +85,7 @@ function CampoSenha({ label, valor, onChange, autoComplete }) {
         <button
           type="button"
           onClick={() => setMostrar(!mostrar)}
+          aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors"
         >
           {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}

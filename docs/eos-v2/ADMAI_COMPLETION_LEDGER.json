@@ -512,15 +512,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-A11Y-NOME-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "semNome=0 nas 5 superficies reais x 4 viewports (medida corrigida)",
+        "axe 13/13 + pages 85/85",
+        "achado CLOSED no registry com evidencia corrigida (13 superficies era inflacao da sonda)"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T06:13:52.202Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

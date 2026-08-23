@@ -265,6 +265,20 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'todo elemento interativo tem nome acessível por texto, aria-label ou title',
       'a sonda reporta `botaoSemNome: 0` nas superfícies do conjunto afetado',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'A evidência original estava INFLADA por defeito da própria sonda: a medida não resolvia ' +
+      'label[for], aria-labelledby, label envolvente nem placeholder — inputs corretamente ' +
+      'associados (primitive Field) eram falsos positivos em série. Medida corrigida ' +
+      '(SONDA-NOME-ACESSIVEL) e conjunto REAL: 5 arquivos, 10 controles — 5 olhos de senha sem ' +
+      'aria-label (o do Login já tinha; inconsistência de autoria), De/Até e o formulário de ' +
+      'técnico sem associação (o helper Campo renderizava a label como IRMÃ; agora envolve), e ' +
+      'gráficos do recharts focáveis dentro de wrapper decorativo (focável-porém-oculto; ' +
+      'accessibilityLayer desligado + inert nos wrappers).',
+    provaDeFechamento:
+      'semNome=0 nas 5 superfícies afetadas × 4 viewports com a medida corrigida; toda a família ' +
+      'auth e o papel funcionário medem 0; foco bloqueado sob inert provado por CDP no navegador ' +
+      'real (g.focus() não move o foco); suítes do painel verdes.',
   },
   {
     id: 'GAP-UX-ALVO-01',

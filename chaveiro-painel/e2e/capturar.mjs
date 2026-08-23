@@ -83,8 +83,36 @@ export const EXPRESSAO_SONDA = String.raw`(() => {
     return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0';
   };
 
+  /* NOME ACESSÍVEL, resolvido como o leitor de tela resolve — não como o innerText vê.
+     A primeira versão de 'botaoSemNome' só olhava texto/aria-label/title e marcava como sem nome
+     TODO input com label corretamente associada (label[for], aria-labelledby, label envolvente) —
+     o primitive Field, que faz a associação certa, era falso positivo em série. Corrigir a medida
+     é o que separa "13 superfícies quebradas" de "as ~7 que realmente estão". [SONDA-NOME-ACESSIVEL]
+     Nota de re-baseline: os semNome do inventário estavam INFLADOS para inputs; oclusão, alvo e
+     truncamento não passam por aqui e permanecem comparáveis. */
+  const temNomeAcessivel = (el) => {
+    if (txt(el)) return true;
+    if (el.getAttribute('aria-label') || el.getAttribute('title')) return true;
+    const labelledby = el.getAttribute('aria-labelledby');
+    if (labelledby && labelledby.split(/\s+/).some((id) => txt(document.getElementById(id) || {}))) return true;
+    if (el.id) {
+      const assoc = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+      if (assoc && txt(assoc)) return true;
+    }
+    const envolvente = el.closest('label');
+    if (envolvente && txt(envolvente)) return true;
+    if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) return true; // fraco, mas é nome
+    return false;
+  };
+
   const SEL = 'button, a[href], input, select, textarea, [role=button], [tabindex]:not([tabindex="-1"])';
-  const interativos = [...document.querySelectorAll(SEL)].filter(visivel);
+  /* Subárvore inert é NÃO-INTERATIVA por especificação: focus() não move o foco e o conteúdo
+     sai da árvore de acessibilidade. Provado por CDP antes desta emenda — a sonda acusava um
+     g[tabindex] do recharts DENTRO de wrapper inert, que o navegador real já não focava.
+     [SONDA-INERT] */
+  const interativos = [...document.querySelectorAll(SEL)]
+    .filter(visivel)
+    .filter((el) => !el.closest('[inert]'));
 
   /* Elementos tirados do fluxo: são eles que podem cobrir conteúdo sem reservar espaço. */
   const fixos = [...document.querySelectorAll('*')].filter((el) => {
@@ -168,8 +196,18 @@ export const EXPRESSAO_SONDA = String.raw`(() => {
     semDados: /nenhum|nada (aqui|encontrad)|sem (dados|resultado|registro)|vazio|comece/i.test(corpo),
     /* a11y barato e determinístico; o axe completo já roda em suíte própria. */
     imgSemAlt: [...document.querySelectorAll('img:not([alt])')].filter(visivel).length,
-    botaoSemNome: interativos.filter((el) =>
-      !txt(el) && !el.getAttribute('aria-label') && !el.getAttribute('title')).length,
+    botaoSemNome: interativos.filter((el) => !temNomeAcessivel(el)).length,
+    /* ADITIVO [F2-SONDA-LISTAS]: identifica CADA controle sem nome por tag + icone lucide +
+       contexto do pai, para a correcao ser cirurgia e nao cacada. Nao altera medida existente. */
+    semNomeLista: interativos
+      .filter((el) => !temNomeAcessivel(el))
+      .map((el) => ({
+        tag: el.tagName.toLowerCase(),
+        icone: el.querySelector('svg[class*="lucide"]')?.getAttribute('class')?.match(/lucide-([a-z-]+)/)?.[1] ?? null,
+        pai: (el.closest('[class]')?.className ?? '').toString().slice(0, 40),
+        contexto: txt(el.parentElement ?? el).slice(0, 40),
+      }))
+      .slice(0, 12),
     palavras: corpo.split(' ').filter(Boolean).length,
   };
 })()`;

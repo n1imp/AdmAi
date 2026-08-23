@@ -131,6 +131,7 @@ export default function TrocarSenha() {
                 <button
                   type="button"
                   onClick={() => setMostrarPin(!mostrarPin)}
+                  aria-label={mostrarPin ? 'Ocultar PIN' : 'Mostrar PIN'}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
                 >
                   {mostrarPin ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -157,6 +158,7 @@ export default function TrocarSenha() {
                 <button
                   type="button"
                   onClick={() => setMostrarNova(!mostrarNova)}
+                  aria-label={mostrarNova ? 'Ocultar nova senha' : 'Mostrar nova senha'}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
                 >
                   {mostrarNova ? <EyeOff size={18} /> : <Eye size={18} />}

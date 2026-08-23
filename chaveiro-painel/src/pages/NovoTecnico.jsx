@@ -38,12 +38,18 @@ const NIVEIS = [
 const ehClt = (m) => m === 'clt' || m === 'clt_meio' || m === 'clt_12x36';
 
 function Campo({ label, Icon, children, dica }) {
+  /* A label ENVOLVE o controle (associação implícita) em vez de ser irmã dele. Antes, o campo de
+     data era o único do formulário sem nome acessível — os demais só "passavam" porque
+     placeholder vale como nome, que é o nome mais fraco que existe. Envolver conserta o
+     formulário INTEIRO de uma vez, sem espalhar htmlFor/id por dezesseis campos. [SL-01] */
   return (
     <div>
-      <label className="kpi-label block mb-1.5 flex items-center gap-1">
-        {Icon && <Icon size={11} />} {label}
+      <label className="block">
+        <span className="kpi-label mb-1.5 flex items-center gap-1">
+          {Icon && <Icon size={11} />} {label}
+        </span>
+        {children}
       </label>
-      {children}
       {dica && <p className="text-muted text-xs mt-1">{dica}</p>}
     </div>
   );
