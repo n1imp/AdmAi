@@ -324,15 +324,17 @@ export default function Login() {
       </aside>
 
       {/* ── Painel direito (formulário) ──────────────────────────────────── */}
-      <div className="flex flex-col items-center justify-center px-6 py-10 min-h-dvh lg:min-h-0 relative">
+      <div className="flex flex-col items-center justify-center px-6 py-6 lg:py-10 min-h-dvh lg:min-h-0 relative">
         {/* halo suave de fundo no mobile */}
         <div className="lg:hidden absolute -top-24 right-0 w-80 h-80 rounded-full bg-accent-400/10 blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-[400px] animate-rise relative">
-          {/* Marca (mobile) */}
-          <div className="lg:hidden flex flex-col items-center gap-3 mb-8">
-            <div className="w-16 h-16 rounded-xl bg-accent-400/15 border border-accent-400/30 flex items-center justify-center shadow-glow">
-              <KeyRound size={30} className="text-accent-300" strokeWidth={2} />
+          {/* Marca (mobile) — em LINHA: o bloco vertical gastava ~140px antes do primeiro campo
+              e empurrava o submit do cadastro para baixo da dobra em 360/800. Em lg+ a marca
+              vive no painel esquerdo e nada disto renderiza. [SL-06] */}
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-accent-400/15 border border-accent-400/30 flex items-center justify-center shadow-glow">
+              <KeyRound size={20} className="text-accent-300" strokeWidth={2} />
             </div>
             <p className="font-display font-bold text-2xl tracking-wide text-white">
               ADM<span className="text-accent-400">AI</span>

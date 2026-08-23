@@ -48274,9 +48274,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Crisp atras do consentimento (fail-closed, sabotagem mordida) + controle de revogacao do rodape com ciclo completo provado por CDP no app real. 210/210. Rede real = F4.4.",
       "declaradoEm": "2026-08-23T07:15:57.975Z"
+    },
+    {
+      "sliceId": "SL-06-LOGIN-CADASTRO",
+      "titulo": "Dobra do cadastro em 360/390 — marca em linha no mobile; MUST_REVIEW via Codex REVISOR delta",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Dobra do cadastro: -108px no mobile via marca em linha; submit de volta a dobra em 360/390. MUST_REVIEW: Codex REVISOR APROVADO (thread 01a02e48). Ressalva do revisor (metrica mede topo, nao visibilidade integral) coberta pela captura visual anexa.",
+      "declaradoEm": "2026-08-23T10:57:38.489Z"
     }
   ],
-  "geradoEm": "2026-08-23T10:54:05.877Z",
+  "geradoEm": "2026-08-23T11:06:30.608Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

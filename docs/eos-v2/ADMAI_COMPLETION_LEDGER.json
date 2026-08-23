@@ -653,13 +653,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Mandato triplo: residuais de sonda e campos-sob-banner ja mediam ZERO (fatias anteriores); residuo real era a dobra do cadastro.",
+        "Marca mobile em linha + py-6 <lg: alturaDoc 1499->1391 (360) e 1464->1356 (390); submit CRIAR CONTA saiu da lista abaixoDaDobra nos dois viewports; desktop intocado (bytes identicos de medicao).",
+        "Painel 210/210. MUST_REVIEW cumprido: Codex REVISOR delta APROVADO, thread 01a02e48-14ff-7050-81b3-e21309bbaf6e; ressalva do revisor registrada: abaixoDaDobra mede topo do controle, nao visibilidade integral — captura visual 360 anexada em telas/sl06."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:06:28.760Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
