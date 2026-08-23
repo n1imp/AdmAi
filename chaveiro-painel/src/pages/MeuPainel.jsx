@@ -193,7 +193,7 @@ export default function MeuPainel() {
           onClick={atualizarManual}
           disabled={atualizando}
           aria-label="Atualizar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          className="w-11 h-11 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
         >
           <RefreshCw size={17} className={atualizando ? 'animate-spin' : ''} />
         </button>
@@ -245,7 +245,7 @@ export default function MeuPainel() {
               </div>
             </div>
             <KpiCard
-              label="Total gerado no período"
+              label="Comissão gerada no período"
               valor={formatarMoeda(dados.comissaoGanha)}
               icon={HandCoins}
               cor="indigo"
@@ -316,7 +316,7 @@ export default function MeuPainel() {
                 type="button"
                 onClick={() => setPeriodo(p.value)}
                 aria-pressed={periodo === p.value}
-                className={`px-3 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
+                className={`alvo-toque px-3 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
                   periodo === p.value
                     ? 'bg-accent-400 text-dark-950'
                     : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'

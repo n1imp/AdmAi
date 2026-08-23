@@ -675,7 +675,7 @@ export const CLASSIFICADAS = Object.freeze({
       'produto. Estrutura permanece; o que muda é reserva de espaço, alvo de toque e a paleta.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_CADASTRO: {
     classificacao: 'REFINE',
@@ -686,7 +686,7 @@ export const CLASSIFICADAS = Object.freeze({
       'está certo e a hierarquia funciona.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/recuperar-senha': {
     classificacao: 'REFINE',
@@ -696,7 +696,7 @@ export const CLASSIFICADAS = Object.freeze({
       '844px. O cabeçalho ausente virou GAP-UX-CABECALHO-01, compartilhado com outras seis.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_REDEFINIR_SENHA: {
     classificacao: 'REFINE',
@@ -745,7 +745,7 @@ export const CLASSIFICADAS = Object.freeze({
       'GAP-UX-CABECALHO-01 junto das outras seis telas de auth que têm a mesma causa.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/convite/:token': {
     classificacao: 'REFINE',
@@ -755,7 +755,7 @@ export const CLASSIFICADAS = Object.freeze({
       'próprio é de conteúdo: não diz com clareza o que aconteceu nem o que fazer em seguida.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/trocar-senha': {
     classificacao: 'REFINE',
@@ -821,46 +821,44 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   HOME_LANDING: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'A face pública do produto, e ela se sustenta: herói legível, promessa concreta ("registre ' +
-      'serviços pelo WhatsApp"), CTA primário acima da dobra nos QUATRO viewports, secundário ' +
-      '"Já tenho conta" ao lado, e blocos de recurso abaixo. A sonda apontou "CRIAR MINHA CONTA" ' +
-      'sob a dobra — a captura mostrou que é o CTA de rodapé, e não o principal; medida sozinha ' +
-      'teria produzido um achado falso. O que resta é real e menor: 8 alvos abaixo de 40px em ' +
-      '390 e o banner cobrindo a primeira fileira de cards.',
+      'RECLASSIFICADA (SL-11). Os dois residuos morreram medidos: alvos <40px zerados pela ' +
+      'varredura de SL-02 e o banner passou a reservar espaco (CONSENT-01). SL-09 trouxe Aurora ' +
+      'e CTA compacto no desktop. Sonda sl09: peq=0 e overflowX=0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   HOME_DONO: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Observada nos quatro viewports. Hierarquia boa: lucro do período em destaque com margem, ' +
-      'depois a grade de KPIs. Três defeitos: rótulos de KPI que quebram em duas linhas ' +
-      '("RECEITA LÍQUIDA", "CUSTO MATERIAL") desalinham a base dos valores na mesma fileira; ' +
-      'endereços truncados na lista de serviços recentes; e ausência de estado vazio guiado — ' +
-      'com empresa nova tudo mostra R$ 0,00 sem dizer o que fazer em seguida.',
+      'RECLASSIFICADA (SL-11). Tres defeitos, tres correcoes provadas: rotulo de KPI reserva 2 ' +
+      'linhas (min-h-[2lh]) e a base dos valores alinha sem truncar (GAP-UI-03 preservado); ' +
+      'linhas truncadas da lista de recentes ganharam title com o dado completo (detalhe a um ' +
+      'clique); periodo sem servico mostra vazio GUIADO com CTA e mantem os zeros visiveis ' +
+      '(unit 2 casos: aparece com 0, some com dados). Sonda: peq=0, ocluidosPerm=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   HOME_GESTOR: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Boa tela: operação do dia, filtro de período, quatro KPIs, aprovações pendentes com ' +
-      'atalho e presença do time ao vivo. O banner cobre "Presença do time" em 390px — mesmo ' +
-      'defeito sistêmico das demais.',
+      'RECLASSIFICADA (SL-11). O banner reserva espaco desde CONSENT-01 — sonda desta fatia: ' +
+      'ocluidosPermanentes=[] em 360/390 com o seed carregado. "Ver todos (3)" (controle que so ' +
+      'renderiza com pendencia, invisivel na varredura de SL-02) recebeu alvo-toque-linha: peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   HOME_FUNCIONARIO: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Observada em 360 e 390 antes e depois das correções GAP-UI-03 e GAP-UI-04. Rótulos e ' +
-      'semântica corrigidos; permanece a oclusão pelo banner e a duplicação visual entre ' +
-      '"Comissão a receber" e "Total gerado", que hoje só se distinguem pelo texto de apoio.',
+      'RECLASSIFICADA (SL-11). Oclusao zerada (CONSENT-01, medida aqui de novo). A dupla ' +
+      '"Comissao a receber"/"Total gerado" se desfez pela precisao: o segundo card agora diz ' +
+      '"Comissao gerada no periodo" — mesma metrica, nome verdadeiro. Chips de periodo e botao ' +
+      'de atualizar a 44px (controles de estado que SL-02 nao viu renderizados): peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
@@ -868,12 +866,11 @@ export const CLASSIFICADAS = Object.freeze({
 
   /* ── Primeiro acesso: três superfícies em sequência ───────────────────── */
   PRIMEIRO_ACESSO: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'O passo de consentimento. Ele funciona: aparece, é legível, tem as duas escolhas ' +
-      'separadas e um link para saber mais. É também a causa única do achado mais espalhado do ' +
-      'inventário — cobre conteúdo em 35 superfícies porque é fixo e não reserva espaço. REFINE, ' +
-      'e não REDESIGN: o que precisa mudar é o encaixe no layout, não a tela.',
+      'RECLASSIFICADA (SL-11). A causa unica (fixo sem reservar espaco) fechou em CONSENT-01 ' +
+      'com prova de runtime, e SL-05 somou a revogacao prometida pela politica. O passo em si ' +
+      'ja estava certo — era o encaixe, e o encaixe mede zero oclusao em todo o produto. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
@@ -891,13 +888,11 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   TOUR_GUIADO: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Passo 1 de 7 observado: título, explicação, contador de progresso, Voltar/Próximo, X e ' +
-      'fundo escurecido. Nunca inicia sozinho, o que preserva a correção de GAP-UI-02. Dois ' +
-      'defeitos: "Voltar" fica habilitado no primeiro passo, e um passo mira ' +
-      '`a[href="/configuracao/whatsapp"]` (TourGuide.jsx:111) — link que /configuracao não ' +
-      'renderiza, porque marca WhatsApp como "em breve".',
+      'RECLASSIFICADA (SL-11). Os dois defeitos fecharam: o passo do WhatsApp mira ' +
+      'a[href=/configuracao/whatsapp] que AGORA existe (SL-10, unit do hub), e o primeiro passo ' +
+      'nao renderiza mais "Voltar" (showButtons por passo — botao que mentia). ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),

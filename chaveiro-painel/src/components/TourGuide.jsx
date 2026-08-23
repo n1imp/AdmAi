@@ -245,7 +245,12 @@ export function startTour({ force = false, navigate } = {}) {
     nextBtnText: 'Próximo',
     prevBtnText: 'Voltar',
     doneBtnText: 'Concluir',
-    steps: PASSOS.map((p) => ({ element: p.element, popover: p.popover })),
+    /* O primeiro passo não tem para onde voltar — renderizar "Voltar" habilitado ali é um
+       botão que mente. driver.js aceita showButtons por passo. [SL-11] */
+    steps: PASSOS.map((p, i) => ({
+      element: p.element,
+      popover: i === 0 ? { ...p.popover, showButtons: ['next', 'close'] } : p.popover,
+    })),
     // Tomamos controle do avançar/voltar para sincronizar a navegação de abas.
     onNextClick: () => irPara((instanciaAtiva?.getActiveIndex() ?? 0) + 1),
     onPrevClick: () => irPara((instanciaAtiva?.getActiveIndex() ?? 0) - 1),

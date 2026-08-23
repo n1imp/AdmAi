@@ -133,10 +133,15 @@ function WidgetOperacao() {
           {dados.map((s) => (
             <Row key={s.id} as={Link} to={`/servicos?servico=${s.id}`} className="last:!border-b-0">
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-white text-sm truncate">
+                {/* O truncate é deliberado (widget compacto, detalhe a um clique) — o title
+                    entrega o texto completo sem quebrar a densidade. [SL-11] */}
+                <p
+                  className="font-semibold text-white text-sm truncate"
+                  title={s.tecnico?.nome ?? undefined}
+                >
                   {s.tecnico?.nome ?? 'Sem técnico'}
                 </p>
-                <p className="text-muted text-xs truncate">
+                <p className="text-muted text-xs truncate" title={s.local}>
                   {s.local} · {formatarData(s.criadoEm)}
                 </p>
               </div>

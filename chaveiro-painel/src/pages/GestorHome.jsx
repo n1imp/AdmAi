@@ -279,7 +279,10 @@ export default function GestorHome() {
           <h2 id="servicos-recentes-titulo" className="section-label">
             <span className="w-5 h-px bg-accent-400" /> SERVIÇOS RECENTES
           </h2>
-          <Link to="/servicos" className="text-xs text-accent-300 hover:text-accent-400">
+          <Link
+            to="/servicos"
+            className="alvo-toque-linha px-2 text-xs text-accent-300 hover:text-accent-400"
+          >
             Ver todos{total ? ` (${total})` : ''}
           </Link>
         </div>

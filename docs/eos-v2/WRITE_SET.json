@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SL-09B-IDENTIDADE-FECHAMENTO",
-  "titulo": "Fechamento de GAP-UX-IDENTIDADE-01 com a prova da jornada (trabalho feito em SL-09)",
+  "sliceId": "SL-11-HOMES",
+  "titulo": "Cluster homes/dashboard: vazio guiado, base dos KPIs, rotulo ambiguo, tour passo 1",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T11:33:57.409Z",
+  "declaradoEm": "2026-08-23T11:37:56.829Z",
   "baseCommitPorLane": {
-    "HARNESS": "6713e5928c3e92f22da0bc262841c326b5cdc8db"
+    "HARNESS": "da96157302f216286f84483cf59a6a20e3022d11"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "SL-09 matou a causa (lista PUBLIC_SURFACES); este conjunto so mede a jornada do criterio (Landing -> login -> recuperar-senha -> termos sem troca de paleta) e grava o fechamento no registry.",
+  "notaDeMetodo": "Residuos REAIS do cluster (o resto ja caiu com CONSENT/SL-02/03/10 e sera provado por sonda no flip): (1) Dashboard sem guia com empresa zerada -> EstadoVazio com CTA; (2) rotulo de KPI em 2 linhas desalinha a base dos valores -> min-h-[2lh] SEM truncar (preserva GAP-UI-03); (3) lista de recentes trunca endereco sem via de acesso ao dado -> title com o texto completo (detalhe fica a um clique); (4) MeuPainel: 'Total gerado' mostrando comissaoGanha e ambiguo -> 'Comissao gerada no periodo'; (5) tour passo 1 com Voltar habilitado -> primeiro passo sem botao Voltar. Flip das 6 classificacoes do cluster com prova nova. EXPANSAO AUTORIZADA (antes de escrever): GestorHome.jsx — a sonda da fatia achou alvos <40px que SL-02 mediu como zero porque os controles dependem de ESTADO (Ver todos so renderiza com aprovacao pendente; o seed agora tem 3). Mesma classe GAP-UX-ALVO-01, mesma correcao alvo-toque, na fatia dona do cluster homes.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -566,8 +566,8 @@
       "docs/eos-v2/RUN_STATE.json": "a3d7021ac0a003ebf648ecb9837eba3ec4fe4cbc38d189c1339d573cb4ca8bb2",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a13cb611e68388fae658c35453496ee91015e295b153f34a9d22a58f40f57490",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "cb2818bdaa955ad71e300c8d00126513bde9a22b45a2351d1a9f425f81532681",
+      "docs/eos-v2/WRITE_SET.json": "3642ef1fdf17068538a969dfe2adbebdd20367da97b51c0a2d5c952707a9c6dd",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "6e384e8da23ef72d1dfefdce9d377bda993c4fcce279a290b16ec115da25376b",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -617,7 +617,7 @@
       "tools/admai-delivery/run-state.mjs": "3139f7b4a4f91ddf92c19baf41fa732ba727131daa087b8c169bfea973857502",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "a0718415a452b52ebae68ec049ff8cc20261e09560814c404b2e9905636b08d1",
+      "tools/admai-delivery/surface-registry.mjs": "fc9111b3c0b1779dac29a7083cabff1b0a7229a364be96dba04ae4df7a4b29b1",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -2336,23 +2336,83 @@
   "entradas": [
     {
       "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Dashboard.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "estado vazio guiado com zero servicos no periodo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c0d98f0eb10f650dbdae7afdadced9d27cc1c588a18691aa3a890a203e0daa4b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/DashboardParts.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "kpi-label reserva 2 linhas: base dos valores alinhada",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ff46eb22569c816aba76992f70f92939ec24e148d43e4286a68ff09b8c380547",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/DashboardWidgetsOps.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "title no nome e no endereco truncados da lista de recentes",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "afee1bea406a6218a0b8da32c8a007cbecafdc089bd0727c232daa67efabe0d3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/MeuPainel.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "rotulo preciso: Comissao gerada no periodo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "60d52b95a09908583bc68bced6b66760cd37dbffeda97be159e0410ae7972b7a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/TourGuide.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "passo 1 sem Voltar",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a6188bb97d3c95b652ae5e4a8ea6342d1e14e7e16ace19acf6bd3d2645fccd1f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Dashboard.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "unit do vazio guiado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6dc1ba511a0d3e3fd6e19cfe9308d9175c3773f7d5318a4074ffe5aa907bdec9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
       "caminho": "tools/admai-delivery/surface-registry.mjs",
       "precisao": "BOUNDED",
-      "proposito": "status CLOSED com correcao e prova",
+      "proposito": "flip das 6 classificacoes do cluster para KEEP com prova",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a0718415a452b52ebae68ec049ff8cc20261e09560814c404b2e9905636b08d1",
+      "shaNaDeclaracao": "fc9111b3c0b1779dac29a7083cabff1b0a7229a364be96dba04ae4df7a4b29b1",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T11:33:57.624Z",
+  "validadoEm": "2026-08-23T11:37:57.061Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "expansoesAutorizadas": [
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/GestorHome.jsx"
+    }
+  ],
+  "comparacao": "AUTHORIZED_EXPANSION",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "GAP-UX-IDENTIDADE-01 CLOSED: SL-09 removeu a propria fronteira; jornada do criterio medida por CDP com acento identico nas 4 superficies.",
+  "nota": "Cluster homes: 5 correcoes + regressao de classe (alvos dependentes de estado) fechada na hora + flip de 6 classificacoes p/ KEEP com prova de sonda. REFINE 32->26.",
   "aviso": "Declaracao ENCERRADA."
 }

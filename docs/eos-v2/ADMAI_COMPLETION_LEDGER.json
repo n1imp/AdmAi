@@ -829,13 +829,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Vazio guiado no Dashboard (mensagem+CTA com zero servicos; some com dados — unit 2); base dos KPIs alinhada por min-h-[2lh] sem truncar; title nas linhas truncadas dos recentes; MeuPainel com rotulo preciso Comissao gerada; tour passo 1 sem Voltar.",
+        "REGRESSAO DE CLASSE detectada e fechada: alvos <40px dependentes de ESTADO (Ver todos com pendencia; chips de periodo) que SL-02 nao viu renderizados — alvo-toque aplicado, peq=0 re-medido nos 3 papeis em 360/390. Expansao autorizada: GestorHome.jsx.",
+        "Flip de 6 classificacoes do cluster homes para KEEP com prova (sonda sl09/sl11: ocluidosPerm=0, peq=0). REFINE 32->26. Painel 216/216."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:44:59.123Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

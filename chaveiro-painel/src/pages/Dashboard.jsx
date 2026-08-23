@@ -15,6 +15,7 @@ import { KpiCard, CardSatisfacao } from './DashboardParts.jsx';
 import DashboardWidgets from './DashboardWidgets.jsx';
 import { SkeletonKpi } from '../components/Skeleton.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
+import EstadoVazio from '../components/EstadoVazio.jsx';
 import WelcomeCard from '../components/WelcomeCard.jsx';
 import { featureAtiva } from '../lib/featureFlags.js';
 import { startTour } from '../components/TourGuide.jsx';
@@ -219,6 +220,19 @@ export default function Dashboard() {
 
           {/* Card de satisfação (avaliações dos clientes) */}
           <CardSatisfacao resumo={satisfacao} />
+        </div>
+      )}
+
+      {/* Empresa (ou período) sem NENHUM serviço: R$ 0,00 em seis cards não diz o que fazer.
+          O guia diz — e os KPIs zerados continuam visíveis logo abaixo, porque zero também é
+          informação. Texto vale tanto para conta nova quanto para período vazio. [SL-11] */}
+      {!carregando && dados && dados.totalServicos === 0 && (
+        <div className="px-4 mb-4">
+          <EstadoVazio
+            mensagem="Nenhum serviço neste período"
+            sub="Registre o primeiro pelo painel — ou pelo WhatsApp, se o robô estiver conectado. Os números aparecem aqui na hora."
+            cta={{ to: '/servicos/novo', label: 'Registrar serviço' }}
+          />
         </div>
       )}
 

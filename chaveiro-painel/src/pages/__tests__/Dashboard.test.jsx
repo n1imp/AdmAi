@@ -99,4 +99,54 @@ describe('<Dashboard> — estados (F8)', () => {
     expect(screen.getByText('Sem avaliações')).toBeInTheDocument();
     expect(screen.getByText('Receita Líquida')).toBeInTheDocument();
   });
+
+  it('período sem NENHUM serviço: guia com CTA aparece e os KPIs zerados continuam', async () => {
+    // O defeito do inventário: empresa nova via R$ 0,00 em seis cards sem nenhuma
+    // orientação. O guia diz o que fazer; zero continua visível porque zero é informação.
+    mockGet.mockImplementation(
+      rota({
+        dashboard: {
+          data: {
+            receitaBruta: 0,
+            receitaLiquida: 0,
+            totalMaterial: 0,
+            totalComissao: 0,
+            totalServicos: 0,
+            ticketMedio: 0,
+            lucro: 0,
+            margemLucro: 0,
+          },
+        },
+      })
+    );
+    render(<Dashboard />);
+    expect(await screen.findByText(/nenhum serviço neste período/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /registrar serviço/i })).toHaveAttribute(
+      'href',
+      '/servicos/novo'
+    );
+    expect(screen.getByText(/receita bruta/i)).toBeInTheDocument();
+  });
+
+  it('com serviços no período o guia NÃO aparece — não é banner permanente', async () => {
+    mockGet.mockImplementation(
+      rota({
+        dashboard: {
+          data: {
+            receitaBruta: 100,
+            receitaLiquida: 90,
+            totalMaterial: 5,
+            totalComissao: 5,
+            totalServicos: 3,
+            ticketMedio: 30,
+            lucro: 80,
+            margemLucro: 80,
+          },
+        },
+      })
+    );
+    render(<Dashboard />);
+    expect(await screen.findByText(/receita bruta/i)).toBeInTheDocument();
+    expect(screen.queryByText(/nenhum serviço neste período/i)).toBeNull();
+  });
 });

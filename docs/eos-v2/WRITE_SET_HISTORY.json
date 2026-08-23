@@ -48358,9 +48358,23 @@
       "bloqueiaIntegracao": false,
       "nota": "GAP-UX-IDENTIDADE-01 CLOSED: SL-09 removeu a propria fronteira; jornada do criterio medida por CDP com acento identico nas 4 superficies.",
       "declaradoEm": "2026-08-23T11:33:57.409Z"
+    },
+    {
+      "sliceId": "SL-11-HOMES",
+      "titulo": "Cluster homes/dashboard: vazio guiado, base dos KPIs, rotulo ambiguo, tour passo 1",
+      "estado": "CLOSED",
+      "comparacao": "AUTHORIZED_EXPANSION",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Cluster homes: 5 correcoes + regressao de classe (alvos dependentes de estado) fechada na hora + flip de 6 classificacoes p/ KEEP com prova de sonda. REFINE 32->26.",
+      "declaradoEm": "2026-08-23T11:37:56.829Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:34:32.312Z",
+  "geradoEm": "2026-08-23T11:45:03.441Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
