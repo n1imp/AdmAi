@@ -1635,13 +1635,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md: 7 bloqueios do READY (cada um com tipo, fonte-de-verdade e destrava) + 6 diferidos com revisita. ZERO_FORGOTTEN_BLOCKER: reconstruido de ledger+registry+findings+docs-recon+backlog, todos com dono."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:45:28.264Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1659,13 +1661,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Reconciliacao com ADMAI_SCOPE_FREEZE v1.0.0 no mesmo doc: nada fora do escopo construido; unica superficie nova (/assinatura) e a minima aprovada pelo usuario; registry 50/KEEP48/REFINE2-legais/REDESIGN0; escopo negado (CRM/Orcamentos/Agenda/Offline) intocado."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:45:28.265Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

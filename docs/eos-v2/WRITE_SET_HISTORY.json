@@ -48603,9 +48603,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Advisory novo (deepmerge-ts via prisma CLI) allowlisted com justificativa e reviewBy; gate re-executado do jeito documentado: APROVADO, zero bloqueante. Painel: 3 moderate = toolchain Capacitor (backlog #10, categoria C ja registrada).",
       "declaradoEm": "2026-08-23T17:39:25.173Z"
+    },
+    {
+      "sliceId": "SWEEP-BLOCKERS-RECON",
+      "titulo": "Sweep global: documento unico de bloqueios (ZERO_FORGOTTEN_BLOCKER) + reconciliacao com o freeze",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Sweep global: documento unico de 7 bloqueios do READY + 6 diferidos, todos com dono e revisita; reconciliacao com o freeze (nada fora do escopo).",
+      "declaradoEm": "2026-08-23T17:44:33.003Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:39:57.930Z",
+  "geradoEm": "2026-08-23T17:45:30.364Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
