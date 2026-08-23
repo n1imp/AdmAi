@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { abrirPreferenciasDeCookies } from './CookieBanner.jsx';
 
 /**
  * Rodapé enxuto com os links legais (Privacidade e Termos). Usado no Login e no
@@ -26,6 +27,11 @@ export default function RodapeLegal({ className = '' }) {
       <Link to="/cookies" className={alvo}>
         Cookies
       </Link>
+      <span className="mx-1 text-dark-600">·</span>
+      {/* O controle que a Política de Cookies §3 promete: revoga a escolha e reabre o banner. */}
+      <button type="button" onClick={abrirPreferenciasDeCookies} className={alvo}>
+        Preferências de cookies
+      </button>
     </footer>
   );
 }

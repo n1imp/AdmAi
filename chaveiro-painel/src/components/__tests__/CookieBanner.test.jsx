@@ -23,7 +23,7 @@ import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import CookieBanner from '../CookieBanner.jsx';
+import CookieBanner, { EVENTO_PREFERENCIAS_COOKIES } from '../CookieBanner.jsx';
 
 /* O banner traz um `<Link to="/cookies">` — "Saiba mais" — entao precisa de um Router. */
 const montar = () => render(<CookieBanner />, { wrapper: MemoryRouter });
@@ -85,7 +85,9 @@ describe('CookieBanner — espaço reservado', () => {
 
     /* (1) Página CURTA: o utilitário compartilhado por 13 cascas desconta a altura medida, então
        layout centrado volta a centralizar no espaço visível. */
-    expect(css).toMatch(/\.min-h-dvh\s*\{[^}]*min-height:\s*calc\(100dvh\s*-\s*var\(--admai-consent-h[^)]*\)\)/);
+    expect(css).toMatch(
+      /\.min-h-dvh\s*\{[^}]*min-height:\s*calc\(100dvh\s*-\s*var\(--admai-consent-h[^)]*\)\)/
+    );
 
     /* (2) Página LONGA: o padding no fim do documento devolve a altura ao curso de rolagem, então
        o último conteúdo consegue subir acima do banner em vez de ficar preso debaixo dele. */
@@ -102,5 +104,18 @@ describe('CookieBanner — espaço reservado', () => {
     expect(fonte).toMatch(/setProperty\(\s*'--admai-consent-h'/);
     /* E some ao sair: sem isto a reserva viraria permanente. */
     expect(fonte).toMatch(/removeProperty\('--admai-consent-h'\)/);
+  });
+
+  it('o evento de preferências REABRE um banner já dispensado (revogação do rodapé)', async () => {
+    localStorage.setItem('admai_cookies_consent', 'all');
+    montar();
+    expect(screen.queryByRole('dialog', { name: 'Preferências de cookies' })).toBeNull();
+
+    localStorage.removeItem('admai_cookies_consent'); // o helper do rodapé faz isso antes do evento
+    window.dispatchEvent(new Event(EVENTO_PREFERENCIAS_COOKIES));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Preferências de cookies' })
+    ).toBeInTheDocument();
   });
 });

@@ -48260,9 +48260,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "Fatia que fecha achado declara surface-registry.mjs na PROPRIA declaracao — a escrita de fechamento e parte do trabalho, nao um extra."
       }
+    },
+    {
+      "sliceId": "SL-05-LGPD-CRISP",
+      "titulo": "Crisp atras do consentimento + controle de revogacao prometido pela politica",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Crisp atras do consentimento (fail-closed, sabotagem mordida) + controle de revogacao do rodape com ciclo completo provado por CDP no app real. 210/210. Rede real = F4.4.",
+      "declaradoEm": "2026-08-23T07:15:57.975Z"
     }
   ],
-  "geradoEm": "2026-08-23T07:03:18.286Z",
+  "geradoEm": "2026-08-23T10:54:05.877Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

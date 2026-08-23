@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { iniciarMonitoramento } from './lib/monitoring.js';
-import { iniciarCrisp } from './lib/crispBootstrap.js';
+import { sincronizarCrisp } from './lib/crispBootstrap.js';
 import './index.css';
 import './styles/panel.css';
 import './styles/panel-primitives.css';
@@ -14,9 +14,9 @@ import './styles/panel-rollout.css';
 // Observabilidade (Sentry) — no-op se VITE_SENTRY_DSN não estiver definido.
 iniciarMonitoramento();
 
-// Widget de suporte Crisp — no-op se VITE_CRISP_ID não estiver definido. Módulo ES real
-// (antes era <script> inline em index.html, exigindo 'unsafe-inline' na CSP).
-iniciarCrisp();
+// Widget de suporte Crisp — ATRÁS do consentimento (Política de Cookies §2/§4). No boot,
+// só entra se o usuário já consentiu; a escolha no CookieBanner sincroniza sem recarga.
+sincronizarCrisp();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -1,9 +1,28 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { avisarMudanca } from '../lib/primeiroAcesso.js';
+import { sincronizarCrisp } from '../lib/crispBootstrap.js';
 import { Link } from 'react-router-dom';
 import { Cookie } from 'lucide-react';
 
 const CHAVE = 'admai_cookies_consent';
+
+/**
+ * Revogação prometida na Política de Cookies §3 ("Preferências de cookies" no rodapé).
+ * Remover a escolha reabre o banner — a nova decisão é EXPLÍCITA, nunca herdada — e, sem
+ * consentimento vigente, o Crisp esconde já e nem carrega no próximo boot (fail-closed).
+ * Este módulo é o dono único da semântica; o rodapé apenas chama o helper.
+ */
+export const EVENTO_PREFERENCIAS_COOKIES = 'admai:cookies-preferencias';
+
+export function abrirPreferenciasDeCookies() {
+  try {
+    localStorage.removeItem(CHAVE);
+  } catch {
+    /* storage bloqueado: o evento ainda reabre o banner; sem escolha gravável, tudo segue fail-closed */
+  }
+  sincronizarCrisp();
+  window.dispatchEvent(new Event(EVENTO_PREFERENCIAS_COOKIES));
+}
 
 export function useCookieConsent() {
   const valor = localStorage.getItem(CHAVE); // null | 'all' | 'necessary'
@@ -20,6 +39,7 @@ export default function CookieBanner() {
   function aceitar(opcao) {
     localStorage.setItem(CHAVE, opcao);
     setOculto(true);
+    sincronizarCrisp();
     /* Libera a próxima superfície da sequência sem exigir recarga. [GAP-UI-02] */
     avisarMudanca();
   }
@@ -40,6 +60,12 @@ export default function CookieBanner() {
    * `useLayoutEffect` porque a variável precisa existir ANTES da primeira pintura: com
    * `useEffect` o usuário veria um quadro com o conteúdo na posição errada.
    */
+  useEffect(() => {
+    const reabrir = () => setOculto(localStorage.getItem(CHAVE) !== null);
+    window.addEventListener(EVENTO_PREFERENCIAS_COOKIES, reabrir);
+    return () => window.removeEventListener(EVENTO_PREFERENCIAS_COOKIES, reabrir);
+  }, []);
+
   const caixa = useRef(null);
   useLayoutEffect(() => {
     const el = caixa.current;

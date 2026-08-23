@@ -624,13 +624,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Gate fail-closed no crispBootstrap (espelho do PostHog): unit 5/5 e sabotagem (gate removido) derruba 3 — o teste morde.",
+        "Controle Preferencias de cookies no rodape (promessa da politica §3): remove escolha + evento reabre banner; unit RodapeLegal 2/2 e CookieBanner 7/7.",
+        "Runtime real por CDP: consent all -> banner oculto -> clique no rodape -> consentimento null + banner reaberto.",
+        "Painel 210/210. Matriz de REDE (zero requisicao crisp sem consent) fica para F4.4 por CDP — TEST_PASS != RUNTIME_ACCEPTED registrado no cabecalho do teste."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T10:53:58.104Z",
       "nextAction": "gate em crispBootstrap + revogacao no rodape + testes",
       "revisitCondition": null,
       "snapshotRef": null
