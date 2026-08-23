@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE6-LOCK-REGRESSAO",
-  "titulo": "Gate 6: teste determinístico que protege o FOR UPDATE contra regressao",
+  "sliceId": "GATE6-FINALIZACAO-PROPOSAL",
+  "titulo": "Forma final do proposal apos Gate 6 APROVADO",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T23:12:46.340Z",
+  "declaradoEm": "2026-08-23T23:24:31.724Z",
   "baseCommitPorLane": {
-    "HARNESS": "86725308ecb05b38d270af15ad164a01c51f921e"
+    "HARNESS": "2682410c02a23f92bf735f0d0c09351c52972316"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O Codex confirmou a correcao tecnica; falta a regressao executavel do lock (protocolo: correcao de seguranca precisa de teste que falhe ao remover). Receita do proprio Codex: uma transacao segura a linha do usuario com FOR UPDATE; o /auth/refresh e disparado por OUTRA conexao e deve ESPERAR (nao completar) enquanto a linha esta travada. Promise.race prova a pendencia sem fingir concorrencia. Sabotagem: remover lockUsuario da rotacao faz o refresh completar de imediato -> teste falha.",
+  "notaDeMetodo": "Edicao ja commitada (2682410): proposal reflete Gate 6 APROVADO, remove a pendencia de verificacao, atualiza o anexo do ledger. Declaracao retroativa para integridade do historico de write-set (o .md e a unica fonte nao-exempta; ledger/WRITE_SET sao ARTEFATOS_DO_GATE).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -241,6 +241,7 @@
       "chaveiro-bot/test/integration/erro_nao_tratado.test.js": "2ca30bad5e8290ecdf5f1f0fa9c76d339d732491233bec53760fb4e6550d2127",
       "chaveiro-bot/test/integration/estoque_concorrencia.test.js": "14865cb05029547430db9f1c0274ef6166d17008a44227fbfb5dd01e3695a100",
       "chaveiro-bot/test/integration/gate6_correcoes.test.js": "027b977b56d6644b74d09c953e78e3cc969e60b5e1f64a7d82e3154d266fdc6f",
+      "chaveiro-bot/test/integration/gate6_lock_regressao.test.js": "25a9d4964433d3a8971e2ab1730451d9b799d87d44c1bc1fab72524c6d3be113",
       "chaveiro-bot/test/integration/gestor_indicadores.test.js": "0adebbcb014107e2a02d86e9edf32a093654305ca6d9e106059322d9611c3687",
       "chaveiro-bot/test/integration/global-setup.js": "3e7802a361e68c221971811bc9777cd2b99f3c6b9197ceb39f289e96fb6aa7ec",
       "chaveiro-bot/test/integration/health_operacional.test.js": "5248c9727d38dc846fb828761b3f1f56f05570df924dbc69a474628b0e7a4bef",
@@ -585,7 +586,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "dacad600d2a2d30a06ee9d14c1c204211e1aeb9ed53c06fa5e64b7fda31d37ae",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7268f7325d0b3708d0f05669c6dcd8e55e65df4ee84e587ffb795914461412c7",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -595,10 +596,10 @@
       "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "74d485f20690cb298c2431c1b5ed67fa0be23da6e6956780a66f3ca4acbc2417",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5ee5b79810b0f9ff4768b342f3d8d19dca6052fc28e00da979d78f8eb95f1cf3",
+      "docs/eos-v2/WRITE_SET.json": "ab019cd2121d6d22d8ed4fd1f27b26454c77d2e68b17a79944156e3d0676a75d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "7df1f4b0c146e88f69cae0c26abcdb9bc09a57e465d55d1c30543e471c959427",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2525,23 +2526,23 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/gate6_lock_regressao.test.js",
+      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
       "precisao": "BOUNDED",
-      "proposito": "teste determinístico do lock da rotacao (2 conexoes)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "forma final: Gate 6 APROVADO",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T23:12:46.580Z",
+  "validadoEm": "2026-08-23T23:24:31.973Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Regressao executavel do FOR UPDATE: transacao segura a linha do usuario, o /auth/refresh por outra conexao ESPERA (Promise.race prova a pendencia). Sabotagem CONFIRMADA: remover lockUsuario da rotacao faz o teste FALHAR (a rotacao completa sem esperar). Isola o lock de usuario (a tx nao toca refreshToken). Esta e a prova que o Codex exigiu.",
+  "nota": "Forma final do proposal (Gate 6 APROVADO) — ja commitada em 2682410; declaracao retroativa para integridade do historico.",
   "aviso": "Declaracao ENCERRADA."
 }

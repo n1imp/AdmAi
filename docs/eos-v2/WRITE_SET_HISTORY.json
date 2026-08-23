@@ -51273,9 +51273,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Regressao executavel do FOR UPDATE: transacao segura a linha do usuario, o /auth/refresh por outra conexao ESPERA (Promise.race prova a pendencia). Sabotagem CONFIRMADA: remover lockUsuario da rotacao faz o teste FALHAR (a rotacao completa sem esperar). Isola o lock de usuario (a tx nao toca refreshToken). Esta e a prova que o Codex exigiu.",
       "declaradoEm": "2026-08-23T23:12:46.340Z"
+    },
+    {
+      "sliceId": "GATE6-FINALIZACAO-PROPOSAL",
+      "titulo": "Forma final do proposal apos Gate 6 APROVADO",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Forma final do proposal (Gate 6 APROVADO) — ja commitada em 2682410; declaracao retroativa para integridade do historico.",
+      "declaradoEm": "2026-08-23T23:24:31.724Z"
     }
   ],
-  "geradoEm": "2026-08-23T23:20:34.375Z",
+  "geradoEm": "2026-08-23T23:24:33.820Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
