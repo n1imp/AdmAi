@@ -1265,8 +1265,8 @@ painel continua aberto; isto fecha a alcançabilidade pela API.
 
 | Gap | Impacto | Feature | Estado |
 |---|---|---|---|
-| `GAP-EST-02` | `FUNCTIONAL` | `ESTOQUE` | em correção sob `D-EST-02` |
-| `GAP-OBS-02` | `OPERATIONAL` | `OBSERVABILIDADE` | aberto |
+| `GAP-EST-02` | `FUNCTIONAL` | `ESTOQUE` | **FECHADO** (triagem F0-09, 2026-08-23): as duas restrições de `D-EST-02` implementadas — materiais do funcionário só com `aprovacaoServico` ligada e recusa explícita `materiais_nao_permitidos` (`servicos.js:165-231`); reivindicação atômica `updateMany {status:'pendente'}` em transação (`servicos.js:277-293`). O que a decisão deixara aberto também fechou: `NovoServicoFuncionario.jsx` envia `materiais` via `MaterialPicker`. Corrida provada com sonda de mutação em `aprovacao_rejeicao_estoque.test.js:462` |
+| `GAP-OBS-02` | `OPERATIONAL` | `OBSERVABILIDADE` | **FECHADO** (registro em `feature-registry.mjs:653`): o enunciado estava largo demais — `sentry.test.js`/`sentryTransport.test.js` já provavam ativação/idempotência/enriquecimento; o que faltava (`beforeSend`, 4 casos com controle positivo) foi implementado |
 | `GAP-STG-01` | `EXTERNAL_BLOCKER` | `STAGING` | **exige decisão do usuário** |
 
 `GAP-STG-01` é `BLOCKED` por **autoridade**, não por dificuldade: "deploy reproduzível" e "rollback

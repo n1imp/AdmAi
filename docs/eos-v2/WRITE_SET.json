@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-07-08-CONTRATO",
-  "titulo": "Contrato de seguranca reconciliado com o repo + bloco ops no EXECUTION_STATE",
+  "sliceId": "F0-09-TRIAGEM",
+  "titulo": "Triagem dos findings: stale reclassificados com evidencia, fila real atualizada",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:38:55.615Z",
+  "declaradoEm": "2026-08-23T04:42:05.072Z",
   "baseCommitPorLane": {
-    "HARNESS": "db31c0275dbcf99f76caff6a8fbed0da24904d2b"
+    "HARNESS": "7b3877984d30e65aea8e2d8b854a8599e62be5b0"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Gate 5 re-escopado (script T-BILL-07 nao existe; paywall esta codificado E montado na branch, mas ativacao = deploy, que e D2 — sem violacao). Divergencia D-12 (503 vs 402 para assinatura ausente) REGISTRADA e encaminhada para conformidade junto da matriz F4-05, porque decisao de usuario prevalece sobre implementacao.",
+  "notaDeMetodo": "Investigacao primeiro, escrita depois. GAP-EST-02 e GAP-OBS-02 estao FECHADOS no codigo/registry mas abertos na fila do EXECUTION_STATE e no run-state — atualizar os dois. BROWSER-CAPABILITY e DOCKER sao stale contra esta frente. TENANT-COVERAGE real: 50/65, vetores materiais cobertos.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -511,7 +511,7 @@
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
-      "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md": "269b0e7b998783f7319d6f4f1a89b63a6db9bd6be3004387081769b2379099e0",
+      "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md": "9e09b77951f7b1d6166cfacc205fa9317ee8c1ffdf106e347d1121ba49af634a",
       "docs/agent-environment/EV060_REMEDIATION_REPORT.md": "881bd8c309a29feee08d4ee8ef8334f0aea23dc029d453cbe7ecc4835bd745e8",
       "docs/agent-environment/EV063_REMEDIATION_REPORT.md": "76b9462b11c9db29cdd7bdba5541074c5c3fee8664543cdc95edbf7e167427e3",
       "docs/agent-environment/EV065_VALIDATION_REPORT.md": "a4fde24c31b9863a7ecd0b5b14fde45ed67081b5b812aca7bb9f5e10ae536df9",
@@ -547,13 +547,13 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a6d36e5233dfd90f295ab3925eb637365500e9d0e559c88eccfd5d75afb9b88d",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
-      "docs/eos-v2/EXECUTION_STATE.md": "039e5051f88cebf90dbad7994189ee3929de0caeda3cc69ee7d0ce272b8b7379",
+      "docs/eos-v2/EXECUTION_STATE.md": "c551ab48488c4b951c56087e00ae4ec0c82c9be3d83f68e06404f436a9b100ee",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RUN_STATE.json": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "8e771f3c6b2895d0b27855d6936814a6ab3bbd1238ffd37ce3867c1fe69e39a1",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "6e924838523e54906e48c50f791eb9f860fbcee75857ee5b34949db44959a067",
+      "docs/eos-v2/WRITE_SET.json": "d7d461086f731c827b305ed280d013527730538740345542156f096bab26730f",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "7c9aa5f93a225ff492e77bcc43ba18d854f504755d80624f6f5c25d2ed82fb72",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1743,24 +1743,33 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md",
+      "caminho": "tools/admai-delivery/run-state.mjs",
       "precisao": "BOUNDED",
-      "proposito": "§11: estado verificado de Gates 5/6/7 + divergencia D-12",
+      "proposito": "openFindings atualizados com evidencia datada",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "269b0e7b998783f7319d6f4f1a89b63a6db9bd6be3004387081769b2379099e0",
+      "shaNaDeclaracao": "db4c10880fbb3cfc11461923402054cec8614e6acc7fb97de199cb351cc5b7dc",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/EXECUTION_STATE.md",
       "precisao": "BOUNDED",
-      "proposito": "bloco operacional com comandos canonicos (F0-08)",
+      "proposito": "fila real: GAP-EST-02 e GAP-OBS-02 fechados",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "039e5051f88cebf90dbad7994189ee3929de0caeda3cc69ee7d0ce272b8b7379",
+      "shaNaDeclaracao": "c551ab48488c4b951c56087e00ae4ec0c82c9be3d83f68e06404f436a9b100ee",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/RUN_STATE.json",
+      "precisao": "BOUNDED",
+      "proposito": "regenerado apos a atualizacao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:38:55.916Z",
+  "validadoEm": "2026-08-23T04:42:05.364Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1769,6 +1778,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Gates 5/6/7 do contrato de seguranca reconciliados com o estado VERIFICADO do repo (paywall montado na branch sem violar o gate — ativar = deploy = D2; script de backfill inexistente; divergencia D-12 402-vs-503 registrada e encaminhada para conformidade junto de F4-05, porque decisao de usuario prevalece). Bloco operacional com comandos canonicos no EXECUTION_STATE — inclui o registro de que tools/eos/cli.mjs nunca existiu.",
+  "nota": "Triagem F0-09 com investigacao primeiro: GAP-EST-02 FECHADO (D-EST-02 integral + painel enviando materiais + corrida com sonda de mutacao), GAP-OBS-02 FECHADO (registro no feature-registry), EV-056 fechado no mecanismo (updateMany condicional comentando o proprio EV; teste concorrente dedicado vai em F4-01), TENANT-COVERAGE stale (real: 50/65, vetores materiais cobertos). DOCKER e BROWSER-CAPABILITY reclassificados com evidencia datada desta frente. RUN_STATE regenerado carregando a triagem.",
   "aviso": "Declaracao ENCERRADA."
 }

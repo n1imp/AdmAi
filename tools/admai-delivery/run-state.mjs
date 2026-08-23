@@ -174,7 +174,8 @@ export function montarEstado({ agora, estadoRepo = observarRepositorio() } = {})
       },
       {
         id: 'DOCKER-ENGINE-UNAVAILABLE',
-        classificacao: 'ENVIRONMENT_FAILURE',
+        classificacao: 'RESOLVIDO_NESTA_FRENTE',
+        triagemF009: '2026-08-23: admai-pg-test e admai-redis-test de pe ha horas nesta frente; integracao executada varias vezes com exitCode 0. A instabilidade nao se repetiu; se voltar, a assinatura uniforme de ~30s abaixo continua sendo o discriminador.',
         resumo: 'O daemon do Docker parou entre turnos e nao voltou: pipe dockerDesktopLinuxEngine ausente',
         tentativas: 'Start-Process, `wsl -d docker-desktop`, e `docker desktop start` (que funcionou DUAS vezes e depois o daemon caiu de novo). Instabilidade recorrente: tres quedas nesta sessao',
         padrao: 'Quando cai durante teste de integracao, a assinatura e uniforme: todos os casos falham em ~30s exatos, sem assercao. Isso distingue ENVIRONMENT_FAILURE de PRODUCT_DEFECT sem ambiguidade',
@@ -206,8 +207,9 @@ export function montarEstado({ agora, estadoRepo = observarRepositorio() } = {})
       {
         id: 'TENANT-COVERAGE-LACUNAS',
         classificacao: 'OBSERVED',
-        severidade: 'ALTA_PARA_P1',
-        resumo: '37 de 60 rotas escopadas por empresa nao sao nomeadas por nenhum teste que exercite cross-tenant (38% de cobertura)',
+        severidade: 'MEDIA_POS_TRIAGEM',
+        triagemF009: '2026-08-23: numeros abaixo estavam STALE. Estado real medido pelo instrumento: 65 rotas no escopo, 50 cobertas, 15 lacunas (77%), veredito TODO_VETOR_MATERIAL_COBERTO — os vetores de escrita por id com dado de outra empresa estao provados. As 15 restantes seguem a nuance ja registrada (familia /me/* auto-escopada, negativo natural e de posse). Revisita no sweep global.',
+        resumo: 'HISTORICO (stale): 37 de 60 rotas escopadas por empresa nao nomeadas por teste cross-tenant (38%)',
         instrumento: 'tools/admai-delivery/tenant-coverage.mjs — 6 arquivos de rota declarados fora do escopo de tenant, com motivo por arquivo',
         progresso: 'De 38% para 52% (23 -> 31 cobertas) apos idor_escrita_cross_tenant.test.js — 7/7 PASS. As 6 rotas de escrita por id de maior consequencia estao provadas isoladas, verificando o EFEITO no banco e nao so o status 404, com controle positivo (o dono legitimo consegue no mesmo endpoint)',
         naoHouveVulnerabilidade: 'O isolamento do client Prisma estendido segura as 6 rotas. As 4 falhas intermediarias foram premissas erradas minhas: payload de servico exige `tecnico` por NOME (nao tecnicoId), campo e `quantidadeAtual` (nao quantidade), e POST /tecnicos com telefone cria acesso automaticamente salvo `criarAcesso: false`',
@@ -226,7 +228,8 @@ export function montarEstado({ agora, estadoRepo = observarRepositorio() } = {})
       },
       {
         id: 'BROWSER-CAPABILITY-UNAVAILABLE',
-        classificacao: 'OBSERVED',
+        classificacao: 'SUPERADO',
+        triagemF009: '2026-08-23: a frente de release observou o produto por CDP em 4 viewports x 4 papeis — 152 capturas com sonda deterministica (chaveiro-painel/e2e/capturar.mjs). A capacidade existe e esta provada; a nota historica abaixo descreve outra sessao.',
         resumo: 'Nenhuma ferramenta de browser/Chrome/Supabase registrada nesta sessao; sondagem por ToolSearch devolveu somente WebFetch, que falha em URL autenticada',
         consequencia: 'a rota de recuperacao de credencial via painel do Supabase e inviavel aqui — e ficou desnecessaria: a integracao roda contra Postgres e Redis locais descartaveis, sem credencial nenhuma'
       }

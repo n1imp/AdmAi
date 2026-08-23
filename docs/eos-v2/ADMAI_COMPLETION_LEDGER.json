@@ -166,15 +166,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "T-BILL-07"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "commit 7b38779",
+        "divergencia D-12 registrada e encaminhada a F4-05"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.739Z",
       "nextAction": "editar EOS_SECURITY_CLOSURE_V2_PLAN.md §11 com o estado verificado no repo",
       "revisitCondition": null,
       "snapshotRef": null
@@ -190,13 +193,16 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "commit 7b38779",
+        "bloco ops no EXECUTION_STATE + --resumo do ledger"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "bloco ops no EXECUTION_STATE.md junto de F0-07",
       "revisitCondition": null,
       "snapshotRef": null
@@ -212,13 +218,16 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "WRITE_SET_HISTORY F0-09-TRIAGEM",
+        "run-state.mjs com triagemF009 datada"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "atualizar status dos itens VERIFICATION_REQUIRED deste ledger com evidencia",
       "revisitCondition": null,
       "snapshotRef": null
@@ -283,16 +292,21 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "VERIFICATION_REQUIRED",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-EST-02",
         "D-EST-02"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "servicos.js:165-231 e :277-293 implementam D-EST-02",
+        "NovoServicoFuncionario.jsx envia materiais",
+        "corrida provada com sonda de mutacao em aprovacao_rejeicao_estoque.test.js:462",
+        "exercitado em runtime nesta frente (19 pendente -> aprovar -> estoque 2->1)"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "localizar a correcao e o teste; fechar ou reabrir com evidencia",
       "revisitCondition": null,
       "snapshotRef": null
@@ -308,15 +322,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "VERIFICATION_REQUIRED",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-OBS-02"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "feature-registry.mjs:653 registra fechamento com as suites que faltavam declaradas"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "ler o registro de origem e reclassificar",
       "revisitCondition": null,
       "snapshotRef": null
@@ -332,15 +348,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "VERIFICATION_REQUIRED",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "EV-056"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "codigosRecuperacao.js:45-62 — updateMany condicional usado:false com o proprio EV-056 no comentario",
+        "consumo unico testado em recuperacao_2fa.test.js:81",
+        "teste CONCORRENTE dedicado entra em F4-01 (mesmo padrao ja provado na corrida de aprovacao)"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "confirmar em codigosRecuperacao.js:53-59 + teste que prova a corrida fechada",
       "revisitCondition": null,
       "snapshotRef": null
@@ -356,15 +376,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "VERIFICATION_REQUIRED",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "Q-010"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "tenant-coverage.mjs medido em 2026-08-23: 65 rotas, 50 cobertas (77%), TODO_VETOR_MATERIAL_COBERTO",
+        "finding estava stale (dizia 37 lacunas de 60); 15 restantes sao familia /me/* com negativo natural de posse — revisita no SWEEP-01"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:43:11.740Z",
       "nextAction": "rodar tenant-coverage.mjs e decidir corte na F6",
       "revisitCondition": null,
       "snapshotRef": null

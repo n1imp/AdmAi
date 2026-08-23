@@ -46076,9 +46076,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Gates 5/6/7 do contrato de seguranca reconciliados com o estado VERIFICADO do repo (paywall montado na branch sem violar o gate — ativar = deploy = D2; script de backfill inexistente; divergencia D-12 402-vs-503 registrada e encaminhada para conformidade junto de F4-05, porque decisao de usuario prevalece). Bloco operacional com comandos canonicos no EXECUTION_STATE — inclui o registro de que tools/eos/cli.mjs nunca existiu.",
       "declaradoEm": "2026-08-23T04:38:55.615Z"
+    },
+    {
+      "sliceId": "F0-09-TRIAGEM",
+      "titulo": "Triagem dos findings: stale reclassificados com evidencia, fila real atualizada",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Triagem F0-09 com investigacao primeiro: GAP-EST-02 FECHADO (D-EST-02 integral + painel enviando materiais + corrida com sonda de mutacao), GAP-OBS-02 FECHADO (registro no feature-registry), EV-056 fechado no mecanismo (updateMany condicional comentando o proprio EV; teste concorrente dedicado vai em F4-01), TENANT-COVERAGE stale (real: 50/65, vetores materiais cobertos). DOCKER e BROWSER-CAPABILITY reclassificados com evidencia datada desta frente. RUN_STATE regenerado carregando a triagem.",
+      "declaradoEm": "2026-08-23T04:42:05.072Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:39:44.866Z",
+  "geradoEm": "2026-08-23T04:43:14.076Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
