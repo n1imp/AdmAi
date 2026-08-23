@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { requireAuth, requirePermissao } from '../middlewares/auth.js';
+import { requireAssinaturaAtiva } from '../middlewares/assinatura.js';
 import { verificarHmac, compararToken } from '../services/whatsapp/crypto.js';
 import {
   normalizarInboundCloud,
@@ -56,6 +57,7 @@ function mensagemErro(erro) {
 whatsappRouter.post(
   '/api/whatsapp/cloud/credenciais',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('configuracao', 'editar'),
   async (req, res) => {
     try {
@@ -108,6 +110,7 @@ whatsappRouter.get('/api/bot/whatsapp/status', requireAuth, async (req, res) => 
 whatsappRouter.post(
   '/api/bot/whatsapp/conectar',
   requireAuth,
+  requireAssinaturaAtiva,
   requireSuperAdmin,
   async (_req, res) => {
     try {
@@ -125,6 +128,7 @@ whatsappRouter.post(
 whatsappRouter.post(
   '/api/bot/whatsapp/desconectar',
   requireAuth,
+  requireAssinaturaAtiva,
   requireSuperAdmin,
   async (_req, res) => {
     try {

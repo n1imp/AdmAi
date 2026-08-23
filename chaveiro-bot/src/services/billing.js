@@ -43,6 +43,20 @@ export async function obterOuCriarCliente(empresa, email) {
 }
 
 export async function criarCheckoutSession(empresaId, email, returnUrl) {
+  /* [Gate 6, achado 4] Guard de NEGÓCIO antes de tocar o Stripe: não abrir um segundo Checkout
+     se já existe assinatura VIVA (concluí-lo criaria uma 2ª subscription — cobrança dupla).
+     Independe do Stripe estar configurado. Permite trial local (sem stripeSubId) e reassinar
+     após canceled. */
+  {
+    const { prisma } = await import('../db/prisma.js');
+    const atual = await prisma.assinatura.findUnique({ where: { empresaId } });
+    const ESTADOS_VIVOS = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete'];
+    if (atual?.stripeSubId && ESTADOS_VIVOS.includes(atual.status)) {
+      const erro = new Error('Assinatura já ativa — use o portal para gerenciar.');
+      erro.code = 'ASSINATURA_JA_ATIVA';
+      throw erro;
+    }
+  }
   const stripe = await getStripe();
   if (!stripe) throw new Error('Stripe não configurado');
   if (!env.STRIPE_PRICE_ID_PRO) throw new Error('STRIPE_PRICE_ID_PRO não configurado');

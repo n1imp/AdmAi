@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SWEEP-BLOCKERS-RECON",
-  "titulo": "Sweep global: documento unico de bloqueios (ZERO_FORGOTTEN_BLOCKER) + reconciliacao com o freeze",
+  "sliceId": "GATE6-CORRECOES",
+  "titulo": "Gate 6 adversarial (Codex thread 01a02fb6): 3 bloqueantes + 1 P2 corrigidos",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T17:44:33.003Z",
+  "declaradoEm": "2026-08-23T21:03:22.046Z",
   "baseCommitPorLane": {
-    "HARNESS": "cbacfd5cf72570ae5be30a7712a8d646bf561932"
+    "HARNESS": "1c7f59a6b8b17f8bc185f801a82b1332df9f6e7d"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Reconstroi de TODAS as fontes (ledger, registry, findings, docs recon, backlog) a lista de bloqueios que impedem ADMAI_RELEASE_READY, cada um com fonte-de-verdade, tipo e revisita. Reconcilia produto implementado x ADMAI_SCOPE_FREEZE v1.0.0 (nada fora do escopo foi construido; deferred documentados). Nao fecha os gates ainda — Gate 6 adversarial roda em paralelo.",
+  "notaDeMetodo": "Todos os 4 achados VERIFICADOS no codigo antes de corrigir. (1) paywall: requireAssinaturaAtiva nas rotas autenticadas de produto de google.js (8) e whatsapp.js (credenciais/conectar/desconectar) — montadas na raiz, pulavam a guarda do apiRouter; callback OAuth/webhooks/status seguem isentos (por desenho). (2) 2FA: responderSessao passa a cobrir phone2faAtivo (nao so TOTP) E magic-link/verificar passa a usar responderSessao — email/OAuth comprometido nao contorna mais o 2o fator. (3) reset de senha apaga TODOS os refresh do usuario (como logout-all) — refresh roubado pre-reset deixa de rotacionar. (4/P2) criarCheckoutSession recusa segunda assinatura quando ha stripeSubId em estado vivo (permite trial local e reassinar apos canceled). Alternativa SEGURA em todos (aumenta protecao) — nao reduz nada, dispensa decisao do usuario.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -584,18 +584,19 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "4e58afb35cc326a2a104aecc107a26bf240e79cd336ed6379ce9b08e3b8d144c",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "e33140bc2d4a96a0880e8419d722134a0b5e33930cc95ce31d1333ad1c6bdffb",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
+      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a631fd52cc5bbd757d4ccbee304b0cfb4cef7af52b7cb5dc7179f03733f6c486",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "660c4ab22d615791119b8ffa67aa3a23b050765112f08fd1c33d42893289f3a2",
+      "docs/eos-v2/WRITE_SET.json": "1e8ef442e6fe246fd2dcc768291c00c89964b4d64366c2005b49caa8e71b5e24",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "8de1ccd70ccd94a3ba82578f31203c7e552625b8ce662bc47ffbfa5af0a0bbd9",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2516,23 +2517,59 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
+      "caminho": "chaveiro-bot/src/routes/google.js",
       "precisao": "BOUNDED",
-      "proposito": "novo: registro unico de bloqueios + reconciliacao de escopo",
+      "proposito": "guarda de assinatura nas 8 rotas de produto",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "dc14bf1c077b0b48c9e0940aad501e77b005b452e5db0059dfeb086a3e7ad0c8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/whatsapp.js",
+      "precisao": "BOUNDED",
+      "proposito": "guarda em credenciais/conectar/desconectar",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "43319cfe463e5034b63cd44961fbb934d6c0f901de3823d66ad901605f34a54b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/auth.js",
+      "precisao": "BOUNDED",
+      "proposito": "responderSessao cobre phone2fa; magic-link usa responderSessao; reset apaga refresh",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "90b7c1f0c0cce2e9b998f471ec5dd25f36c90d0b1db1a0271208556b03ba3ac2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/billing.js",
+      "precisao": "BOUNDED",
+      "proposito": "guard contra segunda assinatura no checkout",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "69ba551d279ac59c1d805825d4dd030eee038e7b65068df7e92b1fc211184749",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/gate6_correcoes.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "provas dos 4 achados",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T17:44:33.234Z",
+  "validadoEm": "2026-08-23T21:03:22.313Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Sweep global: documento unico de 7 bloqueios do READY + 6 diferidos, todos com dono e revisita; reconciliacao com o freeze (nada fora do escopo).",
+  "bloqueiaIntegracao": true,
+  "nota": "Gate 6 adversarial: 3 bloqueantes + 1 P2 do Codex (thread 01a02fb6) VERIFICADOS e corrigidos — paywall cobre Google/WhatsApp, 2FA nao contornavel por magic-link/OAuth/phone2fa, reset revoga refresh, checkout recusa 2a assinatura. 6/6 novos + 33 de regressao (auth/billing/2fa). Dois auto-defeitos pegos pelos testes antes do commit (guard depois do getStripe; tipo de token errado).",
   "aviso": "Declaracao ENCERRADA."
 }

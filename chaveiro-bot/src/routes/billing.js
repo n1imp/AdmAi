@@ -21,6 +21,10 @@ billingRouter.post('/billing/checkout', requireAuth, adminOnly, async (req, res)
     const session = await criarCheckoutSession(req.user.empresaId, req.user.email ?? '', returnUrl);
     res.json({ url: session.url });
   } catch (e) {
+    // [Gate 6, achado 4] Segunda assinatura viva -> 409, nao 500: e uma recusa de negocio.
+    if (e.code === 'ASSINATURA_JA_ATIVA') {
+      return res.status(409).json({ erro: e.message, codigo: 'assinatura_ja_ativa' });
+    }
     logger.error('billing_checkout_erro', { erro: e.message });
     res.status(500).json({ erro: e.message });
   }

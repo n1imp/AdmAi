@@ -106,7 +106,24 @@ function payloadSessao(usuario, token) {
 async function responderSessao(res, usuario, via) {
   if (usuario.twoFactorAtivo && usuario.totpSecret) {
     logger.info('login_2fa_required', { userId: usuario.id, via });
-    return res.json({ twoFactorRequerido: true, desafio: gerarDesafio2fa(usuario.id) });
+    return res.json({
+      twoFactorRequerido: true,
+      desafio: gerarDesafio2fa(usuario.id),
+      metodo: 'totp',
+    });
+  }
+  /* [Gate 6, achado 2] O 2o fator por TELEFONE também vale aqui — antes só o TOTP era exigido,
+     então um login por OAuth (ou magic-link, que passou a usar este helper) de quem tem apenas
+     2FA-por-telefone emitia sessão direto, contornando o fator no cenário de e-mail/OAuth
+     comprometido. Espelha o ramo phone2fa do /auth/login normal. */
+  if (usuario.phone2faAtivo && usuario.telefone) {
+    await gerarEEnviarOtp(usuario.id, usuario.telefone);
+    logger.info('login_2fa_required', { userId: usuario.id, via, metodo: 'telefone' });
+    return res.json({
+      twoFactorRequerido: true,
+      desafio: gerarDesafio2fa(usuario.id),
+      metodo: 'telefone',
+    });
   }
   await emitirRefreshCookie(res, usuario.id);
   const token = gerarJWT(usuario);
@@ -527,6 +544,11 @@ router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
       where: { id: usuario.id },
       data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
     });
+    /* [Gate 6, achado 3] tokenValidoApos corta os JWTs antigos, mas /auth/refresh NÃO consulta
+       esse corte — um refresh cookie roubado ANTES do reset ainda rotacionaria para um JWT novo.
+       Apagar todos os refresh do usuário (como /me/logout-all) fecha isso: o atacante perde a
+       sessão no momento do reset. */
+    await prisma.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
     logger.info('senha_redefinida_email', { userId: usuario.id });
     return res.json({ ok: true });
   } catch (erro) {
@@ -789,10 +811,11 @@ router.get('/auth/magic-link/verificar', async (req, res) => {
     if (!usuario.emailVerificado) {
       await prisma.usuario.update({ where: { id: usuario.id }, data: { emailVerificado: true } });
     }
-    await emitirRefreshCookie(res, usuario.id);
-    const sessaoToken = gerarJWT(usuario);
+    /* [Gate 6, achado 2] Posse do e-mail é o 1º fator; se há 2FA ativo, o 2º ainda é exigido —
+       responderSessao devolve o desafio em vez de emitir sessão. Sem isso, o magic-link era um
+       bypass completo do 2FA para quem controlasse o e-mail. */
     logger.info('magic_link_login', { userId: usuario.id });
-    return res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, sessaoToken));
+    return responderSessao(res, usuario, 'magic-link');
   } catch (erro) {
     logger.error('Erro GET /auth/magic-link/verificar', { erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });

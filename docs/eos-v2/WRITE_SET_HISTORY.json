@@ -48617,9 +48617,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Sweep global: documento unico de 7 bloqueios do READY + 6 diferidos, todos com dono e revisita; reconciliacao com o freeze (nada fora do escopo).",
       "declaradoEm": "2026-08-23T17:44:33.003Z"
+    },
+    {
+      "sliceId": "GATE6-CORRECOES",
+      "titulo": "Gate 6 adversarial (Codex thread 01a02fb6): 3 bloqueantes + 1 P2 corrigidos",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Gate 6 adversarial: 3 bloqueantes + 1 P2 do Codex (thread 01a02fb6) VERIFICADOS e corrigidos — paywall cobre Google/WhatsApp, 2FA nao contornavel por magic-link/OAuth/phone2fa, reset revoga refresh, checkout recusa 2a assinatura. 6/6 novos + 33 de regressao (auth/billing/2fa). Dois auto-defeitos pegos pelos testes antes do commit (guard depois do getStripe; tipo de token errado).",
+      "declaradoEm": "2026-08-23T21:03:22.046Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:45:30.364Z",
+  "geradoEm": "2026-08-23T21:43:15.201Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

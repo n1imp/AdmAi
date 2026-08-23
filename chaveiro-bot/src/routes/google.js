@@ -4,6 +4,7 @@ import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { requireAuth, requirePermissao } from '../middlewares/auth.js';
+import { requireAssinaturaAtiva } from '../middlewares/assinatura.js';
 import {
   urlAutorizacao,
   trocarCodigo,
@@ -37,6 +38,7 @@ function urlPainel(rota = '/avaliacoes') {
 googleRouter.get(
   '/api/google/status',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'ver'),
   async (req, res) => {
     try {
@@ -86,6 +88,7 @@ googleRouter.get(
 googleRouter.post(
   '/api/google/place-id',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'editar'),
   async (req, res) => {
     try {
@@ -114,6 +117,7 @@ googleRouter.post(
 googleRouter.get(
   '/api/google/locations',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'ver'),
   async (req, res) => {
     try {
@@ -130,6 +134,7 @@ googleRouter.get(
 googleRouter.post(
   '/api/google/location',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'editar'),
   async (req, res) => {
     try {
@@ -160,6 +165,7 @@ googleRouter.post(
 googleRouter.get(
   '/api/google/oauth/iniciar',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'editar'),
   async (req, res) => {
     try {
@@ -198,6 +204,7 @@ googleRouter.get('/api/google/oauth/callback', async (req, res) => {
 googleRouter.post(
   '/api/google/desconectar',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'editar'),
   async (req, res) => {
     try {
@@ -215,6 +222,7 @@ googleRouter.post(
 googleRouter.get(
   '/api/google/reviews',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'ver'),
   async (req, res) => {
     try {
@@ -278,6 +286,7 @@ googleRouter.get(
 googleRouter.post(
   '/api/google/reviews/:reviewId/responder',
   requireAuth,
+  requireAssinaturaAtiva,
   requirePermissao('avaliacoes', 'editar'),
   async (req, res) => {
     try {
