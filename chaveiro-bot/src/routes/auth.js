@@ -11,6 +11,8 @@ import {
   gerarDesafio2fa,
   verificarDesafio2fa,
   autenticarCandidatos,
+  criarRefreshEmTx,
+  setRefreshCookie,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
@@ -73,16 +75,8 @@ const COOKIE_OPTS = {
 };
 
 async function emitirRefreshCookie(res, usuarioId) {
-  const raw = gerarRefreshTokenRaw();
-  const tokenHash = hashRefreshToken(raw);
-  await prisma.refreshToken.create({
-    data: { tokenHash, usuarioId, expiraEm: dataExpiracaoRefresh() },
-  });
-  res.cookie('refresh_token', raw, {
-    ...COOKIE_OPTS,
-    secure: env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  const raw = await criarRefreshEmTx(prisma, usuarioId);
+  setRefreshCookie(res, raw);
 }
 
 /* [SEC-HB-11] Só resposta que ENTREGA sessão conta como sucesso para o rate limit; 200
@@ -743,35 +737,48 @@ router.post('/auth/refresh', async (req, res) => {
   if (!raw) return res.status(401).json({ erro: 'Refresh token ausente' });
   try {
     const tokenHash = hashRefreshToken(raw);
-    const registro = await prisma.refreshToken.findUnique({
-      where: { tokenHash },
-      include: { usuario: true },
-    });
-    if (!registro || registro.expiraEm < new Date()) {
-      res.clearCookie('refresh_token', { ...COOKIE_OPTS });
-      return res.status(401).json({ erro: 'Sessão expirada' });
+    /* [Gate 6 R3] Rotação ATÔMICA: a checagem do corte, o consumo do token usado e a criação do
+       novo acontecem na MESMA transação, relendo o corte FRESCO do usuário. Fecha as duas
+       corridas que a R2 deixava:
+         - temporal: o corte agora é exato (agora), e comparamos `criadoEm <= corte` (inclusivo);
+         - TOCTOU: o delete é condicional (deleteMany por id → count) — se uma troca de credencial
+           concorrente já apagou a árvore, count=0 e NÃO criamos um refresh novo (aborta 401). */
+    let saida;
+    try {
+      saida = await prisma.$transaction(async (tx) => {
+        const registro = await tx.refreshToken.findUnique({
+          where: { tokenHash },
+          include: { usuario: true },
+        });
+        if (!registro || registro.expiraEm < new Date())
+          return { status: 401, erro: 'Sessão expirada' };
+        if (!registro.usuario.ativo) return { status: 401, erro: 'Usuário inativo' };
+        const corte = registro.usuario.tokenValidoApos;
+        if (corte && registro.criadoEm <= corte) {
+          await tx.refreshToken.deleteMany({ where: { usuarioId: registro.usuario.id } });
+          return { status: 401, erro: 'Sessão expirada' };
+        }
+        const consumido = await tx.refreshToken.deleteMany({ where: { id: registro.id } });
+        if (consumido.count !== 1) return { status: 401, erro: 'Sessão expirada' };
+        const rawNovo = await criarRefreshEmTx(tx, registro.usuario.id);
+        return {
+          status: 200,
+          raw: rawNovo,
+          token: gerarJWT(registro.usuario),
+          userId: registro.usuario.id,
+        };
+      });
+    } catch (e) {
+      logger.error('Erro na rotação de refresh', { erro: e.message });
+      return res.status(500).json({ erro: 'Erro interno' });
     }
-    if (!registro.usuario.ativo) {
+    if (saida.status !== 200) {
       res.clearCookie('refresh_token', { ...COOKIE_OPTS });
-      return res.status(401).json({ erro: 'Usuário inativo' });
+      return res.status(401).json({ erro: saida.erro });
     }
-    /* [Gate 6 R2] Correção de RAIZ da revogação: qualquer troca de credencial avança
-       `tokenValidoApos`. Um refresh criado ANTES desse corte é uma sessão que deveria ter
-       morrido — rejeita e limpa a árvore. Isto cobre de uma vez TODOS os fluxos que mexem no
-       corte (reset por e-mail, /me/senha, /usuarios/:id com senha, resetarPin), sem depender
-       de cada um lembrar de apagar os refresh. */
-    const corte = registro.usuario.tokenValidoApos;
-    if (corte && registro.criadoEm < corte) {
-      await prisma.refreshToken.deleteMany({ where: { usuarioId: registro.usuario.id } });
-      res.clearCookie('refresh_token', { ...COOKIE_OPTS });
-      return res.status(401).json({ erro: 'Sessão expirada' });
-    }
-    // Rotacionar: apagar o token usado e emitir um novo
-    await prisma.refreshToken.delete({ where: { id: registro.id } });
-    await emitirRefreshCookie(res, registro.usuario.id);
-    const token = gerarJWT(registro.usuario);
-    logger.info('token_refreshed', { userId: registro.usuario.id });
-    return res.json({ token });
+    setRefreshCookie(res, saida.raw);
+    logger.info('token_refreshed', { userId: saida.userId });
+    return res.json({ token: saida.token });
   } catch (erro) {
     logger.error('Erro POST /auth/refresh', { erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });

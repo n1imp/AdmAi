@@ -51210,9 +51210,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Proposal terminal entregue com Gate 6 honesto (VERIFICATION_REQUIRED por quota do Codex, nao aprovado); 7 bloqueios D2/externo com passo-a-passo; plano de promocao nao executado.",
       "declaradoEm": "2026-08-23T22:01:52.432Z"
+    },
+    {
+      "sliceId": "GATE6-CORRECOES-R3",
+      "titulo": "Gate 6 rodada 3: fecha as janelas de corrida da revogacao (temporal de 1s + TOCTOU da rotacao)",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Gate 6 R3: fecha as duas janelas de corrida — corte EXATO (tolerancia de 1s movida p/ tokenAindaValido na leitura do JWT), refresh guard criadoEm<=corte (boundary inclusivo com contraprova que morde), rotacao ATOMICA (tx rele corte fresco + delete condicional count===1 + create), /me/senha reemite refresh na tx, resetarPin/usuarios apagam refresh. Helpers de refresh centralizados em services/auth.js. 9/9 + 39 regressao; teste que mascarava a janela (setTimeout) removido.",
+      "declaradoEm": "2026-08-23T22:14:39.579Z"
     }
   ],
-  "geradoEm": "2026-08-23T22:01:57.896Z",
+  "geradoEm": "2026-08-23T22:27:02.557Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

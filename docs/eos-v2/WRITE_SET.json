@@ -1,20 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SWEEP-03-PROPOSAL",
-  "titulo": "USER_DECISION_PROPOSAL: PROMOTE_ADMAI_TO_PRODUCTION — terminal condicional honesto",
+  "sliceId": "GATE6-CORRECOES-R3",
+  "titulo": "Gate 6 rodada 3: fecha as janelas de corrida da revogacao (temporal de 1s + TOCTOU da rotacao)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T22:01:52.432Z",
+  "declaradoEm": "2026-08-23T22:14:39.579Z",
   "baseCommitPorLane": {
-    "HARNESS": "f78d947fd07c3abaf32d36865379dcd8ac763daf"
+    "HARNESS": "2a11d4117c52489f68499b13bf50c09c2143f8b6"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Deliverable terminal: veredito CONDICIONAL (nao READY maquiado), evidencia por gate, lista exata de bloqueios D2/externo com passo-a-passo executavel e criterio de aceite, riscos residuais aceitos com revisita, plano de promocao (backfill->staging->smoke->prod) SEM executar. Anexa estado do ledger. ADMAI_RELEASE_READY so se a lista de bloqueios estiver vazia — nao esta (7 D2/externo), entao o terminal e a PROPOSTA, o limite D2 legitimo.",
+  "notaDeMetodo": "A rodada 2 do Codex achou que o recuo de 1s do corte e a rotacao nao-atomica deixavam refresh roubado sobreviver. RAIZ do recuo: tokenAindaValido compara iat (SEGUNDOS) — o recuo existia so por isso. Correcao: (1) a tolerancia de 1s vai para a LEITURA do JWT em tokenAindaValido; o corte tokenValidoApos passa a ser AGORA exato em todos os 4 fluxos. (2) refresh guard usa criadoEm <= corte (boundary inclusivo, ms, sem tolerancia). (3) /auth/refresh vira ATOMICO: transacao rele o corte fresco, delete condicional (count===1) do token usado, cria o novo na mesma tx — se a troca de credencial correu no meio, o delete da 0 ou o corte fresco barra. (4) /me/senha re-emite refresh na tx (mantem a sessao atual, mata as outras); resetarPin e /usuarios-senha apagam os refresh do alvo. O teste que MASCARAVA a janela (setTimeout 1100) cai; entra teste de boundary determinístico.",
   "baselinePorLane": {
     "HARNESS": {
-      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -596,9 +595,10 @@
       "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "0c2f1880fa1360e544f0eabf9ec1d2819623617cbcb68f781637dbfb792d5b90",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "c30043e5b370ed58b46365ce1e2baaac6fd362348eae8198bf21e83aac9f6a92",
+      "docs/eos-v2/WRITE_SET.json": "05b0a4d4057c6285338eaab32af00df5cf0e4a2afa8525629cdeb3fd77b5581d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "dc0a3845f46e3a18d72209ce03c6ef25868ad01cdd2eb639cb19a6758cb7477f",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2519,25 +2519,59 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
+      "caminho": "chaveiro-bot/src/services/auth.js",
       "precisao": "BOUNDED",
-      "proposito": "proposta terminal",
+      "proposito": "tokenAindaValido com tolerancia de 1s na leitura do JWT",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "00d44c92eb463f854ff3062291aeb2be6aee41223e3d1fe6432331396673227d",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "d4e27411ab1fd70fe1dd2bc8cdddb62af8c8e2a90693a2ecb2de4f696e602cf0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/auth.js",
+      "precisao": "BOUNDED",
+      "proposito": "rotacao atomica; /me/senha re-emite na tx; corte exato",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "968d31d60e891a5f87cb029f6b28fddfc3dd4ebaa4a2680234a9312fbc6d6785",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/credenciais.js",
+      "precisao": "BOUNDED",
+      "proposito": "resetarPin: corte exato + apaga refresh",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3f132fc88838f552104ebe0f46c9e0d32e2214ee9b39a90db16301016473be6a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/admin.js",
+      "precisao": "BOUNDED",
+      "proposito": "/usuarios-senha apaga refresh do alvo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "bd97b48a917fbab77078a58fc8c012a9c0f6871aa4e02bfb6403c0ad7423db11",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/gate6_correcoes.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "boundary determinístico; sem o setTimeout que mascarava",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f4d1dd2e2aeb328500c540fb0de6977221e4a4ab7049679a4df6cbfcebcd5dc5",
+      "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T22:01:53.029Z",
+  "validadoEm": "2026-08-23T22:14:39.912Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Proposal terminal entregue com Gate 6 honesto (VERIFICATION_REQUIRED por quota do Codex, nao aprovado); 7 bloqueios D2/externo com passo-a-passo; plano de promocao nao executado.",
+  "bloqueiaIntegracao": true,
+  "nota": "Gate 6 R3: fecha as duas janelas de corrida — corte EXATO (tolerancia de 1s movida p/ tokenAindaValido na leitura do JWT), refresh guard criadoEm<=corte (boundary inclusivo com contraprova que morde), rotacao ATOMICA (tx rele corte fresco + delete condicional count===1 + create), /me/senha reemite refresh na tx, resetarPin/usuarios apagam refresh. Helpers de refresh centralizados em services/auth.js. 9/9 + 39 regressao; teste que mascarava a janela (setTimeout) removido.",
   "aviso": "Declaracao ENCERRADA."
 }

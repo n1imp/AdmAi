@@ -169,17 +169,46 @@ describe('#3b revogação de RAIZ: /me/senha invalida refresh via /auth/refresh'
       .post('/api/auth/login')
       .send({ username: 'donacorte', password: 'SenhaForte1!' });
     const cookie = login.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
-    // Delay de 1s: tokenValidoApos é em ms mas o corte precisa ser > criadoEm do refresh.
-    await new Promise((r) => setTimeout(r, 1100));
     const troca = await request(app)
       .patch('/api/me/senha')
       .set('Authorization', `Bearer ${setup.body.token}`)
       .send({ senhaAtual: 'SenhaForte1!', novaSenha: 'NovaForte1!' });
     expect(troca.status).toBe(200);
-    // O refresh anterior à troca não rotaciona mais — a correção de raiz cobre /me/senha
-    // sem que a rota precise apagar refresh explicitamente.
+    // O refresh anterior à troca não rotaciona mais — SEM depender de janela temporal: o corte
+    // é exato e o guard compara criadoEm <= corte.
     const depois = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
     expect(depois.status).toBe(401);
+  });
+
+  it('BOUNDARY determinístico: refresh com criadoEm == corte é rejeitado (<=, não <)', async () => {
+    const { prisma: db } = await import('./helpers.js');
+    const setup = await request(app).post('/api/setup').send({
+      nome: 'Dona Boundary',
+      nomeEmpresa: 'Chaveiro Boundary',
+      username: 'donaboundary',
+      senha: 'SenhaForte1!',
+    });
+    const usuario = await db.usuario.findFirst({ where: { username: 'donaboundary' } });
+    // Cria um refresh e crava criadoEm EXATAMENTE igual ao corte — a corrida de 1ms materializada.
+    const jwt = (await import('jsonwebtoken')).default;
+    void jwt;
+    const instante = new Date();
+    const crypto = await import('node:crypto');
+    const raw = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(raw).digest('hex');
+    await db.refreshToken.create({
+      data: {
+        tokenHash,
+        usuarioId: usuario.id,
+        criadoEm: instante,
+        expiraEm: new Date(Date.now() + 7 * 864e5),
+      },
+    });
+    await db.usuario.update({ where: { id: usuario.id }, data: { tokenValidoApos: instante } });
+    const cookie = `refresh_token=${raw}`;
+    const r = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
+    // Sob `<` (a versão R2), criadoEm==corte passava; sob `<=` morre.
+    expect(r.status).toBe(401);
   });
 });
 

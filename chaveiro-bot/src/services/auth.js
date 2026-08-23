@@ -36,6 +36,28 @@ export function dataExpiracaoRefresh() {
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
 
+/* Opções do cookie de refresh — path restrito a /api/auth (só as rotas de sessão o recebem). */
+export const COOKIE_OPTS_REFRESH = { httpOnly: true, sameSite: 'strict', path: '/api/auth' };
+
+/* [Gate 6 R3] Criação de refresh centralizada aqui (junto dos primitivos), para que auth.js e
+   account.js reusem a MESMA lógica dentro de suas transações — sem duplicar nem cada um montar
+   o próprio cookie. Devolve o raw; não toca a resposta. */
+export async function criarRefreshEmTx(tx, usuarioId) {
+  const raw = gerarRefreshTokenRaw();
+  await tx.refreshToken.create({
+    data: { tokenHash: hashRefreshToken(raw), usuarioId, expiraEm: dataExpiracaoRefresh() },
+  });
+  return raw;
+}
+
+export function setRefreshCookie(res, raw) {
+  res.cookie('refresh_token', raw, {
+    ...COOKIE_OPTS_REFRESH,
+    secure: env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
 export function verificarJWT(token) {
   return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
 }
@@ -51,7 +73,12 @@ export function verificarJWT(token) {
 export function tokenAindaValido(payload, tokenValidoApos) {
   if (!tokenValidoApos) return true;
   if (!payload?.iat) return false;
-  return payload.iat * 1000 >= new Date(tokenValidoApos).getTime();
+  /* [Gate 6 R3] `iat` é em SEGUNDOS (RFC 7519); um JWT reemitido no MESMO segundo da troca de
+     credencial pode ter iat*1000 até 999ms abaixo do corte (que é em ms). Toleramos 1s AQUI, na
+     leitura do JWT — e SÓ aqui. O corte em si passou a ser exato (agora), e o refresh token
+     (persistente, ms) usa o corte exato sem tolerância. Antes, recuar o próprio corte 1s abria
+     uma janela para refresh roubado recente sobreviver. */
+  return payload.iat * 1000 >= new Date(tokenValidoApos).getTime() - 1000;
 }
 
 /**

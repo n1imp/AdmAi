@@ -5,7 +5,13 @@ import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
-import { gerarJWT } from '../services/auth.js';
+import {
+  gerarJWT,
+  gerarRefreshTokenRaw,
+  hashRefreshToken,
+  dataExpiracaoRefresh,
+  setRefreshCookie,
+} from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
 import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
 import { avaliarForcaSenha } from '../services/senha.js';
@@ -351,11 +357,27 @@ router.patch('/me/senha', async (req, res) => {
         .json({ erro: 'A nova senha é muito fraca', requisitos: forca.requisitos });
     const senhaHash = await bcrypt.hash(novaSenha, 12);
     const agora = new Date();
-    const corte = new Date(agora.getTime() - 1000);
-    const atualizado = await prisma.usuario.update({
-      where: { id: req.user.id },
-      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: corte, senhaProvisoria: false },
+    /* [Gate 6 R3] Corte EXATO (sem recuo) numa transação que também: (a) apaga TODOS os refresh
+       do usuário — mata as outras sessões; (b) cria um refresh NOVO (criadoEm > corte) para ESTA
+       sessão continuar. Sem isto, ou o corte recuado deixava refresh roubado recente sobreviver,
+       ou o usuário que troca a própria senha era deslogado no próximo /auth/refresh. */
+    const { atualizado, rawRefresh } = await prisma.$transaction(async (tx) => {
+      const u = await tx.usuario.update({
+        where: { id: req.user.id },
+        data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
+      });
+      await tx.refreshToken.deleteMany({ where: { usuarioId: req.user.id } });
+      const raw = gerarRefreshTokenRaw();
+      await tx.refreshToken.create({
+        data: {
+          tokenHash: hashRefreshToken(raw),
+          usuarioId: req.user.id,
+          expiraEm: dataExpiracaoRefresh(),
+        },
+      });
+      return { atualizado: u, rawRefresh: raw };
     });
+    setRefreshCookie(res, rawRefresh);
     const token = gerarJWT(atualizado);
     logger.info('senha_alterada', { userId: req.user.id });
     res.json({ mensagem: 'Senha alterada com sucesso', token });

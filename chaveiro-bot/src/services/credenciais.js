@@ -90,15 +90,13 @@ export async function criarAcessoTecnico({
 export async function resetarPin(usuarioId, tx = prisma) {
   const pin = gerarPin();
   const senhaHash = await bcrypt.hash(pin, 12);
+  /* [Gate 6 R3] Corte EXATO (a tolerância de 1s vive agora em tokenAindaValido, na leitura do
+     JWT) + revogação dos refresh do alvo na MESMA transação — o funcionário perde toda sessão
+     e refaz login com o PIN novo. */
   await tx.usuario.update({
     where: { id: usuarioId },
-    data: {
-      senhaHash,
-      senhaProvisoria: true,
-      // Recua 1s: o `iat` do JWT é em segundos; corte = agora poderia invalidar um
-      // token emitido na mesma janela. Aqui invalida tudo que veio antes deste reset.
-      tokenValidoApos: new Date(Date.now() - 1000),
-    },
+    data: { senhaHash, senhaProvisoria: true, tokenValidoApos: new Date() },
   });
+  await tx.refreshToken.deleteMany({ where: { usuarioId } });
   return pin;
 }

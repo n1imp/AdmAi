@@ -336,6 +336,11 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       data,
     });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
+    /* [Gate 6 R3] Trocar a senha de um usuário revoga as sessões dele: o corte já foi avançado no
+       update; apagar os refresh mata as sessões roubadas de imediato (não só na próxima rotação). */
+    if (senha && r.count === 1) {
+      await prisma.refreshToken.deleteMany({ where: { usuarioId: id } });
+    }
     const usuario = await prisma.usuario.findUnique({ where: { id }, select: SELECT_USUARIO });
     if (parse.data.ativo === false) {
       logger.info('user_deactivated', { adminId: req.user.id, userId: id });
