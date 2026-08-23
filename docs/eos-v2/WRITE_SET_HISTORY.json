@@ -45947,8 +45947,9 @@
       ],
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": false,
-      "nota": "Sonda passa a medir oclusao PERMANENTE (hit-test apos scrollIntoView), que e a medida do contrato de aceite. Contraprova: sabotando as duas regras de CSS o /login acusa 6/6/3/0 permanentes; com a correcao, 0 em todos. Varredura dos quatro papeis: 117 oclusoes a scroll-0 (esperado em pagina longa) e 15 PERMANENTES restantes, todas do mesmo tipo — botao flutuante , que e ele proprio fixed, e o rodape do painel dentro de main, que tem rolagem propria e nao recebe o padding do body.",
-      "declaradoEm": "2026-08-23T01:46:12.578Z"
+      "nota": "Sonda passa a medir oclusao PERMANENTE (hit-test apos scrollIntoView), que e a medida do contrato de aceite. Contraprova: sabotando as duas regras de CSS o /login acusa 6/6/3/0 permanentes; com a correcao, 0 em todos. Varredura dos quatro papeis: 117 oclusoes a scroll-0 (esperado em pagina longa) e 15 PERMANENTES restantes — botao flutuante que e ele proprio fixed, e o rodape do painel dentro de main, que tem rolagem propria e nao recebe o padding do body.",
+      "declaradoEm": "2026-08-23T01:46:12.578Z",
+      "correcaoDeRegistro": "A nota gravada no fechamento era a da fatia anterior: o sed que a substituia falhou (crase interpretada pelo shell) e o script fechou com o texto antigo. Corrigido aqui, sem alterar comparacao, provenance nem bloqueio."
     }
   ],
   "geradoEm": "2026-08-23T01:52:45.760Z",
