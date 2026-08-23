@@ -773,13 +773,16 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "SL-05..09 DONE com prova por fatia; revisao Codex em lote (thread 01a02e9b): CORRECOES_NECESSARIAS na 1a rodada (fronteira sobrevivendo por contrato em PanelScope/teste/comentario) -> corrigido -> APROVADO na rodada de evidencia; SL-06 com revisao dedicada previa (01a02e48).",
+        "Bateria: registry 28/28, write-set-gate 121/121, ledger 4/4, painel 247/247."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T12:47:23.574Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -977,13 +980,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Registry re-gravado e re-derivado pelo revisor: 50 superficies, KEEP 48, REFINE 2 (exclusivamente /privacidade e /termos — excecao BLOCKED_D2 explicita, GAP-LEGAL-MODELO-01), REDESIGN 0, NOT_INVENTORIED 0, zero KEEP com viewport ISSUE.",
+        "Incoerencia PASS/ISSUE achada pelo revisor: causa raiz no meu script de flip (substituicao global em vez de por bloco); reparo com auditoria contra baseline git + 2 sondas novas (/meu-ponto, /configuracao/usuarios — zeros x4). Codex APROVADO (thread 01a02e9b, rodada de evidencia).",
+        "Achados compartilhados: 9 de 10 CLOSED; aberto apenas GAP-LEGAL (D2 do usuario). SL-15 com DECISOR+REVISOR dedicados (01a02e86/01a02e93)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T12:47:23.575Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

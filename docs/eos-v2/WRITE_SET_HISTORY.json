@@ -48435,9 +48435,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Unica REDESIGN fechada por medida: direcao B do DECISOR, bateria completa, REVISOR delta APROVADO. GAP-UX-DESKTOP-LARGURA-01 6/6. Registry: zero REFINE/REDESIGN fora da excecao legal D2.",
       "declaradoEm": "2026-08-23T12:13:11.800Z"
+    },
+    {
+      "sliceId": "GATE-F2F3-CORRECOES",
+      "titulo": "Correcoes da revisao de lote (thread 01a02e9b): fronteira morta de verdade + viewports coerentes",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Correcoes da revisao de lote: PanelScope sem capacidade morta (teste vira contrato novo), viewports reconciliados por auditoria contra baseline + 2 sondas novas. Codex APROVADO na rodada de evidencia; gates F2 e F3 fecham.",
+      "declaradoEm": "2026-08-23T12:40:23.153Z"
     }
   ],
-  "geradoEm": "2026-08-23T12:31:29.062Z",
+  "geradoEm": "2026-08-23T12:47:26.570Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

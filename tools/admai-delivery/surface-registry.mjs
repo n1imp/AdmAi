@@ -935,7 +935,7 @@ export const CLASSIFICADAS = Object.freeze({
       'razao do inventario vetava). Sonda: truncados=0 e peq=0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/meus-servicos': {
     classificacao: 'KEEP',
@@ -945,7 +945,7 @@ export const CLASSIFICADAS = Object.freeze({
       'line-clamp-2 com title: truncados=0 medido em 360, 1440 e 1920 com o seed carregado. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/meus-servicos/novo': {
     classificacao: 'KEEP',
@@ -954,7 +954,7 @@ export const CLASSIFICADAS = Object.freeze({
       'mobile-first intacto. Sonda: truncados=0, peq=0, oclusao 0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/aprovacoes': {
     classificacao: 'KEEP',
@@ -980,7 +980,7 @@ export const CLASSIFICADAS = Object.freeze({
       'REVISOR delta APROVADO (01a02e93).',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/tecnicos/novo': {
     classificacao: 'KEEP',
@@ -990,7 +990,7 @@ export const CLASSIFICADAS = Object.freeze({
       'ocl=0, trunc=0 nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/tecnicos/:id': {
     classificacao: 'KEEP',
@@ -1012,7 +1012,7 @@ export const CLASSIFICADAS = Object.freeze({
       'e o estado vazio centraliza no espaço total), pequena demais para justificar retrabalho.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Recursos ─────────────────────────────────────────────────────────── */
@@ -1024,7 +1024,7 @@ export const CLASSIFICADAS = Object.freeze({
       'SL-02 (fileira Entrada/Saida/Ajuste/historico a 44px) — sonda desta fatia: peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   CATALOGO_MODAIS: {
     classificacao: 'KEEP',
@@ -1047,7 +1047,7 @@ export const CLASSIFICADAS = Object.freeze({
       'viewports, sem truncamento.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Ponto e documentos ───────────────────────────────────────────────── */
@@ -1061,7 +1061,7 @@ export const CLASSIFICADAS = Object.freeze({
       'telefone. A duplicação de "Entrada 14:30" em dois blocos é o único reparo possível.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/meus-documentos': {
     classificacao: 'KEEP',
@@ -1072,7 +1072,7 @@ export const CLASSIFICADAS = Object.freeze({
       'antecipa nem o esconde. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Navegação e ajuda ────────────────────────────────────────────────── */
@@ -1083,7 +1083,7 @@ export const CLASSIFICADAS = Object.freeze({
       'feature na navegacao + prova de deep-link). Sonda desta fatia: zeros; hub integro. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/ajuda': {
     classificacao: 'KEEP',
@@ -1093,7 +1093,7 @@ export const CLASSIFICADAS = Object.freeze({
       'fatia. Conteudo e organizacao ja estavam adequados. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Configurações: sete superfícies, sete julgamentos ────────────────── */
@@ -1105,7 +1105,7 @@ export const CLASSIFICADAS = Object.freeze({
       'em breve (unit do hub). GAP-UX-CONFIG-PROMESSA-01 CLOSED. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/configuracao/perfil': {
     classificacao: 'KEEP',
@@ -1114,7 +1114,7 @@ export const CLASSIFICADAS = Object.freeze({
       'novo nesta fatia: semNome=0, peq=0, ocl=0, trunc=0 em 390 e 1440. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/configuracao/seguranca': {
     classificacao: 'KEEP',
@@ -1127,7 +1127,7 @@ export const CLASSIFICADAS = Object.freeze({
       '(max-w-2xl centrado, precedente SL-04/12).',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/configuracao/whatsapp': {
     classificacao: 'KEEP',
@@ -1136,7 +1136,7 @@ export const CLASSIFICADAS = Object.freeze({
       '/configuracao/whatsapp] (unit; alvo do tour). A tela em si ja funcionava. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/configuracao/usuarios': {
     classificacao: 'KEEP',
@@ -1147,7 +1147,7 @@ export const CLASSIFICADAS = Object.freeze({
       'escopo manteve no release por sustentar RBAC.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/configuracao/estoque': {
     classificacao: 'KEEP',

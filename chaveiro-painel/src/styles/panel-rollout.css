@@ -5,9 +5,10 @@
  * autenticado adota a identidade aprovada de uma vez, e a migração página a página para as
  * primitives passa a ser refinamento, não pré-requisito visual.
  *
- * A landing e as páginas legais NÃO têm `.panel-ui`, então continuam com a identidade
- * legada (fora do escopo desta fase). O seletor `.panel-ui .x` tem especificidade maior que
- * o utilitário `.x`, então vence sem `!important`.
+ * Desde SL-09 ("Aurora em tudo", decisão do usuário) o escopo `.panel-ui` é INCONDICIONAL:
+ * landing e páginas legais também vivem nele — não existe mais identidade legada visível.
+ * O seletor `.panel-ui .x` tem especificidade maior que o utilitário `.x`, então vence sem
+ * `!important`.
  */
 
 .panel-ui.panel-canvas,

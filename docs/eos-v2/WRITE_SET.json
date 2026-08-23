@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SL-15-TECNICOS-REDESIGN",
-  "titulo": "/tecnicos: direcao B do DECISOR (thread 01a02e86) — reflow do card, 2 colunas no desktop",
+  "sliceId": "GATE-F2F3-CORRECOES",
+  "titulo": "Correcoes da revisao de lote (thread 01a02e9b): fronteira morta de verdade + viewports coerentes",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T12:13:11.800Z",
+  "declaradoEm": "2026-08-23T12:40:23.153Z",
   "baseCommitPorLane": {
-    "HARNESS": "13545d1ec86e0568fa962e43f2975e45d147fd04"
+    "HARNESS": "d208f6c92995949bb5f805138643f93d29979ea1"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Decisao vinculada D-SL15-TECNICOS-DIRECAO (CONCORDO, confianca ALTA): reflow exclusivamente desktop; nome deixa de truncar em lg+ (quebra integral); badges com quebra segura; KPIs com clamp de 2 linhas reservadas (precedente SL-11); grade lg:grid-cols-2 sem a trilha xl vazia; shell max-w-6xl INTOCADO. Testes obrigatorios do consenso: sonda 1440/1920 zero truncamento, geometria computada de 2 colunas em xl, capturas 4 viewports vistas, axe zero serious/critical, suite+lint+format+diff-check, REVISOR delta depois.",
+  "notaDeMetodo": "Achado 1: PanelScope mantinha a capacidade morta (active=false), o teste de Structure a exigia e o comentario do rollout afirmava a fronteira removida — o contrato preservava o que SL-09 matou. Achado 2: meu script de flip substituia a PRIMEIRA ocorrencia de vp(...) no arquivo, nao a da entrada-alvo — PASS caiu em entradas erradas e 17 KEEP ficaram com ISSUE. Reparo: auditoria de TODAS as entradas contra o baseline pre-flips do git + re-atribuicao de viewports a partir das MEDICOES desta sessao (sonda por superficie), medindo agora o que faltar.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -464,7 +464,7 @@
       "chaveiro-painel/src/pages/Reparticao.jsx": "99db05c61ccdf88dcf21673e15be745844273d706e04fcdcee89275e3c6d7643",
       "chaveiro-painel/src/pages/Seguranca.jsx": "6946e2b375292f20f9329cfda52927bdea47b425d8632821e7417e7f08a17460",
       "chaveiro-painel/src/pages/Servicos.jsx": "99616efb594dbd8808e529367fc59de90f592e6a39f36b7e57cc9979b95b0d76",
-      "chaveiro-painel/src/pages/Tecnicos.jsx": "61dd6203ffaa8cfa7b670ba186d5753ebd9d2d7e3cc1f2cd8bd1873c3a4394a4",
+      "chaveiro-painel/src/pages/Tecnicos.jsx": "755d6d0d12f357d0e37280761030ad0ebe537705dd5dd03c687608d3ee3bcf06",
       "chaveiro-painel/src/pages/Termos.jsx": "a7ded1477e4576f19aaf9d6e206d45639f7b9c4ed92a6595d68c3da6308b0fff",
       "chaveiro-painel/src/pages/TrocarSenha.jsx": "1fdb77441dc45f0f662f643e87a10ab68d2f49655afd0a0b2b234e917ffd2701",
       "chaveiro-painel/src/pages/Usuarios.jsx": "fa8956510870b6b4136636eab16b5929346c14669b5f914d1d10f25d1fc476fa",
@@ -495,6 +495,7 @@
       "chaveiro-painel/src/pages/__tests__/Servicos.a11y.test.jsx": "bd5bf4958c0e01b765c9cc3bfede880d1843f47eef1b7bc04612d076d0065f97",
       "chaveiro-painel/src/pages/__tests__/Servicos.badge.test.jsx": "99a5bed3e03d4da38a94016357e27db98656276db3a261110938a3db36a41e4a",
       "chaveiro-painel/src/pages/__tests__/Servicos.test.jsx": "e44938311192501b836f614171bfc56509cd930b5f11f767817ca6dab29e0de9",
+      "chaveiro-painel/src/pages/__tests__/Tecnicos.axe.jsx": "3619c30edcd47b42faa53a1c7fc9a28e806fa688b07b5302b87deedae976f737",
       "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
       "chaveiro-painel/src/styles/panel-overlay.css": "760c67920d30cc9afda8f211d533f6c3c0c1d533e43089edb19921bd647dd68d",
       "chaveiro-painel/src/styles/panel-primitives.css": "cc30373e525a94ef77e506a56e6ca3d6acf62292e241592f7d82cbf6de9d1316",
@@ -520,7 +521,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "ba8c0f173fca09fa29baff7137a3111fdeddb6882c0e1a7fcc92630adff40da9",
+      "docs/agent-environment/AGENT_DECISIONS.md": "132114a2d1fa5ce1b9215e57191ec00353d89438f90dc383f30716ec2c2f5cd4",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -559,7 +560,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "dec7731f88c7466bc98779e58ea2f83577f2f1ff28e571f46870e5bd080fe758",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "848fd38892ba20cfbc1f276699236ea005fd08e2f46be783879663bfafa7af5c",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -568,8 +569,8 @@
       "docs/eos-v2/RUN_STATE.json": "a3d7021ac0a003ebf648ecb9837eba3ec4fe4cbc38d189c1339d573cb4ca8bb2",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "09c395fb916170464fa3f26d0503e65706d0070e261594e914f14de41cea0b29",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "f86e2b64f6113c6436812940ebab7ed1945787bacc1b8bdea724d9ff48505fc2",
+      "docs/eos-v2/WRITE_SET.json": "0e39cb602de35ed6fd45acdd365d51c0934669433b232fc00c0dacca1018d18d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "16390c77e117a0f248497721550f1269e22bcd2ae8f9b95334965360247b64ca",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -619,7 +620,7 @@
       "tools/admai-delivery/run-state.mjs": "3139f7b4a4f91ddf92c19baf41fa732ba727131daa087b8c169bfea973857502",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "0444fdcb4b8c36c53342fe59946672a73ecc0b69ae41c1a74c76649139deac3f",
+      "tools/admai-delivery/surface-registry.mjs": "e06548da7dc735628db97bd09831c6beb767bccae729d3fdf9d00250dcd6d2a6",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -2081,6 +2082,11 @@
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__1920x1080.jpg": "65503:1787486281485",
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__360x800.jpg": "157231:1787486264100",
       "chaveiro-painel/telas/sl13-antes/tecnico__meus-documentos__390x844.jpg": "165477:1787486270145",
+      "chaveiro-painel/telas/sl15/dono__tecnicos__1440x900.jpg": "70948:1787487667153",
+      "chaveiro-painel/telas/sl15/dono__tecnicos__1920x1080.jpg": "74637:1787487669908",
+      "chaveiro-painel/telas/sl15/dono__tecnicos__360x800.jpg": "153990:1787487661195",
+      "chaveiro-painel/telas/sl15/dono__tecnicos__390x844.jpg": "178024:1787487664196",
+      "chaveiro-painel/telas/sl15/sonda-dono.json": "4416:1787487669916",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1440x900.jpg": "31776:1787449723423",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1920x1080.jpg": "34802:1787449755600",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__360x800.jpg": "100624:1787449643425",
@@ -2424,42 +2430,42 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Tecnicos.jsx",
+      "caminho": "chaveiro-painel/src/components/ui/PanelScope.jsx",
       "precisao": "BOUNDED",
-      "proposito": "reflow do card + grade 2 colunas",
+      "proposito": "capacidade active removida — escopo incondicional",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "61dd6203ffaa8cfa7b670ba186d5753ebd9d2d7e3cc1f2cd8bd1873c3a4394a4",
+      "shaNaDeclaracao": "d2a3635d117d45f12a6daa75fe7ec9e27daf4a146355b15ed794756ada91ffaf",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/Tecnicos.axe.jsx",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Structure.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "axe obrigatorio do consenso",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "teste passa a exigir o escopo SEMPRE",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "16806be17287772caa7af6190f8e1bb8f2d9d44c0dd72a504431fe4c4a0eb8bf",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/styles/panel-rollout.css",
+      "precisao": "BOUNDED",
+      "proposito": "comentario da fronteira corrigido",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ce1188d00cbeb93f1274688630ff0bc651d64f764f6a3ea8f77dec73ff715265",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "tools/admai-delivery/surface-registry.mjs",
       "precisao": "BOUNDED",
-      "proposito": "flip /tecnicos + fechamento de GAP-UX-DESKTOP-LARGURA-01 (6/6)",
+      "proposito": "viewports reconciliados com a medicao real",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0444fdcb4b8c36c53342fe59946672a73ecc0b69ae41c1a74c76649139deac3f",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "BOUNDED",
-      "proposito": "registro da decisao D-SL15",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ba8c0f173fca09fa29baff7137a3111fdeddb6882c0e1a7fcc92630adff40da9",
+      "shaNaDeclaracao": "e06548da7dc735628db97bd09831c6beb767bccae729d3fdf9d00250dcd6d2a6",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T12:13:12.033Z",
+  "validadoEm": "2026-08-23T12:40:23.427Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -2468,6 +2474,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Unica REDESIGN fechada por medida: direcao B do DECISOR, bateria completa, REVISOR delta APROVADO. GAP-UX-DESKTOP-LARGURA-01 6/6. Registry: zero REFINE/REDESIGN fora da excecao legal D2.",
+  "nota": "Correcoes da revisao de lote: PanelScope sem capacidade morta (teste vira contrato novo), viewports reconciliados por auditoria contra baseline + 2 sondas novas. Codex APROVADO na rodada de evidencia; gates F2 e F3 fecham.",
   "aviso": "Declaracao ENCERRADA."
 }

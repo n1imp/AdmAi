@@ -65,13 +65,13 @@ describe('primitives estruturais', () => {
     expect(onBack).toHaveBeenCalledOnce();
   });
 
-  it('PanelScope não envolve superfícies públicas', () => {
+  it('PanelScope envolve TODA superfície — Aurora em tudo, sem prop de exceção (SL-09)', () => {
     const { container, rerender } = render(
-      <PanelScope active={false}>
+      <PanelScope>
         <span>Público</span>
       </PanelScope>
     );
-    expect(container.querySelector('.panel-ui')).not.toBeInTheDocument();
+    expect(container.querySelector('.panel-ui')).toBeInTheDocument();
 
     rerender(
       <PanelScope>
