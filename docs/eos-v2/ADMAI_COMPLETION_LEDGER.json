@@ -886,13 +886,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Medicao em lote: 8 superficies de operacao com zeros absolutos (alvos/nomes/oclusao/truncamento) em 390 e 1440; glifo de /materiais ja era placeholder desenhado (captura vista).",
+        "Correcoes reais: PerfilTecnico kpi-label em line-clamp-2 min-h-[2lh] (classe de SL-11; RECEITA LIQUIDA etc. legiveis em 360) + title no historico; convite invalido deixou de ser beco (orientacao + Ir para o login — captura re-vista). Regressao intermediaria propria pega na hora: Link nao importado quebrou a pagina (h1 ALGO DEU ERRADO) e foi corrigido antes de fechar.",
+        "Flip de 19 classificacoes para KEEP com prova por linha. KEEP 46, REFINE 3 (2 legais D2 + seguranca/SL-14), REDESIGN 1 (SL-15). 28/28, ZERO_UNCLASSIFIED sim. Painel 234/234 lido antes do commit."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T12:04:00.299Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

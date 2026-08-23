@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { KeyRound, User, ArrowRight, Loader2, XCircle } from 'lucide-react';
 import api from '../lib/api.js';
@@ -97,7 +97,15 @@ export default function ConviteAceitar() {
                   Convite inválido
                 </h1>
                 <p className="text-muted text-sm mt-1">{erro}</p>
+                {/* Beco sem saída era o defeito: quem chega por convite expirado precisa saber
+                    O QUE FAZER — pedir outro a quem convidou; convites expiram por segurança. */}
+                <p className="text-muted text-sm mt-2">
+                  Peça um novo convite para quem chamou você — convites expiram por segurança.
+                </p>
               </div>
+              <Link to="/login" className="btn-secondary w-full">
+                Ir para o login
+              </Link>
             </div>
           ) : (
             <>

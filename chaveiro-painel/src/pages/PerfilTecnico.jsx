@@ -226,7 +226,11 @@ export default function PerfilTecnico() {
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <BackHeader titulo="Técnico" para="/tecnicos" />
-      {t?.nome && <p className="px-4 -mt-0.5 mb-3 text-muted text-sm truncate">{t.nome}</p>}
+      {t?.nome && (
+        <p className="px-4 -mt-0.5 mb-3 text-muted text-sm truncate" title={t.nome}>
+          {t.nome}
+        </p>
+      )}
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
 
@@ -564,7 +568,9 @@ export default function PerfilTecnico() {
                         <Icon size={18} strokeWidth={1.8} />
                       </div>
                       <div className="min-w-0">
-                        <p className="kpi-label text-[10px] truncate">{label}</p>
+                        {/* Cortar o rótulo esconde QUAL métrica é — mesma regra do Dashboard (SL-11):
+                            quebra em 2 linhas reservadas, base dos valores alinhada. */}
+                        <p className="kpi-label text-[10px] line-clamp-2 min-h-[2lh]">{label}</p>
                         <p className="font-display font-bold text-white text-lg leading-tight tnum">
                           {valor}
                         </p>
@@ -647,7 +653,12 @@ export default function PerfilTecnico() {
                       {dados.periodo.servicos.map((s) => (
                         <div key={s.id} className="card flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{s.descricao}</p>
+                            <p
+                              className="text-white text-sm font-medium truncate"
+                              title={s.descricao}
+                            >
+                              {s.descricao}
+                            </p>
                             <p className="text-muted text-xs mt-0.5">
                               {formatarData(s.criadoEm)} · {s.local}
                             </p>

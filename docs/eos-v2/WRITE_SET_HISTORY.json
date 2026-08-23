@@ -48393,9 +48393,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Cluster servicos: badge de excecao corrigido (mordida provada), clamp na linha principal do tecnico, 4 flips p/ KEEP; controle KEEP-exige-captura honrado e /assinatura classificada. REFINE 26->22. Suite 234/234 lida antes do commit.",
       "declaradoEm": "2026-08-23T11:50:40.608Z"
+    },
+    {
+      "sliceId": "SL-13-OPERACAO",
+      "titulo": "Cluster operacao + varredura das razoes mortas: 2 correcoes reais e flips em massa",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Cluster operacao: 2 correcoes reais (KPI do perfil, convite com saida) + 19 flips com prova. Regressao propria (Link nao importado) pega pela sonda na mesma rodada. KEEP 46 / REFINE 3 / REDESIGN 1.",
+      "declaradoEm": "2026-08-23T12:00:14.711Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:55:45.469Z",
+  "geradoEm": "2026-08-23T12:04:04.214Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

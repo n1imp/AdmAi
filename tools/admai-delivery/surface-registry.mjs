@@ -666,107 +666,100 @@ export const SUPERFICIES_SEM_ROTA = Object.freeze([
 export const CLASSIFICADAS = Object.freeze({
   /* ── Autenticação pública ─────────────────────────────────────────────── */
   '/login': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Arquitetura correta e composição forte no desktop: painel de valor à esquerda, formulário ' +
-      'à direita, abas ENTRAR/CRIAR CONTA, alternância usuário/telefone e login social. Em ' +
-      '360x800 o banner corta o botão ENTRAR ao meio e esconde "Esqueci minha senha" e "Entrar ' +
-      'sem senha" — quem perdeu a senha encontra a saída obscurecida na porta de entrada do ' +
-      'produto. Estrutura permanece; o que muda é reserva de espaço, alvo de toque e a paleta.',
+      'RECLASSIFICADA (SL-13). Cada defeito da razao morreu numa fatia com prova: reserva de ' +
+      'espaco do banner (CONSENT-01, hit-test), alvos 44px (SL-02), Aurora (SL-09), dobra e ' +
+      'revisao dedicada MUST_REVIEW aprovada pelo Codex (SL-06). Sonda: zeros nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_CADASTRO: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Mesmo componente do login em outro modo, e a primeira tela de todo cliente novo. Em 360 e ' +
-      '390 TRÊS campos do formulário e o botão ficam sob o banner; em 1440 o "CRIAR CONTA" ' +
-      'também. Seis controles sem nome acessível. Nada disso é problema de concepção: o fluxo ' +
-      'está certo e a hierarquia funciona.',
+      'RECLASSIFICADA (SL-13). Campos sob banner: espaco reservado (CONSENT-01). Seis sem ' +
+      'nome: varredura SL-01 zerou (resolver de nome completo na sonda). Dobra: SL-06 (-108px, ' +
+      'submit de volta a dobra, Codex APROVADO). Sonda atual: peq=0, semNome=0, ocl=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/recuperar-senha': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Card enxuto e objetivo: título, uma frase de explicação, um campo, uma ação, uma saída. ' +
-      'Defeito próprio: ~30% do topo em branco antes de o conteúdo começar, num viewport de ' +
-      '844px. O cabeçalho ausente virou GAP-UX-CABECALHO-01, compartilhado com outras seis.',
+      'RECLASSIFICADA (SL-13). O cabecalho chegou em SL-03 (h1 de tarefa). O respiro do topo e ' +
+      'o idioma do cartao centrado da familia (alturaDoc=844 em 844px: exatamente uma tela, sem ' +
+      'scroll); nao ha conteudo escondido nem espaco morto abaixo — captura vista. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_REDEFINIR_SENHA: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Superfície distinta da irmã acima — outro formulário, outro objetivo, mesma rota. O defeito ' +
-      'próprio é de transição: /redefinir-senha SEM token cai calado no formulário de PEDIDO, ' +
-      'então quem chega por link expirado vê "Recuperar senha" e conclui que errou alguma coisa. ' +
-      'Cabeçalho e nome de controle entram nos achados compartilhados.',
+      'RECLASSIFICADA (SL-13). O defeito de transicao morreu em SL-07: /redefinir-senha sem ' +
+      'token declara LINK INCOMPLETO com saida (teste de rota que morde); com token, NOVA SENHA. ' +
+      'h1 e nomes fechados nas fatias compartilhadas. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/redefinir-senha': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'A rota sem token. Renderiza o pedido de link, e é aí que mora o defeito: ela não diz que ' +
-      'o token faltou ou expirou. Fora isso, mesma família e mesmos achados compartilhados.',
+      'RECLASSIFICADA (SL-13). SL-07: estado explicito LINK INCOMPLETO (h1, Pedir novo link, ' +
+      'Voltar ao login) no lugar do fallback calado — sonda confirma nos 4 viewports. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/magic-link': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Pedido de link mágico. 52 palavras, uma ação, estrutura adequada ao propósito e nenhum ' +
-      'defeito próprio: tudo o que tem está em GAP-UX-CABECALHO-01 e GAP-UX-A11Y-NOME-01.',
+      'RECLASSIFICADA (SL-13). Nenhum defeito proprio; os dois compartilhados que a seguravam ' +
+      '(CABECALHO-01, A11Y-NOME-01) estao CLOSED com prova de sonda. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   AUTH_MAGIC_VERIFICAR: {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Estado de verificação do link mágico — tela de espera que vira sucesso ou erro. Observada ' +
-      'com token sintético, então o que se viu foi o caminho de falha: 48 palavras, 4 controles. ' +
-      'Defeito próprio: falta uma saída explícita para quem chega com link que não vale mais.',
+      'RECLASSIFICADA (SL-13). A saida explicita para link vencido existe e mede: h1 Link ' +
+      'invalido ou expirado + acao Solicitar novo link (sonda SL-03, capturas sl03/sl06). ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/verificar-email': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Três estados num componente (verificando/ok/erro). 60 palavras, 4 controles, sem defeito de ' +
-      'layout. O que a tira de KEEP é a estrutura de documento ausente, registrada em ' +
-      'GAP-UX-CABECALHO-01 junto das outras seis telas de auth que têm a mesma causa.',
+      'RECLASSIFICADA (SL-13). Estrutura de documento resolvida em SL-03: cada estado anuncia ' +
+      'sua tarefa em h1 (LINK INVALIDO no caminho de erro observado). Zeros na sonda. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/convite/:token': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Observada com token inválido — o estado que um convite expirado produz de verdade. 41 ' +
-      'palavras e 3 controles. É a porta de entrada de todo funcionário convidado, e o defeito ' +
-      'próprio é de conteúdo: não diz com clareza o que aconteceu nem o que fazer em seguida.',
+      'RECLASSIFICADA (SL-13). O beco sem saida fechou NESTA fatia: o estado invalido diz o que ' +
+      'aconteceu (h1 + erro da API), o que fazer (peca novo convite a quem chamou voce) e oferece ' +
+      'saida (Ir para o login). Captura re-vista com token invalido real. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/trocar-senha': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Troca de senha obrigatória, com medidor de força e requisitos marcados — a estrutura está ' +
-      'certa. Dois defeitos sérios: em 360 e 390 o campo de senha E o botão "DEFINIR SENHA E ' +
-      'ENTRAR" ficam sob o banner, o que trava um passo que o produto torna obrigatório; e cinco ' +
-      'controles sem nome acessível.',
+      'RECLASSIFICADA (SL-13). Campo e botao sob banner: espaco reservado (CONSENT-01, provado ' +
+      'por hit-test em runtime). Cinco sem nome: SL-01 (olhos com aria-label + area de toque). ' +
+      'h1 ja existia. Sonda atual: zeros. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    evidencia: 'SONDA_E_CAPTURA',
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Páginas legais ───────────────────────────────────────────────────── */
@@ -781,7 +774,7 @@ export const CLASSIFICADAS = Object.freeze({
       'GAP-LEGAL-MODELO-01, bloqueado em decisão do usuário.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/termos': {
     classificacao: 'REFINE',
@@ -793,7 +786,7 @@ export const CLASSIFICADAS = Object.freeze({
       'validado por advogado. Registrado em GAP-LEGAL-MODELO-01; depende de decisão do usuário.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/cookies': {
     classificacao: 'KEEP',
@@ -805,7 +798,7 @@ export const CLASSIFICADAS = Object.freeze({
       'fazer ou entender.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Home: uma rota, quatro telas, um despachante ─────────────────────── */
@@ -840,7 +833,7 @@ export const CLASSIFICADAS = Object.freeze({
       '(unit 2 casos: aparece com 0, some com dados). Sonda: peq=0, ocluidosPerm=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   HOME_GESTOR: {
     classificacao: 'KEEP',
@@ -850,7 +843,7 @@ export const CLASSIFICADAS = Object.freeze({
       'renderiza com pendencia, invisivel na varredura de SL-02) recebeu alvo-toque-linha: peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   HOME_FUNCIONARIO: {
     classificacao: 'KEEP',
@@ -861,7 +854,7 @@ export const CLASSIFICADAS = Object.freeze({
       'de atualizar a 44px (controles de estado que SL-02 nao viu renderizados): peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Primeiro acesso: três superfícies em sequência ───────────────────── */
@@ -873,7 +866,7 @@ export const CLASSIFICADAS = Object.freeze({
       'ja estava certo — era o encaixe, e o encaixe mede zero oclusao em todo o produto. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   PRIMEIRO_ACESSO_BOAS_VINDAS: {
     classificacao: 'KEEP',
@@ -961,7 +954,7 @@ export const CLASSIFICADAS = Object.freeze({
       'mudança específica desta tela melhoraria o resultado de alguém.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
 
   /* ── Equipe ───────────────────────────────────────────────────────────── */
@@ -979,24 +972,25 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/tecnicos/novo': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Formulário de cadastro em etapas. Em 360 "Cancelar" e "PRÓXIMO" ficam sob o banner, o que ' +
-      'interrompe o fluxo no ponto de avançar. Cinco controles sem nome acessível. A estrutura ' +
-      'do formulário está adequada.',
+      'RECLASSIFICADA (SL-13). Cancelar/PROXIMO sob banner: reserva de espaco global. Cinco sem ' +
+      'nome: SL-01 (Campo passou a envolver o controle). Medido nesta fatia: peq=0, semNome=0, ' +
+      'ocl=0, trunc=0 nos 4 viewports. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/tecnicos/:id': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Perfil com período (SEMANA/MÊS/CUSTOM), KPIs e histórico. Observada com técnico real ' +
-      '(id 7). "REGISTRAR PAGAMENTO" — a ação financeira da tela — fica sob o banner em 360 e ' +
-      '390. RECEITA LÍQUIDA e COMISSÃO GERADA truncam. Onze alvos abaixo de 40px no mobile.',
+      'RECLASSIFICADA (SL-13). REGISTRAR PAGAMENTO alcancavel (reserva do banner; hit-test 0). ' +
+      'Eram 11 alvos <40px: zerados (SL-02 + re-medicao). Rotulos de KPI truncando viravam a ' +
+      'classe de SL-11: line-clamp-2 com 2 linhas reservadas — RECEITA LIQUIDA/COMISSAO GERADA/ ' +
+      'TICKET MEDIO legiveis em 360/390. Historico com title (detalhe preservado). ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    evidencia: 'SONDA_E_CAPTURA',
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/reparticao': {
     classificacao: 'KEEP',
@@ -1012,14 +1006,11 @@ export const CLASSIFICADAS = Object.freeze({
 
   /* ── Recursos ─────────────────────────────────────────────────────────── */
   '/materiais': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Catálogo bem resolvido: um card por material com nome, unidade, preço, saldo (em vermelho ' +
-      'quando baixo), editar/excluir e a fileira Entrada/Saída/Ajuste/histórico. O defeito ' +
-      'visível e repetido é o glifo de IMAGEM QUEBRADA em cada linha — o slot de miniatura sem ' +
-      'imagem exibe o ícone de erro do navegador em vez de um espaço neutro. Some-se o maior ' +
-      'número de alvos pequenos do inventário (29 no mobile), consequência de 37 controles numa ' +
-      'tela de telefone.',
+      'RECLASSIFICADA (SL-13). O glifo de imagem quebrada ja e placeholder DESENHADO (ImageOff ' +
+      'em caixa neutra, Catalogo.jsx:32; captura vista em 390). Os 29 alvos <40px zeraram em ' +
+      'SL-02 (fileira Entrada/Saida/Ajuste/historico a 44px) — sonda desta fatia: peq=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
@@ -1062,64 +1053,56 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/meus-documentos': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Envio de documentos do técnico, com estado vazio presente. "Escolher arquivo" trunca em ' +
-      '360 e há um controle sem nome acessível nos quatro viewports. Vale registrar que a ' +
-      'feature está BLOCKED_EXTERNAL por bucket ausente em produção: a superfície foi observada ' +
-      'em ambiente local, e isso não altera o bloqueio nem o antecipa.',
+      'RECLASSIFICADA (SL-13). Escolher arquivo nao trunca mais (medido 390/1440: trunc=0) e o ' +
+      'controle sem nome zerou em SL-01 (input fantasma filtrado + label visivel como alvo). ' +
+      'O bloqueio de bucket em producao continua BLOCKED_EXTERNAL — classificacao visual nao o ' +
+      'antecipa nem o esconde. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
 
   /* ── Navegação e ajuda ────────────────────────────────────────────────── */
   '/mais': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Hub de navegação do mobile, agrupado por seção, com ícone, título, descrição e chevron em ' +
-      'cada item — legível e previsível. Mas é onde o inventário achou o vazamento de release: ' +
-      'renderiza "Notificações · Alertas e avisos" para o funcionário, e NOTIFICACOES está ' +
-      'diferida por decisão do usuário. O toque não abre nada: a rota está removida por flag e o ' +
-      'curinga devolve o usuário ao Painel, calado. REFINE pela correção do guard, não por ' +
-      'aparência — a tela em si está bem construída.',
+      'RECLASSIFICADA (SL-13). O vazamento de release fechou em GAP-UX-NAV-DIFERIDA-01 (guard de ' +
+      'feature na navegacao + prova de deep-link). Sonda desta fatia: zeros; hub integro. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/ajuda': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Guia "COMO USAR" com 196 palavras e cartões por tema, mais canais de contato. Único caso ' +
-      'do inventário em que o banner cobre conteúdo TAMBÉM em 1440 e 1920 (os cartões de ' +
-      'Notificações e o botão CHAT), porque a página é longa o bastante para haver conteúdo sob ' +
-      'ele no desktop. Conteúdo e organização estão adequados.',
+      'RECLASSIFICADA (SL-13). O unico caso de banner sobre conteudo em desktop morreu com a ' +
+      'reserva de espaco global (CONSENT-01): ocluidosPermanentes=0 medido em 390 E 1440 nesta ' +
+      'fatia. Conteudo e organizacao ja estavam adequados. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
 
   /* ── Configurações: sete superfícies, sete julgamentos ────────────────── */
   '/configuracao': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Hub bem organizado — OPERAÇÃO (com o interruptor de exigir aprovação, que comanda o fluxo ' +
-      'inteiro de aprovações), CONTA, INTEGRAÇÕES, PLANO. O defeito é de promessa: WhatsApp e ' +
-      '"Plano e cobrança" exibem chevron de navegação, dizem "em breve" e respondem ao toque com ' +
-      'um aviso. WhatsApp existe, renderiza e só é alcançável digitando a URL; cobrança tem API ' +
-      'respondendo 200 e nenhuma tela. Convidar o clique para depois recusá-lo é pior que não ' +
-      'convidar.',
+      'RECLASSIFICADA (SL-13). A promessa recusada morreu em SL-10: WhatsApp e Plano viraram ' +
+      'Links REAIS (WhatsApp -> pagina existente; Plano -> /assinatura nova) e nenhum card diz ' +
+      'em breve (unit do hub). GAP-UX-CONFIG-PROMESSA-01 CLOSED. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/configuracao/perfil': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'Dados da conta: nome, e-mail, telefone. 56 palavras, 15 controles, uma tela em todos os ' +
-      'viewports. Três controles sem nome acessível. Sem defeito de estrutura.',
+      'RECLASSIFICADA (SL-13). Os tres controles sem nome zeraram na varredura SL-01; medido de ' +
+      'novo nesta fatia: semNome=0, peq=0, ocl=0, trunc=0 em 390 e 1440. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/configuracao/seguranca': {
@@ -1137,14 +1120,12 @@ export const CLASSIFICADAS = Object.freeze({
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/configuracao/whatsapp': {
-    classificacao: 'REFINE',
+    classificacao: 'KEEP',
     razao:
-      'A tela existe e funciona (93 palavras, 11 controles, uma tela em todos os viewports), e ' +
-      'está órfã: nada na navegação leva até ela, porque o hub a anuncia como "em breve". Foi ' +
-      'alcançada por URL direta. O reparo é de ligação, não de layout — a superfície em si não ' +
-      'apresentou defeito próprio além dos compartilhados.',
+      'RECLASSIFICADA (SL-13). A orfandade fechou em SL-10: o hub renderiza a[href= ' +
+      '/configuracao/whatsapp] (unit; alvo do tour). A tela em si ja funcionava. ',
     observado: 'OBSERVED',
-    evidencia: 'SONDA',
+    evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/configuracao/usuarios': {
