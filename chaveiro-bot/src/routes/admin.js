@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { lockUsuario } from '../services/auth.js';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
@@ -322,25 +323,29 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       data.senhaAlteradaEm = new Date();
       data.tokenValidoApos = new Date();
     }
-    const r = await prisma.usuario.updateMany({
-      /* [SEC-HB-03] Quando o guard decidiu com `antes.papel` (ator sem autoridade plena), a
+    const r = await prisma.$transaction(async (tx) => {
+      /* [Gate 6 R4] Lock da linha do alvo: se o usuário trocar a própria senha concorrentemente
+         (ou uma rotação de refresh ocorrer), esta troca administrativa serializa com ela. */
+      await lockUsuario(tx, id);
+      const res = await tx.usuario.updateMany({
+        /* [SEC-HB-03] Quando o guard decidiu com `antes.papel` (ator sem autoridade plena), a
          mutação exige que o papel AINDA seja aquele — promoção concorrente na janela
          leitura→escrita vira count=0 (404), nunca decisão sobre nível velho (CWE-367).
          Dono/admin não passam pelo guard de nível (antes pode ser null) e não precisam de
          âncora: têm autoridade sobre qualquer papel. */
-      where: {
-        id,
-        empresaId: req.user.empresaId,
-        ...(precisaGuardarAlvo && antes ? { papel: antes.papel } : {}),
-      },
-      data,
+        where: {
+          id,
+          empresaId: req.user.empresaId,
+          ...(precisaGuardarAlvo && antes ? { papel: antes.papel } : {}),
+        },
+        data,
+      });
+      if (res.count === 1 && senha) {
+        await tx.refreshToken.deleteMany({ where: { usuarioId: id } });
+      }
+      return res;
     });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
-    /* [Gate 6 R3] Trocar a senha de um usuário revoga as sessões dele: o corte já foi avançado no
-       update; apagar os refresh mata as sessões roubadas de imediato (não só na próxima rotação). */
-    if (senha && r.count === 1) {
-      await prisma.refreshToken.deleteMany({ where: { usuarioId: id } });
-    }
     const usuario = await prisma.usuario.findUnique({ where: { id }, select: SELECT_USUARIO });
     if (parse.data.ativo === false) {
       logger.info('user_deactivated', { adminId: req.user.id, userId: id });

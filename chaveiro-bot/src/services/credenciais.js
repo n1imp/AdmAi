@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
+import { lockUsuario } from './auth.js';
 import { canonizarTelefone } from './parser.js';
 
 /**
@@ -87,16 +88,21 @@ export async function criarAcessoTecnico({
  * Invalida as sessões antigas e volta a exigir troca no próximo login.
  * @returns {Promise<string>} o novo PIN em claro (uma vez).
  */
-export async function resetarPin(usuarioId, tx = prisma) {
+export async function resetarPin(usuarioId, tx = null) {
   const pin = gerarPin();
   const senhaHash = await bcrypt.hash(pin, 12);
-  /* [Gate 6 R3] Corte EXATO (a tolerância de 1s vive agora em tokenAindaValido, na leitura do
-     JWT) + revogação dos refresh do alvo na MESMA transação — o funcionário perde toda sessão
-     e refaz login com o PIN novo. */
-  await tx.usuario.update({
-    where: { id: usuarioId },
-    data: { senhaHash, senhaProvisoria: true, tokenValidoApos: new Date() },
-  });
-  await tx.refreshToken.deleteMany({ where: { usuarioId } });
+  /* [Gate 6 R4] Corte EXATO + revogação dos refresh numa transação com LOCK da linha do usuário
+     — serializa com uma rotação de refresh concorrente (o call site não passava tx, então eram
+     dois autocommits). Se um `tx` for fornecido, assume que o chamador já serializa. */
+  const executar = async (client) => {
+    await lockUsuario(client, usuarioId);
+    await client.usuario.update({
+      where: { id: usuarioId },
+      data: { senhaHash, senhaProvisoria: true, tokenValidoApos: new Date() },
+    });
+    await client.refreshToken.deleteMany({ where: { usuarioId } });
+  };
+  if (tx) await executar(tx);
+  else await prisma.$transaction(executar);
   return pin;
 }

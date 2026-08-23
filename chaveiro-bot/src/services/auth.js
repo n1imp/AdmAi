@@ -18,6 +18,11 @@ export function gerarJWT(usuario) {
       papel: usuario.papel ?? (usuario.admin ? 'dono' : 'funcionario'),
       senhaProvisoria: Boolean(usuario.senhaProvisoria),
       empresaId: usuario.empresaId,
+      /* [Gate 6 R4] Emissão em MILISSEGUNDOS: o `iat` padrão é em segundos e forçava uma
+         tolerância de 1s no corte — uma janela por onde um JWT emitido logo antes da troca de
+         credencial sobrevivia até `exp` (1h). Com iatMs a comparação com tokenValidoApos é
+         exata, sem janela, mantendo `iat` padrão para compatibilidade. */
+      iatMs: Date.now(),
     },
     env.JWT_SECRET,
     { algorithm: 'HS256', expiresIn: '1h' }
@@ -50,6 +55,14 @@ export async function criarRefreshEmTx(tx, usuarioId) {
   return raw;
 }
 
+/* [Gate 6 R4] Lock da linha do usuário DENTRO de uma transação — serializa a rotação de
+   refresh com as trocas de credencial (as duas disputam esta mesma linha). Sem ele, sob
+   READ COMMITTED, uma rotação e uma troca de credencial concorrentes se intercalam e um refresh
+   novo nasce posterior ao corte. Mesma técnica do FOR UPDATE de estoque. */
+export async function lockUsuario(tx, usuarioId) {
+  await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${usuarioId} FOR UPDATE`;
+}
+
 export function setRefreshCookie(res, raw) {
   res.cookie('refresh_token', raw, {
     ...COOKIE_OPTS_REFRESH,
@@ -72,13 +85,14 @@ export function verificarJWT(token) {
  */
 export function tokenAindaValido(payload, tokenValidoApos) {
   if (!tokenValidoApos) return true;
+  const corteMs = new Date(tokenValidoApos).getTime();
+  /* [Gate 6 R4] Preferimos o claim `iatMs` (milissegundos), que dá comparação EXATA contra o
+     corte — sem janela. Só tokens LEGADOS (emitidos antes deste deploy) não têm iatMs; para
+     eles mantemos a tolerância de 1s sobre o `iat` em segundos, e eles expiram em ≤1h de
+     qualquer forma. */
+  if (typeof payload?.iatMs === 'number') return payload.iatMs >= corteMs;
   if (!payload?.iat) return false;
-  /* [Gate 6 R3] `iat` é em SEGUNDOS (RFC 7519); um JWT reemitido no MESMO segundo da troca de
-     credencial pode ter iat*1000 até 999ms abaixo do corte (que é em ms). Toleramos 1s AQUI, na
-     leitura do JWT — e SÓ aqui. O corte em si passou a ser exato (agora), e o refresh token
-     (persistente, ms) usa o corte exato sem tolerância. Antes, recuar o próprio corte 1s abria
-     uma janela para refresh roubado recente sobreviver. */
-  return payload.iat * 1000 >= new Date(tokenValidoApos).getTime() - 1000;
+  return payload.iat * 1000 >= corteMs - 1000;
 }
 
 /**

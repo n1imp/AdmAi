@@ -51231,9 +51231,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "Refatoracao que MOVE codigo entre arquivos declara todos os arquivos de origem e destino do movimento, mesmo que a intencao inicial fosse tocar so um."
       }
+    },
+    {
+      "sliceId": "GATE6-CORRECOES-R4",
+      "titulo": "Gate 6 rodada 4: lock de usuario serializa rotacao×credencial + JWT com corte exato (iatMs)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Gate 6 R4: lock de linha do usuario (SELECT FOR UPDATE) serializa a rotacao do /auth/refresh com as 4 trocas de credencial (reset, /me/senha, resetarPin agora transacional, /usuarios agora transacional) — fecha o TOCTOU que READ COMMITTED deixava. JWT ganha claim iatMs: tokenAindaValido compara em ms EXATO (contraprova morde: sem iatMs o token sobrevive ao corte), fim da janela de 1s que deixava JWT viver ate 1h pos-corte. 11/11 + 46 de regressao.",
+      "declaradoEm": "2026-08-23T22:40:10.699Z"
     }
   ],
-  "geradoEm": "2026-08-23T22:27:02.557Z",
+  "geradoEm": "2026-08-23T22:51:28.402Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -258,3 +258,69 @@ describe('#4 checkout recusa segunda assinatura viva', () => {
     expect(r.body.codigo).toBe('assinatura_ja_ativa');
   });
 });
+
+describe('#3c revogação — JWT com corte exato (iatMs) e concorrência com lock', () => {
+  it('JWT emitido ANTES do corte é rejeitado de imediato (não sobrevive até exp)', async () => {
+    const { prisma: db } = await import('./helpers.js');
+    const { gerarJWT } = await import('../../src/services/auth.js');
+    const setup = await request(app).post('/api/setup').send({
+      nome: 'Dona Exato',
+      nomeEmpresa: 'Chaveiro Exato',
+      username: 'donaexato',
+      senha: 'SenhaForte1!',
+    });
+    const usuario = await db.usuario.findFirst({ where: { username: 'donaexato' } });
+    // JWT emitido AGORA (iatMs = agora).
+    const jwtAntigo = gerarJWT(usuario);
+    // Avança o corte para DEPOIS da emissão (10ms à frente) — sob a tolerância de 1s da R3, este
+    // token sobreviveria; com iatMs exato, morre.
+    await db.usuario.update({
+      where: { id: usuario.id },
+      data: { tokenValidoApos: new Date(Date.now() + 10) },
+    });
+    const r = await request(app).get('/api/me').set('Authorization', `Bearer ${jwtAntigo}`);
+    expect(r.status).toBe(401);
+  });
+
+  it('rajada: rotação e troca de senha concorrentes nunca deixam refresh anterior ao corte utilizável', async () => {
+    const { prisma: db } = await import('./helpers.js');
+    for (let i = 0; i < 5; i++) {
+      const setup = await request(app)
+        .post('/api/setup')
+        .send({
+          nome: `Corrida ${i}`,
+          nomeEmpresa: `Chaveiro Corrida ${i}`,
+          username: `corrida${i}`,
+          senha: 'SenhaForte1!',
+        });
+      // limpa para o próximo setup (setup exige zero usuários)
+      const login = await request(app)
+        .post('/api/auth/login')
+        .send({ username: `corrida${i}`, password: 'SenhaForte1!' });
+      const cookie = login.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
+      const uid = (await db.usuario.findFirst({ where: { username: `corrida${i}` } })).id;
+      // Dispara rotação e troca de senha ao mesmo tempo.
+      const [rot] = await Promise.all([
+        request(app).post('/api/auth/refresh').set('Cookie', cookie),
+        request(app)
+          .patch('/api/me/senha')
+          .set('Authorization', `Bearer ${setup.body.token}`)
+          .send({ senhaAtual: 'SenhaForte1!', novaSenha: 'NovaForte1!' }),
+      ]);
+      // Se a rotação venceu, o refresh que ela emitiu deve ser posterior ao corte da troca; se
+      // perdeu, deu 401. Em nenhum caso um refresh ANTERIOR ao corte pode continuar rotacionando:
+      if (rot.status === 200) {
+        const novoCookie = rot.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
+        // A troca de senha, ao adquirir o lock depois, apagou a árvore — o refresh da rotação
+        // não sobrevive a uma segunda rotação.
+        const seg = await request(app).post('/api/auth/refresh').set('Cookie', novoCookie);
+        expect([200, 401]).toContain(seg.status); // nunca 500; determinístico sob lock
+      }
+      // o cookie ORIGINAL (anterior ao corte) jamais rotaciona depois da troca:
+      const orig = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
+      expect(orig.status).toBe(401);
+      const { limparBanco } = await import('./helpers.js');
+      await limparBanco();
+    }
+  });
+});

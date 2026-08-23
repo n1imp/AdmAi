@@ -13,6 +13,7 @@ import {
   autenticarCandidatos,
   criarRefreshEmTx,
   setRefreshCookie,
+  lockUsuario,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
@@ -537,13 +538,14 @@ router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
     /* [Gate 6 R2] Mutação da senha + revogação dos refresh na MESMA transação — atômico, como
        o revisor exigiu. O corte em tokenValidoApos já barra refresh antigos no /auth/refresh; o
        delete é o cinturão (invalida imediatamente, sem esperar a próxima rotação). */
-    await prisma.$transaction([
-      prisma.usuario.update({
+    await prisma.$transaction(async (tx) => {
+      await lockUsuario(tx, usuario.id); // serializa com rotação concorrente [Gate 6 R4]
+      await tx.usuario.update({
         where: { id: usuario.id },
         data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
-      }),
-      prisma.refreshToken.deleteMany({ where: { usuarioId: usuario.id } }),
-    ]);
+      });
+      await tx.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
+    });
     logger.info('senha_redefinida_email', { userId: usuario.id });
     return res.json({ ok: true });
   } catch (erro) {

@@ -11,6 +11,7 @@ import {
   hashRefreshToken,
   dataExpiracaoRefresh,
   setRefreshCookie,
+  lockUsuario,
 } from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
 import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
@@ -362,6 +363,7 @@ router.patch('/me/senha', async (req, res) => {
        sessão continuar. Sem isto, ou o corte recuado deixava refresh roubado recente sobreviver,
        ou o usuário que troca a própria senha era deslogado no próximo /auth/refresh. */
     const { atualizado, rawRefresh } = await prisma.$transaction(async (tx) => {
+      await lockUsuario(tx, req.user.id); // serializa com rotação concorrente [Gate 6 R4]
       const u = await tx.usuario.update({
         where: { id: req.user.id },
         data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
