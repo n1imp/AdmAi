@@ -1471,21 +1471,19 @@
       "authority": "CODEX_D1",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "VERIFICATION_REQUIRED",
-      "blockerRefs": [
-        "CODEX-QUOTA"
-      ],
+      "status": "DONE",
+      "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Rodada 1 (thread 01a02fb6): 3 bloqueantes + 1 P2. Rodada 2: paywall e emissores de sessao CONFIRMADOS fechados; revogacao-apos-credencial apontada como incompleta.",
-        "Correcoes aplicadas e auto-verificadas (2f39055, f78d947): revogacao na RAIZ (/auth/refresh vs tokenValidoApos, cobre os 4 fluxos), reset transacional, /usuarios/:id-senha avanca corte, paused em ESTADOS_VIVOS. Testes 8/8 com sabotagem que morde + 39 de regressao.",
-        "Rodada 3 (chancela da correcao de raiz) BLOQUEADA: Codex atingiu limite de uso (retry 2026-08-27). UNAVAILABLE != PASS — nao auto-aprovado. Ver D-GATE6-CODEX-UNAVAILABLE."
+        "Gate 6 adversarial APROVADO pelo Codex (thread 01a02fb6) apos 6 rodadas: rodada 1 achou 3 bloqueantes (paywall furado em Google/WhatsApp, bypass de 2FA por magic-link/OAuth/phone2fa, reset sem revogar refresh) + 1 P2 (checkout duplo); rodadas 2-5 acharam corridas mais fundas (revogacao incompleta em 4 fluxos, TOCTOU da rotacao, janela temporal de 1s, corte pre-lock) — TODAS corrigidas na raiz: lock FOR UPDATE serializa rotacao×credencial, iatMs da corte exato ao JWT, boundary criadoEm<=corte.",
+        "Regressao executavel do lock (gate6_lock_regressao): transacao segura a linha do usuario, /auth/refresh por outra conexao ESPERA; sabotagem (remover lockUsuario) faz o teste FALHAR. Provas de corte mordem por contraprova (iatMs, boundary). 27 verdes no bloco.",
+        "Residuais: P3 transitorio (JWT legado sem iatMs, some em <=1h pos-deploy); P2-CHECKOUT-CONCORRENTE registrado com revisitCondition."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-23T22:00:44.108Z",
+      "lastAttempt": "2026-08-23T23:22:49.462Z",
       "nextAction": null,
-      "revisitCondition": "Codex disponivel (limite de uso reseta 2026-08-27) para a chancela adversarial da correcao de raiz da revogacao",
+      "revisitCondition": null,
       "snapshotRef": null
     },
     {
@@ -1613,19 +1611,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "VERIFICATION_REQUIRED",
-      "blockerRefs": [
-        "CODEX-QUOTA"
-      ],
+      "status": "DONE",
+      "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "F6-01..10 DONE (perf, SEO, fontes, hardening, uploads-split, backfill, backup-drill, reconciliacoes, audit-gate verde). Unica pendencia: a chancela final do Gate 6 adversarial (F6-06) depende do Codex, indisponivel por quota ate 2026-08-27."
+        "F6-01..10 DONE + Gate 6 adversarial APROVADO. Engenharia de release completa: perf -44% JS publico, SEO fail-closed, fontes self-hosted, 6 hardenings + 5 correcoes do Gate 6, uploads-split, backfill+drill provados, audit-gate verde."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-23T22:00:44.111Z",
+      "lastAttempt": "2026-08-23T23:22:49.463Z",
       "nextAction": null,
-      "revisitCondition": "Chancela da rodada 3 do Gate 6 (Codex disponivel 2026-08-27)",
+      "revisitCondition": null,
       "snapshotRef": null
     },
     {

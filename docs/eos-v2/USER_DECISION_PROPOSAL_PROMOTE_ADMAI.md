@@ -6,11 +6,11 @@
 
 **`ADMAI_RELEASE_READY` NÃO pode ser declarado** — e isso é o resultado honesto, não uma falha.
 O programa (F0→F6) está completo do lado que depende de engenharia: 62 itens DONE, todos os
-gates de fase fechados, suíte verde, e a revisão adversarial do Gate 6 achou e teve corrigidos 3
-bloqueantes de segurança reais (sua chancela final está pendente por indisponibilidade do Codex,
-não por defeito em aberto — ver abaixo). O que impede o READY são **7 bloqueios D2/externo** que
-dependem de decisão do usuário ou de provisionamento com custo — nenhum é executável
-unilateralmente por um agente. O terminal legítimo é esta proposta.
+gates de fase fechados, suíte verde, e o Gate 6 adversarial **APROVADO** pelo Codex após 6
+rodadas (3 bloqueantes de segurança reais + 2 corridas sutis achados e corrigidos na raiz). O
+que impede o READY são **7 bloqueios D2/externo** que dependem de decisão do usuário ou de
+provisionamento com custo — nenhum é executável unilateralmente por um agente. O terminal
+legítimo é esta proposta.
 
 Se os 7 bloqueios abaixo forem resolvidos, `ADMAI_RELEASE_READY` é declarável sem nenhum trabalho
 de engenharia adicional além do plano de promoção da última seção.
@@ -27,15 +27,9 @@ de engenharia adicional além do plano de promoção da última seção.
 | F4 Runtime Acceptance | ✅ | 2FA loop, auditoria, documentos, paywall, canário, WhatsApp HMAC, LGPD; integração 348 testes |
 | F5 Staging & E2E | ⚠️ parcial | 9/9 jornadas E2E no stack real (3 defeitos achados e corrigidos); staging BLOCKED_EXTERNAL honesto |
 | F6 Release Engineering | ✅ | perf −44% JS público, SEO fail-closed, fontes self-hosted, 6 hardenings, backfill+drill provados, audit-gate verde |
-| Gate 6 adversarial | ⚠️ re-verif. pendente | 2 rodadas Codex fecharam paywall+emissores de sessão; correção de raiz da revogação aplicada e testada (8/8, sabotagem morde); rodada 3 de chancela BLOQUEADA por limite de uso do Codex (reseta 2026-08-27) — ver D-GATE6-CODEX-UNAVAILABLE |
+| Gate 6 adversarial | ✅ APROVADO | 6 rodadas Codex (thread 01a02fb6): paywall Google/WhatsApp gateado; 2FA não contornável (magic-link/OAuth/phone2fa); revogação de refresh com lock FOR UPDATE serializando rotação×credencial; JWT com corte exato (iatMs); checkout sem 2ª assinatura. Regressão executável do lock (sabotagem morde). Residuais: P3 JWT legado (<1h), P2 checkout concorrente registrado |
 
 Painel: 251 testes verdes. Bot: 348 testes de integração + unit verdes.
-
-**Pendência de verificação (não é bloqueio D2):** a chancela adversarial final do Gate 6 sobre a
-correção de raiz da revogação de refresh depende do Codex, que atingiu o limite de uso (retry
-2026-08-27). As correções estão implementadas, verificadas contra o código e provadas por testes
-que mordem; o que falta é o segundo par de olhos hostil da rodada 3. `UNAVAILABLE != PASS` — por
-isso o Gate 6 fica `VERIFICATION_REQUIRED`, não aprovado. Não afeta a lista de bloqueios D2 abaixo.
 
 ## Bloqueios D2/externo (a lista que precisa esvaziar) — 7
 
@@ -105,6 +99,6 @@ fora do que um agente faz sem autorização — este documento é o ponto de dec
 
 ## Anexo — estado do ledger
 
-78 itens: **63 DONE**, 6 DEFERRED_BY_SCOPE, 4 BLOCKED_D2, 3 BLOCKED_EXTERNAL, 2
-VERIFICATION_REQUIRED (Gate 6 adversarial + Gate F6, ambos aguardando só a chancela do Codex,
-que reseta 2026-08-27). `node tools/admai-delivery/completion-ledger.mjs --resumo` para o detalhe vivo.
+79 itens: **65 DONE**, 7 DEFERRED_BY_SCOPE, 4 BLOCKED_D2, 3 BLOCKED_EXTERNAL, zero pendências
+de verificação — todos os gates de fase e o Gate 6 adversarial fechados. Os 7 bloqueios acima são
+D2/externo (decisão do usuário ou provisionamento). `node tools/admai-delivery/completion-ledger.mjs --resumo` para o detalhe vivo.
