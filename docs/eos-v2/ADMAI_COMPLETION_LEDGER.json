@@ -596,15 +596,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-DESKTOP-LARGURA-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Fechamento por MEDICAO, zero escrita de produto (declarador recusa conjunto vazio por desenho): sonda em /tecnicos/7 (dados reais), /servicos/novo, /configuracao/seguranca, /reparticao, /meus-servicos/novo = truncados 0 em 1440 E 1920, coluna centrada.",
+        "Prova vacua descartada: /tecnicos/1 nao existe no seed e rendia card de erro — refeito com id real 7.",
+        "/tecnicos (lista) segue truncando Ana Tecnica/COMISSAO/PENDENTE nos dois viewports: residual pertence a SL-15 REDESIGN; GAP-UX-DESKTOP-LARGURA-01 permanece ABERTO no registry ate la."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T07:14:01.646Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
