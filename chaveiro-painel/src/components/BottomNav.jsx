@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -14,8 +15,30 @@ export default function BottomNav() {
   const itens = [...primary, { to: '/mais', label: 'Mais', icon: MoreHorizontal, end: false }];
   const total = carregando ? 5 : itens.length;
 
+  /* Publica a propria altura para que o banner de consentimento sente ACIMA dela, e nao sobre
+     ela. Em >= lg este componente esta em `display: none`, entao a medida cai a zero sozinha —
+     sem `if` de breakpoint duplicando a regra que o CSS ja expressa. [GAP-UX-CONSENT-01] */
+  const caixa = useRef(null);
+  useLayoutEffect(() => {
+    const el = caixa.current;
+    if (!el) return undefined;
+    const publicar = () =>
+      document.documentElement.style.setProperty(
+        '--admai-nav-h', `${Math.ceil(el.getBoundingClientRect().height)}px`
+      );
+    publicar();
+    const RO = globalThis.ResizeObserver;
+    const obs = RO ? new RO(publicar) : null;
+    obs?.observe(el);
+    return () => {
+      obs?.disconnect();
+      document.documentElement.style.removeProperty('--admai-nav-h');
+    };
+  });
+
   return (
     <nav
+      ref={caixa}
       aria-label="Navegação principal"
       aria-busy={carregando || undefined}
       className="fixed bottom-0 left-0 right-0 bg-dark-900/95 backdrop-blur border-t border-dark-600 z-40 safe-area-bottom"

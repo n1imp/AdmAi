@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SCOPE-F2E-NAV-DIFERIDA",
-  "titulo": "GAP-UX-NAV-DIFERIDA-01: feature diferida deixa de ser alcancavel",
+  "sliceId": "SCOPE-F2F-CONSENT",
+  "titulo": "GAP-UX-CONSENT-01: reservar espaco real para o consentimento",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T00:26:35.155Z",
+  "declaradoEm": "2026-08-23T01:14:04.291Z",
   "baseCommitPorLane": {
-    "HARNESS": "d8d229e78d6cb27334277ced22e8982989694e97"
+    "HARNESS": "df3b0d0d33b6220e1df7039f60a316dab79d3437"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "A entrada de Notificacoes e a instancia; a classe e que `permite()` retorna true em `guard.sempre` ANTES de checar `feature`, entao sempre:true e um escape que desliga o gate de feature. Corrigir so a entrada deixaria a classe aberta para a proxima. Controle DERIVADO das rotas com flag em App.jsx, porque o furo existiu por conferencia item a item.",
+  "notaDeMetodo": "Uma causa, um dono. O banner mede a propria altura e publica em --admai-consent-h; a navegacao inferior publica --admai-nav-h; o utilitario min-h-dvh, usado por 13 superficies, passa a descontar a altura medida. Nada de offset fixo: a altura varia com viewport, quebra de linha, traducao e escala de fonte.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -389,8 +389,8 @@
       "chaveiro-painel/src/components/ui/__tests__/Overlay.test.jsx": "2cca31dc99ff8ecc31ff6cba07701c68427f87e84e222caaa3a88c1e570ff56f",
       "chaveiro-painel/src/components/ui/__tests__/Structure.test.jsx": "16806be17287772caa7af6190f8e1bb8f2d9d44c0dd72a504431fe4c4a0eb8bf",
       "chaveiro-painel/src/components/ui/index.js": "3d873e3b5fd081e629438086728a333bed530c6dcb865199572f971ba39b73fb",
-      "chaveiro-painel/src/config/__tests__/navigation.test.js": "7db66740cc421604510110b09c25f12b64502c9d6cc0cfd4bc9eea8e160aa834",
-      "chaveiro-painel/src/config/navigation.js": "bd327c3e7d4b52049e6f623df7a48dde4ef1d19b7e1312e034683a9c46d6e266",
+      "chaveiro-painel/src/config/__tests__/navigation.test.js": "7f02c984ccead3157745dd1dc1d095246b4175ec35d2580400f787c926e0a269",
+      "chaveiro-painel/src/config/navigation.js": "78844d13e6bb23c74569a6f6bb98f2a7b463ca8ae80c10a803e5b71a597c5db0",
       "chaveiro-painel/src/contexts/AuthContext.jsx": "832f67e6a052b9b93431d5ca35699d8b949e6df46db485db6b512c02c47a80cd",
       "chaveiro-painel/src/hooks/__tests__/useFormPersist.test.js": "917927a6047c649f393ede5cdc2cb34cfe9a299869a79aecd4a86805264d717b",
       "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js": "d5f4a20796db255ad3a67a60e95632203decd23d01b109c368621ee0fc15bc66",
@@ -547,8 +547,8 @@
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "0a8d59dca7e6b3c83728f729b105d5d0f517c887fcd4aca7b21e279f86c8cb83",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "49370d56b198ad53d7ece8a6475dae233119479a9e08f7eface65519be1fc2e4",
+      "docs/eos-v2/WRITE_SET.json": "f6666f25689a98ae3dba371257888f22751eec84408fda2edf3432b5437b5519",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "76568350907d15e6314cd05651db81d5eb20c9081652283995815c1155085ef2",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1086,44 +1086,68 @@
       "chaveiro-painel/telas/inventario/anonimo__verificar-email__1920x1080.jpg": "41868:1787431382034",
       "chaveiro-painel/telas/inventario/anonimo__verificar-email__360x800.jpg": "122270:1787431322712",
       "chaveiro-painel/telas/inventario/anonimo__verificar-email__390x844.jpg": "128701:1787431343688",
-      "chaveiro-painel/telas/inventario/sonda-anonimo.json": "22962:1787431390156"
+      "chaveiro-painel/telas/inventario/sonda-anonimo.json": "22962:1787431390156",
+      "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__1440x900.jpg": "81198:1787445626977",
+      "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__1920x1080.jpg": "92177:1787445632679",
+      "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__360x800.jpg": "176960:1787445615290",
+      "chaveiro-painel/telas/prova-nav/funcionario__configuracao-notificacoes__390x844.jpg": "202714:1787445621312",
+      "chaveiro-painel/telas/prova-nav/funcionario__mais__1440x900.jpg": "58170:1787445624190",
+      "chaveiro-painel/telas/prova-nav/funcionario__mais__1920x1080.jpg": "63278:1787445629876",
+      "chaveiro-painel/telas/prova-nav/funcionario__mais__360x800.jpg": "149424:1787445612260",
+      "chaveiro-painel/telas/prova-nav/funcionario__mais__390x844.jpg": "158642:1787445618305",
+      "chaveiro-painel/telas/prova-nav/sonda-funcionario.json": "13265:1787445632690"
     }
   },
+  "artefatos": [
+    "chaveiro-painel/telas"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/config/navigation.js",
+      "caminho": "chaveiro-painel/src/components/CookieBanner.jsx",
       "precisao": "BOUNDED",
-      "proposito": "ordem do guard e feature na entrada de notificacoes",
+      "proposito": "medir altura, publicar variavel, sentar acima da navegacao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "bd327c3e7d4b52049e6f623df7a48dde4ef1d19b7e1312e034683a9c46d6e266",
+      "shaNaDeclaracao": "e5824e16cda788945ad9cfa56216a34210a2d8c597ac6b1a21b6d39070dd9b59",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/config/__tests__/navigation.test.js",
+      "caminho": "chaveiro-painel/src/components/BottomNav.jsx",
       "precisao": "BOUNDED",
-      "proposito": "positivo, negativo, sabotagem e controle derivado",
+      "proposito": "publicar --admai-nav-h",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7db66740cc421604510110b09c25f12b64502c9d6cc0cfd4bc9eea8e160aa834",
+      "shaNaDeclaracao": "cf40928569219cd3ec2ccdf85635730b157076013d420be5d0d7a320d5df7c89",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/index.css",
+      "precisao": "BOUNDED",
+      "proposito": "min-h-dvh desconta o espaco reservado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c4f42a5acb95836d5c769d2783cb2e3f7f66db8e21ffc4d44220f149db61c6df",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/CookieBanner.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "positivo, negativo e sabotagem",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T00:26:35.604Z",
+  "validadoEm": "2026-08-23T01:14:06.329Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": true,
-  "nota": "GAP-UX-NAV-DIFERIDA-01 fechado. Classe corrigida em permite(): `feature` passa a ser avaliada ANTES de `sempre`, que era um escape desligando o gate de feature para as dez entradas que o usam. Provas: negativo nos tres papeis, positivo com flag ligada, duas sabotagens que reprovam, controle DERIVADO das rotas sob flag em App.jsx, e runtime — /mais do funcionario de 17 para 16 interativos e deep-link caindo na home em vez da superficie diferida.",
-  "reconciliacao": {
-    "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
-    "autorizadoPor": "Claude (writer) — dentro da missao SCOPE-F2E",
-    "justificativa": "As 9 capturas em chaveiro-painel/telas/prova-nav sao a evidencia de runtime que a propria instrucao exige para esta correcao: conteudo aceito. A ordem foi violada porque eu declarei a fatia sem `artefatos: [\"chaveiro-painel/telas\"]`, sabendo que ia rodar captura. O detector criado na fatia anterior pegou isto no primeiro uso real, que e a validacao mais forte que ele podia receber. Correcao de processo aplicada na proxima fatia: toda fatia que roda captura declara a raiz de artefato.",
-    "provenance": "ORIGINAL_PRE_MUTATION"
-  },
+  "bloqueiaIntegracao": false,
+  "nota": "GAP-UX-CONSENT-01, primeira metade: o banner mede a propria altura via ResizeObserver e publica --admai-consent-h; BottomNav publica --admai-nav-h e o banner senta acima dela; min-h-dvh (13 cascas) desconta a altura medida; body ganha padding-bottom equivalente. Runtime em 360x800: scrollHeight 940 -> 1186 (+246, exatamente a altura medida) e o botao de submissao do login sai de inalcancavel para alcancavel por hit-test. Varredura das 35 superficies fica na fatia seguinte.",
   "aviso": "Declaracao ENCERRADA."
 }

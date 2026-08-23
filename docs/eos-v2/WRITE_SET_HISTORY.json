@@ -45921,9 +45921,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION"
       },
       "declaradoEm": "2026-08-23T00:26:35.155Z"
+    },
+    {
+      "sliceId": "SCOPE-F2F-CONSENT",
+      "titulo": "GAP-UX-CONSENT-01: reservar espaco real para o consentimento",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "GAP-UX-CONSENT-01, primeira metade: o banner mede a propria altura via ResizeObserver e publica --admai-consent-h; BottomNav publica --admai-nav-h e o banner senta acima dela; min-h-dvh (13 cascas) desconta a altura medida; body ganha padding-bottom equivalente. Runtime em 360x800: scrollHeight 940 -> 1186 (+246, exatamente a altura medida) e o botao de submissao do login sai de inalcancavel para alcancavel por hit-test. Varredura das 35 superficies fica na fatia seguinte.",
+      "declaradoEm": "2026-08-23T01:14:04.291Z"
     }
   ],
-  "geradoEm": "2026-08-23T01:08:19.465Z",
+  "geradoEm": "2026-08-23T01:45:49.754Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

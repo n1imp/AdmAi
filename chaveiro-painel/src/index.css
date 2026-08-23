@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * ESPACO RESERVADO PARA O CONSENTIMENTO — o dono compartilhado de GAP-UX-CONSENT-01.
+ *
+ * 13 superficies usam `min-h-dvh` como casca de pagina: login, cadastro, recuperar senha, magic
+ * link, verificar e-mail, convite, troca de senha, landing, paginas legais, erro e as duas cascas
+ * do painel. Corrigir cada uma seria 13 correcoes para uma causa — exatamente o que o inventario
+ * classificou como REPEATED_CROSS_SURFACE_DEFECT.
+ *
+ * Redefinir o utilitario UMA VEZ muda o significado de "altura da viewport" para todas elas:
+ * a area util passa a ser o que sobra depois do banner. Layouts centrados voltam a centralizar
+ * dentro do espaco visivel, e a acao primaria deixa de nascer debaixo do banner.
+ *
+ * O DESCONTO E MEDIDO, NAO FIXO. `--admai-consent-h` e publicada por CookieBanner via
+ * ResizeObserver. A altura muda com viewport, quebra de linha, escala de fonte do sistema e
+ * traducao futura; um offset constante acertaria num tamanho e erraria calado em todos os outros.
+ * Com o banner ausente a variavel nao existe, o fallback e 0px, e o comportamento e o de antes.
+ *
+ * Redefinir utilitario de framework e incomum o bastante para exigir esta nota: a alternativa era
+ * uma classe nova propagada por 13 arquivos, que e mais codigo e mais lugares para esquecer.
+ */
+@layer utilities {
+  .min-h-dvh {
+    min-height: calc(100dvh - var(--admai-consent-h, 0px));
+  }
+}
+
 @layer base {
   html {
     font-family: 'Sora', 'IBM Plex Sans', system-ui, sans-serif;
@@ -13,6 +39,20 @@
     background-color: #0e1014;
     color: #e6e9ef;
     min-height: 100dvh;
+    /**
+     * A SEGUNDA METADE DE GAP-UX-CONSENT-01.
+     *
+     * Descontar a altura do banner de `min-h-dvh` resolve a pagina CURTA: o card centralizado
+     * volta a centralizar no espaco livre. Nao resolve a pagina LONGA. O /login em 360px tem
+     * 940px de conteudo numa viewport de 800: rolar ate o fim levava o ultimo conteudo para
+     * dentro da faixa do banner, onde ele ficava permanentemente inalcancavel — nao "abaixo da
+     * dobra", mas fora de alcance por qualquer rolagem.
+     *
+     * O padding no fim do documento devolve exatamente a altura medida do banner ao curso de
+     * rolagem, entao todo conteudo consegue subir acima dele. Com o banner ausente a variavel
+     * nao existe, o fallback e 0px, e nada muda.
+     */
+    padding-bottom: var(--admai-consent-h, 0px);
     /* Atmosfera técnica: leve grade + vinheta radial de acento no topo */
     background-image:
       radial-gradient(900px 500px at 100% -10%, rgba(34, 211, 238, 0.06), transparent 60%),
