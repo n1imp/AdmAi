@@ -78,6 +78,9 @@ const TODOS_NA = vp('NOT_APPLICABLE', 'NOT_APPLICABLE', 'NOT_APPLICABLE', 'NOT_A
  * inventário produziria GAP-X-LOGIN, GAP-X-ESTOQUE, GAP-X-PONTO para o mesmo `position: fixed`,
  * e a correção seria feita quarenta vezes — ou, mais provavelmente, três vezes e esquecida.
  */
+/** Ciclo de vida de um achado. `CLOSED` exige prova escrita — ver o controle no fim do arquivo. */
+export const STATUS_DE_ACHADO = Object.freeze(['OPEN', 'CLOSED', 'USER_DECISION_REQUIRED']);
+
 export const ACHADOS_COMPARTILHADOS = Object.freeze([
   {
     id: 'GAP-UX-CONSENT-01',
@@ -144,6 +147,22 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'PAGE_CRITICAL_ACTIONS_INTERACTABLE — o hit-test no centro dela chega nela, não no banner',
     ]),
     naoSatisfaz: 'esconder, atrasar, encolher ou mover o banner sem reservar espaço equivalente',
+    status: 'CLOSED',
+    correcao:
+      'O banner mede a si mesmo (ResizeObserver) e publica `--admai-consent-h`; a navegação ' +
+      'inferior publica `--admai-nav-h` e o banner senta ACIMA dela; o utilitário `.min-h-dvh`, ' +
+      'compartilhado por 13 cascas de página, desconta a altura medida; `body` e o `main` do ' +
+      'painel — que tem rolagem própria — ganham o mesmo desconto como padding; e o botão ' +
+      'flutuante, que é ele próprio `fixed`, ganhou dono comum (BotaoFlutuante) que o desloca ' +
+      'pela pilha inteira. Nada de offset constante: a altura varia com viewport, quebra de ' +
+      'linha, escala de fonte e tradução.',
+    provaDeFechamento:
+      '152 capturas em 4 viewports × 4 papéis, com instrumento verificado íntegro (0 páginas em ' +
+      'branco). CONSENT_VISIBLE 152/152 · CONSENT_USABLE 152/152 · 0 oclusões PERMANENTES por ' +
+      'hit-test após rolagem. Contraprova: removendo as duas regras de CSS, o /login volta a ' +
+      'acusar 6/6/3/0 permanentes nos quatro viewports — a medida discrimina, então o zero ' +
+      'significa alguma coisa. Esconder o banner NÃO passaria: a primeira condição exige ' +
+      'presença nas 152.',
   },
   {
     id: 'GAP-UX-IDENTIDADE-01',
@@ -200,6 +219,21 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
     nota:
       'É violação literal de `POST_MVP + USER_REACHABLE = INVALID_RELEASE_STATE`, que é decisão ' +
       'registrada do usuário. Não é matéria de gosto visual e não espera pelo Release Experience.',
+    status: 'CLOSED',
+    correcao:
+      'A entrada era a instância; a classe era `permite()`, que dava `return true` em ' +
+      '`guard.sempre` ANTES de olhar `feature` — ou seja, `sempre` desligava o gate de feature ' +
+      'para as dez entradas que o usam. `feature` passa a ser avaliada primeiro. Some-se o ' +
+      'guard correto na entrada de Notificações.',
+    provaDeFechamento:
+      'Negativo: nenhum dos três papéis alcança a entrada com a flag OFF. Positivo: com a flag ' +
+      'ON a superfície volta para quem tem papel — sem isto, um teste de ausência passaria com ' +
+      'a feature apagada do produto. Sabotagem: reverter a ordem do guard reprova 3 testes; ' +
+      'remover a feature da entrada reprova 4. Controle DERIVADO: toda rota que App.jsx envolve ' +
+      'em featureAtiva(X) obriga a entrada de navegação correspondente a carregar feature: X — ' +
+      'é o que teria pego o furo sem depender de revisão item a item. Runtime: /mais do ' +
+      'funcionário de 17 para 16 interativos, e o deep-link renderiza a home em vez da ' +
+      'superfície diferida.',
   },
   {
     id: 'GAP-UX-A11Y-NOME-01',
@@ -579,7 +613,7 @@ export const CLASSIFICADAS = Object.freeze({
       'produto. Estrutura permanece; o que muda é reserva de espaço, alvo de toque e a paleta.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'PASS'),
+    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   AUTH_CADASTRO: {
     classificacao: 'REFINE',
@@ -590,7 +624,7 @@ export const CLASSIFICADAS = Object.freeze({
       'está certo e a hierarquia funciona.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'PASS'),
+    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/recuperar-senha': {
     classificacao: 'REFINE',
@@ -600,7 +634,7 @@ export const CLASSIFICADAS = Object.freeze({
       '844px. O cabeçalho ausente virou GAP-UX-CABECALHO-01, compartilhado com outras seis.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   AUTH_REDEFINIR_SENHA: {
     classificacao: 'REFINE',
@@ -887,7 +921,7 @@ export const CLASSIFICADAS = Object.freeze({
       'do formulário está adequada.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
   '/tecnicos/:id': {
     classificacao: 'REFINE',
@@ -897,7 +931,7 @@ export const CLASSIFICADAS = Object.freeze({
       '390. RECEITA LÍQUIDA e COMISSÃO GERADA truncam. Onze alvos abaixo de 40px no mobile.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'ISSUE'),
+    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/reparticao': {
     classificacao: 'KEEP',
@@ -908,7 +942,7 @@ export const CLASSIFICADAS = Object.freeze({
       'e o estado vazio centraliza no espaço total), pequena demais para justificar retrabalho.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
+    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
   },
 
   /* ── Recursos ─────────────────────────────────────────────────────────── */
@@ -986,7 +1020,7 @@ export const CLASSIFICADAS = Object.freeze({
       'aparência — a tela em si está bem construída.',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
   '/ajuda': {
     classificacao: 'REFINE',
@@ -997,7 +1031,7 @@ export const CLASSIFICADAS = Object.freeze({
       'ele no desktop. Conteúdo e organização estão adequados.',
     observado: 'OBSERVED',
     evidencia: 'SONDA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('ISSUE', 'ISSUE', 'PASS', 'PASS'),
   },
 
   /* ── Configurações: sete superfícies, sete julgamentos ────────────────── */
@@ -1277,6 +1311,18 @@ export function controles(arquivo = APP) {
     ],
     /* As quatro condições de GAP-UX-CONSENT-01 valem JUNTAS. Separadas, cada uma tem uma saída
        preguiçosa: esconder o banner satisfaz as duas de baixo e destrói o consentimento. */
+    /* Achado fechado sem prova escrita e a forma mais barata de um registry mentir: o numero de
+       gaps abertos cai e nada mudou no produto. A prova precisa dizer O QUE foi medido. */
+    [
+      'achado CLOSED exige correção e prova de fechamento escritas',
+      ACHADOS_COMPARTILHADOS.filter((a) => a.status === 'CLOSED').every(
+        (a) => (a.correcao ?? '').length > 40 && (a.provaDeFechamento ?? '').length > 60
+      ),
+    ],
+    [
+      'todo status de achado pertence à taxonomia',
+      ACHADOS_COMPARTILHADOS.every((a) => !a.status || STATUS_DE_ACHADO.includes(a.status)),
+    ],
     [
       'GAP-UX-CONSENT-01 exige consentimento E ação da página, simultâneos',
       (() => {
@@ -1429,11 +1475,18 @@ export function executar() {
 
   /* ACHADOS. Um por causa, com o conjunto de superfícies que a causa atinge. */
   console.log('');
-  console.log(`  achados compartilhados : ${ACHADOS_COMPARTILHADOS.length}`);
+  const abertos = ACHADOS_COMPARTILHADOS.filter((a) => (a.status ?? 'OPEN') === 'OPEN');
+  const fechados = ACHADOS_COMPARTILHADOS.filter((a) => a.status === 'CLOSED');
+  const doUsuario = ACHADOS_COMPARTILHADOS.filter((a) => a.bloqueio === 'USER_DECISION_REQUIRED');
+  console.log(
+    `  achados compartilhados : ${ACHADOS_COMPARTILHADOS.length}` +
+      `  (abertos ${abertos.length} · fechados ${fechados.length} · do usuário ${doUsuario.length})`
+  );
   for (const a of ACHADOS_COMPARTILHADOS) {
     const bloq = a.bloqueio ? `  [${a.bloqueio}]` : '';
+    const st = a.status === 'CLOSED' ? 'FECHADO' : 'aberto ';
     console.log(
-      `    ${a.severidade.padEnd(6)} ${a.id.padEnd(26)} ${String(a.superficiesAfetadas.length).padStart(2)} superfícies${bloq}`
+      `    ${st} ${a.severidade.padEnd(6)} ${a.id.padEnd(26)} ${String(a.superficiesAfetadas.length).padStart(2)} superfícies${bloq}`
     );
   }
 

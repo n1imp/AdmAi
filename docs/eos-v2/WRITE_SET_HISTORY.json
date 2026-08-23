@@ -45978,9 +45978,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Tres defeitos do instrumento, todos meus. (1) Import inserido dentro de um import multilinha em Catalogo.jsx derrubou o app; tres varreduras mediram tela em branco e devolveram ZERO defeitos — o resultado mais desejavel a partir do estado mais quebrado. (2) Guard novo: captura de pagina com 0 palavras e 0 interativos falha alto; sabotagem confirma que recusa a quebrada e aceita a real. (3) Sem String.raw, o s do template literal virava s, e a sonda trocava toda letra s por espaco em tudo que lia da pagina; geometria nao era afetada, texto e contagem sim. Varredura refeita: 152 capturas, 0 vazias, CONSENT_VISIBLE 152/152, CONSENT_USABLE 152/152, 0 oclusoes permanentes. ORDEM VIOLADA: Catalogo.jsx foi consertado ANTES desta declaracao, entao o baseline ja o continha e a comparacao o mostra como declarado-e-nao-escrito. WRITE antes de DECLARE, que o contrato proibe.",
       "declaradoEm": "2026-08-23T02:06:30.038Z"
+    },
+    {
+      "sliceId": "SCOPE-F3A-RECONCILIACAO",
+      "titulo": "Reconcilia registries com a realidade pos-correcao",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "GAP-UX-CONSENT-01 e GAP-UX-NAV-DIFERIDA-01 passam a CLOSED, cada um com correcao e prova de fechamento escritas — controle novo reprova CLOSED sem prova. Oito estados por viewport divergiam da medicao e foram corrigidos contra a varredura de 152 capturas com instrumento integro. Classificacoes KEEP/REFINE/REDESIGN inalteradas: BUG_FIX != VISUAL_REDESIGN.",
+      "declaradoEm": "2026-08-23T02:25:45.805Z"
     }
   ],
-  "geradoEm": "2026-08-23T02:24:52.646Z",
+  "geradoEm": "2026-08-23T02:28:28.433Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
