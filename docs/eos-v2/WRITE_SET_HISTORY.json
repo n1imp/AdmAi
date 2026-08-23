@@ -46104,9 +46104,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Teste dirigido observou o defeito pelo caminho real (convite sobrevive a exclusao; GET 200-fantasma com empresa vazia; aceite 500 na FK) e a correcao minima entrou na cascata com o motivo LGPD no comentario: email e nomeConvidadoPor sao dado pessoal de TERCEIRO. AuditLog orfao permanece DELIBERADO (trilha nao morre com quem ela audita) — invariante registrada no proprio teste. Vizinho auditoria_dado_pessoal 7/7.",
       "declaradoEm": "2026-08-23T04:44:57.782Z"
+    },
+    {
+      "sliceId": "F05-RUNWAY-DOSSIER",
+      "titulo": "ADMAI_V2_RUNWAY_DOSSIER: 17 capacidades + 12 areas, zero fundacoes",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Dossie do runway: 17 capacidades com readiness e decisao (zero PREPARE_NOW), 12 areas com a condicao que decide cada veredito, notas de migracao escritas antes de esquecer o preco, 8 invariantes que a V2 nao pode quebrar. Correcao ao filtro preliminar: a condicao 1 e satisfeita pelas 17 (roadmap aprovado pela diretiva) — o corte real vem de 2/4/5. Tres perguntas encaminhadas ao Codex numa unica capsula.",
+      "declaradoEm": "2026-08-23T04:51:03.969Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:49:10.159Z",
+  "geradoEm": "2026-08-23T04:53:09.193Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-10-CONVITE-ORFAO",
-  "titulo": "Convite sobrevive a exclusao da empresa: teste dirigido + correcao minima",
+  "sliceId": "F05-RUNWAY-DOSSIER",
+  "titulo": "ADMAI_V2_RUNWAY_DOSSIER: 17 capacidades + 12 areas, zero fundacoes",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:44:57.782Z",
+  "declaradoEm": "2026-08-23T04:51:03.969Z",
   "baseCommitPorLane": {
-    "HARNESS": "50107e0fc2d141c545dff941578890544c0af33e"
+    "HARNESS": "c9287a803c7e06bac26420fa0c0f9b73dd669e56"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "A FK de Usuario.empresaId impede a conta orfa (fail-closed acidental, com 500). O defeito real e outro: ConviteUsuario nao tem FK e sobrevive a cascade — e-mail e nome do convidado (dado pessoal de TERCEIRO) permanecem apos a exclusao LGPD que a propria rota diz servir. Teste primeiro contra o atual, correcao de uma linha na cascata, teste verde depois.",
+  "notaDeMetodo": "Filtro pela regra das 7 condicoes: a condicao 1 (aprovacao estrategica) e satisfeita pelas 17 como ROADMAP — o corte real vem das condicoes 2/4/5 (retrofit posterior e ADITIVO na maioria; custo agora > retrabalho depois; sem risco de fronteira concreto). availability.mjs derivando classes do schema e O mecanismo que torna o diferimento seguro: entidade nova vira metrica servivel sem tocar o plano de metricas.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -123,7 +123,7 @@
       "chaveiro-bot/src/routes/__tests__/billing.test.js": "0e4ce27e8a995066ba530e3e0ab713cb57f38df8f2a87a04530339cb3e8ad9a8",
       "chaveiro-bot/src/routes/__tests__/documentos-storage-key.test.js": "d6e66e57c6fbb1e607db31d81bb2ae935ebe12d5c770c39305875f6e05091a99",
       "chaveiro-bot/src/routes/__tests__/tecnicos-foto-perfil.test.js": "fd791eb3e1d266e178e9f2d2274a88bf8ab12ad40c311ea5ce17213d3d079e55",
-      "chaveiro-bot/src/routes/account.js": "8506a4210c4a23e75c059515cf01d71a88a539314c42375725e8e636d4e6f19a",
+      "chaveiro-bot/src/routes/account.js": "11c48933566f7b55e33ba9246341358644d0586bf808f80c3f2a56ca73f37de7",
       "chaveiro-bot/src/routes/admin.js": "50eee45d055325d21a10406b5c406d679c04639ba1e09ea6c6c23b8752728a79",
       "chaveiro-bot/src/routes/api.js": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
       "chaveiro-bot/src/routes/auth.js": "a1b5c5300a45c0555e62009d3c3734bb019c9eac7f6f5ccfd5c42e03d063afe6",
@@ -228,6 +228,7 @@
       "chaveiro-bot/test/integration/cadastro_otp.test.js": "c7cc91d71a195e51482abaca715e01505213e96fd080522a25ca70972d52c1ce",
       "chaveiro-bot/test/integration/conta_2fa_bruteforce.test.js": "a4acd8bf559321ff5a4010b2d3255f2b7f383754a7d9648fc627b672d4e57c93",
       "chaveiro-bot/test/integration/convite_aceite.test.js": "a74dda6f069a517c8f94b66806d782c209c9ff19e7b8b9f4a91b3bd53b7a5b36",
+      "chaveiro-bot/test/integration/convite_empresa_excluida.test.js": "725628ffa8e99c5af21adffce74b4e00c418b3ff47df57a2e9b22fb1cca4a920",
       "chaveiro-bot/test/integration/dashboard_groupby.test.js": "33830049de27d2e999f8622c8c930e3ef644125572e7144cea5e4d3349dd5232",
       "chaveiro-bot/test/integration/documentos.test.js": "cc2be7b629d47507a7da93571abc69d18a90d8cab8f59b918c3cb87b83c5dafa",
       "chaveiro-bot/test/integration/documentos_storage.test.js": "939f94d5462f392efc57e4840edc1b5cf34a9fe6bad322bf9c7e22b167b8d84b",
@@ -544,16 +545,16 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a26445f4289a0c63e3efe69a12f457b100925eb762ddd704e4df1d8912e50e56",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a0def9c0a4f7dd8d8b6bd519dc9ae7d448228de1e45da8610b06401ab2130ef2",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RUN_STATE.json": "10c8931b72a93f8a4dcadbc8349fe0d7bec1c470606ff394a9822317ee2f5aff",
+      "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "9b7ad6ce659010d1af5c520d91f30fb437830a69fd567dcf4ed547148e3946e2",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "7944c2766fe5a984b174106a3743688e0d6130cb44855b767d8e5f4c2c5eb3a3",
+      "docs/eos-v2/WRITE_SET.json": "94856413e6e067b6cf5459343e569407bc1fb8f9c70e40137fa59ac6a5e3d972",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5d1086b5b66f684421ab353fa3b110af01c4fb38e8c22d9fb69bcbbab512f301",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1740,32 +1741,18 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [
-    "chaveiro-bot/uploads-docs",
-    "chaveiro-bot/uploads-ponto",
-    "chaveiro-bot/uploads"
-  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/convite_empresa_excluida.test.js",
+      "caminho": "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md",
       "precisao": "BOUNDED",
-      "proposito": "prova dirigida: 404 no GET e no aceitar, zero convites no banco, zero usuarios orfaos",
+      "proposito": "dossie + future capability registry + invariantes + notas de migracao",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/account.js",
-      "precisao": "BOUNDED",
-      "proposito": "conviteUsuario.deleteMany entra na cascata de exclusao",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8506a4210c4a23e75c059515cf01d71a88a539314c42375725e8e636d4e6f19a",
-      "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:44:58.059Z",
+  "validadoEm": "2026-08-23T04:51:04.322Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1774,6 +1761,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Teste dirigido observou o defeito pelo caminho real (convite sobrevive a exclusao; GET 200-fantasma com empresa vazia; aceite 500 na FK) e a correcao minima entrou na cascata com o motivo LGPD no comentario: email e nomeConvidadoPor sao dado pessoal de TERCEIRO. AuditLog orfao permanece DELIBERADO (trilha nao morre com quem ela audita) — invariante registrada no proprio teste. Vizinho auditoria_dado_pessoal 7/7.",
+  "nota": "Dossie do runway: 17 capacidades com readiness e decisao (zero PREPARE_NOW), 12 areas com a condicao que decide cada veredito, notas de migracao escritas antes de esquecer o preco, 8 invariantes que a V2 nao pode quebrar. Correcao ao filtro preliminar: a condicao 1 e satisfeita pelas 17 (roadmap aprovado pela diretiva) — o corte real vem de 2/4/5. Tres perguntas encaminhadas ao Codex numa unica capsula.",
   "aviso": "Declaracao ENCERRADA."
 }
