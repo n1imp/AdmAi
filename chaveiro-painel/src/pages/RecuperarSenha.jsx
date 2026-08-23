@@ -107,7 +107,7 @@ function TelaRecuperar() {
 
           <Link
             to="/login"
-            className="mt-5 flex items-center justify-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
+            className="mt-2 alvo-toque-linha justify-center gap-1.5 px-3 w-full text-sm text-muted hover:text-white transition-colors"
           >
             <ArrowLeft size={14} /> Voltar ao login
           </Link>

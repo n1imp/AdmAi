@@ -530,7 +530,7 @@ export default function Login() {
                     <button
                       key={v}
                       onClick={() => trocarModo(v)}
-                      className={`flex-1 py-2 rounded-md text-sm font-display font-semibold uppercase tracking-wider transition-all ${
+                      className={`flex-1 min-h-[44px] rounded-md text-sm font-display font-semibold uppercase tracking-wider transition-all ${
                         modo === v
                           ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]'
                           : 'text-muted hover:text-white'
@@ -611,7 +611,7 @@ export default function Login() {
                               setTipoLogin(v);
                               setErro('');
                             }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
+                            className={`flex-1 min-h-[44px] rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
                               tipoLogin === v
                                 ? 'bg-accent-400 text-dark-950 shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)]'
                                 : 'text-muted hover:text-white'
@@ -668,7 +668,7 @@ export default function Login() {
                         type="button"
                         onClick={() => setMostrar(!mostrar)}
                         aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-3 text-muted hover:text-accent-300 transition-colors"
                       >
                         {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -696,13 +696,13 @@ export default function Login() {
                     <div className="flex justify-between text-xs">
                       <a
                         href="/recuperar-senha"
-                        className="text-muted hover:text-accent-300 transition-colors"
+                        className="alvo-toque-linha px-2 text-muted hover:text-accent-300 transition-colors"
                       >
                         Esqueci minha senha
                       </a>
                       <a
                         href="/magic-link"
-                        className="text-muted hover:text-accent-300 transition-colors"
+                        className="alvo-toque-linha px-2 text-muted hover:text-accent-300 transition-colors"
                       >
                         Entrar sem senha
                       </a>

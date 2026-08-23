@@ -125,12 +125,19 @@ function Toggle({ ativo, onChange, disabled }) {
       disabled={disabled}
       role="switch"
       aria-checked={ativo}
-      className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${ativo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
+      /* O botão REAL mede 44px (pseudo-elemento não entra no getBoundingClientRect — a área
+         até crescia, mas medida honesta exige o alvo de verdade); o pill continua 48×28 como
+         span interno. [SL-02B] */
+      className="relative h-11 w-14 flex items-center justify-center shrink-0 disabled:opacity-50"
       aria-label="Alternar"
     >
       <span
-        className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`}
-      />
+        className={`relative block w-12 h-7 rounded-full transition-colors ${ativo ? 'bg-success' : 'bg-dark-600'}`}
+      >
+        <span
+          className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${ativo ? 'left-6' : 'left-1'}`}
+        />
+      </span>
     </button>
   );
 }

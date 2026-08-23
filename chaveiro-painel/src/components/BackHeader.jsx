@@ -8,7 +8,7 @@ export default function BackHeader({ titulo, para = '/configuracao' }) {
       <button
         onClick={() => navigate(para)}
         aria-label="Voltar"
-        className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors shrink-0"
+        className="w-11 h-11 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors shrink-0"
       >
         <ChevronLeft size={20} />
       </button>

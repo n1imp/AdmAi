@@ -86,7 +86,7 @@ function CampoSenha({ label, valor, onChange, autoComplete }) {
           type="button"
           onClick={() => setMostrar(!mostrar)}
           aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors"
+          className="absolute right-0 top-1/2 -translate-y-1/2 p-3 text-muted hover:text-white transition-colors"
         >
           {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
@@ -410,11 +410,17 @@ export default function Seguranca() {
               role="switch"
               aria-checked={dados?.twoFactorAtivo ?? false}
               aria-label={dados?.twoFactorAtivo ? 'Desativar 2FA' : 'Ativar 2FA'}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${dados?.twoFactorAtivo ? 'bg-success' : 'bg-dark-600'} disabled:opacity-50`}
+              /* Alvo real de 44px com o pill como span interno — mesmo desenho do Toggle de
+                 Configurações (pseudo-elemento não conta no rect). [SL-02B] */
+              className="relative h-11 w-14 flex items-center justify-center shrink-0 disabled:opacity-50"
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${dados?.twoFactorAtivo ? 'left-6' : 'left-1'}`}
-              />
+                className={`relative block w-12 h-7 rounded-full transition-colors ${dados?.twoFactorAtivo ? 'bg-success' : 'bg-dark-600'}`}
+              >
+                <span
+                  className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${dados?.twoFactorAtivo ? 'left-6' : 'left-1'}`}
+                />
+              </span>
             </button>
           </div>
         </section>

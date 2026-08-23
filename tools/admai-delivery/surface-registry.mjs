@@ -321,6 +321,21 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'em 360x800 e 390x844 nenhum elemento interativo mede menos de 44px na menor dimensão',
       'o rodapé legal e o "Saiba mais" do banner entram na correção — são a maior parte da conta',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'Corrigido nos DONOS, nunca tela a tela: RodapeLegal e o Saiba-mais do banner (presentes ' +
+      'em toda página) ganharam área de toque ≥44px por inline-flex+min-height sem crescer o ' +
+      'visual; BackHeader (o "<" universal) e os botões de ícone de linha foram de 36 para 44; o ' +
+      'padrão de chip repetido inline em 6 páginas recebeu o utilitário .alvo-toque; os DOIS ' +
+      'toggles (aprovação e 2FA) viraram botão real de 44px com o pill como span interno — ' +
+      'pseudo-elemento não entra no getBoundingClientRect, e área que a medida não vê não ' +
+      'fecha achado; olhos de senha ganharam hit-area por padding; links de texto (Esqueci, ' +
+      'Entrar sem senha, Voltar, Ver perfil, Sair, Política) viraram .alvo-toque-linha.',
+    provaDeFechamento:
+      'Varredura mobile (360+390) pós-correção: ZERO alvos <40px em todas as superfícies do ' +
+      'conjunto — dono, funcionário e anônimo (painel, auth, Landing e legais). O input de ' +
+      'arquivo de 1px atrás do label deixou de ser contado (controle visualmente oculto não é ' +
+      'alvo; o alvo é o label). Painel 112/112 nos módulos tocados.',
   },
   {
     id: 'GAP-UX-DESKTOP-LARGURA-01',

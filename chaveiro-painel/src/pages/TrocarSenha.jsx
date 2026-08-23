@@ -132,7 +132,7 @@ export default function TrocarSenha() {
                   type="button"
                   onClick={() => setMostrarPin(!mostrarPin)}
                   aria-label={mostrarPin ? 'Ocultar PIN' : 'Mostrar PIN'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-3 text-muted hover:text-accent-300 transition-colors"
                 >
                   {mostrarPin ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -159,7 +159,7 @@ export default function TrocarSenha() {
                   type="button"
                   onClick={() => setMostrarNova(!mostrarNova)}
                   aria-label={mostrarNova ? 'Ocultar nova senha' : 'Mostrar nova senha'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent-300 transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-3 text-muted hover:text-accent-300 transition-colors"
                 >
                   {mostrarNova ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -222,7 +222,7 @@ export default function TrocarSenha() {
             <button
               type="button"
               onClick={sair}
-              className="flex items-center justify-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
+              className="alvo-toque-linha justify-center gap-1.5 px-3 text-sm text-muted hover:text-white transition-colors"
             >
               <LogOut size={14} /> Sair
             </button>

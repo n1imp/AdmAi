@@ -48204,9 +48204,44 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "prettier roda DENTRO da fatia que tocou os arquivos, nunca na fatia seguinte."
       }
+    },
+    {
+      "sliceId": "SL-02-ALVOS",
+      "titulo": "Alvos de toque >=44px: donos compartilhados primeiro",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Parte A: os dois donos GLOBAIS (RodapeLegal em toda pagina; Saiba-mais do banner) ganharam area de toque >=44 sem crescer o visual — e sumiram da medicao AFTER. Restante agrupado em 4 classes de dono para a parte B: BackHeader 36px (o < de toda pagina), padrao de chip repetido inline em 4 paginas (30px), botoes de icone de linha (28-36px), e links de texto (16-20px).",
+      "declaradoEm": "2026-08-23T06:15:46.888Z"
+    },
+    {
+      "sliceId": "SL-02B-ALVOS-DONOS",
+      "titulo": "Alvos >=44px: BackHeader, chips, botoes de linha e links de texto",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "GAP-UX-ALVO-01 CLOSED com zero alvos <40px na varredura mobile do conjunto inteiro (3 papeis). Correcao por DONO: 2 componentes globais, BackHeader universal, utilitario .alvo-toque para o padrao de chip repetido em 6 paginas, toggles reestruturados para alvo REAL de 44 (pseudo-elemento nao conta no rect — area que a medida nao ve nao fecha achado), olhos com hit-area, links de texto em .alvo-toque-linha. Filtro de fantasma na sonda: input de 1px atras de label nao e alvo. Prettier RODOU DENTRO da fatia desta vez.",
+      "declaradoEm": "2026-08-23T06:22:34.089Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — missao SL-02 do programa aprovado",
+        "justificativa": "Tres causas, todas minhas, todas resolvidas antes do commit: (1) prettier com GLOB reformatou 35 arquivos fora da fatia — eol-only restaurados byte a byte ao index; reflows reais (BottomNav, RodapeLegal) mantidos como formatacao pura; (2) RecuperarSenha.jsx editado (Voltar-ao-login 20px, mesma classe da fatia) sem declarar; (3) flip-flop de EOL prettier(LF)/checkout(CRLF) fez tres MetricHub* divergirem do baseline com conteudo identico ao HEAD. O CONTEUDO da fatia esta provado: zero alvos <40px na varredura mobile dos tres papeis; 202 testes.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "prettier NUNCA por glob — lista explicita dos arquivos tocados, dentro da fatia dona. Edicao nova durante fechamento = expansao ANTES de escrever, nao depois."
+      }
     }
   ],
-  "geradoEm": "2026-08-23T06:14:27.932Z",
+  "geradoEm": "2026-08-23T06:57:48.216Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

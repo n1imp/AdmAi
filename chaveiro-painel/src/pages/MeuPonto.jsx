@@ -248,7 +248,7 @@ export default function MeuPonto() {
             </button>
             <p className="text-muted text-xs -mt-2 text-center">
               Ao bater, capturamos uma selfie e sua localização para comprovar a jornada.{' '}
-              <a href="/privacidade" className="underline hover:text-white">
+              <a href="/privacidade" className="alvo-toque-linha px-1 underline hover:text-white">
                 Política de Privacidade
               </a>
               .

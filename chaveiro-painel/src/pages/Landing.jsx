@@ -71,7 +71,10 @@ export default function Landing() {
               ADM<span className="text-accent-400">AI</span>
             </span>
           </div>
-          <Link to="/login" className="text-sm text-muted hover:text-white transition-colors">
+          <Link
+            to="/login"
+            className="alvo-toque-linha px-2 text-sm text-muted hover:text-white transition-colors"
+          >
             Entrar
           </Link>
         </div>
@@ -98,7 +101,7 @@ export default function Landing() {
             </button>
             <Link
               to="/login"
-              className="text-sm text-muted hover:text-white transition-colors px-2"
+              className="alvo-toque-linha px-2 text-sm text-muted hover:text-white transition-colors"
             >
               Já tenho conta
             </Link>

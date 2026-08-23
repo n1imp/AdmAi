@@ -186,6 +186,23 @@
 
 @layer utilities {
   /* Safe-area para notch / home indicator */
+  /* Área de toque mínima do guia (§8): 44px SEM crescer o visual — o alvo cresce por
+     alinhamento flex + min-height, e o texto/chip continua do tamanho que era. Usado pelo
+     padrão de chip repetido em Dashboard/PerfilTecnico/Servicos/Estoque e por links de texto
+     que eram alvos de 16-30px. [SL-02B] */
+  .alvo-toque {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--panel-target, 44px);
+    min-width: var(--panel-target, 44px);
+  }
+  .alvo-toque-linha {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--panel-target, 44px);
+  }
+
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0);
   }

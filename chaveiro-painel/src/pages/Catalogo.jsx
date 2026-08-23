@@ -142,14 +142,14 @@ export default function Catalogo() {
                 <div className="flex gap-1.5 shrink-0">
                   <button
                     onClick={() => setModal({ tipo: 'form', material: m })}
-                    className="w-9 h-9 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
+                    className="w-11 h-11 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
                     title="Editar material"
                   >
                     <Pencil size={15} />
                   </button>
                   <button
                     onClick={() => setModal({ tipo: 'delete', material: m })}
-                    className="w-9 h-9 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-danger hover:border-dark-500 transition-colors"
+                    className="w-11 h-11 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-danger hover:border-dark-500 transition-colors"
                     title="Remover material"
                   >
                     <Trash2 size={15} />
@@ -161,14 +161,14 @@ export default function Catalogo() {
               <div className="flex gap-2 border-t border-dark-700 pt-2.5">
                 <button
                   onClick={() => setModal({ tipo: 'entrada', material: m })}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-dark-700 text-success text-xs font-medium hover:bg-dark-600 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-dark-700 text-success text-xs font-medium hover:bg-dark-600 transition-colors"
                   title="Entrada"
                 >
                   <ArrowDownCircle size={14} /> Entrada
                 </button>
                 <button
                   onClick={() => setModal({ tipo: 'saida', material: m })}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-dark-700 text-danger text-xs font-medium hover:bg-dark-600 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-dark-700 text-danger text-xs font-medium hover:bg-dark-600 transition-colors"
                   title="Saída"
                 >
                   <ArrowUpCircle size={14} /> Saída
@@ -182,7 +182,7 @@ export default function Catalogo() {
                 </button>
                 <button
                   onClick={() => setModal({ tipo: 'historico', material: m })}
-                  className="w-9 flex items-center justify-center py-1.5 rounded-lg bg-dark-700 text-muted hover:text-white hover:bg-dark-600 transition-colors"
+                  className="w-11 min-h-[44px] flex items-center justify-center rounded-lg bg-dark-700 text-muted hover:text-white hover:bg-dark-600 transition-colors"
                   title="Histórico de movimentações"
                 >
                   <History size={14} />
@@ -194,7 +194,10 @@ export default function Catalogo() {
       </div>
 
       {/* FAB */}
-      <BotaoFlutuante onClick={() => setModal({ tipo: 'form', material: null })} rotulo="Novo material">
+      <BotaoFlutuante
+        onClick={() => setModal({ tipo: 'form', material: null })}
+        rotulo="Novo material"
+      >
         +
       </BotaoFlutuante>
 

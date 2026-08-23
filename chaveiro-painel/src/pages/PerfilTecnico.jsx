@@ -269,7 +269,7 @@ export default function PerfilTecnico() {
               <button
                 onClick={toggleAtivo}
                 aria-label={t.ativo ? 'Desativar' : 'Ativar'}
-                className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors shrink-0 ${t.ativo ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}
+                className={`w-11 h-11 rounded-md flex items-center justify-center transition-colors shrink-0 ${t.ativo ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}
               >
                 {t.ativo ? <UserX size={16} /> : <UserCheck size={16} />}
               </button>
@@ -306,7 +306,7 @@ export default function PerfilTecnico() {
                     {!editandoComissao && (
                       <button
                         onClick={() => setEditandoComissao(true)}
-                        className="text-xs text-accent-300 hover:text-accent-400"
+                        className="alvo-toque-linha px-2 text-xs text-accent-300 hover:text-accent-400"
                       >
                         Editar
                       </button>
@@ -351,7 +351,7 @@ export default function PerfilTecnico() {
                     {!editandoMeta && (
                       <button
                         onClick={() => setEditandoMeta(true)}
-                        className="text-xs text-accent-300 hover:text-accent-400"
+                        className="alvo-toque-linha px-2 text-xs text-accent-300 hover:text-accent-400"
                       >
                         {dados.meta?.metaMensal ? 'Editar' : 'Definir'}
                       </button>
@@ -496,7 +496,7 @@ export default function PerfilTecnico() {
                       <button
                         key={p.value}
                         onClick={() => setPeriodo(p.value)}
-                        className={`px-3 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
+                        className={`alvo-toque px-3 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
                           periodo === p.value
                             ? 'bg-accent-400 text-dark-950'
                             : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
@@ -559,7 +559,7 @@ export default function PerfilTecnico() {
                   ].map(({ label, valor, icon: Icon, cor }) => (
                     <div key={label} className="card flex items-center gap-3">
                       <div
-                        className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 ${cor}`}
+                        className={`w-11 h-11 rounded-md flex items-center justify-center shrink-0 ${cor}`}
                       >
                         <Icon size={18} strokeWidth={1.8} />
                       </div>

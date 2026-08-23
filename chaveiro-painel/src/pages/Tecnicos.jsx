@@ -149,14 +149,14 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onEditar(tecnico)}
-            className="w-9 h-9 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
+            className="w-11 h-11 rounded-md flex items-center justify-center bg-dark-700 border border-dark-600 text-muted hover:text-accent-300 hover:border-dark-500 transition-colors"
             title="Editar nome e telefone"
           >
             <Pencil size={15} />
           </button>
           <button
             onClick={() => onToggle(tecnico.id, !tecnico.ativo)}
-            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+            className={`w-11 h-11 rounded-md flex items-center justify-center transition-colors ${
               tecnico.ativo
                 ? 'bg-danger/10 text-danger hover:bg-danger/20'
                 : 'bg-success/10 text-success hover:bg-success/20'
@@ -201,7 +201,7 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
 
       <button
         onClick={() => navigate(`/tecnicos/${tecnico.id}`, { viewTransition: true })}
-        className="flex items-center gap-1.5 text-accent-300 text-xs mt-3 hover:text-accent-400 transition-colors"
+        className="alvo-toque-linha gap-1.5 text-accent-300 text-xs mt-1 hover:text-accent-400 transition-colors"
       >
         Ver perfil completo
         <ChevronRight size={14} />

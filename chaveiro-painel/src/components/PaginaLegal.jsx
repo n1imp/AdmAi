@@ -12,7 +12,7 @@ export default function PaginaLegal({ doc }) {
       <header className="border-b border-dark-600">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center">
               <KeyRound size={18} className="text-accent-300" strokeWidth={2} />
             </div>
             <span className="font-display font-bold text-lg tracking-wide text-white">
@@ -21,7 +21,7 @@ export default function PaginaLegal({ doc }) {
           </Link>
           <Link
             to="/login"
-            className="flex items-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
+            className="alvo-toque-linha gap-1.5 px-2 text-sm text-muted hover:text-white transition-colors"
           >
             <ArrowLeft size={14} /> Voltar
           </Link>

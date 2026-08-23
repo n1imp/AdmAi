@@ -540,15 +540,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-ALVO-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "varredura mobile pos-correcao: 0 alvos <40px no conjunto inteiro (3 papeis)",
+        "donos: RodapeLegal, banner, BackHeader, chips (.alvo-toque), toggles reais de 44, olhos, links"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T06:46:00.924Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

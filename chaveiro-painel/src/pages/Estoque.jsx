@@ -106,7 +106,7 @@ export default function Estoque() {
           <button
             key={valor}
             onClick={() => setPeriodo(valor)}
-            className={`px-4 py-2 rounded-md text-sm font-display font-semibold uppercase tracking-wide transition-colors border ${
+            className={`alvo-toque px-4 rounded-md text-sm font-display font-semibold uppercase tracking-wide transition-colors border ${
               periodo === valor
                 ? 'bg-accent-400 text-dark-950 border-accent-400'
                 : 'bg-dark-700 text-muted border-dark-600 hover:text-white'

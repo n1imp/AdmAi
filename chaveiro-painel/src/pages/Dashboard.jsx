@@ -122,7 +122,7 @@ export default function Dashboard() {
           onClick={atualizarManual}
           disabled={ocupado}
           aria-label="Atualizar"
-          className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-11 h-11 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-muted hover:text-accent-300 hover:border-dark-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={17} className={ocupado ? 'animate-spin' : ''} />
         </button>
@@ -147,7 +147,7 @@ export default function Dashboard() {
           <button
             key={p.value}
             onClick={() => setPeriodo(p.value)}
-            className={`px-4 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
+            className={`alvo-toque px-4 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
               periodo === p.value
                 ? 'bg-accent-400 text-dark-950'
                 : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'

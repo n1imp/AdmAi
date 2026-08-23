@@ -434,7 +434,7 @@ export default function Usuarios() {
                   <button
                     onClick={() => toggleAtivo(u)}
                     disabled={ehEu}
-                    className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                    className={`w-11 h-11 rounded-md flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                       u.ativo
                         ? 'bg-danger/10 text-danger hover:bg-danger/20'
                         : 'bg-success/10 text-success hover:bg-success/20'
@@ -446,7 +446,7 @@ export default function Usuarios() {
                   <button
                     onClick={() => excluir(u)}
                     disabled={ehEu}
-                    className="w-9 h-9 rounded-md flex items-center justify-center bg-dark-700 text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="w-11 h-11 rounded-md flex items-center justify-center bg-dark-700 text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     title="Excluir conta"
                   >
                     <Trash2 size={15} />

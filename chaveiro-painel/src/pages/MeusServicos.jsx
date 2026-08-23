@@ -260,7 +260,7 @@ export default function MeusServicos() {
               key={f.valor}
               onClick={() => selecionar(f.valor)}
               aria-pressed={filtro === f.valor}
-              className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
+              className={`alvo-toque shrink-0 px-3 rounded-md text-xs font-medium transition-colors border ${
                 filtro === f.valor
                   ? 'bg-accent-400 text-dark-950 border-accent-400'
                   : 'bg-dark-700 text-muted border-dark-600 hover:text-white'
@@ -298,7 +298,7 @@ export default function MeusServicos() {
                     <button
                       onClick={() => iniciar(s.id)}
                       disabled={acaoId === s.id}
-                      className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-md bg-accent-400/10 text-accent-300 border border-accent-400/20 font-display font-semibold uppercase tracking-wide text-xs hover:bg-accent-400/15 transition-colors disabled:opacity-60"
+                      className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-md bg-accent-400/10 text-accent-300 border border-accent-400/20 font-display font-semibold uppercase tracking-wide text-xs hover:bg-accent-400/15 transition-colors disabled:opacity-60"
                     >
                       <Play size={14} /> Iniciar serviço
                     </button>

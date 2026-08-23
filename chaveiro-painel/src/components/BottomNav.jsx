@@ -24,7 +24,8 @@ export default function BottomNav() {
     if (!el) return undefined;
     const publicar = () =>
       document.documentElement.style.setProperty(
-        '--admai-nav-h', `${Math.ceil(el.getBoundingClientRect().height)}px`
+        '--admai-nav-h',
+        `${Math.ceil(el.getBoundingClientRect().height)}px`
       );
     publicar();
     const RO = globalThis.ResizeObserver;

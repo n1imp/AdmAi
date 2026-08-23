@@ -134,7 +134,7 @@ export default function GestorHome() {
             key={p.value}
             onClick={() => setPeriodo(p.value)}
             aria-pressed={periodo === p.value}
-            className={`px-4 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
+            className={`alvo-toque px-4 rounded-md text-xs font-display font-semibold uppercase tracking-wider transition-all ${
               periodo === p.value
                 ? 'bg-accent-400 text-dark-950'
                 : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'

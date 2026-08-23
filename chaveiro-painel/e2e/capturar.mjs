@@ -158,7 +158,9 @@ export const EXPRESSAO_SONDA = String.raw`(() => {
   const alvosPequenos = W <= 480
     ? interativos.filter((el) => {
         const r = el.getBoundingClientRect();
-        return r.height > 0 && (r.height < 40 || r.width < 40);
+        /* height >= 4: controle visualmente oculto (input de arquivo de 1px atras do label
+               "Escolher arquivo") nao e alvo de toque — o alvo e o label visivel. [SL-02B] */
+            return r.height >= 4 && (r.height < 40 || r.width < 40);
       }).map((el) => ({ alvo: txt(el) || el.tagName, h: Math.round(el.getBoundingClientRect().height) }))
     : [];
 

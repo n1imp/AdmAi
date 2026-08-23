@@ -356,7 +356,7 @@ export default function Servicos() {
             onClick={() => setFiltrosAbertos((v) => !v)}
             aria-expanded={filtrosAbertos}
             aria-controls="servicos-filtros-avancados"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-white transition-colors"
+            className="alvo-toque-linha gap-2 px-1 text-sm text-muted hover:text-white transition-colors"
           >
             <SlidersHorizontal size={15} />
             Filtros{filtrosAtivos ? ` (${filtrosAtivos})` : ''}
@@ -384,7 +384,7 @@ export default function Servicos() {
                   type="button"
                   aria-pressed={filtroLocal === l}
                   onClick={() => setFiltroLocal(l)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
+                  className={`alvo-toque px-3 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
                     filtroLocal === l
                       ? 'bg-accent-400 text-dark-950'
                       : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'

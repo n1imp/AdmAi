@@ -46,7 +46,8 @@ export default function CookieBanner() {
     if (!el) return undefined;
     const publicar = () =>
       document.documentElement.style.setProperty(
-        '--admai-consent-h', `${Math.ceil(el.getBoundingClientRect().height)}px`
+        '--admai-consent-h',
+        `${Math.ceil(el.getBoundingClientRect().height)}px`
       );
     publicar();
     /* jsdom não implementa ResizeObserver; a medição inicial já cobre o caso de teste. */
@@ -87,7 +88,7 @@ export default function CookieBanner() {
               (analíticos e suporte) são opcionais.{' '}
               <Link
                 to="/cookies"
-                className="text-accent-300 hover:text-accent-200 transition-colors"
+                className="inline-flex items-center min-h-[44px] -my-3 px-1 text-accent-300 hover:text-accent-200 transition-colors"
               >
                 Saiba mais
               </Link>
@@ -98,13 +99,13 @@ export default function CookieBanner() {
         <div className="flex gap-2 mt-4 flex-wrap">
           <button
             onClick={() => aceitar('all')}
-            className="btn-primary flex-1 min-w-[120px] text-sm py-2"
+            className="btn-primary flex-1 min-w-[120px] text-sm min-h-[44px]"
           >
             Aceitar todos
           </button>
           <button
             onClick={() => aceitar('necessary')}
-            className="btn-secondary flex-1 min-w-[120px] text-sm py-2"
+            className="btn-secondary flex-1 min-w-[120px] text-sm min-h-[44px]"
           >
             Apenas necessários
           </button>
