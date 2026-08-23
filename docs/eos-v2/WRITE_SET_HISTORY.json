@@ -46006,9 +46006,23 @@
       "bloqueiaIntegracao": false,
       "nota": "ADMAI_SCOPE_FREEZE materializado com numeros derivados dos registries. ADMAI_SCOPE_CLOSED declarado: escopo conhecido e congelado, o que NAO e RELEASE_READY. EOS_NEXT_SESSION_HANDOFF materializado com DO_NOT_REOPEN_ADMAI_SCOPE_WITHOUT_D2. Zero slices do EOS despachadas.",
       "declaradoEm": "2026-08-23T02:29:00.002Z"
+    },
+    {
+      "sliceId": "F0-01-DECLARADOR",
+      "titulo": "Promove declarador/fechador do write set do scratchpad para tools/",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Declarador/fechador promovido do scratchpad para tools/admai-delivery. LANES derivadas da localizacao do modulo (EOS so se a worktree irma existir no disco); fechamento e modo de primeira classe com reconciliacao validada pelo gate; provenance segue a regra do gate — HEAD movido nunca produz ORIGINAL_PRE_MUTATION. Selftest 10/10 contra caminhos injetados; o proprio fechamento desta fatia foi executado pela ferramenta promovida (prova de bootstrap). Corrigido no caminho: lerValor escondia a flag numa variavel e --nota caia em FLAG_DESCONHECIDA — a allowlist derivada so enxerga literais.",
+      "declaradoEm": "2026-08-23T04:06:47.103Z"
     }
   ],
-  "geradoEm": "2026-08-23T02:32:08.103Z",
+  "geradoEm": "2026-08-23T04:14:37.251Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
