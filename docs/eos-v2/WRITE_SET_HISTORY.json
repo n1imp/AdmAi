@@ -48344,9 +48344,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Superficie minima de billing + fim das promessas: /assinatura sobre os 3 endpoints (trialing discriminado por periodoFimEm — determinismo verificado no fluxo de dados), hub com Links reais e alvo do tour presente. Risco de dupla assinatura no checkout ANOTADO para Gate 6. 231/231.",
       "declaradoEm": "2026-08-23T11:25:54.321Z"
+    },
+    {
+      "sliceId": "SL-09B-IDENTIDADE-FECHAMENTO",
+      "titulo": "Fechamento de GAP-UX-IDENTIDADE-01 com a prova da jornada (trabalho feito em SL-09)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "GAP-UX-IDENTIDADE-01 CLOSED: SL-09 removeu a propria fronteira; jornada do criterio medida por CDP com acento identico nas 4 superficies.",
+      "declaradoEm": "2026-08-23T11:33:57.409Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:33:00.712Z",
+  "geradoEm": "2026-08-23T11:34:32.312Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

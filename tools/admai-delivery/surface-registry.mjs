@@ -196,6 +196,14 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
         'de uma lista de caminhos que precisa ser lembrada a cada rota nova',
       'atravessar Landing → login → recuperar senha → termos não troca de paleta',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'SL-09 (decisão do usuário: Aurora em tudo) removeu a PRÓPRIA fronteira — PanelScope é ' +
+      'incondicional, então não existe lista a lembrar nem propriedade a derivar: todas as 50 ' +
+      'superfícies vivem no mesmo escopo .panel-ui.',
+    provaDeFechamento:
+      'CDP na jornada literal do critério (/, /login, /recuperar-senha, /termos em 1440): ' +
+      'escopoAurora=true e acento rgb(196,181,253) IDÊNTICO nas quatro — paleta não troca.',
   },
   {
     id: 'GAP-UX-NAV-DIFERIDA-01',
