@@ -48421,9 +48421,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Sessoes falam portugues (13 unit + captura viva), coluna no idioma do guia, flip de seguranca. Restam so as 2 legais (excecao D2) e /tecnicos (SL-15). 247/247.",
       "declaradoEm": "2026-08-23T12:05:17.837Z"
+    },
+    {
+      "sliceId": "SL-15-TECNICOS-REDESIGN",
+      "titulo": "/tecnicos: direcao B do DECISOR (thread 01a02e86) — reflow do card, 2 colunas no desktop",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Unica REDESIGN fechada por medida: direcao B do DECISOR, bateria completa, REVISOR delta APROVADO. GAP-UX-DESKTOP-LARGURA-01 6/6. Registry: zero REFINE/REDESIGN fora da excecao legal D2.",
+      "declaradoEm": "2026-08-23T12:13:11.800Z"
     }
   ],
-  "geradoEm": "2026-08-23T12:07:59.883Z",
+  "geradoEm": "2026-08-23T12:31:29.062Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

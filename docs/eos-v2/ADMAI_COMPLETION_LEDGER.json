@@ -942,15 +942,19 @@
       "authority": "CODEX_D1",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-DESKTOP-LARGURA-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Protocolo completo: DECISOR antes de escrever (D-SL15, thread 01a02e86, CONCORDO ALTA — direcao B) -> implementacao -> bateria (sonda 4vp zeros; geometria @1920 2x440px sem trilha vazia; contencao mobile CDP 327/360, 357/390; suite 247/247; axe 14/14 com nome longo; eslint/prettier/diff limpos) -> REVISOR delta APROVADO (thread 01a02e93).",
+        "Dois desvios da restricao exclusivamente-desktop, ambos por defeito MEDIDO no mobile (KPI 70px com palavra unica; card de 456px clipado em 360) — aceitos pelo revisor sem retorno ao DECISOR e registrados em AGENT_DECISIONS.",
+        "GAP-UX-DESKTOP-LARGURA-01 CLOSED (6/6). Registry final de F3: KEEP 48, REFINE 2 (legais D2), REDESIGN 0, 28/28."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T12:31:24.253Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

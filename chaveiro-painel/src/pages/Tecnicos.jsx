@@ -115,8 +115,10 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
         )}
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-white truncate">{tecnico.nome}</p>
+          {/* Direção B do DECISOR (D-SL15): em lg+ o nome tem direito à linha — quebra
+              integral em vez de "An…"; badges fluem para a linha de baixo quando preciso. */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="font-semibold text-white truncate lg:whitespace-normal">{tecnico.nome}</p>
             <span
               className={`badge ${
                 tecnico.ativo
@@ -168,26 +170,28 @@ function CardTecnico({ tecnico, onToggle, onEditar }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 mt-3">
+      {/* 4 células a 360px dão ~70px cada — COMISSÃO é palavra única e não quebra.
+          2×2 no telefone, 4 em linha de sm pra cima. [SL-15] */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
         <div className="bg-dark-700 border border-dark-600 rounded-md p-2 text-center">
-          <p className="kpi-label text-[10px]">Serviços</p>
+          <p className="kpi-label text-[10px] line-clamp-2 min-h-[2lh]">Serviços</p>
           <p className="font-display font-bold text-white text-lg tnum">{tecnico.totalServicos}</p>
         </div>
         <div className="bg-dark-700 border border-dark-600 rounded-md p-2 text-center">
-          <p className="kpi-label text-[10px]">Líquido</p>
+          <p className="kpi-label text-[10px] line-clamp-2 min-h-[2lh]">Líquido</p>
           <p className="font-display font-bold text-white text-sm tnum">
             {formatarMoeda(tecnico.receitaLiquida)}
           </p>
         </div>
         <div className="bg-dark-700 border border-dark-600 rounded-md p-2 text-center">
-          <p className="kpi-label text-[10px]">Comissão</p>
+          <p className="kpi-label text-[10px] line-clamp-2 min-h-[2lh]">Comissão</p>
           <p className="font-display font-bold text-white text-sm tnum">{tecnico.comissao}%</p>
         </div>
         <div
           className={`rounded-md p-2 text-center border ${tecnico.saldoPendente > 0 ? 'bg-accent-400/10 border-accent-400/20' : 'bg-dark-700 border-dark-600'}`}
         >
           <p
-            className={`kpi-label text-[10px] ${tecnico.saldoPendente > 0 ? 'text-accent-300' : ''}`}
+            className={`kpi-label text-[10px] line-clamp-2 min-h-[2lh] ${tecnico.saldoPendente > 0 ? 'text-accent-300' : ''}`}
           >
             Pendente
           </p>
@@ -260,9 +264,9 @@ export default function Tecnicos() {
 
       {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
 
-      <div className="px-4 pb-6 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="px-4 pb-6 grid gap-3 lg:grid-cols-2">
         {carregando ? (
-          <div className="lg:col-span-2 xl:col-span-3">
+          <div className="lg:col-span-2">
             <SkeletonLista qtd={4} />
           </div>
         ) : /* Falha de carregamento nao e evidencia de lista vazia: com `erro`,
@@ -271,7 +275,7 @@ export default function Tecnicos() {
                nao esta em evidencia. O ErroBanner acima ja comunica o estado e
                oferece o retry. (DOG-002 / F-DOG-002) */
         tecnicos.length === 0 && !erro ? (
-          <div className="lg:col-span-2 xl:col-span-3">
+          <div className="lg:col-span-2">
             <EstadoVazio
               mensagem="Nenhum técnico cadastrado"
               sub="Toque no + para adicionar um técnico, ou ele é criado automaticamente ao registrar serviços no WhatsApp"

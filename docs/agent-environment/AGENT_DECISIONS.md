@@ -45,3 +45,15 @@ Use este ledger somente quando uma missao nao possuir plano ou contrato ativo. D
 | `THREAD` | Codex DECISOR 01a02cd7-85be-7ca1-9d9e-684815fe10cd |
 | `IMPACTO` | tools/admai-delivery/write-set-gate.mjs: FORMAS_DE_RUNTIME + ehEfeitoDeRuntime() + particao em compararRodada + campo efeitosDeRuntime no resultado e no relatorio. Nenhuma mudanca em chaveiro-bot/src (call sites sao proveniencia somente leitura). |
 | `TESTES` | 12 controles novos no selftest (121/121): 4 formas validas nao bloqueiam e aparecem na lista; manual.txt/near-misses (versao, variante, extensao, subdiretorio) bloqueiam; caso misto reporta ambos com classe bloqueante prevalecendo; misto com UNDECLARED_WRITE de fonte preserva a classe de fonte; alteracao e remocao cobertas; nome runtime-shaped fora da raiz sem isencao; controle explicito de produto-<uuid>. |
+
+## D-SL15-TECNICOS-DIRECAO (2026-08-23)
+
+- **Missão**: SL-15 do programa de release — /tecnicos, única REDESIGN do inventário ("por medida, não por gosto").
+- **Evidências**: sonda com "Ana Técnica"→"An…" e COMISSÃO/PENDENTE truncando em 1440 E 1920; anatomia do card (uma linha disputada por avatar+nome+2 badges+2 ações; 4 mini-KPIs truncando); grade lg:2/xl:3 com célula ~430px; mobile medindo limpo.
+- **Posição Claude**: direção B (reflow do card, grade 2 colunas, clamp nos KPIs) — menor diff que atende os critérios medidos; A (tabela) = peso sem ganho para equipes 1-15; C muda mobile limpo.
+- **Posição Codex (DECISOR, thread 01a02e86)**: CONCORDO, confiança ALTA, com correção factual (shell max-w-6xl limita células; morre a trilha xl) e bateria obrigatória (sonda 1440/1920 zero, geometria computada, capturas 4 vp, axe, suíte/lint/format/diff, REVISOR delta).
+- **Decisão final**: B, implementada com dois desvios da restrição "exclusivamente desktop", ambos por defeito MEDIDO no mobile: (a) KPI 2×2 abaixo de sm ("COMISSÃO" é palavra única e truncava em ~70px); (b) flex-wrap em todos os viewports — a versão fiel à restrição media card de 456px num viewport de 360 (conteúdo clipado inalcançável, botões em 389/439px); com wrap: 344/360 e 374/390.
+- **Revisão (REVISOR delta, thread 01a02e93)**: APROVADO; desvios "locais, reversíveis e sustentados por medições", sem retorno ao DECISOR; pediu registrar que "exclusivamente desktop" deixou de ser literal — feito aqui.
+- **Impacto**: /tecnicos zera truncamento nos 4 viewports; geometria @1920 = 2 trilhas de 440px sem trilha vazia; GAP-UX-DESKTOP-LARGURA-01 fecha 6/6.
+- **Testes**: suíte 247/247; axe 14/14 (caso novo com nome longo); sonda 4 vp zeros; contenção mobile por CDP; eslint/prettier/diff-check limpos.
+- **Risco residual (do revisor)**: axe/jsdom não valida geometria; reforço futuro não bloqueante = caso CDP com nome longo em 1024/1440.

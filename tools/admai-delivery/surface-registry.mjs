@@ -369,6 +369,17 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'a largura útil cresce com a viewport, em vez de reservar vazio à direita',
       'alargar não pode ser trocar um desperdício por outro: linha longa demais também é defeito',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'Cinco superfícies fecharam por medição em SL-04 (colunas centradas, zero truncamento); ' +
+      'a sexta — /tecnicos, a origem do achado — fechou em SL-15 pela direção B do DECISOR ' +
+      '(D-SL15, thread 01a02e86): nome com quebra integral em lg+, KPIs com 2 linhas ' +
+      'reservadas, grade lg:grid-cols-2 sem a trilha xl vazia. REVISOR delta APROVADO ' +
+      '(thread 01a02e93).',
+    provaDeFechamento:
+      'Sonda: truncados=0 nas SEIS superfícies em 1440 E 1920 (e nos móveis). Geometria ' +
+      'computada @1920 em /tecnicos: 2 trilhas de 440px, sem vazio à direita. Contenção ' +
+      'mobile por CDP: máx borda direita 327/360 e 357/390.',
   },
   {
     id: 'GAP-UX-RODAPE-01',
@@ -914,7 +925,7 @@ export const CLASSIFICADAS = Object.freeze({
       'completo — densidade deliberada de lista. 1440/1920: truncados=0. ',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
-    viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
+    viewports: vp('PASS', 'PASS', 'PASS', 'PASS'),
   },
   '/servicos/novo': {
     classificacao: 'KEEP',
@@ -959,14 +970,14 @@ export const CLASSIFICADAS = Object.freeze({
 
   /* ── Equipe ───────────────────────────────────────────────────────────── */
   '/tecnicos': {
-    classificacao: 'REDESIGN',
+    classificacao: 'KEEP',
     razao:
-      'A única REDESIGN do inventário, e por medida, não por gosto. Em 1440px os nomes aparecem ' +
-      'como "An…" e "Br…" com ~55% da viewport vazia: o card tem largura fixa e, dentro dele, o ' +
-      'nome perde espaço para dois badges e dois botões de ícone. Os rótulos COMISSÃO e PENDENTE ' +
-      'truncam junto, em 1440 E 1920. Numa tela cuja função é identificar pessoas, o ' +
-      'identificador é o que se perde primeiro — isso é arranjo errado, e mexer em espaçamento ' +
-      'não conserta. Some-se o "+" coberto pelo banner nos quatro viewports.',
+      'RECLASSIFICADA (SL-15, a única REDESIGN — por medida, e fechada por medida). ' +
+      'Direção B do DECISOR: nome tem direito à linha em lg+ (quebra integral), badges ' +
+      'com quebra segura, KPIs com 2 linhas reservadas, grade em 2 colunas reais (a ' +
+      'trilha xl vazia morreu). Zeros absolutos nos 4 viewports; geometria @1920 = 2×440px; ' +
+      'contenção mobile medida por CDP. Suíte 247/247, axe 14/14 com nome longo. ' +
+      'REVISOR delta APROVADO (01a02e93).',
     observado: 'OBSERVED',
     evidencia: 'SONDA_E_CAPTURA',
     viewports: vp('ISSUE', 'ISSUE', 'ISSUE', 'ISSUE'),
