@@ -1855,6 +1855,33 @@
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
+    },
+    {
+      "workId": "FIX-COMISSAO-SNAPSHOT",
+      "phase": "F0",
+      "domain": "financeiro",
+      "description": "Snapshot imutavel da taxa de comissao aplicada (coluna aditiva nullable; historico NULL honesto)",
+      "dependencies": [],
+      "priority": "P1",
+      "risk": "baixo",
+      "authority": "CODEX_D1",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DONE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "D-F05-REV-01"
+      ],
+      "writeSetRef": "FIX-COMISSAO-SNAPSHOT",
+      "evidenceRefs": [
+        "servico_comissao_snapshot.test.js 2/2 com o caso aritmetico exato (0.05/1.01 -> divisao 4.95% vs snapshot 5%)",
+        "migracao 20260823000100 aplicada em test e dev"
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-23T05:46:19.191Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     }
   ]
 }

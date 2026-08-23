@@ -191,6 +191,7 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
   // gravava 33 pelo painel e 33.000000000000004 pelo WhatsApp; somando milhares de linhas,
   // o saldo do técnico divergia em centavos do somatório exibido na mesma tela.
   const comissaoGerada = parseFloat((valorLiquido * ((tecnico?.comissao ?? 0) / 100)).toFixed(2));
+  const comissaoTaxaAplicada = tecnico?.comissao ?? 0; // snapshot imutável [FIX-COMISSAO-SNAPSHOT]
   const materialTexto =
     itens.length > 0 ? itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ') : null;
 
@@ -205,6 +206,7 @@ async function concluirRegistro(empresaId, jidTecnico, tecnicoId, dados, respond
     valorMaterial,
     valorLiquido,
     comissaoGerada,
+    comissaoTaxaAplicada,
     fotoEvidencia: dados.foto ?? null,
     clienteNome: dados.clienteNome ?? null,
     clienteTelefone: dados.clienteTelefone ?? null,

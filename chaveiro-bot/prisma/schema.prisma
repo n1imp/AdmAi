@@ -134,6 +134,10 @@ model Servico {
   valorMaterial  Float             @default(0)
   valorLiquido   Float             // calculado automaticamente: cobrado - material
   comissaoGerada Float             @default(0)  // valorLiquido * (comissao / 100)
+  // Taxa VIGENTE quando a comissão foi computada. `comissaoGerada` grava o valor; a taxa era
+  // irreconstituível (toFixed(2) + Float: líquido 1,01 a 5% grava 0,05 e a divisão devolve
+  // 4,95%; líquido zero nem divide). Nullable: histórico fica NULL — lacuna honesta.
+  comissaoTaxaAplicada Float?       // snapshot imutável [FIX-COMISSAO-SNAPSHOT]
   fotoEvidencia  String?           // caminho/URL da foto enviada junto ao serviço (prova visual)
   // Cliente atendido — usado para enviar a solicitação de avaliação após a conclusão
   clienteNome    String?

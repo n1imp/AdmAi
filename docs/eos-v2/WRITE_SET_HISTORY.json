@@ -46174,9 +46174,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Consenso do achado 1 aplicado: desmarcar-na-falha nos dois caminhos + timeouts explicitos. A sabotagem pegou um defeito NA MINHA correcao (enableOfflineQueue:false fazia a primeira marca de cada processo falhar aberta — dedup inexistente nas primeiras chamadas); removido com o porque gravado no codigo. Dupla sabotagem final: os dois caminhos mordem. 6/6 + inbound_idempotencia 7/7 + billing 7/7. Modos residuais do consenso documentados no proprio desmarcar().",
       "declaradoEm": "2026-08-23T05:20:05.959Z"
+    },
+    {
+      "sliceId": "FIX-COMISSAO-SNAPSHOT",
+      "titulo": "Snapshot imutavel da taxa de comissao aplicada (achado 2 — gate de schema)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Achado 2 aplicado como fundacao barata e nao-especulativa: comissaoTaxaAplicada Float? gravada pelos DOIS produtores (rota e WhatsApp), migracao aditiva no padrao das 27 existentes, aplicada em test e dev. Teste prova o caso aritmetico exato do achado e que liquido zero deixa de apagar a informacao. Historico permanece NULL — lacuna honesta.",
+      "declaradoEm": "2026-08-23T05:39:37.864Z"
     }
   ],
-  "geradoEm": "2026-08-23T05:34:44.694Z",
+  "geradoEm": "2026-08-23T05:46:21.439Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

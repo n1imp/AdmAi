@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FIX-IDEMP-PERDA",
-  "titulo": "Evento nao se perde mais quando o handler falha depois da marca (achado 1)",
+  "sliceId": "FIX-COMISSAO-SNAPSHOT",
+  "titulo": "Snapshot imutavel da taxa de comissao aplicada (achado 2 — gate de schema)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T05:20:05.959Z",
+  "declaradoEm": "2026-08-23T05:39:37.864Z",
   "baseCommitPorLane": {
-    "HARNESS": "cdc4a919793a689964bffc65dc0629156a3f29ad"
+    "HARNESS": "f5f42a1552257021309ea77bd5da59ca602ad64a"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Consenso com o Revisor (remedio menor): desmarcar-na-falha + timeouts explicitos no cliente (sem eles, fail-open nao e declaravel — a espera podia ser indefinida). Recepcao duravel adiada com gatilho registrado. Testes obrigatorios do proprio Revisor implementados contra Redis real.",
+  "notaDeMetodo": "Divisao nao reconstitui a taxa: toFixed(2) + Float dao 4.95% onde a taxa era 5% (liquido 1.01), e liquido zero torna a divisao impossivel. Coluna ADITIVA nullable — historico permanece null, honesto. Escrita nos DOIS produtores (rota e WhatsApp). Migracao manual no padrao das 27 existentes; irreversibilidade da lacuna cresce por dia.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -127,7 +127,7 @@
       "chaveiro-bot/src/routes/admin.js": "50eee45d055325d21a10406b5c406d679c04639ba1e09ea6c6c23b8752728a79",
       "chaveiro-bot/src/routes/api.js": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
       "chaveiro-bot/src/routes/auth.js": "a1b5c5300a45c0555e62009d3c3734bb019c9eac7f6f5ccfd5c42e03d063afe6",
-      "chaveiro-bot/src/routes/billing.js": "6d00c4661ae8d7703c6656b8ed07659c203f2186e69a54d880a3708d7541e3da",
+      "chaveiro-bot/src/routes/billing.js": "47fd81a21ecee112baa1e9fe43db249a08ff23033184316f29828228397eaba7",
       "chaveiro-bot/src/routes/documentos.js": "4d8ac0606d5722543c4731a38d50f101b7f146dcc2b23d6d87e2a02b456781b3",
       "chaveiro-bot/src/routes/estoque.js": "2d99713fe061b92bee1e28e74891e7547e112e141f36c9752365bfcbc98adc77",
       "chaveiro-bot/src/routes/google.js": "dc14bf1c077b0b48c9e0940aad501e77b005b452e5db0059dfeb086a3e7ad0c8",
@@ -176,9 +176,9 @@
       "chaveiro-bot/src/services/google/analise.js": "8b0bb4e340d7204f03f473686a955dc378203537852ad83937e360aea1e4beb0",
       "chaveiro-bot/src/services/google/businessClient.js": "8ed554c4e47f29223fb9136e3f938dec535ca6ce686b4477ce5a489467643bcb",
       "chaveiro-bot/src/services/google/oauth.js": "56981a1569a83eaca573b877199e15ce2b5e242a2290f7c02f4fb1e3713636bc",
-      "chaveiro-bot/src/services/idempotencia.js": "896754cbba19ec6a570ff62a74e9a5cb1110003521976005f081c0092bf0d0fd",
+      "chaveiro-bot/src/services/idempotencia.js": "5b584362b27c33a6a2d3dd6f77d9309bd75e1ab9efdbc391bf3756a95ffcb823",
       "chaveiro-bot/src/services/identidade.js": "ffa5ff28399aaace3fd109c47acf70758db157ba5c3cc80414facf5452398f39",
-      "chaveiro-bot/src/services/inbound.js": "db42dd53b0bd8613ba937c4a859664a3bc495c12c9f21a179aa7e382aeaf638a",
+      "chaveiro-bot/src/services/inbound.js": "8fe7536b6720501487a808ec32675a368fd480e898802b4bbd0a0d23a471f4d1",
       "chaveiro-bot/src/services/metricas/calculo.js": "96b29fc7d1985d5b3ac53fc0d1961afbcba4bcc5203b0cace1d12765bac02f7b",
       "chaveiro-bot/src/services/metricas/consulta.js": "448966c70119c75cff3f130e2841c06ac75e50e6d3849cfee1cb17601b41be46",
       "chaveiro-bot/src/services/metricas/contrato.js": "f23be62b79aa540ae50f277968f6cd9667271164dcd45933c1fb3f1322d7a222",
@@ -263,6 +263,7 @@
       "chaveiro-bot/test/integration/tecnico_criacao.test.js": "5dc4c9086bb26fd12838d242223cf09d2331eabb7a308dee3d5dc81b48ba1f2b",
       "chaveiro-bot/test/integration/troca_email_confirmacao.test.js": "beeaafaf7a18c5fd17ac6fd66f402eaa204a5946ada71b29e4504362f2d55981",
       "chaveiro-bot/test/integration/vazamento_colecao_cross_tenant.test.js": "5f2620d7df938c8102cf19509300df83da21d60a95140e9fe02712649174d5f2",
+      "chaveiro-bot/test/integration/webhook_idempotencia_perda.test.js": "05b1b02cf2c79a609b9b9516da1423efdf8200f5685d517ac1db1225b5b57397",
       "chaveiro-bot/vitest.config.js": "88248b5a3cbff886643c5bc04cb89f2f0acdf4cb6bfd5e01f329842714419440",
       "chaveiro-bot/vitest.integration.config.js": "fe7c32ecee1e73ac03cabc4e8b545dd71873e56691b3b45da44a5d1b0e9526d8",
       "chaveiro-painel/.dockerignore": "153249881c11bc89436274cd0c192c71ef6180f65e7ca9aba1d65a28465f4ad5",
@@ -548,7 +549,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "37f4fa62c20b0907a789962429e174eae6a7108333698c0120a4aeffd494efc1",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7053123a2621002780f9eaca590e332b3df9619e8b99629c4e29ff99934e94fd",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "c039544a7ae5193259e60d97f9b03b15fbdeb2c973e287ee9d6e87c30b812ea8",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -557,8 +558,8 @@
       "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "0e85ef4f00eadf6c06f025e85586cc79b86e653490c48da5e90b26bbe26ae5cb",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "085602aa828edd5dce93fdba27f314004fa84fd9387b61f96ba1b0d4b92e5a8e",
+      "docs/eos-v2/WRITE_SET.json": "a4edfeb8da88bb7eaed0c5d50b57c1652f4081899d4b3450492a0b3326dab0e2",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "99866586f0cfa701efffe1b2daa719c25fc140736998152e5bbd03c2addb2fd3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1753,42 +1754,51 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/idempotencia.js",
+      "caminho": "chaveiro-bot/prisma/schema.prisma",
       "precisao": "BOUNDED",
-      "proposito": "desmarcar() best-effort + connectTimeout/commandTimeout",
+      "proposito": "comissaoTaxaAplicada Float? em Servico",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "896754cbba19ec6a570ff62a74e9a5cb1110003521976005f081c0092bf0d0fd",
+      "shaNaDeclaracao": "07ad02f4edd91c20771a695f93780421185410900480b1b3dd5586af604f2466",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/billing.js",
+      "caminho": "chaveiro-bot/prisma/migrations/20260823000100_servico_comissao_taxa_aplicada/migration.sql",
       "precisao": "BOUNDED",
-      "proposito": "desmarcar no catch antes do 500",
+      "proposito": "ALTER TABLE aditivo",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/servicos.js",
+      "precisao": "BOUNDED",
+      "proposito": "grava a taxa no produtor da rota",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6d00c4661ae8d7703c6656b8ed07659c203f2186e69a54d880a3708d7541e3da",
+      "shaNaDeclaracao": "7fed80c3d3658961ba87b55990250221f4096d42e8e79c8c6518d503bfcebd70",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/services/inbound.js",
       "precisao": "BOUNDED",
-      "proposito": "desmarcar + rethrow apos a dedup, para o retry da fila executar",
+      "proposito": "grava a taxa no produtor do WhatsApp",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "db42dd53b0bd8613ba937c4a859664a3bc495c12c9f21a179aa7e382aeaf638a",
+      "shaNaDeclaracao": "8fe7536b6720501487a808ec32675a368fd480e898802b4bbd0a0d23a471f4d1",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/webhook_idempotencia_perda.test.js",
+      "caminho": "chaveiro-bot/test/integration/servico_comissao_snapshot.test.js",
       "precisao": "BOUNDED",
-      "proposito": "os testes obrigatorios do consenso, contra Redis real",
+      "proposito": "taxa gravada na criacao; mudanca posterior nao reescreve",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T05:20:06.232Z",
+  "validadoEm": "2026-08-23T05:39:38.099Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1797,6 +1807,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Consenso do achado 1 aplicado: desmarcar-na-falha nos dois caminhos + timeouts explicitos. A sabotagem pegou um defeito NA MINHA correcao (enableOfflineQueue:false fazia a primeira marca de cada processo falhar aberta — dedup inexistente nas primeiras chamadas); removido com o porque gravado no codigo. Dupla sabotagem final: os dois caminhos mordem. 6/6 + inbound_idempotencia 7/7 + billing 7/7. Modos residuais do consenso documentados no proprio desmarcar().",
+  "nota": "Achado 2 aplicado como fundacao barata e nao-especulativa: comissaoTaxaAplicada Float? gravada pelos DOIS produtores (rota e WhatsApp), migracao aditiva no padrao das 27 existentes, aplicada em test e dev. Teste prova o caso aritmetico exato do achado e que liquido zero deixa de apagar a informacao. Historico permanece NULL — lacuna honesta.",
   "aviso": "Declaracao ENCERRADA."
 }

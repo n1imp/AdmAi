@@ -200,6 +200,9 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
     }
     const valorLiquido = dados.valorCobrado - dados.valorMaterial;
     const comissaoGerada = parseFloat((valorLiquido * (tecnico.comissao / 100)).toFixed(2));
+    // A taxa entra IMUTÁVEL junto do valor: mudar Tecnico.comissao amanhã não reescreve o
+    // passado (comportamento certo que já existia) e agora também não o torna irrecuperável.
+    const comissaoTaxaAplicada = tecnico.comissao;
     const servico = await prisma.$transaction(async (tx) => {
       if (materiais.length > 0) {
         const ids = materiais.map((m) => m.materialId);
@@ -218,6 +221,7 @@ router.post('/servicos', podeRegistrarServico, async (req, res) => {
           valorMaterial: dados.valorMaterial,
           valorLiquido,
           comissaoGerada,
+          comissaoTaxaAplicada,
           status,
           clienteNome: dados.clienteNome ?? null,
           clienteTelefone: dados.clienteTelefone ?? null,
