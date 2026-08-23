@@ -45964,9 +45964,23 @@
       "bloqueiaIntegracao": false,
       "nota": "As 15 oclusoes permanentes fechadas. Duas causas: o botao flutuante era fixed sem coordenacao com a pilha do rodape (tres copias identicas sem dono comum — criar o dono foi a correcao), e o main do painel tem rolagem propria, que padding no body nao alcanca. Varredura final: 38 superficies x papel, ZERO oclusoes permanentes, e as telas do painel limpas ate a posicao inicial.",
       "declaradoEm": "2026-08-23T01:53:53.183Z"
+    },
+    {
+      "sliceId": "SCOPE-F2I-PAGINA-VAZIA",
+      "titulo": "Corrige import quebrado e impede que pagina vazia passe por medicao",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Tres defeitos do instrumento, todos meus. (1) Import inserido dentro de um import multilinha em Catalogo.jsx derrubou o app; tres varreduras mediram tela em branco e devolveram ZERO defeitos — o resultado mais desejavel a partir do estado mais quebrado. (2) Guard novo: captura de pagina com 0 palavras e 0 interativos falha alto; sabotagem confirma que recusa a quebrada e aceita a real. (3) Sem String.raw, o s do template literal virava s, e a sonda trocava toda letra s por espaco em tudo que lia da pagina; geometria nao era afetada, texto e contagem sim. Varredura refeita: 152 capturas, 0 vazias, CONSENT_VISIBLE 152/152, CONSENT_USABLE 152/152, 0 oclusoes permanentes. ORDEM VIOLADA: Catalogo.jsx foi consertado ANTES desta declaracao, entao o baseline ja o continha e a comparacao o mostra como declarado-e-nao-escrito. WRITE antes de DECLARE, que o contrato proibe.",
+      "declaradoEm": "2026-08-23T02:06:30.038Z"
     }
   ],
-  "geradoEm": "2026-08-23T02:02:43.430Z",
+  "geradoEm": "2026-08-23T02:24:52.646Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

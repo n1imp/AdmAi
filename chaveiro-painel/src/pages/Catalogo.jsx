@@ -16,12 +16,12 @@ import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import {
-import BotaoFlutuante from '../components/ui/BotaoFlutuante.jsx';
   ModalMaterial,
   ModalMovimentacao,
   ModalHistorico,
   ModalConfirmarDelete,
 } from './CatalogoModais.jsx';
+import BotaoFlutuante from '../components/ui/BotaoFlutuante.jsx';
 
 function Miniatura({ url, nome }) {
   const [falhou, setFalhou] = useState(false);

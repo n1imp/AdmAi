@@ -66,7 +66,12 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
  *   Foi assim que o banner de consentimento sobre "Esqueci minha senha" apareceu como medida, e
  *   não como suspeita.
  */
-export const EXPRESSAO_SONDA = `(() => {
+/* `String.raw` NAO e detalhe de estilo: sem ele, `\s` dentro do template literal vira `s`, e o
+   `/\s+/g` de normalizacao de espaco virava `/s+/g` — a sonda trocava toda letra "s" por espaco
+   em tudo que lia da pagina. "Usamos cookies" chegava como "U amo  cookie ", e a contagem de
+   palavras saia inflada. Nada disso afetava oclusao, transbordo ou alvo de toque, que sao
+   geometricos; afetava todo texto e todo numero derivado de texto. */
+export const EXPRESSAO_SONDA = String.raw`(() => {
   const W = window.innerWidth, H = window.innerHeight;
   const doc = document.documentElement;
   const txt = (el) => (el.innerText || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 70);
@@ -394,6 +399,26 @@ export async function capturar({ destino, papel, usuario, senha, rotas }) {
           expression: EXPRESSAO_SONDA,
           returnByValue: true,
         });
+        /**
+         * PAGINA QUE NAO RENDERIZOU NAO E PAGINA SEM DEFEITOS.
+         *
+         * Um erro de sintaxe em UMA pagina derrubou o app inteiro, e as tres varreduras
+         * seguintes mediram tela em branco: zero oclusoes, zero truncamentos, zero alvos
+         * pequenos. O resultado mais desejavel possivel a partir do estado mais quebrado
+         * possivel — e eu quase o arquivei como prova de que a correcao tinha funcionado.
+         *
+         * A suite de testes nao pegou porque nenhum teste importava aquela pagina. Entao a
+         * guarda mora aqui, no instrumento que OBSERVA: sem conteudo e sem elemento
+         * interativo, a captura falha alto em vez de virar silencio com cara de aprovacao.
+         */
+        const medida = sonda.result?.value;
+        if (medida && medida.palavras === 0 && medida.interativos === 0) {
+          throw new Error(
+            `${rota} em ${vp.nome} renderizou VAZIA (0 palavras, 0 interativos) — ` +
+              'medida descartada. Verifique erro de runtime no painel antes de confiar na varredura.'
+          );
+        }
+
         medidas.push({
           papel,
           rota,
