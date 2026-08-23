@@ -421,14 +421,16 @@ function Layout({ children }) {
              O `pb-20` continua reservando a navegacao inferior; a altura do consentimento entra
              somada, e medida. [GAP-UX-CONSENT-01] */
           style={{ paddingBottom: 'calc(var(--admai-consent-h, 0px))' }}
-          className="flex-1 overflow-y-auto pb-20 lg:pb-8"
+          className="flex-1 overflow-y-auto pb-20 lg:pb-8 flex flex-col"
         >
           {/* key={pathname}: remonta o conteúdo por navegação p/ a transição de rota tocar
               (fade-only, .panel-route). RodapeLegal fica fora p/ não reanimar. */}
           <div key={pathname} className="panel-route lg:max-w-6xl lg:mx-auto lg:px-2">
             {children}
           </div>
-          <RodapeLegal />
+          {/* mt-auto: em página curta o rodapé ENCOSTA na base do main; em página longa segue o
+              conteúdo — o critério literal de GAP-UX-RODAPE-01, sem virar barra fixa. */}
+          <RodapeLegal className="mt-auto" />
         </main>
       </div>
 

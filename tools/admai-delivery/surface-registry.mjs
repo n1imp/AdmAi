@@ -384,6 +384,13 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'com conteúdo curto, o rodapé encosta na base da viewport, sem vazio abaixo dele',
       'com conteúdo longo, o rodapé continua no fim do conteúdo e não vira barra fixa',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'O main do painel virou flex-col e o RodapeLegal ganhou mt-auto: em página curta ele ' +
+      'ENCOSTA na base do main; em página longa segue o conteúdo. Nunca vira barra fixa.',
+    provaDeFechamento:
+      'CDP em 1440px: gap rodapé→base = 0 em /aprovacoes, /reparticao e /servicos (páginas ' +
+      'curtas, sem scroll), com o main não-scrollável — o critério literal do achado.',
   },
   {
     id: 'GAP-UX-CONFIG-PROMESSA-01',
@@ -439,6 +446,14 @@ export const ACHADOS_COMPARTILHADOS = Object.freeze([
       'a sonda devolve `cabecalho` não vazio nas sete, nos quatro viewports',
       'não basta trocar a tag: o texto precisa dizer o que a tela faz, e não a marca',
     ]),
+    status: 'CLOSED',
+    correcao:
+      'Os títulos de TAREFA viraram h1 (a marca ADMAI continua p) nas sete superfícies — ' +
+      'inclusive os estados de erro, que agora anunciam "Link inválido ou expirado"/"CONVITE ' +
+      'INVÁLIDO" como cabeçalho. Troca de tag visualmente neutra (preflight zera h1).',
+    provaDeFechamento:
+      'Sonda pós-correção: cabeçalho não vazio nas 7 superfícies/estados (pedido, redefinição, ' +
+      'magic solicitar/verificar, verificar-email, convite), nomeando a tarefa e não a marca.',
   },
   {
     id: 'GAP-LEGAL-MODELO-01',

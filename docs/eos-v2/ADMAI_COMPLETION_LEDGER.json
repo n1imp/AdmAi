@@ -567,16 +567,20 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-CABECALHO-01",
         "GAP-UX-RODAPE-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "h1 de tarefa nas 7 superficies/estados (sonda)",
+        "gap rodape->base = 0 nas paginas curtas via CDP",
+        "pages 85/85"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T07:03:08.088Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

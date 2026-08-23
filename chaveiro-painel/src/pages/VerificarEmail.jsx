@@ -44,9 +44,9 @@ export default function VerificarEmail() {
             <>
               <CheckCircle size={44} className="text-success" />
               <div>
-                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+                <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
                   E-mail verificado!
-                </p>
+                </h1>
                 <p className="text-muted text-sm mt-1">Sua conta está ativa. Aproveite o AdmAi.</p>
               </div>
               <Link to="/" className="btn-primary w-full">
@@ -59,9 +59,9 @@ export default function VerificarEmail() {
             <>
               <XCircle size={44} className="text-danger" />
               <div>
-                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+                <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
                   Link inválido
-                </p>
+                </h1>
                 <p className="text-muted text-sm mt-1">
                   O link expirou ou já foi usado. Solicite um novo link de verificação no painel em
                   Configurações → Segurança.

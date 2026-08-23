@@ -48239,9 +48239,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "prettier NUNCA por glob — lista explicita dos arquivos tocados, dentro da fatia dona. Edicao nova durante fechamento = expansao ANTES de escrever, nao depois."
       }
+    },
+    {
+      "sliceId": "SL-03-SHELL-AUTH",
+      "titulo": "h1 semantico na familia auth + rodape ancorado no painel",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Dois achados CLOSED numa fatia: CABECALHO-01 (h1 de tarefa nas 7 superficies, inclusive estados de erro) e RODAPE-01 (main flex-col + mt-auto; gap 0 provado por CDP nas paginas curtas). Prettier por LISTA explicita, dentro da fatia.",
+      "declaradoEm": "2026-08-23T06:59:23.807Z"
     }
   ],
-  "geradoEm": "2026-08-23T06:57:48.216Z",
+  "geradoEm": "2026-08-23T07:03:18.286Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

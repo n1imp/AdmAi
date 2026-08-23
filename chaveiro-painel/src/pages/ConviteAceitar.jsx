@@ -93,9 +93,9 @@ export default function ConviteAceitar() {
             <div className="flex flex-col items-center gap-4 text-center py-4">
               <XCircle size={40} className="text-danger" />
               <div>
-                <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+                <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
                   Convite inválido
-                </p>
+                </h1>
                 <p className="text-muted text-sm mt-1">{erro}</p>
               </div>
             </div>
@@ -105,9 +105,9 @@ export default function ConviteAceitar() {
                 <p className="text-xs text-accent-300 font-mono uppercase tracking-wider mb-1">
                   Você foi convidado por {convite.convidadoPor ?? 'um administrador'}
                 </p>
-                <p className="font-display font-bold text-white text-xl uppercase tracking-wide">
+                <h1 className="font-display font-bold text-white text-xl uppercase tracking-wide">
                   Entrar em {convite.empresa}
-                </p>
+                </h1>
                 <p className="text-muted text-sm mt-0.5">
                   Como{' '}
                   <strong className="text-white">

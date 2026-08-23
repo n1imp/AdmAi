@@ -64,9 +64,9 @@ function TelaRecuperar() {
       ) : (
         <>
           <div className="mb-5">
-            <p className="font-display font-bold text-white text-xl uppercase tracking-wide">
+            <h1 className="font-display font-bold text-white text-xl uppercase tracking-wide">
               Recuperar senha
-            </p>
+            </h1>
             <p className="text-muted text-sm mt-0.5">
               Digite seu e-mail e enviamos um link de redefinição.
             </p>
@@ -162,9 +162,9 @@ function TelaRedefinir({ token }) {
       ) : (
         <>
           <div className="mb-5">
-            <p className="font-display font-bold text-white text-xl uppercase tracking-wide">
+            <h1 className="font-display font-bold text-white text-xl uppercase tracking-wide">
               Nova senha
-            </p>
+            </h1>
             <p className="text-muted text-sm mt-0.5">
               Escolha uma senha forte com pelo menos 8 caracteres.
             </p>

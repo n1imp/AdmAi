@@ -40,7 +40,7 @@ function TelaSolicitar() {
         {enviado ? (
           <div className="card p-8 flex flex-col items-center gap-4 text-center">
             <CheckCircle size={40} className="text-success" />
-            <p className="font-display font-bold text-lg text-white">Verifique seu e-mail</p>
+            <h1 className="font-display font-bold text-lg text-white">Verifique seu e-mail</h1>
             <p className="text-muted text-sm">
               Enviamos um link de acesso para <strong className="text-white">{email}</strong>.
               Válido por 15 minutos.
@@ -59,7 +59,7 @@ function TelaSolicitar() {
                 <Zap size={20} className="text-accent-300" />
               </div>
               <div>
-                <p className="font-display font-bold text-white">Entrar sem senha</p>
+                <h1 className="font-display font-bold text-white">Entrar sem senha</h1>
                 <p className="text-muted text-xs">Receba um link de acesso no seu e-mail.</p>
               </div>
             </div>
@@ -126,7 +126,7 @@ function TelaVerificar({ token }) {
         ) : (
           <>
             <XCircle size={40} className="text-danger" />
-            <p className="font-display font-bold text-white">Link inválido ou expirado</p>
+            <h1 className="font-display font-bold text-white">Link inválido ou expirado</h1>
             <p className="text-muted text-sm">Solicite um novo link de acesso.</p>
             <a href="/magic-link" className="btn-primary mt-1 text-sm">
               Solicitar novo link
