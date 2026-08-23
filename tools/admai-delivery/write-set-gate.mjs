@@ -374,7 +374,11 @@ export function caminhosDeclarados(decl) {
  * um controle negativo prova que ela nao cobre nada alem destes dois.
  */
 export const ARTEFATOS_DO_GATE = Object.freeze([
-  'docs/eos-v2/WRITE_SET.json', 'docs/eos-v2/WRITE_SET_HISTORY.json'
+  'docs/eos-v2/WRITE_SET.json', 'docs/eos-v2/WRITE_SET_HISTORY.json',
+  /* O Completion Ledger e tocado por TODA fatia (transicao de estado por item). Declara-lo em
+     cada write set seria ruido de formulario; escondee-lo seria o .gitignore de novo. Entra na
+     mesma isencao VISIVEL do livro-razao: sai da lista comparada, aparece em campo proprio. */
+  'docs/eos-v2/ADMAI_COMPLETION_LEDGER.json'
 ]);
 
 export function observarEscritaDasLanes(decl) {
@@ -1611,9 +1615,9 @@ export function executar(argv = []) {
     /* [R25-03] O controle anterior era `length === 2 && endsWith('.json')` — verdadeiro para
        QUALQUER par de arquivos .json. Não provava quais dois estão isentos, então trocar a lista
        inteira por outros dois caminhos passaria. Identidade exata, ordenada. */
-    ['os dois artefatos isentos são exatamente estes',
+    ['os TRES artefatos isentos são exatamente estes — identidade exata, não contagem',
       [...ARTEFATOS_DO_GATE].sort().join('|')
-        === 'docs/eos-v2/WRITE_SET.json|docs/eos-v2/WRITE_SET_HISTORY.json'],
+        === 'docs/eos-v2/ADMAI_COMPLETION_LEDGER.json|docs/eos-v2/WRITE_SET.json|docs/eos-v2/WRITE_SET_HISTORY.json'],
     ['livro-razão tocado é REPORTADO, não removido em silêncio',
       (() => {
         mkdirSync(join(laneB, 'docs/eos-v2'), { recursive: true });

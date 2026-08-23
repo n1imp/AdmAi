@@ -46048,9 +46048,23 @@
       "bloqueiaIntegracao": false,
       "nota": "D-F0-02 aplicada: FORMAS_DE_RUNTIME (4 produtores, UUID v4 estrito, filhos diretos) + ehEfeitoDeRuntime + particao antes do calculo de nao-declarados + campo efeitosDeRuntime sempre visivel. 12 controles novos, selftest 121/121. Codex corrigiu a evidencia (produto-<uuid> em estoque.js:128) e a correcao foi verificada no fonte antes de entrar na regra.",
       "declaradoEm": "2026-08-23T04:28:03.078Z"
+    },
+    {
+      "sliceId": "F0-04-05-LEDGER",
+      "titulo": "Completion Ledger: dado + controles + seed de todas as fontes",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Completion Ledger materializado: 72 itens de todas as fontes (registries, backlog de hardening com revisitCondition copiada, EXECUTION_STATE, EVs, docs de release referenciados), taxonomia de 13 estados com schema condicional (BLOCKED_* exige blockerRefs+revisitCondition+nextAction; DEFERRED exige revisitCondition; DONE exige evidencia). CLI de leitura com --resumo/--validar/--por-fase/--selftest (11/11). JSON entrou em ARTEFATOS_DO_GATE — isencao visivel, identidade exata no selftest do gate (121/121). SKIP != FORGET agora e regra de schema, nao promessa.",
+      "declaradoEm": "2026-08-23T04:32:13.562Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:30:37.211Z",
+  "geradoEm": "2026-08-23T04:37:54.520Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

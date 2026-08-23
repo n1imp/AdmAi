@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-02-RUNTIME-SIDE-EFFECT",
-  "titulo": "Gate distingue efeito de runtime da aplicacao de escrita de engenharia",
+  "sliceId": "F0-04-05-LEDGER",
+  "titulo": "Completion Ledger: dado + controles + seed de todas as fontes",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:28:03.078Z",
+  "declaradoEm": "2026-08-23T04:32:13.562Z",
   "baseCommitPorLane": {
-    "HARNESS": "decf9b65ad4d401285889007af8cc4e1a223eae6"
+    "HARNESS": "d9d0392c5edacad41e8b8605acfbfeb434ea762f"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Decisao D-F0-02 (Codex DECISOR, CONCORDO, confianca ALTA): classificacao por raiz + forma de nome server-generated com UUID v4 estrito, so filhos diretos, precedencia bloqueante preservada, listas estruturadas completas. Codex corrigiu a evidencia: quarto produtor produto-<uuid> em estoque.js:128 — verificado.",
+  "notaDeMetodo": "Ledger e JULGAMENTO DECLARADO (nao fundir com run-state, que e observacao). JSON em docs/eos-v2 no padrao dos irmaos; controles com taxonomia de 13 estados, blockerRefs obrigatorio em BLOCKED_*, revisitCondition obrigatoria em BLOCKED_*/DEFERRED (SKIP != FORGET vira regra de schema). O JSON entra em ARTEFATOS_DO_GATE: sera tocado por toda fatia, e isencao que se ve e auditavel.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -507,7 +507,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "5ef1b89b5d4da189a93ddaf759bec43496438cb52b8a00ada951543c36389176",
+      "docs/agent-environment/AGENT_DECISIONS.md": "c894c873da84cd5bb511931cbfa47ef173b26d836607ee2e20740792d1f2de1a",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -551,8 +551,8 @@
       "docs/eos-v2/RUN_STATE.json": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "ea6d07fc204159e79f1fc3cbc575d52f1f1adbabad87583132c75e43bf7bd001",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "4c852da5732fe85015a3e9ee35e14d0add0134a4762a7d0fafe038b890864dd5",
+      "docs/eos-v2/WRITE_SET.json": "2b1df6f8c56718e4dcefd863e41c97f5bc62989bba1d39b9f9e86013ae1dbb97",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "43adb57822b556f055831f55c0bb1b9ea2277676868f4947f0cfa660e2300a65",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -606,7 +606,7 @@
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
       "tools/admai-delivery/write-set-declarar.mjs": "b5ae466e8906651d6eb7211740f406e51e7eae427420f04d1a425807f407d9f7",
-      "tools/admai-delivery/write-set-gate.mjs": "8e5a53371d5135edcc508575e51bcc8938c22280087b1c1f3b90c12594e26915",
+      "tools/admai-delivery/write-set-gate.mjs": "2f2f510ee57c8e230039a503c945c43032b865f54e1d7127ff9f99c845e9f960",
       "tools/codex-policy/README.md": "a8eecbfd6e54a00738c65e82d5b6f663eb89a1d7f1c1cea00d4d893b77ba0047",
       "tools/codex-policy/agent-governance.test.mjs": "94b3f9165f5137b3ca4bda6cb0d8f5e8378004a47ca7df67d289470c9e3ac2aa",
       "tools/codex-policy/approval-policy.mjs": "a2a750f65515178551ef097b527370b94efbb4f888be87fa01fd173306722c25",
@@ -1741,32 +1741,41 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/write-set-gate.mjs",
+      "caminho": "tools/admai-delivery/completion-ledger.mjs",
       "precisao": "BOUNDED",
-      "proposito": "classe APPLICATION_RUNTIME_SIDE_EFFECT + selftests obrigatorios da decisao",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8e5a53371d5135edcc508575e51bcc8938c22280087b1c1f3b90c12594e26915",
+      "proposito": "controles + CLI --resumo/--validar/--por-fase/--selftest",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "registro da decisao material D-F0-02 (fallback designado — o plano ativo vive fora do repo)",
+      "proposito": "dado: ~55 itens de todas as fontes",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "tools/admai-delivery/write-set-gate.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "ADMAI_COMPLETION_LEDGER.json entra na isencao visivel do livro-razao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5ef1b89b5d4da189a93ddaf759bec43496438cb52b8a00ada951543c36389176",
+      "shaNaDeclaracao": "2f2f510ee57c8e230039a503c945c43032b865f54e1d7127ff9f99c845e9f960",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:28:04.217Z",
+  "validadoEm": "2026-08-23T04:32:13.832Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "D-F0-02 aplicada: FORMAS_DE_RUNTIME (4 produtores, UUID v4 estrito, filhos diretos) + ehEfeitoDeRuntime + particao antes do calculo de nao-declarados + campo efeitosDeRuntime sempre visivel. 12 controles novos, selftest 121/121. Codex corrigiu a evidencia (produto-<uuid> em estoque.js:128) e a correcao foi verificada no fonte antes de entrar na regra.",
+  "nota": "Completion Ledger materializado: 72 itens de todas as fontes (registries, backlog de hardening com revisitCondition copiada, EXECUTION_STATE, EVs, docs de release referenciados), taxonomia de 13 estados com schema condicional (BLOCKED_* exige blockerRefs+revisitCondition+nextAction; DEFERRED exige revisitCondition; DONE exige evidencia). CLI de leitura com --resumo/--validar/--por-fase/--selftest (11/11). JSON entrou em ARTEFATOS_DO_GATE — isencao visivel, identidade exata no selftest do gate (121/121). SKIP != FORGET agora e regra de schema, nao promessa.",
   "aviso": "Declaracao ENCERRADA."
 }
