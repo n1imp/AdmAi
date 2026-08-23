@@ -18,7 +18,16 @@ export function RequireAuth({ children }) {
   useEffect(() => {
     if (expirado && user) logout();
   }, [expirado, user, logout]);
-  if (!user || expirado) return <Navigate to="/login" replace />;
+  /* Deep-link diferido: quem cai aqui vindo de /aprovacoes deve VOLTAR a /aprovacoes depois
+     do login — o destino viaja em state.from (jornada F5). */
+  if (!user || expirado)
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: window.location.pathname + window.location.search }}
+      />
+    );
   // Usuário com PIN provisório fica preso na troca de senha até definir uma definitiva.
   if (senhaProvisoria && window.location.pathname !== '/trocar-senha') {
     return <Navigate to="/trocar-senha" replace />;

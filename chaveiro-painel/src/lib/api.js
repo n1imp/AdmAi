@@ -51,7 +51,11 @@ api.interceptors.response.use(
     const { status, data } = error.response ?? {};
     const originalConfig = error.config;
 
-    if (status === 401 && !originalConfig._retry) {
+    /* 401 vindo do PRÓPRIO /auth/* é credencial errada, não sessão vencida — tentar refresh
+       aqui redirecionava a página no meio do submit e a mensagem de erro nunca renderizava
+       (defeito achado pela jornada F5 de senha errada). */
+    const ehRotaDeAuth = String(originalConfig?.url ?? '').startsWith('/auth/');
+    if (status === 401 && !originalConfig._retry && !ehRotaDeAuth) {
       originalConfig._retry = true;
       try {
         const novoToken = await tentarRefresh();
@@ -60,6 +64,13 @@ api.interceptors.response.use(
       } catch {
         limparSessao();
         window.location.href = '/login';
+      }
+    } else if (status === 402) {
+      /* Assinatura morta: TODA página de produto ficava em branco (jornada F5 mediu a tela).
+         O destino certo existe desde SL-10: /assinatura mostra o motivo e a ação. /billing é
+         allowlisted no backend e a própria página de assinatura consome /billing — sem loop. */
+      if (!window.location.pathname.startsWith('/assinatura')) {
+        window.location.href = '/assinatura';
       }
     } else if (status === 403 && data?.codigo === 'senha_provisoria') {
       if (!window.location.pathname.startsWith('/trocar-senha')) {

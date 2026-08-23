@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   KeyRound,
   Eye,
@@ -22,6 +22,7 @@ import RodapeLegal from '../components/RodapeLegal.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   // Abre direto na aba de cadastro quando vier da landing (/login?modo=cadastrar).
   const [modo, setModo] = useState(() =>
@@ -155,7 +156,7 @@ export default function Login() {
       return;
     }
     login(data.token);
-    navigate('/', { replace: true });
+    navigate(location.state?.from ?? '/', { replace: true });
   }
 
   async function cadastrar(e) {

@@ -48463,9 +48463,23 @@
       "bloqueiaIntegracao": false,
       "nota": "F4 runtime acceptance: 6 arquivos de teste novos (33 casos), 1 correcao de produto achada pelo proprio teste (entidade no convite.enviado, expansao declarada). Suite completa 53 arquivos / 348 testes verde. GATE-F4 DONE com BLOCKED_CAPABILITY explicito (WhatsApp ponta real) e Sentry anotado p/ staging.",
       "declaradoEm": "2026-08-23T12:49:27.007Z"
+    },
+    {
+      "sliceId": "F5-JORNADAS-E2E",
+      "titulo": "Driver de jornadas E2E contra o stack REAL (bot+painel+Postgres+Redis) + sonda de staging",
+      "estado": "CLOSED",
+      "comparacao": "AUTHORIZED_EXPANSION",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "F5: driver de jornadas novo (9/9 contra o stack real) que achou e corrigiu 3 defeitos de produto (401 do proprio login engolia o erro; 402 = pagina em branco -> /assinatura; deep-link sem retorno); sonda de staging pelo protocolo do usuario: staging de APLICACAO inexistente (evidencia objetiva) -> BLOCKED_EXTERNAL/D2 honesto. Painel 251/251.",
+      "declaradoEm": "2026-08-23T14:05:30.315Z"
     }
   ],
-  "geradoEm": "2026-08-23T14:04:32.297Z",
+  "geradoEm": "2026-08-23T14:31:41.157Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
