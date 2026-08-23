@@ -57,3 +57,11 @@ Use este ledger somente quando uma missao nao possuir plano ou contrato ativo. D
 - **Impacto**: /tecnicos zera truncamento nos 4 viewports; geometria @1920 = 2 trilhas de 440px sem trilha vazia; GAP-UX-DESKTOP-LARGURA-01 fecha 6/6.
 - **Testes**: suíte 247/247; axe 14/14 (caso novo com nome longo); sonda 4 vp zeros; contenção mobile por CDP; eslint/prettier/diff-check limpos.
 - **Risco residual (do revisor)**: axe/jsdom não valida geometria; reforço futuro não bloqueante = caso CDP com nome longo em 1024/1440.
+
+## D-GATE6-CODEX-UNAVAILABLE (2026-08-23)
+
+- **Contexto**: Gate 6 adversarial (thread 01a02fb6). Rodada 1 achou 3 bloqueantes + 1 P2; rodada 2 confirmou paywall e emissores de sessão FECHADOS no código, mas apontou revogação-após-credencial incompleta (bloqueante mais fundo) + testes que não mordiam + P2 residual.
+- **Correções aplicadas e auto-verificadas** (commits 2f39055, f78d947): revogação de refresh na RAIZ (/auth/refresh rejeita refresh anterior a tokenValidoApos — cobre os 4 fluxos de credencial), reset transacional, /usuarios/:id-senha avança o corte, testes com rota real (sabotagem confirma que mordem), ramo phone2fa coberto, paused em ESTADOS_VIVOS. 8/8 + 39 de regressão verdes.
+- **Indisponibilidade**: a rodada 3 (chancela da correção de raiz) NÃO foi obtida — Codex retornou "You've hit your usage limit ... try again at Aug 27th, 2026". Evidência objetiva, não fallback silencioso.
+- **Decisão**: Gate 6 NÃO é auto-aprovado (gate adversarial existe para um segundo par de olhos hostil; auto-aprovar violaria a governança). Fica `VERIFICATION_REQUIRED` com revisita "Codex disponível (limite reseta 2026-08-27)". As correções em si estão feitas, verificadas contra o código e provadas por testes que mordem — o que falta é a chancela externa da rodada final.
+- **Impacto no terminal**: o proposal `USER_DECISION_PROPOSAL` lista o Gate 6 como "2 rodadas adversariais fecharam paywall+emissores; correção de raiz da revogação aplicada e testada; rodada 3 de chancela pendente por quota". Não altera os 7 bloqueios D2 nem o veredito condicional.

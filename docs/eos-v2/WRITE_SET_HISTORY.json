@@ -51196,9 +51196,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Gate 6 R2: revogacao de refresh na RAIZ (/auth/refresh rejeita refresh anterior ao corte tokenValidoApos — cobre reset, /me/senha, /usuarios/:id-senha, resetarPin de uma vez); reset transacional; /usuarios/:id-senha avanca o corte; paused em ESTADOS_VIVOS. Testes: rota google REAL agora morde (sabotagem quebra 1), +2 casos (raiz via /me/senha, phone2fa), cookie rotacionado. 8/8 + 39 regressao.",
       "declaradoEm": "2026-08-23T21:52:53.846Z"
+    },
+    {
+      "sliceId": "SWEEP-03-PROPOSAL",
+      "titulo": "USER_DECISION_PROPOSAL: PROMOTE_ADMAI_TO_PRODUCTION — terminal condicional honesto",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Proposal terminal entregue com Gate 6 honesto (VERIFICATION_REQUIRED por quota do Codex, nao aprovado); 7 bloqueios D2/externo com passo-a-passo; plano de promocao nao executado.",
+      "declaradoEm": "2026-08-23T22:01:52.432Z"
     }
   ],
-  "geradoEm": "2026-08-23T21:58:49.660Z",
+  "geradoEm": "2026-08-23T22:01:57.896Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

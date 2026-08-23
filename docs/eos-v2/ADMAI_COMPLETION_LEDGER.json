@@ -1471,15 +1471,21 @@
       "authority": "CODEX_D1",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "NOT_READY",
-      "blockerRefs": [],
+      "status": "VERIFICATION_REQUIRED",
+      "blockerRefs": [
+        "CODEX-QUOTA"
+      ],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Rodada 1 (thread 01a02fb6): 3 bloqueantes + 1 P2. Rodada 2: paywall e emissores de sessao CONFIRMADOS fechados; revogacao-apos-credencial apontada como incompleta.",
+        "Correcoes aplicadas e auto-verificadas (2f39055, f78d947): revogacao na RAIZ (/auth/refresh vs tokenValidoApos, cobre os 4 fluxos), reset transacional, /usuarios/:id-senha avanca corte, paused em ESTADOS_VIVOS. Testes 8/8 com sabotagem que morde + 39 de regressao.",
+        "Rodada 3 (chancela da correcao de raiz) BLOQUEADA: Codex atingiu limite de uso (retry 2026-08-27). UNAVAILABLE != PASS — nao auto-aprovado. Ver D-GATE6-CODEX-UNAVAILABLE."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T22:00:44.108Z",
       "nextAction": null,
-      "revisitCondition": null,
+      "revisitCondition": "Codex disponivel (limite de uso reseta 2026-08-27) para a chancela adversarial da correcao de raiz da revogacao",
       "snapshotRef": null
     },
     {
@@ -1607,15 +1613,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
-      "blockerRefs": [],
+      "status": "VERIFICATION_REQUIRED",
+      "blockerRefs": [
+        "CODEX-QUOTA"
+      ],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "F6-01..10 DONE (perf, SEO, fontes, hardening, uploads-split, backfill, backup-drill, reconciliacoes, audit-gate verde). Unica pendencia: a chancela final do Gate 6 adversarial (F6-06) depende do Codex, indisponivel por quota ate 2026-08-27."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T22:00:44.111Z",
       "nextAction": null,
-      "revisitCondition": null,
+      "revisitCondition": "Chancela da rodada 3 do Gate 6 (Codex disponivel 2026-08-27)",
       "snapshotRef": null
     },
     {
@@ -1687,13 +1697,15 @@
       "authority": "USER_D2",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md: veredito CONDICIONAL honesto (nao READY maquiado), evidencia por gate, 7 bloqueios D2/externo com passo-a-passo e aceite, riscos residuais com revisita, plano de promocao NAO executado, estado do ledger anexado. Gate 6 marcado como re-verificacao pendente (Codex por quota), nao como aprovado."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T22:00:44.111Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
