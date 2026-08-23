@@ -45901,9 +45901,29 @@
       "bloqueiaIntegracao": false,
       "nota": "Controle negativo e positivo do detector de artefato ignorado, contra o caminho real. Registro em docs/eos-v2/CONTROLE_ARTEFATO.md.",
       "declaradoEm": "2026-08-23T00:21:47.298Z"
+    },
+    {
+      "sliceId": "SCOPE-F2E-NAV-DIFERIDA",
+      "titulo": "GAP-UX-NAV-DIFERIDA-01: feature diferida deixa de ser alcancavel",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "GAP-UX-NAV-DIFERIDA-01 fechado. Classe corrigida em permite(): `feature` passa a ser avaliada ANTES de `sempre`, que era um escape desligando o gate de feature para as dez entradas que o usam. Provas: negativo nos tres papeis, positivo com flag ligada, duas sabotagens que reprovam, controle DERIVADO das rotas sob flag em App.jsx, e runtime — /mais do funcionario de 17 para 16 interativos e deep-link caindo na home em vez da superficie diferida.",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — dentro da missao SCOPE-F2E",
+        "justificativa": "As 9 capturas em chaveiro-painel/telas/prova-nav sao a evidencia de runtime que a propria instrucao exige para esta correcao: conteudo aceito. A ordem foi violada porque eu declarei a fatia sem `artefatos: [\"chaveiro-painel/telas\"]`, sabendo que ia rodar captura. O detector criado na fatia anterior pegou isto no primeiro uso real, que e a validacao mais forte que ele podia receber. Correcao de processo aplicada na proxima fatia: toda fatia que roda captura declara a raiz de artefato.",
+        "provenance": "ORIGINAL_PRE_MUTATION"
+      },
+      "declaradoEm": "2026-08-23T00:26:35.155Z"
     }
   ],
-  "geradoEm": "2026-08-23T00:24:31.469Z",
+  "geradoEm": "2026-08-23T01:08:19.465Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

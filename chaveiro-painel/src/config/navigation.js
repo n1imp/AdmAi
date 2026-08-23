@@ -321,7 +321,10 @@ const FUNCIONARIO = {
       icon: Bell,
       mobile: 'more',
       group: 'Conta',
-      guard: { sempre: true },
+      /* GAP-UX-NAV-DIFERIDA-01: ficou `{ sempre: true }` quando NOTIFICACOES foi diferida. As
+         duas entradas de /avaliacoes receberam o guard de flag; esta passou batido, e o hub do
+         funcionário seguiu oferecendo um destino que a rota não serve mais. */
+      guard: { sempre: true, feature: 'NOTIFICACOES' },
     },
     {
       to: '/ajuda',
@@ -341,11 +344,16 @@ const POR_PAPEL = { dono: DONO, gestor: GESTOR, funcionario: FUNCIONARIO };
 export const MAX_PRIMARY = 4;
 
 function permite(guard, ctx) {
-  if (!guard || guard.sempre) return true;
-  /* `feature` vem ANTES da permissão: capacidade diferida não existe neste release, então nem
-     chega a ser questão de quem pode. Ordem invertida deixaria o item aparecer para quem tem a
-     permissão de uma feature que não foi lançada. [SCOPE-F3] */
+  if (!guard) return true;
+  /* `feature` vem PRIMEIRO — antes de `sempre` e antes da permissão. [SCOPE-F2E]
+     Eu já tinha escrito "feature vem antes da permissão" e implementado só metade: `guard.sempre`
+     dava return true na linha anterior, então `sempre` era um escape que desligava o gate de
+     feature inteiro. Dez entradas usam `sempre: true`; qualquer uma delas ganhando uma feature
+     diferida repetiria o vazamento em silêncio.
+     `sempre` significa "para todo papel e toda permissão", nunca "mesmo que a capacidade não
+     exista neste release". Capacidade diferida não é questão de quem pode: ela não está no ar. */
   if (guard.feature && !featureAtiva(guard.feature)) return false;
+  if (guard.sempre) return true;
   if (guard.proprio) return ctx.podeProprio(guard.proprio);
   if (guard.modulo) return ctx.pode(guard.modulo, guard.acao ?? 'ver');
   return true;

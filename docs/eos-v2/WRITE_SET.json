@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SCOPE-F2D-CONTROLE",
-  "titulo": "Controle negativo e positivo do detector de artefato ignorado",
+  "sliceId": "SCOPE-F2E-NAV-DIFERIDA",
+  "titulo": "GAP-UX-NAV-DIFERIDA-01: feature diferida deixa de ser alcancavel",
   "lanes": {
     "HARNESS": "C:/Users/n1iag/dev/admai-worktrees/agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T00:21:47.298Z",
+  "declaradoEm": "2026-08-23T00:26:35.155Z",
   "baseCommitPorLane": {
-    "HARNESS": "f97e8643d095f1cb472276b83b3826b0f6a4ac63"
+    "HARNESS": "d8d229e78d6cb27334277ced22e8982989694e97"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Roda contra o caminho REAL: CLI do gate, repositorio real, .gitignore real.",
+  "notaDeMetodo": "A entrada de Notificacoes e a instancia; a classe e que `permite()` retorna true em `guard.sempre` ANTES de checar `feature`, entao sempre:true e um escape que desliga o gate de feature. Corrigir so a entrada deixaria a classe aberta para a proxima. Controle DERIVADO das rotas com flag em App.jsx, porque o furo existiu por conferencia item a item.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -540,14 +540,15 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
+      "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "039e5051f88cebf90dbad7994189ee3929de0caeda3cc69ee7d0ce272b8b7379",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "992e16a859e75611522177e9389e30d18a4d13fdab981eab62015f47bd0f3831",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "3201e0ac15a6cf1284b47466fbe9f921e1f8535ad1174b4822a715b544157913",
+      "docs/eos-v2/WRITE_SET.json": "0a8d59dca7e6b3c83728f729b105d5d0f517c887fcd4aca7b21e279f86c8cb83",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "49370d56b198ad53d7ece8a6475dae233119479a9e08f7eface65519be1fc2e4",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1091,21 +1092,38 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/CONTROLE_ARTEFATO.md",
+      "caminho": "chaveiro-painel/src/config/navigation.js",
       "precisao": "BOUNDED",
-      "proposito": "registro do controle",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "ordem do guard e feature na entrada de notificacoes",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "bd327c3e7d4b52049e6f623df7a48dde4ef1d19b7e1312e034683a9c46d6e266",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/config/__tests__/navigation.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "positivo, negativo, sabotagem e controle derivado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7db66740cc421604510110b09c25f12b64502c9d6cc0cfd4bc9eea8e160aa834",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "validadoEm": "2026-08-23T00:26:35.604Z",
+  "validadoPor": "write-set-gate.mjs",
+  "comparacao": "UNDECLARED_ARTIFACT_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Controle negativo e positivo do detector de artefato ignorado, contra o caminho real. Registro em docs/eos-v2/CONTROLE_ARTEFATO.md.",
+  "bloqueiaIntegracao": true,
+  "nota": "GAP-UX-NAV-DIFERIDA-01 fechado. Classe corrigida em permite(): `feature` passa a ser avaliada ANTES de `sempre`, que era um escape desligando o gate de feature para as dez entradas que o usam. Provas: negativo nos tres papeis, positivo com flag ligada, duas sabotagens que reprovam, controle DERIVADO das rotas sob flag em App.jsx, e runtime — /mais do funcionario de 17 para 16 interativos e deep-link caindo na home em vez da superficie diferida.",
+  "reconciliacao": {
+    "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+    "autorizadoPor": "Claude (writer) — dentro da missao SCOPE-F2E",
+    "justificativa": "As 9 capturas em chaveiro-painel/telas/prova-nav sao a evidencia de runtime que a propria instrucao exige para esta correcao: conteudo aceito. A ordem foi violada porque eu declarei a fatia sem `artefatos: [\"chaveiro-painel/telas\"]`, sabendo que ia rodar captura. O detector criado na fatia anterior pegou isto no primeiro uso real, que e a validacao mais forte que ele podia receber. Correcao de processo aplicada na proxima fatia: toda fatia que roda captura declara a raiz de artefato.",
+    "provenance": "ORIGINAL_PRE_MUTATION"
+  },
   "aviso": "Declaracao ENCERRADA."
 }
