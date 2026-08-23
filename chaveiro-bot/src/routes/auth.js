@@ -540,15 +540,16 @@ router.post('/auth/redefinir-senha', authLimiter, async (req, res) => {
     const bcrypt = await import('bcryptjs');
     const senhaHash = await bcrypt.default.hash(parse.data.novaSenha, 12);
     const agora = new Date();
-    await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
-    });
-    /* [Gate 6, achado 3] tokenValidoApos corta os JWTs antigos, mas /auth/refresh NÃO consulta
-       esse corte — um refresh cookie roubado ANTES do reset ainda rotacionaria para um JWT novo.
-       Apagar todos os refresh do usuário (como /me/logout-all) fecha isso: o atacante perde a
-       sessão no momento do reset. */
-    await prisma.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
+    /* [Gate 6 R2] Mutação da senha + revogação dos refresh na MESMA transação — atômico, como
+       o revisor exigiu. O corte em tokenValidoApos já barra refresh antigos no /auth/refresh; o
+       delete é o cinturão (invalida imediatamente, sem esperar a próxima rotação). */
+    await prisma.$transaction([
+      prisma.usuario.update({
+        where: { id: usuario.id },
+        data: { senhaHash, senhaAlteradaEm: agora, tokenValidoApos: agora, senhaProvisoria: false },
+      }),
+      prisma.refreshToken.deleteMany({ where: { usuarioId: usuario.id } }),
+    ]);
     logger.info('senha_redefinida_email', { userId: usuario.id });
     return res.json({ ok: true });
   } catch (erro) {
@@ -753,6 +754,17 @@ router.post('/auth/refresh', async (req, res) => {
     if (!registro.usuario.ativo) {
       res.clearCookie('refresh_token', { ...COOKIE_OPTS });
       return res.status(401).json({ erro: 'Usuário inativo' });
+    }
+    /* [Gate 6 R2] Correção de RAIZ da revogação: qualquer troca de credencial avança
+       `tokenValidoApos`. Um refresh criado ANTES desse corte é uma sessão que deveria ter
+       morrido — rejeita e limpa a árvore. Isto cobre de uma vez TODOS os fluxos que mexem no
+       corte (reset por e-mail, /me/senha, /usuarios/:id com senha, resetarPin), sem depender
+       de cada um lembrar de apagar os refresh. */
+    const corte = registro.usuario.tokenValidoApos;
+    if (corte && registro.criadoEm < corte) {
+      await prisma.refreshToken.deleteMany({ where: { usuarioId: registro.usuario.id } });
+      res.clearCookie('refresh_token', { ...COOKIE_OPTS });
+      return res.status(401).json({ erro: 'Sessão expirada' });
     }
     // Rotacionar: apagar o token usado e emitir um novo
     await prisma.refreshToken.delete({ where: { id: registro.id } });

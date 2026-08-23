@@ -1,19 +1,20 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "GATE6-CORRECOES",
-  "titulo": "Gate 6 adversarial (Codex thread 01a02fb6): 3 bloqueantes + 1 P2 corrigidos",
+  "sliceId": "GATE6-CORRECOES-R2",
+  "titulo": "Gate 6 rodada 2: revogacao de refresh na RAIZ + testes que mordem + P2 paused",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T21:03:22.046Z",
+  "declaradoEm": "2026-08-23T21:52:53.846Z",
   "baseCommitPorLane": {
-    "HARNESS": "1c7f59a6b8b17f8bc185f801a82b1332df9f6e7d"
+    "HARNESS": "379f5976cc2639731b2e40b36f1cfb54ae0a3793"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Todos os 4 achados VERIFICADOS no codigo antes de corrigir. (1) paywall: requireAssinaturaAtiva nas rotas autenticadas de produto de google.js (8) e whatsapp.js (credenciais/conectar/desconectar) — montadas na raiz, pulavam a guarda do apiRouter; callback OAuth/webhooks/status seguem isentos (por desenho). (2) 2FA: responderSessao passa a cobrir phone2faAtivo (nao so TOTP) E magic-link/verificar passa a usar responderSessao — email/OAuth comprometido nao contorna mais o 2o fator. (3) reset de senha apaga TODOS os refresh do usuario (como logout-all) — refresh roubado pre-reset deixa de rotacionar. (4/P2) criarCheckoutSession recusa segunda assinatura quando ha stripeSubId em estado vivo (permite trial local e reassinar apos canceled). Alternativa SEGURA em todos (aumenta protecao) — nao reduz nada, dispensa decisao do usuario.",
+  "notaDeMetodo": "A re-verificacao (thread 01a02fb6) achou que apagar refresh so no reset era incompleto: /me/senha, /usuarios/:id-senha e resetarPin tambem trocam credencial. Correcao de RAIZ: /auth/refresh passa a rejeitar refresh cujo criadoEm < tokenValidoApos do usuario — assim TODO fluxo que avanca o corte invalida os refresh antigos de uma vez. /usuarios/:id-senha passa a setar tokenValidoApos (nao setava). Reset vira transacional (senha+delete atomicos). Testes: rota google REAL (/api/google/status, nao a inexistente que pegava 402 do curinga), ramo phone2fa de responderSessao, cookie rotacionado. P2: 'paused' entra em ESTADOS_VIVOS; concorrente-pre-webhook fica P2 residual documentado (exige idempotencia de sessao).",
   "baselinePorLane": {
     "HARNESS": {
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "d7eff3cd10bce7c737fed8ca561afb968f9ce772886c30b4382de71b830be665",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -128,15 +129,15 @@
       "chaveiro-bot/src/routes/account.js": "11c48933566f7b55e33ba9246341358644d0586bf808f80c3f2a56ca73f37de7",
       "chaveiro-bot/src/routes/admin.js": "f91d3d5b457a398faffc77760616a684e027d425ad848c57ee4fa463abc60a04",
       "chaveiro-bot/src/routes/api.js": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
-      "chaveiro-bot/src/routes/auth.js": "90b7c1f0c0cce2e9b998f471ec5dd25f36c90d0b1db1a0271208556b03ba3ac2",
-      "chaveiro-bot/src/routes/billing.js": "47fd81a21ecee112baa1e9fe43db249a08ff23033184316f29828228397eaba7",
+      "chaveiro-bot/src/routes/auth.js": "a5c68cf38741562f9029c05bdb46e1f41dabdbe62f2d7e56ae289cc8d78df0e2",
+      "chaveiro-bot/src/routes/billing.js": "995f254a8f31fe9de516fd022afb34967ce79d7561e37396ddf6bdda1806a938",
       "chaveiro-bot/src/routes/documentos.js": "4d8ac0606d5722543c4731a38d50f101b7f146dcc2b23d6d87e2a02b456781b3",
       "chaveiro-bot/src/routes/estoque.js": "2d99713fe061b92bee1e28e74891e7547e112e141f36c9752365bfcbc98adc77",
-      "chaveiro-bot/src/routes/google.js": "dc14bf1c077b0b48c9e0940aad501e77b005b452e5db0059dfeb086a3e7ad0c8",
+      "chaveiro-bot/src/routes/google.js": "77096784718e2e1b6c3031dbb68357e71121ba712efeabd6aaba7f5d10d634af",
       "chaveiro-bot/src/routes/metricas.js": "063be56c5c62fa2555e719e122e59be3ce494aa3d73e7b1fbc32b0e97fe71547",
       "chaveiro-bot/src/routes/servicos.js": "21b6d85c12bcd2b7729a450776f0a17f320828dfe55a4c3527862bdeac695207",
       "chaveiro-bot/src/routes/tecnicos.js": "fc0d2d0a5cca97eb26983a6b60e23e860276f0c38bb7663debd20b6e681c3478",
-      "chaveiro-bot/src/routes/whatsapp.js": "43319cfe463e5034b63cd44961fbb934d6c0f901de3823d66ad901605f34a54b",
+      "chaveiro-bot/src/routes/whatsapp.js": "666939fc3041924d9a9f520c072e9090ad32805832e8348fb9e38a249be5eca4",
       "chaveiro-bot/src/server.js": "90ec6dc7d1cb2306b849f66a35c11eefc73eebd3f72a3c7535da859f4bc3b871",
       "chaveiro-bot/src/services/__tests__/agendador-lock.test.js": "51cdcad5a620f60e7bc104ea3ab1725b47eed3265d9cd8ee9b1254f5c67eeb1c",
       "chaveiro-bot/src/services/__tests__/agendador.test.js": "caae72bf42bea97e83d6218dc1e3c354c2a8c9645f010815010ad0bbffcecaef",
@@ -164,7 +165,7 @@
       "chaveiro-bot/src/services/auditoria.js": "4f1f8e0b31eb4b21dab412a3fadb474b87a24c622fdd5a9d149f30d3a9d0f432",
       "chaveiro-bot/src/services/auth.js": "d4e27411ab1fd70fe1dd2bc8cdddb62af8c8e2a90693a2ecb2de4f696e602cf0",
       "chaveiro-bot/src/services/avaliacao.js": "7a50e02e4873e81834b8e78478ebbc60cd6e222febe554dff035b7290008dbf9",
-      "chaveiro-bot/src/services/billing.js": "69ba551d279ac59c1d805825d4dd030eee038e7b65068df7e92b1fc211184749",
+      "chaveiro-bot/src/services/billing.js": "cf65574cd01493aac43d47aafa53ab3dac69af910902f4d3427ccb405209d086",
       "chaveiro-bot/src/services/bootstrap.js": "e92af907aa8b57c6389afb93d24b9ec73fda9340ff2f2a13f25c5acee2ee10fe",
       "chaveiro-bot/src/services/catalogo.js": "8cf23c3e5843cb5ecd635d2e5379f9591a4bcd19f1503aea870a7b63840ba440",
       "chaveiro-bot/src/services/codigosRecuperacao.js": "af708a97b72f60eb7bd622d01c7d3825fa8a8927808a551628c1f9bd43b1e690",
@@ -240,6 +241,7 @@
       "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js": "138eb85441b2724d6cb1b982cba3b42ea6bbaa9c1ea8777b7be9063c5b59692d",
       "chaveiro-bot/test/integration/erro_nao_tratado.test.js": "2ca30bad5e8290ecdf5f1f0fa9c76d339d732491233bec53760fb4e6550d2127",
       "chaveiro-bot/test/integration/estoque_concorrencia.test.js": "14865cb05029547430db9f1c0274ef6166d17008a44227fbfb5dd01e3695a100",
+      "chaveiro-bot/test/integration/gate6_correcoes.test.js": "9e17ba08e4c870fb7e05a715bd2d0d8e18b1cfb31ef0c98a36ecfc73a9c033f6",
       "chaveiro-bot/test/integration/gestor_indicadores.test.js": "0adebbcb014107e2a02d86e9edf32a093654305ca6d9e106059322d9611c3687",
       "chaveiro-bot/test/integration/global-setup.js": "3e7802a361e68c221971811bc9777cd2b99f3c6b9197ceb39f289e96fb6aa7ec",
       "chaveiro-bot/test/integration/health_operacional.test.js": "5248c9727d38dc846fb828761b3f1f56f05570df924dbc69a474628b0e7a4bef",
@@ -595,8 +597,8 @@
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "1e8ef442e6fe246fd2dcc768291c00c89964b4d64366c2005b49caa8e71b5e24",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "8de1ccd70ccd94a3ba82578f31203c7e552625b8ce662bc47ffbfa5af0a0bbd9",
+      "docs/eos-v2/WRITE_SET.json": "6610cf0c15efcdf30230b0ad3b361370f10d0948e82449f25b017706926a83e6",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "526765fd947d3422005eb63db1ea8f3bdf001afaa4c2875ace2c4b3278869c46",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2517,59 +2519,50 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/google.js",
-      "precisao": "BOUNDED",
-      "proposito": "guarda de assinatura nas 8 rotas de produto",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "dc14bf1c077b0b48c9e0940aad501e77b005b452e5db0059dfeb086a3e7ad0c8",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/whatsapp.js",
-      "precisao": "BOUNDED",
-      "proposito": "guarda em credenciais/conectar/desconectar",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "43319cfe463e5034b63cd44961fbb934d6c0f901de3823d66ad901605f34a54b",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/routes/auth.js",
       "precisao": "BOUNDED",
-      "proposito": "responderSessao cobre phone2fa; magic-link usa responderSessao; reset apaga refresh",
+      "proposito": "/auth/refresh valida tokenValidoApos; reset transacional",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "90b7c1f0c0cce2e9b998f471ec5dd25f36c90d0b1db1a0271208556b03ba3ac2",
+      "shaNaDeclaracao": "a5c68cf38741562f9029c05bdb46e1f41dabdbe62f2d7e56ae289cc8d78df0e2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/admin.js",
+      "precisao": "BOUNDED",
+      "proposito": "/usuarios/:id com senha avanca tokenValidoApos",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f91d3d5b457a398faffc77760616a684e027d425ad848c57ee4fa463abc60a04",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/src/services/billing.js",
       "precisao": "BOUNDED",
-      "proposito": "guard contra segunda assinatura no checkout",
+      "proposito": "paused em ESTADOS_VIVOS",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "69ba551d279ac59c1d805825d4dd030eee038e7b65068df7e92b1fc211184749",
+      "shaNaDeclaracao": "cf65574cd01493aac43d47aafa53ab3dac69af910902f4d3427ccb405209d086",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/test/integration/gate6_correcoes.test.js",
       "precisao": "BOUNDED",
-      "proposito": "provas dos 4 achados",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "rota real; phone2fa; cookie rotacionado; /me/senha e /usuarios revogam",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9e17ba08e4c870fb7e05a715bd2d0d8e18b1cfb31ef0c98a36ecfc73a9c033f6",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T21:03:22.313Z",
+  "validadoEm": "2026-08-23T21:52:54.266Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "UNDECLARED_WRITE",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": true,
-  "nota": "Gate 6 adversarial: 3 bloqueantes + 1 P2 do Codex (thread 01a02fb6) VERIFICADOS e corrigidos — paywall cobre Google/WhatsApp, 2FA nao contornavel por magic-link/OAuth/phone2fa, reset revoga refresh, checkout recusa 2a assinatura. 6/6 novos + 33 de regressao (auth/billing/2fa). Dois auto-defeitos pegos pelos testes antes do commit (guard depois do getStripe; tipo de token errado).",
+  "bloqueiaIntegracao": false,
+  "nota": "Gate 6 R2: revogacao de refresh na RAIZ (/auth/refresh rejeita refresh anterior ao corte tokenValidoApos — cobre reset, /me/senha, /usuarios/:id-senha, resetarPin de uma vez); reset transacional; /usuarios/:id-senha avanca o corte; paused em ESTADOS_VIVOS. Testes: rota google REAL agora morde (sabotagem quebra 1), +2 casos (raiz via /me/senha, phone2fa), cookie rotacionado. 8/8 + 39 regressao.",
   "aviso": "Declaracao ENCERRADA."
 }

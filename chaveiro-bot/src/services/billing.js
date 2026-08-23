@@ -50,7 +50,7 @@ export async function criarCheckoutSession(empresaId, email, returnUrl) {
   {
     const { prisma } = await import('../db/prisma.js');
     const atual = await prisma.assinatura.findUnique({ where: { empresaId } });
-    const ESTADOS_VIVOS = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete'];
+    const ESTADOS_VIVOS = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'];
     if (atual?.stripeSubId && ESTADOS_VIVOS.includes(atual.status)) {
       const erro = new Error('Assinatura já ativa — use o portal para gerenciar.');
       erro.code = 'ASSINATURA_JA_ATIVA';

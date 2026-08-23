@@ -315,7 +315,13 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
     }
     if (permissoes !== undefined)
       data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
-    if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
+    if (senha) {
+      data.senhaHash = await bcrypt.hash(senha, 12);
+      /* [Gate 6 R2] Trocar a senha de um usuário avança o corte — /auth/refresh passa a rejeitar
+         os refresh antigos dele (antes só senhaHash mudava e sessões roubadas sobreviviam). */
+      data.senhaAlteradaEm = new Date();
+      data.tokenValidoApos = new Date();
+    }
     const r = await prisma.usuario.updateMany({
       /* [SEC-HB-03] Quando o guard decidiu com `antes.papel` (ator sem autoridade plena), a
          mutação exige que o papel AINDA seja aquele — promoção concorrente na janela

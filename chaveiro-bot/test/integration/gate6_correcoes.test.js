@@ -38,9 +38,9 @@ describe('#1 paywall cobre Google/WhatsApp (mounts na raiz)', () => {
   it('assinatura morta: rota de Google Business responde 402', async () => {
     const { token, empresaId } = await criarEmpresaComAdmin(request, app, 'G1');
     await matarAssinatura(empresaId);
-    const r = await request(app)
-      .get('/api/google/avaliacoes')
-      .set('Authorization', `Bearer ${token}`);
+    // Rota REAL de google.js (/api/google/status) — a inexistente pegaria 402 do curinga do
+    // apiRouter e passaria mesmo sem a guarda em google.js (não morderia).
+    const r = await request(app).get('/api/google/status').set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(402);
   });
 
@@ -128,9 +128,11 @@ describe('#3 reset de senha revoga refresh tokens', () => {
     const cookie = login.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
     expect(cookie).toBeTruthy();
 
-    // O refresh funciona ANTES do reset.
+    // O refresh funciona ANTES do reset — e rotaciona; o cookie novo é o que a vítima teria.
     const antes = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
     expect(antes.status).toBe(200);
+    const cookieRot = antes.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
+    expect(cookieRot).toBeTruthy();
 
     // Reset de senha por token de e-mail.
     const jwt = (await import('jsonwebtoken')).default;
@@ -147,12 +149,68 @@ describe('#3 reset de senha revoga refresh tokens', () => {
       .send({ token: resetToken, novaSenha: 'OutraForte1!' });
     expect(reset.status).toBe(200);
 
-    // O refresh original (mesmo cookie de antes; o de 'antes' já rotacionou, mas o reset
-    // apaga TODA a árvore) não vale mais.
-    const depois = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
+    // O cookie ROTACIONADO (o vivo no momento do reset) deixa de valer — a árvore foi apagada.
+    const depois = await request(app).post('/api/auth/refresh').set('Cookie', cookieRot);
     expect(depois.status).toBe(401);
     const restantes = await prisma.refreshToken.count({ where: { usuarioId: usuario.id } });
     expect(restantes).toBe(0);
+  });
+});
+
+describe('#3b revogação de RAIZ: /me/senha invalida refresh via /auth/refresh', () => {
+  it('trocar a senha logado mata o refresh anterior (corte em tokenValidoApos)', async () => {
+    const setup = await request(app).post('/api/setup').send({
+      nome: 'Dona Corte',
+      nomeEmpresa: 'Chaveiro Corte',
+      username: 'donacorte',
+      senha: 'SenhaForte1!',
+    });
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'donacorte', password: 'SenhaForte1!' });
+    const cookie = login.headers['set-cookie']?.find((c) => c.startsWith('refresh_token='));
+    // Delay de 1s: tokenValidoApos é em ms mas o corte precisa ser > criadoEm do refresh.
+    await new Promise((r) => setTimeout(r, 1100));
+    const troca = await request(app)
+      .patch('/api/me/senha')
+      .set('Authorization', `Bearer ${setup.body.token}`)
+      .send({ senhaAtual: 'SenhaForte1!', novaSenha: 'NovaForte1!' });
+    expect(troca.status).toBe(200);
+    // O refresh anterior à troca não rotaciona mais — a correção de raiz cobre /me/senha
+    // sem que a rota precise apagar refresh explicitamente.
+    const depois = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
+    expect(depois.status).toBe(401);
+  });
+});
+
+describe('#2b responderSessao cobre 2FA por telefone (OAuth)', () => {
+  it('usuário com phone2faAtivo logando por magic-link recebe desafio, não sessão', async () => {
+    const setup = await request(app).post('/api/setup').send({
+      nome: 'Dona Fone',
+      nomeEmpresa: 'Chaveiro Fone',
+      username: 'donafone',
+      senha: 'SenhaForte1!',
+    });
+    const usuario = await prisma.usuario.findFirst({ where: { username: 'donafone' } });
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: {
+        email: 'donafone@teste.com',
+        emailVerificado: true,
+        phone2faAtivo: true,
+        telefone: '5511999998888',
+      },
+    });
+    const jwt = (await import('jsonwebtoken')).default;
+    const magic = jwt.sign({ sub: usuario.id, tipo: 'magic_link' }, process.env.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '15m',
+    });
+    const r = await request(app).get(`/api/auth/magic-link/verificar?token=${magic}`);
+    expect(r.status).toBe(200);
+    expect(r.body.twoFactorRequerido).toBe(true);
+    expect(r.body.metodo).toBe('telefone');
+    expect(r.body.token).toBeUndefined();
   });
 });
 
