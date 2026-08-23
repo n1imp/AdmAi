@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/Toast.jsx';
 import PanelScope from './components/ui/PanelScope.jsx';
@@ -9,19 +10,19 @@ import Sidebar from './components/Sidebar.jsx';
 import { useOffline } from './hooks/useOffline.js';
 import Login from './pages/Login.jsx';
 import TrocarSenha from './pages/TrocarSenha.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import MetricHub from './pages/MetricHub.jsx';
-import MetricHubReceita from './pages/MetricHubReceita.jsx';
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const MetricHub = lazy(() => import('./pages/MetricHub.jsx'));
+const MetricHubReceita = lazy(() => import('./pages/MetricHubReceita.jsx'));
 import GestorHome from './pages/GestorHome.jsx';
 import Servicos from './pages/Servicos.jsx';
 import NovoServico from './pages/NovoServico.jsx';
 import Reparticao from './pages/Reparticao.jsx';
 import Tecnicos from './pages/Tecnicos.jsx';
 import NovoTecnico from './pages/NovoTecnico.jsx';
-import PerfilTecnico from './pages/PerfilTecnico.jsx';
+const PerfilTecnico = lazy(() => import('./pages/PerfilTecnico.jsx'));
 import Avaliacoes from './pages/Avaliacoes.jsx';
 import MeuPonto from './pages/MeuPonto.jsx';
-import MeuPainel from './pages/MeuPainel.jsx';
+const MeuPainel = lazy(() => import('./pages/MeuPainel.jsx'));
 import MeusServicos from './pages/MeusServicos.jsx';
 import Documentos from './pages/Documentos.jsx';
 import NovoServicoFuncionario from './pages/NovoServicoFuncionario.jsx';
@@ -83,319 +84,330 @@ function AppContent() {
     <PanelScope>
       <ToastProvider>
         <CookieBanner />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          {/* Troca de senha forçada (PIN provisório) — tela focada, sem Layout */}
-          <Route
-            path="/trocar-senha"
-            element={
-              <RequireAuth>
-                <TrocarSenha />
-              </RequireAuth>
-            }
-          />
-          {/* Documentos legais — públicos (acessíveis sem login) */}
-          <Route path="/privacidade" element={<Privacidade />} />
-          <Route path="/termos" element={<Termos />} />
-          <Route path="/cookies" element={<Cookies />} />
-          {/* Fluxos de auth por e-mail — sem autenticação prévia */}
-          <Route path="/verificar-email" element={<VerificarEmail />} />
-          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
-          <Route path="/redefinir-senha" element={<RecuperarSenha />} />
-          <Route path="/convite/:token" element={<ConviteAceitar />} />
-          <Route path="/magic-link" element={<MagicLink />} />
+        {/* [F6-PERF] As páginas de gráficos são lazy: recharts (152KB gzip) saía junto com a
+            Landing pública. Um único Suspense cobre as rotas — fallback breve no padrão do
+            painel. */}
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-[40vh]" aria-label="Carregando">
+              <span className="w-6 h-6 rounded-full border-2 border-accent-400/30 border-t-accent-300 animate-spin" />
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            {/* Troca de senha forçada (PIN provisório) — tela focada, sem Layout */}
+            <Route
+              path="/trocar-senha"
+              element={
+                <RequireAuth>
+                  <TrocarSenha />
+                </RequireAuth>
+              }
+            />
+            {/* Documentos legais — públicos (acessíveis sem login) */}
+            <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/termos" element={<Termos />} />
+            <Route path="/cookies" element={<Cookies />} />
+            {/* Fluxos de auth por e-mail — sem autenticação prévia */}
+            <Route path="/verificar-email" element={<VerificarEmail />} />
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+            <Route path="/redefinir-senha" element={<RecuperarSenha />} />
+            <Route path="/convite/:token" element={<ConviteAceitar />} />
+            <Route path="/magic-link" element={<MagicLink />} />
 
-          <Route path="/" element={<Home />} />
-          {/* Rota por Hub implementado, não `/metricas/:metricId`: das 8 métricas, 6 ainda não
+            <Route path="/" element={<Home />} />
+            {/* Rota por Hub implementado, não `/metricas/:metricId`: das 8 métricas, 6 ainda não
               têm Hub, e uma rota curinga renderizaria página quebrada para elas. */}
-          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+            {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
               a rota viva deixaria a feature a um deep-link de distância — que é o estado
               inválido que a flag existe para impedir. [SCOPE-F3] */}
-          {featureAtiva('METRIC_HUBS') && (
+            {featureAtiva('METRIC_HUBS') && (
+              <Route
+                path="/metricas/faturamento-liquido"
+                element={
+                  <RequireAuth>
+                    <RequirePermissao modulo="financeiro" acao="ver">
+                      <Layout>
+                        <MetricHubReceita />
+                      </Layout>
+                    </RequirePermissao>
+                  </RequireAuth>
+                }
+              />
+            )}
+            {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+            {featureAtiva('METRIC_HUBS') && (
+              <Route
+                path="/metricas/servicos-concluidos"
+                element={
+                  <RequireAuth>
+                    <RequirePermissao modulo="servicos" acao="ver">
+                      <Layout>
+                        <MetricHub />
+                      </Layout>
+                    </RequirePermissao>
+                  </RequireAuth>
+                }
+              />
+            )}
             <Route
-              path="/metricas/faturamento-liquido"
+              path="/servicos"
               element={
                 <RequireAuth>
-                  <RequirePermissao modulo="financeiro" acao="ver">
+                  <Layout>
+                    <Servicos />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/servicos/novo"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <NovoServico />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/reparticao"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Reparticao />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/tecnicos"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Tecnicos />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/tecnicos/novo"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <NovoTecnico />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/tecnicos/:id"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <PerfilTecnico />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+            {featureAtiva('GOOGLE_REVIEWS') && (
+              <Route
+                path="/avaliacoes"
+                element={
+                  <RequireAuth>
                     <Layout>
-                      <MetricHubReceita />
+                      <Avaliacoes />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+            )}
+            <Route
+              path="/meu-ponto"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <MeuPonto />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+
+            {/* Painel simplificado do funcionário: serviços próprios e aprovações */}
+            <Route
+              path="/meus-servicos"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <MeusServicos />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/meus-servicos/novo"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <NovoServicoFuncionario />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            {/* F9/M4: documentos do próprio funcionário (a tela feature-detecta a flag) */}
+            <Route
+              path="/meus-documentos"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Documentos />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/aprovacoes"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Aprovacoes />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+
+            {/* Materiais (ex-Catálogo) e Estoque agora são abas próprias */}
+            <Route
+              path="/materiais"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Catalogo />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/estoque"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Estoque />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/mais"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Mais />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/ajuda"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Ajuda />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/assinatura"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Assinatura />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/configuracao"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Configuracao />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/configuracao/perfil"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Perfil />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/configuracao/seguranca"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Seguranca />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
+              a rota viva deixaria a feature a um deep-link de distância — que é o estado
+              inválido que a flag existe para impedir. [SCOPE-F3] */}
+            {featureAtiva('NOTIFICACOES') && (
+              <Route
+                path="/configuracao/notificacoes"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <Notificacoes />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+            )}
+            <Route
+              path="/configuracao/whatsapp"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <ConfiguracaoBot />
+                  </Layout>
+                </RequireAuth>
+              }
+            />
+            {/* Rotas antigas redirecionadas para as novas abas */}
+            <Route path="/configuracao/estoque" element={<Navigate to="/estoque" replace />} />
+            <Route path="/configuracao/catalogo" element={<Navigate to="/materiais" replace />} />
+            <Route
+              path="/configuracao/usuarios"
+              element={
+                <RequireAuth>
+                  <RequirePermissao modulo="usuarios">
+                    <Layout>
+                      <Usuarios />
                     </Layout>
                   </RequirePermissao>
                 </RequireAuth>
               }
             />
-          )}
-          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
-              a rota viva deixaria a feature a um deep-link de distância — que é o estado
-              inválido que a flag existe para impedir. [SCOPE-F3] */}
-          {featureAtiva('METRIC_HUBS') && (
-            <Route
-              path="/metricas/servicos-concluidos"
-              element={
-                <RequireAuth>
-                  <RequirePermissao modulo="servicos" acao="ver">
-                    <Layout>
-                      <MetricHub />
-                    </Layout>
-                  </RequirePermissao>
-                </RequireAuth>
-              }
-            />
-          )}
-          <Route
-            path="/servicos"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Servicos />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/servicos/novo"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <NovoServico />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/reparticao"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Reparticao />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/tecnicos"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Tecnicos />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/tecnicos/novo"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <NovoTecnico />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/tecnicos/:id"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <PerfilTecnico />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
-              a rota viva deixaria a feature a um deep-link de distância — que é o estado
-              inválido que a flag existe para impedir. [SCOPE-F3] */}
-          {featureAtiva('GOOGLE_REVIEWS') && (
-            <Route
-              path="/avaliacoes"
-              element={
-                <RequireAuth>
-                  <Layout>
-                    <Avaliacoes />
-                  </Layout>
-                </RequireAuth>
-              }
-            />
-          )}
-          <Route
-            path="/meu-ponto"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <MeuPonto />
-                </Layout>
-              </RequireAuth>
-            }
-          />
 
-          {/* Painel simplificado do funcionário: serviços próprios e aprovações */}
-          <Route
-            path="/meus-servicos"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <MeusServicos />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/meus-servicos/novo"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <NovoServicoFuncionario />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          {/* F9/M4: documentos do próprio funcionário (a tela feature-detecta a flag) */}
-          <Route
-            path="/meus-documentos"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Documentos />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/aprovacoes"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Aprovacoes />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-
-          {/* Materiais (ex-Catálogo) e Estoque agora são abas próprias */}
-          <Route
-            path="/materiais"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Catalogo />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/estoque"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Estoque />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-
-          <Route
-            path="/mais"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Mais />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/ajuda"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Ajuda />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/assinatura"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Assinatura />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/configuracao"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Configuracao />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/configuracao/perfil"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Perfil />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/configuracao/seguranca"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <Seguranca />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          {/* Rota só existe se a capacidade entrar no release. Esconder o menu e manter
-              a rota viva deixaria a feature a um deep-link de distância — que é o estado
-              inválido que a flag existe para impedir. [SCOPE-F3] */}
-          {featureAtiva('NOTIFICACOES') && (
-            <Route
-              path="/configuracao/notificacoes"
-              element={
-                <RequireAuth>
-                  <Layout>
-                    <Notificacoes />
-                  </Layout>
-                </RequireAuth>
-              }
-            />
-          )}
-          <Route
-            path="/configuracao/whatsapp"
-            element={
-              <RequireAuth>
-                <Layout>
-                  <ConfiguracaoBot />
-                </Layout>
-              </RequireAuth>
-            }
-          />
-          {/* Rotas antigas redirecionadas para as novas abas */}
-          <Route path="/configuracao/estoque" element={<Navigate to="/estoque" replace />} />
-          <Route path="/configuracao/catalogo" element={<Navigate to="/materiais" replace />} />
-          <Route
-            path="/configuracao/usuarios"
-            element={
-              <RequireAuth>
-                <RequirePermissao modulo="usuarios">
-                  <Layout>
-                    <Usuarios />
-                  </Layout>
-                </RequirePermissao>
-              </RequireAuth>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </ToastProvider>
     </PanelScope>
   );

@@ -1324,13 +1324,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "ORCAMENTO REGISTRADO (build + preview + CDP, zero deps novas): caminho PUBLICO 166KB gzip de JS (era 297KB, -44%) apos lazy nas 5 paginas de recharts + queda da regra manualChunks que virava modulepreload do entry; FCP/LCP 400-480ms local; CLS 0 a 0.002 (excecao conhecida: Landing desktop 0.104, area do hero — registrada, nao bloqueante); dist total 1.5MB.",
+        "charts (157KB gzip) agora e chunk ASYNC: index.html sem modulepreload dele; sob demanda nas paginas de grafico. Medicao vacua PEGA no caminho: preview em ::1 fazia a sonda medir a pagina de erro do Chrome — refeito via localhost.",
+        "Regressao das rotas lazy provada no stack real: 9/9 jornadas OK; painel 251/251."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T16:23:06.761Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

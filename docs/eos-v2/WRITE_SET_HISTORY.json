@@ -48498,9 +48498,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "Antes de declarar, VERIFICAR cada caminho com ls/glob — declaracao nunca por memoria. Segunda ocorrencia da classe; se houver terceira, o declarador ganha validacao de existencia para arquivos nao marcados como a-criar."
       }
+    },
+    {
+      "sliceId": "F6-PERF",
+      "titulo": "Performance: fronteira lazy nas paginas de graficos — recharts sai do caminho publico",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Perf: lazy nas paginas de grafico + fim do manualChunks de recharts (modulepreload anulava o lazy) — publico -44% de JS; orcamento e numeros no ledger; jornadas 9/9 como gate de regressao.",
+      "declaradoEm": "2026-08-23T16:12:49.740Z"
     }
   ],
-  "geradoEm": "2026-08-23T15:16:59.036Z",
+  "geradoEm": "2026-08-23T16:23:14.437Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

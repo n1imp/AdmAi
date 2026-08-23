@@ -44,7 +44,9 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
           if (/[\\/]react(-dom|-router-dom)?[\\/]/.test(id)) return 'react-vendor';
-          if (id.includes('recharts')) return 'charts';
+          /* recharts NAO entra aqui: chunk manual vira modulepreload do entry no HTML e
+             anula o lazy das paginas de grafico (F6-PERF) — o bundler ja cria o chunk async
+             compartilhado sozinho. */
           if (id.includes('lucide-react')) return 'icons';
         },
       },

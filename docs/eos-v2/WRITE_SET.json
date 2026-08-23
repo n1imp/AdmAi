@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F6-SEO-FONTS",
-  "titulo": "SEO publico + self-host das fontes (fecha F6-FONTS-PRECONSENT)",
+  "sliceId": "F6-PERF",
+  "titulo": "Performance: fronteira lazy nas paginas de graficos — recharts sai do caminho publico",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T14:33:35.924Z",
+  "declaradoEm": "2026-08-23T16:12:49.740Z",
   "baseCommitPorLane": {
-    "HARNESS": "09b419833f97264aec182d7a31668b9aa569f368"
+    "HARNESS": "4bec5d002d276d9f5c1698eed38f0e246df4e58a"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Sem dominio decidido (GO_LIVE A5: nao confirmado) sitemap.xml com URLs absolutas seria fabricacao — fica declarado como pendente-de-dominio no ledger; robots.txt e meta noindex nao precisam de dominio. Favicon PNG ja existe (icons/icon-192/512) — vira fallback declarado no head (iOS ignora SVG). Fontes: os woff2 (latin) de Saira Condensed/Sora/JetBrains Mono passam a assets locais (OFL) com @font-face proprio — zero requisicao a Google pre-consentimento, e ganho de perf. useDocumentHead proprio (sem react-helmet) da titulo/descricao por rota publica e noindex nas privadas. EXPANSAO: os 11 woff2 latin baixados (OFL) — nomes so conhecidos apos parsear o CSS do Google; declarados aqui antes do fechamento.",
+  "notaDeMetodo": "Medicao primeiro (build + preview + CDP): FCP/LCP ~450-500ms local, CLS ~0, MAS o chunk charts (152KB gzip, recharts) carrega ate na Landing publica porque App.jsx importa todas as paginas estaticamente. Corte minimo: React.lazy nas 4 paginas donas de recharts (Dashboard, MeuPainel, PerfilTecnico, MetricHub) com Suspense de fallback breve — o chunk vira async e o caminho publico cai ~150KB. Orcamento registrado no ledger com os numeros de antes/depois. EXPANSAO (antes de escrever): vite.config.js — o manualChunks(recharts->charts) forca o chunk a virar modulepreload do ENTRY no index.html, anulando o lazy; a regra cai e o rolldown agrupa recharts como chunk async compartilhado das 4 paginas.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -342,17 +342,29 @@
       "chaveiro-painel/e2e/jornadas.mjs": "4eda6421b57684ea1edb7a1d1c6253a4d5f1eca12e772f8c2a8e7b8858066905",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
-      "chaveiro-painel/index.html": "a5dbefb386683538a78485ad098dda4ca34a4297e9d00739bfa4b4317519ce75",
+      "chaveiro-painel/index.html": "d786acd8e9810c307751d15dc9b8ac2b09bcb42d2761aa6b9f25534715c85e88",
       "chaveiro-painel/jsconfig.json": "8c1eaa0a35d0055fe8c59fe9bf60dc932c44adf65b0aef0dbcbdb630322e7134",
       "chaveiro-painel/nginx.conf": "74096274d1a147c737444849132cb247c6c372761eeaca7d5e52121b675d405b",
       "chaveiro-painel/package-lock.json": "71f098aa78936b8a74dfd5c26d5239295c6b453a16e5f32d95b62ad6a151fd24",
       "chaveiro-painel/package.json": "e26f29e16c4241ec7e32fb654611477b0d6fc25dc55b9745ecdee5806f4632ba",
       "chaveiro-painel/postcss.config.js": "98e8d8a143f16216f4b50a2520024f6254987049b2e199026742a96e16ba411e",
       "chaveiro-painel/public/_redirects": "4d7c53e6e411a7fead9643ff20321defd73dcd127b000f5f2d5356a263cb949c",
+      "chaveiro-painel/public/fonts/jetbrains-mono-400.woff2": "83c005d49d8a6a50474c73a5a36ac0468076e9c4a29da7bdb14995d80560a5be",
+      "chaveiro-painel/public/fonts/jetbrains-mono-500.woff2": "83c005d49d8a6a50474c73a5a36ac0468076e9c4a29da7bdb14995d80560a5be",
+      "chaveiro-painel/public/fonts/jetbrains-mono-600.woff2": "83c005d49d8a6a50474c73a5a36ac0468076e9c4a29da7bdb14995d80560a5be",
+      "chaveiro-painel/public/fonts/saira-condensed-500.woff2": "22c6c5bf5a71e10f0d0f71f630414437797738ed8aef613c457c749498b5e783",
+      "chaveiro-painel/public/fonts/saira-condensed-600.woff2": "d20f5b8d2d6a1a236cf776fa3ac0bec671503824cbed5dedf656b61930dc87ee",
+      "chaveiro-painel/public/fonts/saira-condensed-700.woff2": "eb1cf59a1f785a890ac30d69bb59fffef3989fef4e7a2ae2367c85e861077fda",
+      "chaveiro-painel/public/fonts/saira-condensed-800.woff2": "5afa98eefcd54d5e7c4d9e5dc5a01a8ae61dc6ad91e2bbc0aaed82525063ae91",
+      "chaveiro-painel/public/fonts/sora-400.woff2": "811e11966d29f3a01fcb19b087b61ac067d380665a55aebb7fcdf2cda95e4a93",
+      "chaveiro-painel/public/fonts/sora-500.woff2": "811e11966d29f3a01fcb19b087b61ac067d380665a55aebb7fcdf2cda95e4a93",
+      "chaveiro-painel/public/fonts/sora-600.woff2": "811e11966d29f3a01fcb19b087b61ac067d380665a55aebb7fcdf2cda95e4a93",
+      "chaveiro-painel/public/fonts/sora-700.woff2": "811e11966d29f3a01fcb19b087b61ac067d380665a55aebb7fcdf2cda95e4a93",
       "chaveiro-painel/public/icons/icon-192.png": "df9600dc69b4ebcff18cc2f4abaa16b1678476e4b79d2180c0aad1cd5163a052",
       "chaveiro-painel/public/icons/icon-512.png": "4db8f03895c59353fcb3cfbbf3c32f48d856d46f69b70e3846ed68a639531e80",
       "chaveiro-painel/public/icons/icon.svg": "9c7dc34be0abb63673e058a0ccd62b27e63d00d7f056406c546b928f7e0012fc",
       "chaveiro-painel/public/manifest.webmanifest": "25508e529c5915674991bcfcf065b38a0ab35d0b02c54d855c77f0fc42adcb20",
+      "chaveiro-painel/public/robots.txt": "82b38191a65c911fae6d7d2a83599cdd0f87e2037014e0d1b5e3b4a6a75281c0",
       "chaveiro-painel/public/sw.js": "54420d274e17703b2f9029fb7e406f10e97f15f9c210cd2bfbaf1de8996fffc1",
       "chaveiro-painel/scripts/gerar-headers.mjs": "cb2b8f27c8c4a3dd22be697906a34aa42ff8db653f5da6755c4c1c13d7c3d87f",
       "chaveiro-painel/src/App.jsx": "fc4927685086b3cebd07e9448e1a4aec0c1c52f75a92a24295020a650a8e31db",
@@ -368,7 +380,7 @@
       "chaveiro-painel/src/components/Guards.jsx": "02b89f5b9d64ce4e2ef728442dded8719dce214e6a2d3abf2df280fdd4216f63",
       "chaveiro-painel/src/components/MaterialPicker.jsx": "8bea0d237ad3fade1828f7eeb402116a82fa50bac1ab50c12a5540ea151bffb0",
       "chaveiro-painel/src/components/MatrizPermissoes.jsx": "a831ebbaad9ff854117bd0d0566fb32e426142cac74fc12bc84550a6c73297e0",
-      "chaveiro-painel/src/components/PaginaLegal.jsx": "5f0fc525c51444c3067472cfdacb62fed7ad92a211741d967a757ed2a86680ba",
+      "chaveiro-painel/src/components/PaginaLegal.jsx": "1407b1c5b1b815f5ed7ee00932a13d921c80c2e88f5ffad926cb46b1285768d9",
       "chaveiro-painel/src/components/RodapeLegal.jsx": "006d6d1dc54ac28fd7a27dabc707998beae5fa4be22b34dc7e2fa4f80830a658",
       "chaveiro-painel/src/components/Sidebar.jsx": "7c910c49352fee8e5cb49f585de201388d510584931655a3373ba39257dd1583",
       "chaveiro-painel/src/components/Skeleton.jsx": "22daaa01d2e3ba2c7572bae5f8eb1e3693a55db53a51dffe89353d6d99f28cbc",
@@ -410,12 +422,13 @@
       "chaveiro-painel/src/hooks/__tests__/useFormPersist.test.js": "917927a6047c649f393ede5cdc2cb34cfe9a299869a79aecd4a86805264d717b",
       "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js": "d5f4a20796db255ad3a67a60e95632203decd23d01b109c368621ee0fc15bc66",
       "chaveiro-painel/src/hooks/useAnalytics.js": "94496e9f006e4fa416531ae46508eb842afa437a9216aecd8688e97ce42062e5",
+      "chaveiro-painel/src/hooks/useDocumentHead.js": "041deae91d917df5e22964961bcd59481dd810a79d687a08fbae6c12410aef60",
       "chaveiro-painel/src/hooks/useFormPersist.js": "4910ee3e6ebc0cd791d4654bae54d918a1ae7e3b3cf60b450887e6befa6bc461",
       "chaveiro-painel/src/hooks/useMetricHub.js": "e5ec7ff4ebcca519237a44a249d4511f9f65bfb6205f319476246cde99978446",
       "chaveiro-painel/src/hooks/useOffline.js": "3604eaad1f76e46c8069b48579a472528945f261a1b4c71a1f69735b340feed2",
       "chaveiro-painel/src/hooks/usePullToRefresh.js": "0b3e5ca14d804e7b4b673887b7d159d24a60a67b1977f321777d4a03e2323795",
       "chaveiro-painel/src/hooks/useWidgetPrefs.js": "97c80c31ac93704bd990e1717c503d7f2b906a8ce63b4db2b8b5475cd5f4dd6b",
-      "chaveiro-painel/src/index.css": "76c8faeb356c667ceab448a07c3b54668e91d319a3769413f864011872fe00b2",
+      "chaveiro-painel/src/index.css": "3bcf3068f6a87d49a801d10d8e3c047e7f550c71742e19004df1cd7a90654680",
       "chaveiro-painel/src/lib/__tests__/api.test.js": "aaa30f79e5fbe53122a9cdd1ee85b7b944ea56f9750ad13372d58fa77df33aca",
       "chaveiro-painel/src/lib/__tests__/crispBootstrap.test.js": "268e67250477eff56c501ecb36ef5f0c31affaae05022a5216cd7fe56516e2f8",
       "chaveiro-painel/src/lib/__tests__/featureFlags.test.js": "d912746eccc44e56bf39cc3ea3bb3c92e87f7587ace401a0ca4519c68a20e60d",
@@ -450,8 +463,8 @@
       "chaveiro-painel/src/pages/Documentos.jsx": "47d56d06d9af68f709f73956ff629f7bbe29a9008f527946a20fe6986c922ee0",
       "chaveiro-painel/src/pages/Estoque.jsx": "0a219e18c746767abab978c6f62afb9575711d00980e2113c26f4b410d4ffe93",
       "chaveiro-painel/src/pages/GestorHome.jsx": "f11111a226fb6df8469460501488f86c782e957e5fb9f1ac6d8a41dfbc7cf263",
-      "chaveiro-painel/src/pages/Landing.jsx": "6124dc7481fbd173c09bfa3bf17aa8816847a3121c3c4243f6f57c39d6638d73",
-      "chaveiro-painel/src/pages/Login.jsx": "813dc65b290038ec6723bd3879dacbf56b664d5b1e527773eac43e7b70b6b8a2",
+      "chaveiro-painel/src/pages/Landing.jsx": "5c00172d312a20d168ae4e6174f8cffc105591db5c090b02106fce114409fbed",
+      "chaveiro-painel/src/pages/Login.jsx": "5af38cca0d1f3c7baa9fc771f6b32acd9dbb078f679e8cd105a0a1c5046fabf5",
       "chaveiro-painel/src/pages/MagicLink.jsx": "ca1608ecc86f8f5b1afa49f9dceed18c88f012ca6838a9b424d07acd716156a8",
       "chaveiro-painel/src/pages/Mais.jsx": "55f6e66fcbb2067231ef6776dc130efca2c410b71833301ce88212e1ebe3dec1",
       "chaveiro-painel/src/pages/MetricHub.jsx": "805e68a71427be76172e749d775ccda47a8d0f24c89820e62c6c0a1773d2df53",
@@ -504,6 +517,7 @@
       "chaveiro-painel/src/pages/__tests__/Servicos.test.jsx": "e44938311192501b836f614171bfc56509cd930b5f11f767817ca6dab29e0de9",
       "chaveiro-painel/src/pages/__tests__/Tecnicos.axe.jsx": "3619c30edcd47b42faa53a1c7fc9a28e806fa688b07b5302b87deedae976f737",
       "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
+      "chaveiro-painel/src/styles/fonts.css": "eb51f53c5fbbb2aaa53614068db4ef3e270d93e023b83b5f755c954ef967e798",
       "chaveiro-painel/src/styles/panel-overlay.css": "760c67920d30cc9afda8f211d533f6c3c0c1d533e43089edb19921bd647dd68d",
       "chaveiro-painel/src/styles/panel-primitives.css": "cc30373e525a94ef77e506a56e6ca3d6acf62292e241592f7d82cbf6de9d1316",
       "chaveiro-painel/src/styles/panel-rollout.css": "5d5bc90d42139a08421f73db179c991dbf9f16f0e79d56f232e85061a05c6b3a",
@@ -567,7 +581,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "11296d0748446a3652d1cb4825f6de90567df15315954e8e051ef22d57dcb434",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "6b99d3810d07c0715f02f7f56acea7780fb4c9b315fa51f18d700c66e76b8b6c",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -576,8 +590,8 @@
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d8fa5d99126871c62923836615f7ffa12b47cefd9655fad141145945c7fa49a9",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "93ed31fc244de384ee3311ade50bbaacae08e4e6516f0fb9dc802a554b413ff2",
+      "docs/eos-v2/WRITE_SET.json": "00023aa0bff2cc57407893dfe73710096656edbdc93412d6540c871b904f85c7",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "19aac85f0ae03b3f4e477f0f90e8f1c08e803abaa709f07e418329211859261b",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -947,19 +961,31 @@
       "chaveiro-bot/uploads-ponto/ponto-e4f4c0c5-7d6a-4d42-8be7-518074010ee7.png": "70:1785460907312",
       "chaveiro-bot/uploads-ponto/ponto-ee2214ef-cf37-4f12-954c-e8e90ab11531.png": "70:1785536786488",
       "chaveiro-bot/uploads-ponto/ponto-eeec6707-a630-4e75-87f0-6beeeaea51ee.png": "70:1787378793507",
-      "chaveiro-painel/dist/_headers": "1156:1785894611649",
+      "chaveiro-painel/dist/_headers": "1156:1787501184262",
       "chaveiro-painel/dist/_redirects": "326:1784588793154",
-      "chaveiro-painel/dist/assets/charts-QXHasCYR.js": "537887:1785894611200",
-      "chaveiro-painel/dist/assets/icons-D4vIxqkf.js": "28766:1785894611201",
-      "chaveiro-painel/dist/assets/index-Cg_18dH7.js": "469187:1785894611200",
-      "chaveiro-painel/dist/assets/index-Cym1aEgA.css": "59171:1785894611219",
-      "chaveiro-painel/dist/assets/react-vendor-DtGGamCc.js": "24618:1785894611218",
-      "chaveiro-painel/dist/assets/rolldown-runtime-QTnfLwEv.js": "694:1785894611218",
+      "chaveiro-painel/dist/assets/charts-QXHasCYR.js": "537887:1787501183639",
+      "chaveiro-painel/dist/assets/icons-CYe1dn5x.js": "28968:1787501183640",
+      "chaveiro-painel/dist/assets/index-7AweaRM0.js": "497898:1787501183638",
+      "chaveiro-painel/dist/assets/index-XPenrZlz.css": "63013:1787501183642",
+      "chaveiro-painel/dist/assets/react-vendor-DtGGamCc.js": "24618:1787501183641",
+      "chaveiro-painel/dist/assets/rolldown-runtime-QTnfLwEv.js": "694:1787501183641",
+      "chaveiro-painel/dist/fonts/jetbrains-mono-400.woff2": "31432:1787495638845",
+      "chaveiro-painel/dist/fonts/jetbrains-mono-500.woff2": "31432:1787495638944",
+      "chaveiro-painel/dist/fonts/jetbrains-mono-600.woff2": "31432:1787495639208",
+      "chaveiro-painel/dist/fonts/saira-condensed-500.woff2": "18044:1787495639302",
+      "chaveiro-painel/dist/fonts/saira-condensed-600.woff2": "17980:1787495639392",
+      "chaveiro-painel/dist/fonts/saira-condensed-700.woff2": "17808:1787495639488",
+      "chaveiro-painel/dist/fonts/saira-condensed-800.woff2": "17984:1787495639579",
+      "chaveiro-painel/dist/fonts/sora-400.woff2": "25284:1787495639681",
+      "chaveiro-painel/dist/fonts/sora-500.woff2": "25284:1787495639785",
+      "chaveiro-painel/dist/fonts/sora-600.woff2": "25284:1787495639879",
+      "chaveiro-painel/dist/fonts/sora-700.woff2": "25284:1787495639989",
       "chaveiro-painel/dist/icons/icon-192.png": "5671:1784588793155",
       "chaveiro-painel/dist/icons/icon-512.png": "20192:1784588793157",
       "chaveiro-painel/dist/icons/icon.svg": "601:1784588793157",
-      "chaveiro-painel/dist/index.html": "1797:1785894611219",
+      "chaveiro-painel/dist/index.html": "2950:1787501183643",
       "chaveiro-painel/dist/manifest.webmanifest": "749:1784588793158",
+      "chaveiro-painel/dist/robots.txt": "264:1787497156704",
       "chaveiro-painel/dist/sw.js": "1913:1784588793159",
       "chaveiro-painel/telas/final-dono/dono__ajuda__1440x900.jpg": "109487:1787450374573",
       "chaveiro-painel/telas/final-dono/dono__ajuda__1920x1080.jpg": "125283:1787450431698",
@@ -2473,141 +2499,29 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/index.html",
-      "precisao": "BOUNDED",
-      "proposito": "fonts locais, favicon PNG fallback, OG/Twitter/JSON-LD sem URLs inventadas",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a5dbefb386683538a78485ad098dda4ca34a4297e9d00739bfa4b4317519ce75",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/robots.txt",
-      "precisao": "BOUNDED",
-      "proposito": "novo: allow publicas, disallow privadas",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/styles/fonts.css",
-      "precisao": "BOUNDED",
-      "proposito": "novo: @font-face local",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/hooks/useDocumentHead.js",
-      "precisao": "BOUNDED",
-      "proposito": "novo: titulo/descricao/robots por rota",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Landing.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "head da face publica",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6124dc7481fbd173c09bfa3bf17aa8816847a3121c3c4243f6f57c39d6638d73",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/PaginaLegal.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "head das legais",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Login.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "head do login",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "813dc65b290038ec6723bd3879dacbf56b664d5b1e527773eac43e7b70b6b8a2",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "chaveiro-painel/src/App.jsx",
       "precisao": "BOUNDED",
-      "proposito": "noindex nas rotas privadas (Layout)",
+      "proposito": "React.lazy + Suspense nas 4 rotas de graficos",
       "existiaNaDeclaracao": true,
       "shaNaDeclaracao": "fc4927685086b3cebd07e9448e1a4aec0c1c52f75a92a24295020a650a8e31db",
       "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/index.css",
-      "precisao": "BOUNDED",
-      "proposito": "import do fonts.css",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "76c8faeb356c667ceab448a07c3b54668e91d319a3769413f864011872fe00b2",
-      "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T14:33:36.407Z",
+  "validadoEm": "2026-08-23T16:12:50.043Z",
   "validadoPor": "write-set-gate.mjs",
   "expansoesAutorizadas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-400.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-500.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-600.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/saira-condensed-500.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/saira-condensed-600.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/saira-condensed-700.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/saira-condensed-800.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/sora-400.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/sora-500.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/sora-600.woff2"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/public/fonts/sora-700.woff2"
+      "caminho": "chaveiro-painel/vite.config.js"
     }
   ],
-  "comparacao": "UNDECLARED_WRITE",
+  "comparacao": "UNDECLARED_ARTIFACT_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": true,
-  "nota": "SEO publico honesto (sem dominio nao se fabrica URL: sitemap/og:url gated) + fontes self-hosted fechando o achado pre-consentimento da matriz LGPD. Runtime provado: robots por rota fail-closed, zero fonts.google, titulos proprios. 251/251.",
+  "nota": "Perf: lazy nas paginas de grafico + fim do manualChunks de recharts (modulepreload anulava o lazy) — publico -44% de JS; orcamento e numeros no ledger; jornadas 9/9 como gate de regressao.",
   "aviso": "Declaracao ENCERRADA."
 }
