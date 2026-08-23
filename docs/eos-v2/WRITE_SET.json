@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-09-TRIAGEM",
-  "titulo": "Triagem dos findings: stale reclassificados com evidencia, fila real atualizada",
+  "sliceId": "F0-10-CONVITE-ORFAO",
+  "titulo": "Convite sobrevive a exclusao da empresa: teste dirigido + correcao minima",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:42:05.072Z",
+  "declaradoEm": "2026-08-23T04:44:57.782Z",
   "baseCommitPorLane": {
-    "HARNESS": "7b3877984d30e65aea8e2d8b854a8599e62be5b0"
+    "HARNESS": "50107e0fc2d141c545dff941578890544c0af33e"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Investigacao primeiro, escrita depois. GAP-EST-02 e GAP-OBS-02 estao FECHADOS no codigo/registry mas abertos na fila do EXECUTION_STATE e no run-state — atualizar os dois. BROWSER-CAPABILITY e DOCKER sao stale contra esta frente. TENANT-COVERAGE real: 50/65, vetores materiais cobertos.",
+  "notaDeMetodo": "A FK de Usuario.empresaId impede a conta orfa (fail-closed acidental, com 500). O defeito real e outro: ConviteUsuario nao tem FK e sobrevive a cascade — e-mail e nome do convidado (dado pessoal de TERCEIRO) permanecem apos a exclusao LGPD que a propria rota diz servir. Teste primeiro contra o atual, correcao de uma linha na cascata, teste verde depois.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -544,16 +544,16 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a6d36e5233dfd90f295ab3925eb637365500e9d0e559c88eccfd5d75afb9b88d",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a26445f4289a0c63e3efe69a12f457b100925eb762ddd704e4df1d8912e50e56",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
-      "docs/eos-v2/EXECUTION_STATE.md": "c551ab48488c4b951c56087e00ae4ec0c82c9be3d83f68e06404f436a9b100ee",
+      "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RUN_STATE.json": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
+      "docs/eos-v2/RUN_STATE.json": "10c8931b72a93f8a4dcadbc8349fe0d7bec1c470606ff394a9822317ee2f5aff",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d7d461086f731c827b305ed280d013527730538740345542156f096bab26730f",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "7c9aa5f93a225ff492e77bcc43ba18d854f504755d80624f6f5c25d2ed82fb72",
+      "docs/eos-v2/WRITE_SET.json": "9b7ad6ce659010d1af5c520d91f30fb437830a69fd567dcf4ed547148e3946e2",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "7944c2766fe5a984b174106a3743688e0d6130cb44855b767d8e5f4c2c5eb3a3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -600,7 +600,7 @@
       "tools/admai-delivery/metric/hub-readiness.mjs": "4ca379cba9a8cf5be7eec2367eef15238e53cfd7a27f867b0b74197c365a3a13",
       "tools/admai-delivery/metric/verify-exposicao.mjs": "2e658309fa712197d9387d2786a4cf1504ee1a4f29bb8acdfdab351bc60b86b3",
       "tools/admai-delivery/metric/verify.mjs": "4f020e6eafb4e8bba4ed5c72554baeede69641f9eb43fee0b46bd67ef264218b",
-      "tools/admai-delivery/run-state.mjs": "db4c10880fbb3cfc11461923402054cec8614e6acc7fb97de199cb351cc5b7dc",
+      "tools/admai-delivery/run-state.mjs": "3139f7b4a4f91ddf92c19baf41fa732ba727131daa087b8c169bfea973857502",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
       "tools/admai-delivery/surface-registry.mjs": "f5cbb6aaae2f4b3951133617601ae88768621cc8abd48bd25df115ca609dd379",
@@ -1740,36 +1740,32 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
+  "artefatos": [
+    "chaveiro-bot/uploads-docs",
+    "chaveiro-bot/uploads-ponto",
+    "chaveiro-bot/uploads"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/run-state.mjs",
+      "caminho": "chaveiro-bot/test/integration/convite_empresa_excluida.test.js",
       "precisao": "BOUNDED",
-      "proposito": "openFindings atualizados com evidencia datada",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "db4c10880fbb3cfc11461923402054cec8614e6acc7fb97de199cb351cc5b7dc",
+      "proposito": "prova dirigida: 404 no GET e no aceitar, zero convites no banco, zero usuarios orfaos",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/EXECUTION_STATE.md",
+      "caminho": "chaveiro-bot/src/routes/account.js",
       "precisao": "BOUNDED",
-      "proposito": "fila real: GAP-EST-02 e GAP-OBS-02 fechados",
+      "proposito": "conviteUsuario.deleteMany entra na cascata de exclusao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c551ab48488c4b951c56087e00ae4ec0c82c9be3d83f68e06404f436a9b100ee",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/RUN_STATE.json",
-      "precisao": "BOUNDED",
-      "proposito": "regenerado apos a atualizacao",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
+      "shaNaDeclaracao": "8506a4210c4a23e75c059515cf01d71a88a539314c42375725e8e636d4e6f19a",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:42:05.364Z",
+  "validadoEm": "2026-08-23T04:44:58.059Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1778,6 +1774,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Triagem F0-09 com investigacao primeiro: GAP-EST-02 FECHADO (D-EST-02 integral + painel enviando materiais + corrida com sonda de mutacao), GAP-OBS-02 FECHADO (registro no feature-registry), EV-056 fechado no mecanismo (updateMany condicional comentando o proprio EV; teste concorrente dedicado vai em F4-01), TENANT-COVERAGE stale (real: 50/65, vetores materiais cobertos). DOCKER e BROWSER-CAPABILITY reclassificados com evidencia datada desta frente. RUN_STATE regenerado carregando a triagem.",
+  "nota": "Teste dirigido observou o defeito pelo caminho real (convite sobrevive a exclusao; GET 200-fantasma com empresa vazia; aceite 500 na FK) e a correcao minima entrou na cascata com o motivo LGPD no comentario: email e nomeConvidadoPor sao dado pessoal de TERCEIRO. AuditLog orfao permanece DELIBERADO (trilha nao morre com quem ela audita) — invariante registrada no proprio teste. Vizinho auditoria_dado_pessoal 7/7.",
   "aviso": "Declaracao ENCERRADA."
 }

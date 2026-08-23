@@ -243,13 +243,17 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "convite_empresa_excluida.test.js: vermelho no orfao ANTES, verde DEPOIS",
+        "account.js: conviteUsuario.deleteMany na cascata",
+        "auditoria_dado_pessoal.test.js 7/7 (invariante do AuditLog preservada)"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:49:08.051Z",
       "nextAction": "teste de integracao novo em chaveiro-bot/test/integration",
       "revisitCondition": null,
       "snapshotRef": null

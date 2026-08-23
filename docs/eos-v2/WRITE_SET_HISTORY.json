@@ -46090,9 +46090,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Triagem F0-09 com investigacao primeiro: GAP-EST-02 FECHADO (D-EST-02 integral + painel enviando materiais + corrida com sonda de mutacao), GAP-OBS-02 FECHADO (registro no feature-registry), EV-056 fechado no mecanismo (updateMany condicional comentando o proprio EV; teste concorrente dedicado vai em F4-01), TENANT-COVERAGE stale (real: 50/65, vetores materiais cobertos). DOCKER e BROWSER-CAPABILITY reclassificados com evidencia datada desta frente. RUN_STATE regenerado carregando a triagem.",
       "declaradoEm": "2026-08-23T04:42:05.072Z"
+    },
+    {
+      "sliceId": "F0-10-CONVITE-ORFAO",
+      "titulo": "Convite sobrevive a exclusao da empresa: teste dirigido + correcao minima",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Teste dirigido observou o defeito pelo caminho real (convite sobrevive a exclusao; GET 200-fantasma com empresa vazia; aceite 500 na FK) e a correcao minima entrou na cascata com o motivo LGPD no comentario: email e nomeConvidadoPor sao dado pessoal de TERCEIRO. AuditLog orfao permanece DELIBERADO (trilha nao morre com quem ela audita) — invariante registrada no proprio teste. Vizinho auditoria_dado_pessoal 7/7.",
+      "declaradoEm": "2026-08-23T04:44:57.782Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:43:14.076Z",
+  "geradoEm": "2026-08-23T04:49:10.159Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

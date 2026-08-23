@@ -89,6 +89,12 @@ async function apagarEmpresaEmCascata(empresaId) {
     // exclusão de conta (LGPD/Play Store) falhava com 500 para todo cliente que já tivesse
     // iniciado um checkout no Stripe, justamente a base pagante.
     prisma.assinatura.deleteMany({ where }),
+    // ConviteUsuario não tem FK (schema.prisma:485), então nada FORÇAVA sua inclusão aqui — e
+    // ele ficava órfão: `GET /convite/:token` respondia 200 com `empresa: ''` e o aceite
+    // estourava na FK de Usuario com 500. Pior: `email` e `nomeConvidadoPor` são dado pessoal
+    // de um TERCEIRO (o convidado), sobrevivendo à exclusão LGPD que esta cascata existe para
+    // cumprir. Provado por convite_empresa_excluida.test.js. [F0-10]
+    prisma.conviteUsuario.deleteMany({ where }),
     prisma.registroPonto.deleteMany({ where }),
     prisma.avaliacao.deleteMany({ where }),
     prisma.avaliacaoGoogle.deleteMany({ where }),
