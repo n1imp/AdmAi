@@ -76,6 +76,10 @@ export function criarApp() {
   });
 
   // Fotos de evidência salvas pelo bot — servidas estaticamente para o painel.
+  /* [SEC-HB-02] CONTRATO: ./uploads serve SOMENTE conteúdo público por design (fotos de
+     produto do estoque). Sensível tem dir próprio fora do static — ./uploads-ponto (selfies)
+     e ./uploads-evidencias (fotos de evidência via WhatsApp) — servido por rotas autenticadas
+     com escopo de tenant. Escrever conteúdo sensível aqui reabre o achado. */
   app.use('/uploads', express.static(path.resolve('./uploads')));
 
   app.use(cookieParser());

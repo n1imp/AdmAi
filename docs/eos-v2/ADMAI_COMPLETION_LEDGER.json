@@ -1412,15 +1412,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "SEC-HB-02"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Evidencias do WhatsApp saem do estatico: inbound grava em ./uploads-evidencias (privado) + URL app-relativa /api/servicos/evidencia/<uuid.ext>; rota autenticada espelha o padrao das selfies (tenant via req.db escopado, permissao servicos.ver ou tecnico dono, 302 assinado com storage on, disco privado no fallback).",
+        "Teste 4/4: 401 sem token; 200 com bytes identicos e Cache-Control private; 404 cross-tenant (existencia nao transparece); 400 para nome fora do formato (path traversal nem toca o disco).",
+        "Painel: ImagemEvidencia baixa com Bearer e exibe blob (img nao manda Authorization); URL legada /uploads/* continua renderizando. Contrato do static declarado em app.js: ./uploads = SOMENTE publico por design. Painel 251/251; inbound 16/16."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:25:07.676Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

@@ -22,7 +22,11 @@ import { enviarMensagem } from './whatsapp/gateway.js';
 import { agendarAvaliacao, tentarCapturarResposta } from './avaliacao.js';
 import { marcarSeNovo, desmarcar } from './idempotencia.js';
 
-const UPLOADS_DIR = path.resolve('./uploads');
+/* [SEC-HB-02] Evidências de serviço são dado potencialmente sensível (LGPD): fora do
+   ./uploads público. O padrão é o das selfies de ponto — dir privado + URL app-relativa
+   servida por rota autenticada (routes/servicos.js), storage privado com 302 assinado
+   quando disponível. */
+const UPLOADS_EVIDENCIAS_DIR = path.resolve('./uploads-evidencias');
 
 /**
  * Roteia um evento MESSAGES_UPSERT do robô de NÚMERO ÚNICO para o fluxo correto.
@@ -333,13 +337,16 @@ async function salvarFotoBase64(base64, mimetype) {
     const buffer = Buffer.from(base64, 'base64');
     const ext = (mimetype?.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
     const nomeArquivo = `${randomUUID()}.${ext}`;
-    return await uploadComFallback(
-      'inbound',
+    /* A URL gravada é SEMPRE a app-relativa autenticada; quem resolve storage×disco é a
+       rota de serve (mesmo contrato de /uploads-ponto nas selfies). */
+    await uploadComFallback(
+      'evidencias-servico',
       nomeArquivo,
       buffer,
       mimetype || 'image/jpeg',
-      UPLOADS_DIR
+      UPLOADS_EVIDENCIAS_DIR
     );
+    return `/api/servicos/evidencia/${nomeArquivo}`;
   } catch (erro) {
     logger.warn('Falha ao salvar foto inbound', { erro: erro.message });
     return null;

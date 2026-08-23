@@ -10,6 +10,9 @@ import { contemInsensivel } from '../utils/busca.js';
 import { construirFiltroPeriodo, construirFiltroPeriodoAnterior } from '../services/periodo.js';
 import { diaLocal } from '../services/ponto.js';
 import { env } from '../config/env.js';
+import path from 'node:path';
+import { existsSync } from 'node:fs';
+import { storageHabilitado, urlAssinada } from '../services/storage.js';
 import { capturarErro, JA_ENVIADO_AO_SENTRY } from '../config/sentry.js';
 import { logger } from '../utils/logger.js';
 
@@ -737,6 +740,46 @@ router.post('/servicos/:id/concluir', recursoServicoAtual, async (req, res) => {
       empresaId: req.user?.empresaId,
       extra: { servicoId: id },
     });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+/* [SEC-HB-02] Serve de evidência — espelho de GET /ponto/selfie/:arquivo. A foto que chega
+   pelo WhatsApp é dado sensível: sai do ./uploads público e passa por auth (router) +
+   tenant (req.db — Servico é escopado; cross-tenant vira not-found) + permissão
+   (servicos.ver, ou o próprio técnico do serviço). Storage privado responde 302 assinado;
+   fallback é o disco privado ./uploads-evidencias. */
+const EVIDENCIA_ARQUIVO_RE = /^[0-9a-f-]{36}\.(?:jpg|jpeg|png|webp|gif)$/;
+const UPLOADS_EVIDENCIAS_DIR = path.resolve('./uploads-evidencias');
+
+router.get('/servicos/evidencia/:arquivo', async (req, res) => {
+  try {
+    const arquivo = String(req.params.arquivo ?? '');
+    if (!EVIDENCIA_ARQUIVO_RE.test(arquivo)) {
+      return res.status(400).json({ erro: 'Arquivo inválido' });
+    }
+    const servico = await req.db.servico.findFirst({
+      where: { fotoEvidencia: `/api/servicos/evidencia/${arquivo}` },
+      select: { tecnicoId: true },
+    });
+    if (!servico) return res.status(404).json({ erro: 'Evidência não encontrada' });
+    const ehProprio = req.user.tecnicoId === servico.tecnicoId;
+    if (!ehProprio && !pode(req.user, 'servicos', 'ver')) {
+      return res.status(403).json({ erro: 'Sem permissão para ver esta evidência' });
+    }
+    if (storageHabilitado()) {
+      const assinada = await urlAssinada('evidencias-servico', arquivo, 60);
+      if (assinada) {
+        res.setHeader('Cache-Control', 'private, no-store');
+        return res.redirect(302, assinada);
+      }
+    }
+    const caminho = path.join(UPLOADS_EVIDENCIAS_DIR, arquivo);
+    if (!existsSync(caminho)) return res.status(404).json({ erro: 'Evidência não encontrada' });
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.sendFile(caminho);
+  } catch (erro) {
+    logger.error('Erro GET /servicos/evidencia', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

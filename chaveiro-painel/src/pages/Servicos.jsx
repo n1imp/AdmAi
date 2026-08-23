@@ -172,21 +172,7 @@ function DetalheServico({ servico, modoDetalhe, onExpandir, onRecolher, onDeleta
               <span className="text-white font-medium">Material:</span> {servico.material}
             </p>
           )}
-          {servico.fotoEvidencia && (
-            <a
-              href={servico.fotoEvidencia}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <img
-                src={servico.fotoEvidencia}
-                alt="Foto de evidência do serviço"
-                loading="lazy"
-                className="w-full max-h-60 object-cover rounded-md border border-dark-600"
-              />
-            </a>
-          )}
+          {servico.fotoEvidencia && <ImagemEvidencia url={servico.fotoEvidencia} />}
           <p className="text-xs text-muted">ID #{servico.id}</p>
         </div>
       )}
@@ -211,6 +197,43 @@ function DetalheServico({ servico, modoDetalhe, onExpandir, onRecolher, onDeleta
         </div>
       )}
     </div>
+  );
+}
+
+/* [SEC-HB-02] Evidência nova vem em URL autenticada (/api/servicos/evidencia/...) — <img src>
+   não manda Authorization, então baixamos via api (Bearer) e exibimos como blob. URL legada
+   (/uploads/...) continua estática pública e renderiza direto. */
+function ImagemEvidencia({ url }) {
+  const protegida = url.startsWith('/api/');
+  const [src, setSrc] = useState(protegida ? null : url);
+  useEffect(() => {
+    if (!protegida) return undefined;
+    let vivo = true;
+    let objeto;
+    api
+      .get(url.replace(/^\/api/, ''), { responseType: 'blob' })
+      .then((r) => {
+        if (!vivo) return;
+        objeto = URL.createObjectURL(r.data);
+        setSrc(objeto);
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+      if (objeto) URL.revokeObjectURL(objeto);
+    };
+  }, [url, protegida]);
+
+  if (!src) return null;
+  return (
+    <a href={src} target="_blank" rel="noopener noreferrer" className="block">
+      <img
+        src={src}
+        alt="Foto de evidência do serviço"
+        loading="lazy"
+        className="w-full max-h-60 object-cover rounded-md border border-dark-600"
+      />
+    </a>
   );
 }
 
