@@ -136,10 +136,17 @@ export function identidadeDaRequisicao(req) {
 
 // Rate limit AGRESSIVO contra brute force em login/register/recuperação de senha/magic-link
 // (guia §3.2). Chave pela IDENTIDADE do corpo; IP só quando não há identidade.
+/* [SEC-HB-11] "Sucesso" para fins de rate limit é SESSÃO ENTREGUE (res.locals.sessaoCompleta,
+   posto pelas respostas finais em auth.js) — 200 intermediário (desafio 2FA, desambiguação)
+   conta tentativa; sem isso, martelar o ramo pré-2FA nunca esbarrava no teto. */
+const sessaoFoiEntregue = (_req, res) =>
+  res.statusCode < 400 && res.locals?.sessaoCompleta === true;
+
 export const authLimiter = criarLimiterRedis({
   windowMs: 15 * 60_000,
   limit: 5,
   skipSuccessfulRequests: true,
+  requestWasSuccessful: sessaoFoiEntregue,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, _res) => identidadeDaRequisicao(req) ?? ipKeyGenerator(req.ip),
@@ -158,6 +165,7 @@ export const authLimiter = criarLimiterRedis({
 export const authIpLimiter = criarLimiterRedis({
   windowMs: 15 * 60_000,
   limit: 30,
+  requestWasSuccessful: sessaoFoiEntregue,
   skipSuccessfulRequests: true,
   standardHeaders: false,
   legacyHeaders: false,

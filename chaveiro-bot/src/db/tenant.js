@@ -31,6 +31,17 @@ const MODELOS_ESCOPADOS = new Set([
   'SessaoConversa',
   'RegistroPonto',
   'DocumentoTecnico',
+  /* [SEC-HB-06] Os seis que tinham empresaId mas viviam FORA do escopo automático — cada call
+     site futuro dependia de disciplina manual. Único call site req.db atual verificado:
+     assinatura.findUnique do paywall (idempotente sob o rewrite findUnique→findFirst; os 16
+     testes da matriz 402 são a regressão). Webhooks/auditoria usam o prisma global de
+     propósito (sem contexto de tenant) e não passam por aqui. */
+  'GoogleConta',
+  'AvaliacaoGoogle',
+  'AnaliseAvaliacoes',
+  'Assinatura',
+  'ConviteUsuario',
+  'AuditLog',
 ]);
 
 // Operações de LEITURA que aceitam `where` e devem receber o filtro empresaId.

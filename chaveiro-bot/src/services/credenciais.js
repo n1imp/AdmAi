@@ -49,6 +49,12 @@ export async function criarAcessoTecnico({
   papel = 'funcionario',
   tx = prisma,
 }) {
+  /* [SEC-HB-07] A função não confia no chamador: acesso de técnico NUNCA nasce dono. Os dois
+     call sites atuais jamais passam 'dono' — a guarda existe para o terceiro, futuro, que
+     passaria. */
+  if (papel === 'dono') {
+    throw new Error("criarAcessoTecnico não cria papel 'dono'");
+  }
   const telefoneCanonico =
     tecnico.telefone ||
     (tecnico.telefoneDisplay ? canonizarTelefone(tecnico.telefoneDisplay) : null);

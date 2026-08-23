@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F6-PERF",
-  "titulo": "Performance: fronteira lazy nas paginas de graficos — recharts sai do caminho publico",
+  "sliceId": "F6-SEC-BARATOS",
+  "titulo": "Hardening barato: TOCTOUs, validacao interna, rate-limit de nao-finais, tenant-scope, bump lockfile",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T16:12:49.740Z",
+  "declaradoEm": "2026-08-23T16:27:23.509Z",
   "baseCommitPorLane": {
-    "HARNESS": "4bec5d002d276d9f5c1698eed38f0e246df4e58a"
+    "HARNESS": "8e739630c966ceac441eaaba32b59e231b2a0471"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Medicao primeiro (build + preview + CDP): FCP/LCP ~450-500ms local, CLS ~0, MAS o chunk charts (152KB gzip, recharts) carrega ate na Landing publica porque App.jsx importa todas as paginas estaticamente. Corte minimo: React.lazy nas 4 paginas donas de recharts (Dashboard, MeuPainel, PerfilTecnico, MetricHub) com Suspense de fallback breve — o chunk vira async e o caminho publico cai ~150KB. Orcamento registrado no ledger com os numeros de antes/depois. EXPANSAO (antes de escrever): vite.config.js — o manualChunks(recharts->charts) forca o chunk a virar modulepreload do ENTRY no index.html, anulando o lazy; a regra cai e o rolldown agrupa recharts como chunk async compartilhado das 4 paginas.",
+  "notaDeMetodo": "Seis fechamentos do backlog aprovados no plano: (1) aceite de convite vira updateMany condicional DENTRO da transacao (padrao EV-056; corrida = rollback); (3) PATCH/DELETE usuarios condicionam o where ao papel LIDO no guard (janela TOCTOU fecha no banco); (7) criarAcessoTecnico valida papel internamente; (11) respostas 200 nao-finais (desafio 2FA/desambiguacao) passam a CONTAR no rate limit via res.locals.sessaoCompleta; (6) os 6 modelos com empresaId entram em MODELOS_ESCOPADOS — unico call site req.db verificado (assinatura.findUnique, idempotente sob rewrite; 16 testes de paywall como regressao); (14) bump lockfile-only ip-address 10.2->10.4 (dentro do range; EDE ja refutou exploracao). Prova: teste novo de corrida do convite + unit do 7 + integracao do 11 + suites existentes.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -367,7 +367,7 @@
       "chaveiro-painel/public/robots.txt": "82b38191a65c911fae6d7d2a83599cdd0f87e2037014e0d1b5e3b4a6a75281c0",
       "chaveiro-painel/public/sw.js": "54420d274e17703b2f9029fb7e406f10e97f15f9c210cd2bfbaf1de8996fffc1",
       "chaveiro-painel/scripts/gerar-headers.mjs": "cb2b8f27c8c4a3dd22be697906a34aa42ff8db653f5da6755c4c1c13d7c3d87f",
-      "chaveiro-painel/src/App.jsx": "fc4927685086b3cebd07e9448e1a4aec0c1c52f75a92a24295020a650a8e31db",
+      "chaveiro-painel/src/App.jsx": "8cc047df868b3a770a9c91de12bcdc4904a248b0f607112831446d0c7f816324",
       "chaveiro-painel/src/components/BackHeader.jsx": "9ebbea7afb22ecc24885829d22ffe5c7c1a2eabfddda3f382cbb4c6645bd720b",
       "chaveiro-painel/src/components/BancoHoras.jsx": "11024dbe37645211f1d543472daf41afa0f9835f755e03b0215116540e96cb23",
       "chaveiro-painel/src/components/BotoesSociais.jsx": "999e5a3113512ad8580ec7ad3ed86032c9f7fe203afa162386fe250bedabb0ce",
@@ -525,7 +525,7 @@
       "chaveiro-painel/src/test/axe.js": "74547d3934177ffa8c8e4d74ecf5d3112c4f639a888e594d56d633934fad1782",
       "chaveiro-painel/src/test/setup.js": "fd0b71cff6bc469d16c98ee6a84811f50b9e77615920080d90d2ed6ae6f53945",
       "chaveiro-painel/tailwind.config.js": "f205feb1fad524356a86ac26a60e182153b1f224dcb7b583a7b68054874d7a41",
-      "chaveiro-painel/vite.config.js": "faf1d60ce96df90c383423839615e2ace3b63109c96acf7d31f1250a80456974",
+      "chaveiro-painel/vite.config.js": "4732d16f53403c2da3a184fdf3ef56d96f5e8d79cd9c07f45ae8914f63492b04",
       "chaveiro-painel/vitest.a11y.config.js": "c0798d9464bcec3a7f02b79ba7bd91380434b5b732a5a64a8d80d77e2eb229a6",
       "docs/ARCHITECTURE_EVOLUTION_PLAN.md": "74541e40003f2baebeed436c664a0926efb79da932fd6706800dba69afb7de7f",
       "docs/AUDIT.md": "b72aea4f86f1e3d77ebe83e2e3a0f50aeeddc9b0649c8543286dec67e655c957",
@@ -581,7 +581,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "6b99d3810d07c0715f02f7f56acea7780fb4c9b315fa51f18d700c66e76b8b6c",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "3fcfd7c1911d4365db27d83145edf1c3a537448cd8c77e550d4fdf645a4ec873",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -590,8 +590,8 @@
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "00023aa0bff2cc57407893dfe73710096656edbdc93412d6540c871b904f85c7",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "19aac85f0ae03b3f4e477f0f90e8f1c08e803abaa709f07e418329211859261b",
+      "docs/eos-v2/WRITE_SET.json": "6134a8e57e0dbd1185310b9de38f0dac5e4362a5fc5918a22cd0f4df171438b9",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "9827ac31b1dca1981965a31aa3067b4dc4c3af56837801be0029ac459de65910",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -961,14 +961,23 @@
       "chaveiro-bot/uploads-ponto/ponto-e4f4c0c5-7d6a-4d42-8be7-518074010ee7.png": "70:1785460907312",
       "chaveiro-bot/uploads-ponto/ponto-ee2214ef-cf37-4f12-954c-e8e90ab11531.png": "70:1785536786488",
       "chaveiro-bot/uploads-ponto/ponto-eeec6707-a630-4e75-87f0-6beeeaea51ee.png": "70:1787378793507",
-      "chaveiro-painel/dist/_headers": "1156:1787501184262",
+      "chaveiro-painel/dist/_headers": "1156:1787501894436",
       "chaveiro-painel/dist/_redirects": "326:1784588793154",
-      "chaveiro-painel/dist/assets/charts-QXHasCYR.js": "537887:1787501183639",
-      "chaveiro-painel/dist/assets/icons-CYe1dn5x.js": "28968:1787501183640",
-      "chaveiro-painel/dist/assets/index-7AweaRM0.js": "497898:1787501183638",
-      "chaveiro-painel/dist/assets/index-XPenrZlz.css": "63013:1787501183642",
-      "chaveiro-painel/dist/assets/react-vendor-DtGGamCc.js": "24618:1787501183641",
-      "chaveiro-painel/dist/assets/rolldown-runtime-QTnfLwEv.js": "694:1787501183641",
+      "chaveiro-painel/dist/assets/BarChart-B22YVFZz.js": "353883:1787501892944",
+      "chaveiro-painel/dist/assets/Dashboard-2DKMumT3.css": "2974:1787501892951",
+      "chaveiro-painel/dist/assets/Dashboard-Br_pqaej.js": "77317:1787501892944",
+      "chaveiro-painel/dist/assets/FeedbackState-WZZ9j4zy.js": "50696:1787501892945",
+      "chaveiro-painel/dist/assets/LineChart-D14k8AW9.js": "16822:1787501892946",
+      "chaveiro-painel/dist/assets/MetricHub-DIuRUsob.js": "593:1787501892946",
+      "chaveiro-painel/dist/assets/MetricHubReceita-CUGE-2d3.js": "1057:1787501892947",
+      "chaveiro-painel/dist/assets/MetricHubShell-D2gjXSNA.js": "16206:1787501892948",
+      "chaveiro-painel/dist/assets/MeuPainel-czXhOKtz.js": "10744:1787501892948",
+      "chaveiro-painel/dist/assets/PerfilTecnico-B1nGL8Rs.js": "21710:1787501892949",
+      "chaveiro-painel/dist/assets/icons-B4AmmSV7.js": "35378:1787501892949",
+      "chaveiro-painel/dist/assets/index-CQSqujt2.css": "60203:1787501892952",
+      "chaveiro-painel/dist/assets/index-CdzMcUg-.js": "354079:1787501892943",
+      "chaveiro-painel/dist/assets/react-vendor-aieSXgkd.js": "157397:1787501892950",
+      "chaveiro-painel/dist/assets/rolldown-runtime-QTnfLwEv.js": "694:1787501892951",
       "chaveiro-painel/dist/fonts/jetbrains-mono-400.woff2": "31432:1787495638845",
       "chaveiro-painel/dist/fonts/jetbrains-mono-500.woff2": "31432:1787495638944",
       "chaveiro-painel/dist/fonts/jetbrains-mono-600.woff2": "31432:1787495639208",
@@ -983,7 +992,7 @@
       "chaveiro-painel/dist/icons/icon-192.png": "5671:1784588793155",
       "chaveiro-painel/dist/icons/icon-512.png": "20192:1784588793157",
       "chaveiro-painel/dist/icons/icon.svg": "601:1784588793157",
-      "chaveiro-painel/dist/index.html": "2950:1787501183643",
+      "chaveiro-painel/dist/index.html": "2957:1787501892953",
       "chaveiro-painel/dist/manifest.webmanifest": "749:1784588793158",
       "chaveiro-painel/dist/robots.txt": "264:1787497156704",
       "chaveiro-painel/dist/sw.js": "1913:1784588793159",
@@ -2493,35 +2502,81 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [
-    "chaveiro-painel/telas"
-  ],
+  "artefatos": [],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/App.jsx",
+      "caminho": "chaveiro-bot/src/routes/auth.js",
       "precisao": "BOUNDED",
-      "proposito": "React.lazy + Suspense nas 4 rotas de graficos",
+      "proposito": "#1 updateMany condicional; #11 res.locals.sessaoCompleta nas respostas finais",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "fc4927685086b3cebd07e9448e1a4aec0c1c52f75a92a24295020a650a8e31db",
+      "shaNaDeclaracao": "a1b5c5300a45c0555e62009d3c3734bb019c9eac7f6f5ccfd5c42e03d063afe6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/admin.js",
+      "precisao": "BOUNDED",
+      "proposito": "#3 where condicionado ao nivel lido",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "57f932e59fa4b18746eb3a4cc6cf194b26bd099494700a5fca599892bb237f78",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/credenciais.js",
+      "precisao": "BOUNDED",
+      "proposito": "#7 validacao interna de papel",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5e65acd0720a500038d5e5694b851e1af0abf52b8645e771b5053490dee60348",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/middlewares/rateLimiters.js",
+      "precisao": "BOUNDED",
+      "proposito": "#11 requestWasSuccessful custom",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cb6fe5e5b0c62f2ef75375aba9f3816317fd1878b13256e71720e73fab749bff",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/db/tenant.js",
+      "precisao": "BOUNDED",
+      "proposito": "#6 seis modelos escopados",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1b4ef5afc11a8a96427fbf70ab551a4c0db1c83c798a98dd50932f04ec27831f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/package-lock.json",
+      "precisao": "BOUNDED",
+      "proposito": "#14 bump transitivo ip-address (lockfile-only)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a2ad98ddebc589b7f6c99232138da420b4c2d412fea99bc54e419494cc986cb0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/seguranca_baratos.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "provas novas: corrida do convite, papel interno, nao-finais contam",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T16:12:50.043Z",
+  "validadoEm": "2026-08-23T16:27:23.986Z",
   "validadoPor": "write-set-gate.mjs",
-  "expansoesAutorizadas": [
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/vite.config.js"
-    }
-  ],
-  "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": true,
-  "nota": "Perf: lazy nas paginas de grafico + fim do manualChunks de recharts (modulepreload anulava o lazy) — publico -44% de JS; orcamento e numeros no ledger; jornadas 9/9 como gate de regressao.",
+  "bloqueiaIntegracao": false,
+  "nota": "Seis fechamentos do backlog com provas que mordem; a ancora TOCTOU incondicional quebrou dono-sem-guard (500) e o proprio teste pegou antes do commit. Suite integral verde.",
   "aviso": "Declaracao ENCERRADA."
 }

@@ -317,7 +317,16 @@ router.patch('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (req
       data.permissoes = limitarPermissoesAoAtor(req.user, sanitizarPermissoes(permissoes));
     if (senha) data.senhaHash = await bcrypt.hash(senha, 12);
     const r = await prisma.usuario.updateMany({
-      where: { id, empresaId: req.user.empresaId },
+      /* [SEC-HB-03] Quando o guard decidiu com `antes.papel` (ator sem autoridade plena), a
+         mutação exige que o papel AINDA seja aquele — promoção concorrente na janela
+         leitura→escrita vira count=0 (404), nunca decisão sobre nível velho (CWE-367).
+         Dono/admin não passam pelo guard de nível (antes pode ser null) e não precisam de
+         âncora: têm autoridade sobre qualquer papel. */
+      where: {
+        id,
+        empresaId: req.user.empresaId,
+        ...(precisaGuardarAlvo && antes ? { papel: antes.papel } : {}),
+      },
       data,
     });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
@@ -378,7 +387,10 @@ router.delete('/usuarios/:id', requirePermissao('usuarios', 'editar'), async (re
     if (req.user.papel !== 'dono' && !req.user.admin && !podeGerenciarUsuario(req.user, alvoDel)) {
       return res.status(403).json({ erro: 'Sem permissão para remover este usuário' });
     }
-    const r = await prisma.usuario.deleteMany({ where: { id, empresaId: req.user.empresaId } });
+    /* [SEC-HB-03] Mesma âncora de nível do PATCH: só apaga se o papel ainda é o que o guard viu. */
+    const r = await prisma.usuario.deleteMany({
+      where: { id, empresaId: req.user.empresaId, papel: alvoDel.papel },
+    });
     if (r.count === 0) return res.status(404).json({ erro: 'Usuário não encontrado' });
     registrarAudit({
       empresaId: req.user.empresaId,

@@ -85,6 +85,14 @@ async function emitirRefreshCookie(res, usuarioId) {
   });
 }
 
+/* [SEC-HB-11] Só resposta que ENTREGA sessão conta como sucesso para o rate limit; 200
+   intermediário (desafio 2FA, desambiguação) continua contando tentativa. O marcador é lido
+   por requestWasSuccessful em rateLimiters.js. Devolve undefined de propósito (uso via ??). */
+function marcarSessaoCompleta(res) {
+  res.locals.sessaoCompleta = true;
+  return undefined;
+}
+
 function payloadSessao(usuario, token) {
   return {
     token,
@@ -103,7 +111,7 @@ async function responderSessao(res, usuario, via) {
   await emitirRefreshCookie(res, usuario.id);
   const token = gerarJWT(usuario);
   logger.info('login_success', { userId: usuario.id, via });
-  return res.json(payloadSessao(usuario, token));
+  return res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, token));
 }
 
 // T-REC-01: gerarDesafio2fa/verificarDesafio2fa agora vivem em services/auth.js
@@ -229,7 +237,7 @@ router.post('/auth/login', async (req, res) => {
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id });
-    res.json(payloadSessao(usuario, token));
+    res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -261,7 +269,7 @@ router.post('/auth/login/2fa', async (req, res) => {
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa' });
-    res.json(payloadSessao(usuario, token));
+    res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -293,7 +301,7 @@ router.post('/auth/login/2fa-telefone', async (req, res) => {
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa-telefone' });
-    res.json(payloadSessao(usuario, token));
+    res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa-telefone', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -333,7 +341,7 @@ router.post('/auth/login/2fa/recuperar', async (req, res) => {
     await emitirRefreshCookie(res, usuario.id);
     const token = gerarJWT(usuario);
     logger.info('login_success', { userId: usuario.id, via: '2fa-recuperacao' });
-    res.json(payloadSessao(usuario, token));
+    res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, token));
   } catch (erro) {
     logger.error('Erro POST /auth/login/2fa/recuperar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
@@ -679,7 +687,18 @@ router.post('/convite/:token/aceitar', async (req, res) => {
           senhaProvisoria: true,
         },
       });
-      await tx.conviteUsuario.update({ where: { id: convite.id }, data: { aceitoEm: new Date() } });
+      /* [SEC-HB-01] Padrão EV-056: o consumo do convite é CONDICIONAL a aceitoEm:null —
+         duas aceitações concorrentes do mesmo token elegem UM vencedor no banco; a perdedora
+         lança e a transação desfaz o usuário que ela tinha criado. */
+      const consumo = await tx.conviteUsuario.updateMany({
+        where: { id: convite.id, aceitoEm: null },
+        data: { aceitoEm: new Date() },
+      });
+      if (consumo.count !== 1) {
+        const corrida = new Error('Convite já aceito por requisição concorrente');
+        corrida.code = 'CONVITE_JA_ACEITO';
+        throw corrida;
+      }
       return novo;
     });
     logger.info('convite_aceito', { userId: usuario.id, empresaId: convite.empresaId });
@@ -689,6 +708,8 @@ router.post('/convite/:token/aceitar', async (req, res) => {
   } catch (erro) {
     if (erro.code === 'P2002')
       return res.status(409).json({ erro: 'Username ou e-mail já em uso' });
+    if (erro.code === 'CONVITE_JA_ACEITO')
+      return res.status(404).json({ erro: 'Convite inválido ou expirado' });
     logger.error('Erro POST /convite/:token/aceitar', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
@@ -771,7 +792,7 @@ router.get('/auth/magic-link/verificar', async (req, res) => {
     await emitirRefreshCookie(res, usuario.id);
     const sessaoToken = gerarJWT(usuario);
     logger.info('magic_link_login', { userId: usuario.id });
-    return res.json(payloadSessao(usuario, sessaoToken));
+    return res.json(marcarSessaoCompleta(res) ?? payloadSessao(usuario, sessaoToken));
   } catch (erro) {
     logger.error('Erro GET /auth/magic-link/verificar', { erro: erro.message });
     return res.status(500).json({ erro: 'Erro interno' });

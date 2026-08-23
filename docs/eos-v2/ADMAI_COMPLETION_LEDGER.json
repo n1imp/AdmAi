@@ -1375,7 +1375,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "SEC-HB-01",
@@ -1386,9 +1386,17 @@
         "SEC-HB-06"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "SEC-HB-01: consumo do convite via updateMany condicional NA transacao (corrida real testada: 1 vencedor, convite consumido 1x; defesa em camadas com o unique de email).",
+        "SEC-HB-03: PATCH/DELETE de usuarios ancoram o where no papel LIDO pelo guard — a ancora e condicional a precisaGuardarAlvo (a versao incondicional deu 500 com antes=null para dono; pega pelo proprio teste de regressao). DELETE ancora sempre (alvoDel nunca e null).",
+        "SEC-HB-07: criarAcessoTecnico recusa dono internamente (unit).",
+        "SEC-HB-11: sucesso para o rate limit = SESSAO ENTREGUE (res.locals.sessaoCompleta nas 6 respostas finais); teste: 5 desafios 2FA contam e o 6o login leva 429.",
+        "SEC-HB-06: 6 modelos com empresaId entram em MODELOS_ESCOPADOS; unico call site req.db (paywall findUnique) verificado e regressao = matriz 402 16/16.",
+        "SEC-HB-14: ip-address 10.2.0->10.5.0 lockfile-only (3 linhas; package.json intocado; EDE previo refutou exploracao).",
+        "Suite integral verde apos as mudancas: 53 arquivos (rodada em partes por timeout)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T17:14:24.248Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
