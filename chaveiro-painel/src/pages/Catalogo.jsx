@@ -16,6 +16,7 @@ import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import {
+import BotaoFlutuante from '../components/ui/BotaoFlutuante.jsx';
   ModalMaterial,
   ModalMovimentacao,
   ModalHistorico,
@@ -193,13 +194,9 @@ export default function Catalogo() {
       </div>
 
       {/* FAB */}
-      <button
-        onClick={() => setModal({ tipo: 'form', material: null })}
-        aria-label="Novo material"
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light"
-      >
+      <BotaoFlutuante onClick={() => setModal({ tipo: 'form', material: null })} rotulo="Novo material">
         +
-      </button>
+      </BotaoFlutuante>
 
       {modal?.tipo === 'form' && (
         <ModalMaterial material={modal.material} onClose={() => setModal(null)} onSalvo={buscar} />

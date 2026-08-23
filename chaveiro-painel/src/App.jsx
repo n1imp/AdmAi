@@ -414,7 +414,15 @@ function Layout({ children }) {
           </div>
         )}
         {/* No desktop, conteúdo centralizado com largura máxima; no mobile, largura total */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+        <main
+          /* `main` tem rolagem PROPRIA (`overflow-y-auto`), e padding no `body` nao alcanca
+             container de rolagem aninhado. Sem isto o rodape do painel em 1920 ficava
+             permanentemente sob o banner: rolar ate o fim parava dentro da faixa dele.
+             O `pb-20` continua reservando a navegacao inferior; a altura do consentimento entra
+             somada, e medida. [GAP-UX-CONSENT-01] */
+          style={{ paddingBottom: 'calc(var(--admai-consent-h, 0px))' }}
+          className="flex-1 overflow-y-auto pb-20 lg:pb-8"
+        >
           {/* key={pathname}: remonta o conteúdo por navegação p/ a transição de rota tocar
               (fade-only, .panel-route). RodapeLegal fica fora p/ não reanimar. */}
           <div key={pathname} className="panel-route lg:max-w-6xl lg:mx-auto lg:px-2">

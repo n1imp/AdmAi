@@ -7,6 +7,7 @@ import EstadoVazio from '../components/EstadoVazio.jsx';
 import ErroBanner from '../components/ErroBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Overlay } from '../components/ui/index.js';
+import BotaoFlutuante from '../components/ui/BotaoFlutuante.jsx';
 
 function fmtTel(tel) {
   if (!tel) return null;
@@ -285,13 +286,9 @@ export default function Tecnicos() {
       </div>
 
       {/* FAB — adicionar técnico (wizard) */}
-      <button
-        onClick={() => navigate('/tecnicos/novo')}
-        aria-label="Adicionar técnico"
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light"
-      >
+      <BotaoFlutuante onClick={() => navigate('/tecnicos/novo')} rotulo="Adicionar técnico">
         +
-      </button>
+      </BotaoFlutuante>
 
       {editando && (
         <ModalEdicao tecnico={editando} onClose={() => setEditando(null)} onSalvo={buscar} />

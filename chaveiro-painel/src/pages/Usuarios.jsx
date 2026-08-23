@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import MatrizPermissoes from '../components/MatrizPermissoes.jsx';
 import { Overlay } from '../components/ui/index.js';
+import BotaoFlutuante from '../components/ui/BotaoFlutuante.jsx';
 
 // ── Metadados de papel (rótulo + cor do badge) ────────────────────────────────
 const PAPEIS = {
@@ -458,14 +459,13 @@ export default function Usuarios() {
       </div>
 
       {/* FAB */}
-      <button
+      <BotaoFlutuante
         onClick={() => setModal({ modo: 'criar' })}
-        aria-label="Nova conta"
+        rotulo="Nova conta"
         disabled={!catalogo}
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-lg bg-accent-400 flex items-center justify-center shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-dark-950 hover:bg-accent-300 transition-colors z-30 text-2xl font-light disabled:opacity-40"
       >
         +
-      </button>
+      </BotaoFlutuante>
 
       {modal && catalogo && (
         <ModalUsuario
