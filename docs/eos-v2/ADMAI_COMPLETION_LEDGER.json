@@ -708,15 +708,19 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [
         "GAP-UX-IDENTIDADE-01"
       ],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "Tour: unico ciano que RENDERIZAVA (#38DDF5, CSS standalone do driver.js) -> padrao btn-primary (#f8f9ff/#170b2e). Varredura: zero hex ciano no fonte fora de tailwind/rollout-alias.",
+        "Classe hover:bg-accent-300 e hover:bg-accent-400/15 (4 usuarios): CONTRAPROVA por CDP mostrou hover INERTE (override de base engolia ciano e feedback, empate de especificidade + ordem); remap na dona devolve feedback: base rgb(196,181,253) -> hover rgb(248,249,255) medido com mouse real.",
+        "Convite/trocar-senha/boas-vindas: ja fechados por SL-02/SL-03 (alvos, h1) — auditados, intocados. Painel 214/214."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:14:34.817Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

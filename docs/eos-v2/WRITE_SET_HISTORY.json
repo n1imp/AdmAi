@@ -48302,9 +48302,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Estado explicito LINK INCOMPLETO para /redefinir-senha sem token (era troca silenciosa de tarefa); roteiro rota×token com 4 testes que mordem; h1 nos estados pos-submit. 214/214.",
       "declaradoEm": "2026-08-23T11:06:59.869Z"
+    },
+    {
+      "sliceId": "SL-08-IDENTIDADE-SOBRAS",
+      "titulo": "Sobras de ciano: hover dos preenchidos (classe compartilhada) + hover do tour",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Sobras de identidade: tour era o unico ciano renderizavel (corrigido); a classe hover era na verdade INERTE (contraprova CDP corrigiu o modelo do defeito) e o remap devolve feedback no padrao da casa. Hover real medido: base violeta -> #f8f9ff.",
+      "declaradoEm": "2026-08-23T11:11:35.904Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:09:49.747Z",
+  "geradoEm": "2026-08-23T11:14:36.619Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

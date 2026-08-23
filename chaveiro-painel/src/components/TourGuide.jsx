@@ -36,7 +36,7 @@ const TOUR_CSS = `
 .driver-popover.admai-tour button.driver-popover-next-btn:hover,
 .driver-popover.admai-tour button.driver-popover-prev-btn:hover { background: #232833; color: #FFFFFF; }
 .driver-popover.admai-tour button.driver-popover-next-btn { background: #c4b5fd; color: #170b2e; border-color: transparent; }
-.driver-popover.admai-tour button.driver-popover-next-btn:hover { background: #38DDF5; color: #0A0C10; }
+.driver-popover.admai-tour button.driver-popover-next-btn:hover { background: #f8f9ff; color: #170b2e; }
 .driver-popover.admai-tour button.driver-popover-close-btn { color: #6B7280; transition: color 0.15s; }
 .driver-popover.admai-tour button.driver-popover-close-btn:hover { color: #FFFFFF; }
 .driver-popover.admai-tour .driver-popover-arrow { border-color: #15181F; }

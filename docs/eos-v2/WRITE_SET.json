@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SL-07-RECUPERACAO-TOKENS",
-  "titulo": "/redefinir-senha sem token ganha estado explicito; magic/verificar/convite auditados",
+  "sliceId": "SL-08-IDENTIDADE-SOBRAS",
+  "titulo": "Sobras de ciano: hover dos preenchidos (classe compartilhada) + hover do tour",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T11:06:59.869Z",
+  "declaradoEm": "2026-08-23T11:11:35.904Z",
   "baseCommitPorLane": {
-    "HARNESS": "d0855fe699473c8f31bab68bbb996100dc7233bc"
+    "HARNESS": "ce9019a60ae48dc8dc9fd6f4bd24c800611b0a21"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O gap real: /recuperar-senha e /redefinir-senha compartilham componente e o roteiro era 'token ? redefinir : pedido' — link quebrado de redefinicao caia CALADO na tela de pedido, trocando a tarefa sem avisar. Estado explicito espelha o cartao de link-invalido do MagicLink (padrao ja aprovado), com h1 de tarefa (regra SL-03). magic/verificar/convite ja tem estados explicitos medidos pela sonda de SL-03; a fatia os audita por teste de rota, sem tocar neles.",
+  "notaDeMetodo": "Defeito de CLASSE, correcao na dona: panel-rollout.css remapeia hover:bg-accent-300 e hover:bg-accent-400/15 (4 usuarios: FAB, upload de Documentos, INICIAR e reabrir de MeusServicos) — espelhando o btn-primary:hover da casa (clareia para --panel-text). TourGuide (fora do escopo .panel-ui, CSS proprio do driver.js) troca o unico hex ciano remanescente pelo mesmo padrao. Prova: varredura grep zero ciano fora de tailwind/rollout + hover REAL do FAB via CDP (mouse move + computed style). Superficies convite/trocar-senha ja fechadas por SL-02/03 — auditadas, intocadas.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -459,7 +459,7 @@
       "chaveiro-painel/src/pages/Perfil.jsx": "234793f0cd7f7df91b11831320d53782fae67af32e2a32466f988b4092449df0",
       "chaveiro-painel/src/pages/PerfilTecnico.jsx": "fd168c9c67ad84624c501b60079c9ac86302dc4bc0797a74fc2dd44effed8037",
       "chaveiro-painel/src/pages/Privacidade.jsx": "795d4119fb56476705a463d61c055f6dbea7df5e3b65b83c4b1fbd585ab6a4cb",
-      "chaveiro-painel/src/pages/RecuperarSenha.jsx": "b35c7c0febacf415f9d75af6f9c2e3b5399eba491de729387bd8af1b81935260",
+      "chaveiro-painel/src/pages/RecuperarSenha.jsx": "b934f3f3ed923466607cd8538dd5d6f4c3187d19b0b97db691039c13e2b2b758",
       "chaveiro-painel/src/pages/Reparticao.jsx": "99db05c61ccdf88dcf21673e15be745844273d706e04fcdcee89275e3c6d7643",
       "chaveiro-painel/src/pages/Seguranca.jsx": "1fb26e4ecb51d1b8d83795f53dda52514078eff8dff3003fa72c637f35df0115",
       "chaveiro-painel/src/pages/Servicos.jsx": "8a870c5a9ca702b17d41ac442a32dc8d93508f5ae3630671615e965016713f6f",
@@ -487,6 +487,7 @@
       "chaveiro-painel/src/pages/__tests__/MeusServicos.test.jsx": "35bf38939531b013035cd47712e8f14a49da9062fe7e413450055eca395bb7f8",
       "chaveiro-painel/src/pages/__tests__/NovoServico.test.jsx": "adbda741f1566a9d2566f9048f6897f0146715da8809708af3e009ec38bb1f1a",
       "chaveiro-painel/src/pages/__tests__/NovoServicoFuncionario.test.jsx": "f98487db1492158501bcaa1b0334db5a1aed871e057079e83d0165c46e29c476",
+      "chaveiro-painel/src/pages/__tests__/RecuperarSenha.test.jsx": "c00e842c6aea81135ae1257551c3aa7356dd1eea26322b5014da08241d0722c6",
       "chaveiro-painel/src/pages/__tests__/Servicos.a11y.test.jsx": "bd5bf4958c0e01b765c9cc3bfede880d1843f47eef1b7bc04612d076d0065f97",
       "chaveiro-painel/src/pages/__tests__/Servicos.test.jsx": "e44938311192501b836f614171bfc56509cd930b5f11f767817ca6dab29e0de9",
       "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
@@ -553,7 +554,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a3a8a0c7f8ea6f2b2452bf6e6557f35cb763c4316c495c201059df67d699272f",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "d3e460126e95047a9d6118c0fb81ac7175884740cc0dfc8aa46c3110381200bd",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -562,8 +563,8 @@
       "docs/eos-v2/RUN_STATE.json": "432148fac44166e52a6f99b63d4975672a480d31c4c0fcace6869afbfc159d2e",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "887c6ebeb046ab3761717482ef9aed877491c1d30bcc41b8c792adf8244c7832",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "9b9012df30228e1c1c956c67aeea0c37223b0702a0e8cf8df8c32569f3b8fe91",
+      "docs/eos-v2/WRITE_SET.json": "3558f662a158413356e068a72a35ca90099babca933c103ade96c75d939d7990",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "c2406ea2f6b807930ae157473bfcb4957cf75d75784114929121cc18674c1f5d",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1945,6 +1946,11 @@
       "chaveiro-painel/telas/sl06/anonimo__login__360x800.jpg": "139800:1787482666898",
       "chaveiro-painel/telas/sl06/anonimo__login__390x844.jpg": "160816:1787482673046",
       "chaveiro-painel/telas/sl06/sonda-anonimo.json": "7953:1787482687328",
+      "chaveiro-painel/telas/sl07/anonimo__redefinir-senha__1440x900.jpg": "43682:1787483364139",
+      "chaveiro-painel/telas/sl07/anonimo__redefinir-senha__1920x1080.jpg": "44343:1787483366926",
+      "chaveiro-painel/telas/sl07/anonimo__redefinir-senha__360x800.jpg": "135350:1787483358564",
+      "chaveiro-painel/telas/sl07/anonimo__redefinir-senha__390x844.jpg": "140936:1787483361416",
+      "chaveiro-painel/telas/sl07/sonda-anonimo.json": "3052:1787483366941",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1440x900.jpg": "31776:1787449723423",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1920x1080.jpg": "34802:1787449755600",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__360x800.jpg": "100624:1787449643425",
@@ -2288,24 +2294,24 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/RecuperarSenha.jsx",
+      "caminho": "chaveiro-painel/src/styles/panel-rollout.css",
       "precisao": "BOUNDED",
-      "proposito": "estado explicito para /redefinir-senha sem token",
+      "proposito": "remap dos hovers de preenchido sem cobertura",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "b35c7c0febacf415f9d75af6f9c2e3b5399eba491de729387bd8af1b81935260",
+      "shaNaDeclaracao": "4f4a63362e74f22f9517afd0d6839c5a84050e24523672f04970800c7d99fb48",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/RecuperarSenha.test.jsx",
+      "caminho": "chaveiro-painel/src/components/TourGuide.jsx",
       "precisao": "BOUNDED",
-      "proposito": "teste de rota novo: 3 caminhos do componente compartilhado",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "hover do next-btn: ciano -> padrao do btn-primary",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "00eb45c07cb93376ab0cc4982cc526d85d20c0d55e953851856c3bc2870a2636",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T11:07:00.087Z",
+  "validadoEm": "2026-08-23T11:11:36.164Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -2314,6 +2320,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Estado explicito LINK INCOMPLETO para /redefinir-senha sem token (era troca silenciosa de tarefa); roteiro rota×token com 4 testes que mordem; h1 nos estados pos-submit. 214/214.",
+  "nota": "Sobras de identidade: tour era o unico ciano renderizavel (corrigido); a classe hover era na verdade INERTE (contraprova CDP corrigiu o modelo do defeito) e o remap devolve feedback no padrao da casa. Hover real medido: base violeta -> #f8f9ff.",
   "aviso": "Declaracao ENCERRADA."
 }

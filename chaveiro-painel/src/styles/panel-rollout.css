@@ -148,6 +148,18 @@
   border-color: rgb(196 181 253 / 50%);
 }
 
+/* Preenchidos compostos por utilitário (FAB, upload de Documentos, INICIAR de MeusServicos).
+ * Medido por CDP antes desta regra: o hover era INERTE — o override de `.bg-accent-400` acima,
+ * empatado em especificidade e mais tardio que o `hover:bg-accent-300` do Tailwind, engolia o
+ * ciano legado E o feedback junto. A regra devolve o hover no padrão do btn-primary. [SL-08] */
+.panel-ui .hover\:bg-accent-300:hover {
+  background-color: var(--panel-text);
+}
+
+.panel-ui .hover\:bg-accent-400\/15:hover {
+  background-color: rgb(139 92 246 / 15%);
+}
+
 /* Botão social do login (@apply compõe o ciano no build): hover ciano → violeta,
  * borda + brilho. `:not(:disabled)` preserva o reset de sombra no estado desabilitado. */
 .panel-ui .btn-social:hover:not(:disabled) {
