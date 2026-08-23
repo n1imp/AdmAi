@@ -46118,9 +46118,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Dossie do runway: 17 capacidades com readiness e decisao (zero PREPARE_NOW), 12 areas com a condicao que decide cada veredito, notas de migracao escritas antes de esquecer o preco, 8 invariantes que a V2 nao pode quebrar. Correcao ao filtro preliminar: a condicao 1 e satisfeita pelas 17 (roadmap aprovado pela diretiva) — o corte real vem de 2/4/5. Tres perguntas encaminhadas ao Codex numa unica capsula.",
       "declaradoEm": "2026-08-23T04:51:03.969Z"
+    },
+    {
+      "sliceId": "F1-DESIGN-FOUNDATIONS",
+      "titulo": "Research registry + design guide consolidando o que existe",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "F1 completo. Registry: 14 recomendacoes, todas com desfecho (6 ADOPTED ja-existentes, 1 ADAPTED, 4 REJECTED com evidencia, 2 DEFERRED com condicao, 1 NOT_APPLICABLE, zero FORGOTTEN) — a limitacao de acesso as fontes JS-heavy registrada como evidencia. Guia: tokens/primitives/motion consolidados + as tres decisoes que faltavam (lg=1024 como fronteira de modo; --panel-data-* como fonte da paleta; Aurora em tudo com plano de conversao) + pilha fixa como contrato + piso de a11y que a sonda mede.",
+      "declaradoEm": "2026-08-23T04:56:35.474Z"
     }
   ],
-  "geradoEm": "2026-08-23T04:53:09.193Z",
+  "geradoEm": "2026-08-23T04:58:44.456Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

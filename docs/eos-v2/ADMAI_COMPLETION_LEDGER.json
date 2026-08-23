@@ -457,13 +457,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "docs/design/ADMAI_RESEARCH_RECOMMENDATION_REGISTRY.md — 14 recomendacoes, zero FORGOTTEN"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:58:44.773Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -481,13 +483,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "docs/design/ADMAI_RELEASE_DESIGN_GUIDE.md — tokens + primitives + 3 decisoes novas"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T04:58:44.774Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null

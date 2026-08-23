@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F05-RUNWAY-DOSSIER",
-  "titulo": "ADMAI_V2_RUNWAY_DOSSIER: 17 capacidades + 12 areas, zero fundacoes",
+  "sliceId": "F1-DESIGN-FOUNDATIONS",
+  "titulo": "Research registry + design guide consolidando o que existe",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:51:03.969Z",
+  "declaradoEm": "2026-08-23T04:56:35.474Z",
   "baseCommitPorLane": {
-    "HARNESS": "c9287a803c7e06bac26420fa0c0f9b73dd669e56"
+    "HARNESS": "4a3ff2e59918dea28a8bc045609228e0c4207b62"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Filtro pela regra das 7 condicoes: a condicao 1 (aprovacao estrategica) e satisfeita pelas 17 como ROADMAP — o corte real vem das condicoes 2/4/5 (retrofit posterior e ADITIVO na maioria; custo agora > retrabalho depois; sem risco de fronteira concreto). availability.mjs derivando classes do schema e O mecanismo que torna o diferimento seguro: entidade nova vira metrica servivel sem tocar o plano de metricas.",
+  "notaDeMetodo": "REFERENCE != COPY: as fontes viram principios aplicados aos NOSSOS tokens, nunca colagem. Fontes JS-heavy inacessiveis a fetch estatico — registrado como evidencia de acesso, com avaliacao por catalogo conhecido. Toda recomendacao termina com desfecho; nenhuma FORGOTTEN.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -546,6 +546,7 @@
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a0def9c0a4f7dd8d8b6bd519dc9ae7d448228de1e45da8610b06401ab2130ef2",
+      "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "c039544a7ae5193259e60d97f9b03b15fbdeb2c973e287ee9d6e87c30b812ea8",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
@@ -553,8 +554,8 @@
       "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "94856413e6e067b6cf5459343e569407bc1fb8f9c70e40137fa59ac6a5e3d972",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5d1086b5b66f684421ab353fa3b110af01c4fb38e8c22d9fb69bcbbab512f301",
+      "docs/eos-v2/WRITE_SET.json": "c43b61a3ecffb59d343bef29059242f5b40da6c089b2b8608cdf9bf5d2987d04",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "8ca7c94fe8d1962a9ca1c1440d67626ee27ef65967150d35d3d9792db24a3738",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1744,15 +1745,24 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md",
+      "caminho": "docs/design/ADMAI_RESEARCH_RECOMMENDATION_REGISTRY.md",
       "precisao": "BOUNDED",
-      "proposito": "dossie + future capability registry + invariantes + notas de migracao",
+      "proposito": "recomendacoes com desfecho e evidencia",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/design/ADMAI_RELEASE_DESIGN_GUIDE.md",
+      "precisao": "BOUNDED",
+      "proposito": "guia consolidando tokens/primitives/motion/pilha-fixa + decisoes de breakpoint e paleta",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:51:04.322Z",
+  "validadoEm": "2026-08-23T04:56:35.739Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1761,6 +1771,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Dossie do runway: 17 capacidades com readiness e decisao (zero PREPARE_NOW), 12 areas com a condicao que decide cada veredito, notas de migracao escritas antes de esquecer o preco, 8 invariantes que a V2 nao pode quebrar. Correcao ao filtro preliminar: a condicao 1 e satisfeita pelas 17 (roadmap aprovado pela diretiva) — o corte real vem de 2/4/5. Tres perguntas encaminhadas ao Codex numa unica capsula.",
+  "nota": "F1 completo. Registry: 14 recomendacoes, todas com desfecho (6 ADOPTED ja-existentes, 1 ADAPTED, 4 REJECTED com evidencia, 2 DEFERRED com condicao, 1 NOT_APPLICABLE, zero FORGOTTEN) — a limitacao de acesso as fontes JS-heavy registrada como evidencia. Guia: tokens/primitives/motion consolidados + as tres decisoes que faltavam (lg=1024 como fronteira de modo; --panel-data-* como fonte da paleta; Aurora em tudo com plano de conversao) + pilha fixa como contrato + piso de a11y que a sonda mede.",
   "aviso": "Declaracao ENCERRADA."
 }
