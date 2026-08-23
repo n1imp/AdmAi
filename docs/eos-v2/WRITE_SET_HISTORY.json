@@ -48589,9 +48589,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Tres reconciliacoes documentais: research zerado (verificacao), 29 linhas de GO_LIVE/LAUNCH com disposicao explicita, F-MAR-071 avaliado (pos-hoc mantido; provou pegar 3/3 violacoes).",
       "declaradoEm": "2026-08-23T17:35:28.079Z"
+    },
+    {
+      "sliceId": "F6-AUDIT-FINAL",
+      "titulo": "Bateria final de auditoria: allowlist do advisory novo (deepmerge-ts via prisma CLI) + gate verde",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Advisory novo (deepmerge-ts via prisma CLI) allowlisted com justificativa e reviewBy; gate re-executado do jeito documentado: APROVADO, zero bloqueante. Painel: 3 moderate = toolchain Capacitor (backlog #10, categoria C ja registrada).",
+      "declaradoEm": "2026-08-23T17:39:25.173Z"
     }
   ],
-  "geradoEm": "2026-08-23T17:36:32.195Z",
+  "geradoEm": "2026-08-23T17:39:57.930Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

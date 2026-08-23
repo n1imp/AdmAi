@@ -24,6 +24,14 @@
       "justification": "Address6 classifica errado endereço IPv4-mapeado/NAT64 — mesma classe de função de classificação nunca chamada por este projeto; estruturalmente inalcançável. Mesma investigação EV-069.",
       "reference": "docs/agent-environment/EOS_SECURITY_CLOSURE_V2_PLAN.md (linha EV-069), docs/agent-environment/SECURITY_HARDENING_BACKLOG.md item 14",
       "reviewBy": "2026-11-04"
+    },
+    {
+      "ghsaId": "GHSA-ggr8-5vv4-36mx",
+      "package": "deepmerge-ts",
+      "severity": "high",
+      "justification": "Stack exhaustion ao mesclar grafos de objeto RECURSIVOS. Unico caminho no projeto: prisma CLI -> @prisma/config -> deepmerge-ts, na carga de configuracao do proprio repositorio (prisma.config/schema) — input controlado por nos, nunca por atacante; o runtime @prisma/client (adapter-pg) nao importa deepmerge-ts. O fix do npm audit seria DOWNGRADE breaking prisma 7->6. Advisory novo detectado na bateria final de F6 (2026-08-23).",
+      "reference": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json (GATE-F6-RELEASE-ENG); npm ls deepmerge-ts",
+      "reviewBy": "2026-11-23"
     }
   ]
 }
