@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import RodapeLegal from '../components/RodapeLegal.jsx';
+import { useDocumentHead } from '../hooks/useDocumentHead.js';
 
 /**
  * Página pública de apresentação (landing). Exibida em "/" para visitantes não
@@ -55,6 +56,7 @@ const PASSOS = [
 ];
 
 export default function Landing() {
+  useDocumentHead({ indexavel: true });
   const navigate = useNavigate();
   const irParaBeta = () => navigate('/login?modo=cadastrar');
 

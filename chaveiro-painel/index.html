@@ -13,15 +13,35 @@
     />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
-    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <!-- Fallback PNG: iOS ignora SVG em apple-touch-icon; buscadores preferem raster. [F6-02] -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <title>AdmAi — Gestão para chaveiros</title>
-    <!-- Fontes via Google Fonts: Saira Condensed (display) + Sora (corpo) + JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
+    <!-- Fontes SELF-HOSTED (src/styles/fonts.css): o CDN do Google recebia o IP do visitante
+         ANTES de qualquer consentimento (medido na matriz LGPD). [F6-FONTS-PRECONSENT] -->
+
+    <!-- Social/estruturado da face pública. SEM URLs absolutas: domínio ainda não decidido
+         (GO_LIVE A5) — inventar aqui seria mentira indexável. [F6-02] -->
+    <!-- Default FAIL-CLOSED: noindex até a página pública (Landing/login/legais) trocar via
+         useDocumentHead. Painel privado indexado seria vazamento. [F6-02] -->
+    <meta name="robots" content="noindex,nofollow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="AdmAi — Gestão para chaveiros" />
+    <meta
+      property="og:description"
+      content="Registre serviços pelo WhatsApp e acompanhe receita, comissões, estoque e avaliações num painel só."
     />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "AdmAi",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Gestão para chaveiros: serviços pelo WhatsApp, receita, comissões, estoque e avaliações num painel só."
+      }
+    </script>
   </head>
   <body class="bg-dark-900 text-white">
     <div id="root"></div>

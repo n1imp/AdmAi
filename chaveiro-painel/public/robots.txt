@@ -1,0 +1,9 @@
+# AdmAi — indexável é só a face pública; o painel é privado por definição.
+# sitemap.xml entra quando o domínio de produção for decidido (GO_LIVE A5).
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /privacidade
+Allow: /termos
+Allow: /cookies
+Disallow: /

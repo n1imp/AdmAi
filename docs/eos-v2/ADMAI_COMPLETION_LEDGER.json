@@ -1346,13 +1346,16 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "robots.txt (publicas allow, resto disallow); default FAIL-CLOSED noindex no index.html com useDocumentHead proprio trocando por rota — provado em runtime: /, /privacidade, /login = index,follow com titulos proprios; /servicos autenticado = noindex,nofollow.",
+        "OG/Twitter/JSON-LD SEM URLs absolutas: dominio de producao nao decidido (GO_LIVE A5) — sitemap.xml e og:url/og:image ficam gated na decisao de dominio (registrado; fabricar URL seria mentira indexavel). Favicon PNG fallback declarado (icon-192, iOS ignora SVG)."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T15:16:47.357Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -2049,15 +2052,16 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Matriz CDP F4-04: hostsExternos contem fonts.googleapis.com e fonts.gstatic.com nos TRES estados de consentimento, inclusive SEM_ESCOLHA."
+        "Self-host: 11 woff2 latin (OFL) em public/fonts + @font-face local + preload dos 2 criticos; CDN do Google removido do head.",
+        "Prova de runtime: fontesGoogle=0 e fontesLocais=3-4 em todas as rotas sondadas, Sora aplicada — o IP do visitante nao vai mais a terceiro pre-consentimento."
       ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T15:16:47.358Z",
       "nextAction": "Em F6 (SEO/performance): self-host das fontes e re-medir a matriz.",
       "revisitCondition": null,
       "snapshotRef": null

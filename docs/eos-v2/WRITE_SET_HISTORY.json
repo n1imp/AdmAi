@@ -48477,9 +48477,23 @@
       "bloqueiaIntegracao": false,
       "nota": "F5: driver de jornadas novo (9/9 contra o stack real) que achou e corrigiu 3 defeitos de produto (401 do proprio login engolia o erro; 402 = pagina em branco -> /assinatura; deep-link sem retorno); sonda de staging pelo protocolo do usuario: staging de APLICACAO inexistente (evidencia objetiva) -> BLOCKED_EXTERNAL/D2 honesto. Painel 251/251.",
       "declaradoEm": "2026-08-23T14:05:30.315Z"
+    },
+    {
+      "sliceId": "F6-SEO-FONTS",
+      "titulo": "SEO publico + self-host das fontes (fecha F6-FONTS-PRECONSENT)",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "SEO publico honesto (sem dominio nao se fabrica URL: sitemap/og:url gated) + fontes self-hosted fechando o achado pre-consentimento da matriz LGPD. Runtime provado: robots por rota fail-closed, zero fonts.google, titulos proprios. 251/251.",
+      "declaradoEm": "2026-08-23T14:33:35.924Z"
     }
   ],
-  "geradoEm": "2026-08-23T14:31:41.157Z",
+  "geradoEm": "2026-08-23T15:16:59.036Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

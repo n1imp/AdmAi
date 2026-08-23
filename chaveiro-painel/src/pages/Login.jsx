@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDocumentHead } from '../hooks/useDocumentHead.js';
 import {
   KeyRound,
   Eye,
@@ -247,6 +248,7 @@ export default function Login() {
   }
 
   const ehCadastro = modo === 'cadastrar';
+  useDocumentHead({ titulo: ehCadastro ? 'Criar conta' : 'Entrar', indexavel: true });
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[1.05fr_1fr] bg-dark-900">

@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F5-JORNADAS-E2E",
-  "titulo": "Driver de jornadas E2E contra o stack REAL (bot+painel+Postgres+Redis) + sonda de staging",
+  "sliceId": "F6-SEO-FONTS",
+  "titulo": "SEO publico + self-host das fontes (fecha F6-FONTS-PRECONSENT)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T14:05:30.315Z",
+  "declaradoEm": "2026-08-23T14:33:35.924Z",
   "baseCommitPorLane": {
-    "HARNESS": "0f03b5eb4aa2bceec25b0ee9bf9b0fbcc1d0410e"
+    "HARNESS": "09b419833f97264aec182d7a31668b9aa569f368"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Driver novo chaveiro-painel/e2e/jornadas.mjs reutilizando cdp.mjs — NAO estende run.mjs (mock por design) nem engorda capturar.mjs (instrumento de medicao congelado). Jornadas por papel com asserts de DOM + estado via API; negativos incluidos (senha errada, 402 renderizando, deep-link diferido). A sonda de staging segue o protocolo literal do usuario: inventariar capacidade existente, sem alterar baseline, sem MCPs novos, so staging, zero secrets em qualquer saida. EXPANSAO AUTORIZADA (antes de escrever): tres defeitos REAIS achados pelas jornadas — (1) o interceptor 401 trata o 401 do PROPRIO /auth/login como sessao expirada (refresh falha -> reload -> a mensagem de senha errada nunca renderiza); (2) 402 sem tratamento global deixa pagina de produto em branco (a jornada mediu <40 chars) -> redireciona a /assinatura, superficie de SL-10; (3) RequireAuth nao preserva destino do deep-link -> state.from + navegacao pos-login. api.test.js cobre os dois interceptors.",
+  "notaDeMetodo": "Sem dominio decidido (GO_LIVE A5: nao confirmado) sitemap.xml com URLs absolutas seria fabricacao — fica declarado como pendente-de-dominio no ledger; robots.txt e meta noindex nao precisam de dominio. Favicon PNG ja existe (icons/icon-192/512) — vira fallback declarado no head (iOS ignora SVG). Fontes: os woff2 (latin) de Saira Condensed/Sora/JetBrains Mono passam a assets locais (OFL) com @font-face proprio — zero requisicao a Google pre-consentimento, e ganho de perf. useDocumentHead proprio (sem react-helmet) da titulo/descricao por rota publica e noindex nas privadas. EXPANSAO: os 11 woff2 latin baixados (OFL) — nomes so conhecidos apos parsear o CSS do Google; declarados aqui antes do fechamento.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -339,6 +339,7 @@
       "chaveiro-painel/e2e/README.md": "79845a3f619d91cdd8b47b9eb2abb7e281ac8b57d13b01a46b6268e894284164",
       "chaveiro-painel/e2e/capturar.mjs": "ae785ff8f4b71bdda2b6c146836c0c10465d2dfd4830e080c1d4d1c634d581a6",
       "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
+      "chaveiro-painel/e2e/jornadas.mjs": "4eda6421b57684ea1edb7a1d1c6253a4d5f1eca12e772f8c2a8e7b8858066905",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
       "chaveiro-painel/index.html": "a5dbefb386683538a78485ad098dda4ca34a4297e9d00739bfa4b4317519ce75",
@@ -364,7 +365,7 @@
       "chaveiro-painel/src/components/ErroBanner.jsx": "e57ac69087a5db14d4367d8144b826d152f30664a57607d4ffcb0591c59f52df",
       "chaveiro-painel/src/components/ErrorBoundary.jsx": "808ebe4cdd5f3df3aef7b991c7a0b60a39e12d6728d80980edfdc00f04f0f796",
       "chaveiro-painel/src/components/EstadoVazio.jsx": "e88a2522f8dfc665801aaadbd7e4e2cb8d74997cce65c47c0bebb0e80bdd3141",
-      "chaveiro-painel/src/components/Guards.jsx": "5ef6d7df7b673d4c688ee3c05ac6a7460d3bf10b81efc435e1b40a7d1c3295f1",
+      "chaveiro-painel/src/components/Guards.jsx": "02b89f5b9d64ce4e2ef728442dded8719dce214e6a2d3abf2df280fdd4216f63",
       "chaveiro-painel/src/components/MaterialPicker.jsx": "8bea0d237ad3fade1828f7eeb402116a82fa50bac1ab50c12a5540ea151bffb0",
       "chaveiro-painel/src/components/MatrizPermissoes.jsx": "a831ebbaad9ff854117bd0d0566fb32e426142cac74fc12bc84550a6c73297e0",
       "chaveiro-painel/src/components/PaginaLegal.jsx": "5f0fc525c51444c3067472cfdacb62fed7ad92a211741d967a757ed2a86680ba",
@@ -415,13 +416,13 @@
       "chaveiro-painel/src/hooks/usePullToRefresh.js": "0b3e5ca14d804e7b4b673887b7d159d24a60a67b1977f321777d4a03e2323795",
       "chaveiro-painel/src/hooks/useWidgetPrefs.js": "97c80c31ac93704bd990e1717c503d7f2b906a8ce63b4db2b8b5475cd5f4dd6b",
       "chaveiro-painel/src/index.css": "76c8faeb356c667ceab448a07c3b54668e91d319a3769413f864011872fe00b2",
-      "chaveiro-painel/src/lib/__tests__/api.test.js": "c0932aaca5ffd7bb89a2df989e8aab0b0de5a84c02e9f2664d96c14a650e7c3f",
+      "chaveiro-painel/src/lib/__tests__/api.test.js": "aaa30f79e5fbe53122a9cdd1ee85b7b944ea56f9750ad13372d58fa77df33aca",
       "chaveiro-painel/src/lib/__tests__/crispBootstrap.test.js": "268e67250477eff56c501ecb36ef5f0c31affaae05022a5216cd7fe56516e2f8",
       "chaveiro-painel/src/lib/__tests__/featureFlags.test.js": "d912746eccc44e56bf39cc3ea3bb3c92e87f7587ace401a0ca4519c68a20e60d",
       "chaveiro-painel/src/lib/__tests__/jwt.test.js": "082f2d45dfca68abbdba8ebb815f782589fe95f244fe3a94566888afd0800ce6",
       "chaveiro-painel/src/lib/__tests__/primeiroAcesso.test.js": "88958dada1eee3c56c2e03cdaa9587af10f81bf7192f78323a06845858c87e63",
       "chaveiro-painel/src/lib/__tests__/senha.test.js": "0023e631f440e01ef576b6e30736f0378751aed053aa11ec3089d6926af83f07",
-      "chaveiro-painel/src/lib/api.js": "e96927768b4cd1a8320953c3909ed873e91ee6e10f238e62ee0c4d89ec7a8ba2",
+      "chaveiro-painel/src/lib/api.js": "76b084573fc4047ca92d9872e6357ca2bb515913af2b34c53844914398a512e0",
       "chaveiro-painel/src/lib/cookiePolicy.js": "cb96b21e3917ace6e1bbbbc013b8489b638950cc6ccfce626caacbdb99eca30f",
       "chaveiro-painel/src/lib/crispBootstrap.js": "0e72fa2f35fd4a68bff8da3091aee9f06b102c1b267457d3d29db52b439f4def",
       "chaveiro-painel/src/lib/featureFlags.js": "f99ee8fcf6dfca93b5503648c5ce14a9255361dd11e0a4730825244a1947b8d4",
@@ -450,7 +451,7 @@
       "chaveiro-painel/src/pages/Estoque.jsx": "0a219e18c746767abab978c6f62afb9575711d00980e2113c26f4b410d4ffe93",
       "chaveiro-painel/src/pages/GestorHome.jsx": "f11111a226fb6df8469460501488f86c782e957e5fb9f1ac6d8a41dfbc7cf263",
       "chaveiro-painel/src/pages/Landing.jsx": "6124dc7481fbd173c09bfa3bf17aa8816847a3121c3c4243f6f57c39d6638d73",
-      "chaveiro-painel/src/pages/Login.jsx": "cbdaa546cb86c1b6f3250c8b54c9f4272fc5914ab9b32b8ea32b0ca2058bc724",
+      "chaveiro-painel/src/pages/Login.jsx": "813dc65b290038ec6723bd3879dacbf56b664d5b1e527773eac43e7b70b6b8a2",
       "chaveiro-painel/src/pages/MagicLink.jsx": "ca1608ecc86f8f5b1afa49f9dceed18c88f012ca6838a9b424d07acd716156a8",
       "chaveiro-painel/src/pages/Mais.jsx": "55f6e66fcbb2067231ef6776dc130efca2c410b71833301ce88212e1ebe3dec1",
       "chaveiro-painel/src/pages/MetricHub.jsx": "805e68a71427be76172e749d775ccda47a8d0f24c89820e62c6c0a1773d2df53",
@@ -566,7 +567,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "f54c6e1b7a816cc2a5b660b3c5eb328a584d688e561d537841ecd106d7b25450",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "11296d0748446a3652d1cb4825f6de90567df15315954e8e051ef22d57dcb434",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -575,8 +576,8 @@
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "587efe1283132f227be0abaef10664e49d6fcca357c943766cb0b51a8efb8fa8",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "cdca7d99711446072bc0448cc8a99c0bbaa85a8f18b6aa69c8d6ede48a7f84b5",
+      "docs/eos-v2/WRITE_SET.json": "d8fa5d99126871c62923836615f7ffa12b47cefd9655fad141145945c7fa49a9",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "93ed31fc244de384ee3311ade50bbaacae08e4e6516f0fb9dc802a554b413ff2",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2472,41 +2473,141 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/e2e/jornadas.mjs",
+      "caminho": "chaveiro-painel/index.html",
       "precisao": "BOUNDED",
-      "proposito": "driver de jornadas com stack real",
+      "proposito": "fonts locais, favicon PNG fallback, OG/Twitter/JSON-LD sem URLs inventadas",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a5dbefb386683538a78485ad098dda4ca34a4297e9d00739bfa4b4317519ce75",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/robots.txt",
+      "precisao": "BOUNDED",
+      "proposito": "novo: allow publicas, disallow privadas",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/styles/fonts.css",
+      "precisao": "BOUNDED",
+      "proposito": "novo: @font-face local",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useDocumentHead.js",
+      "precisao": "BOUNDED",
+      "proposito": "novo: titulo/descricao/robots por rota",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Landing.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "head da face publica",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6124dc7481fbd173c09bfa3bf17aa8816847a3121c3c4243f6f57c39d6638d73",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/PaginaLegal.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "head das legais",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Login.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "head do login",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "813dc65b290038ec6723bd3879dacbf56b664d5b1e527773eac43e7b70b6b8a2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/App.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "noindex nas rotas privadas (Layout)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fc4927685086b3cebd07e9448e1a4aec0c1c52f75a92a24295020a650a8e31db",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/index.css",
+      "precisao": "BOUNDED",
+      "proposito": "import do fonts.css",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "76c8faeb356c667ceab448a07c3b54668e91d319a3769413f864011872fe00b2",
+      "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T14:05:30.582Z",
+  "validadoEm": "2026-08-23T14:33:36.407Z",
   "validadoPor": "write-set-gate.mjs",
   "expansoesAutorizadas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/lib/api.js"
+      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-400.woff2"
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/Guards.jsx"
+      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-500.woff2"
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Login.jsx"
+      "caminho": "chaveiro-painel/public/fonts/jetbrains-mono-600.woff2"
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/lib/__tests__/api.test.js"
+      "caminho": "chaveiro-painel/public/fonts/saira-condensed-500.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/saira-condensed-600.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/saira-condensed-700.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/saira-condensed-800.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/sora-400.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/sora-500.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/sora-600.woff2"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/public/fonts/sora-700.woff2"
     }
   ],
-  "comparacao": "AUTHORIZED_EXPANSION",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "F5: driver de jornadas novo (9/9 contra o stack real) que achou e corrigiu 3 defeitos de produto (401 do proprio login engolia o erro; 402 = pagina em branco -> /assinatura; deep-link sem retorno); sonda de staging pelo protocolo do usuario: staging de APLICACAO inexistente (evidencia objetiva) -> BLOCKED_EXTERNAL/D2 honesto. Painel 251/251.",
+  "bloqueiaIntegracao": true,
+  "nota": "SEO publico honesto (sem dominio nao se fabrica URL: sitemap/og:url gated) + fontes self-hosted fechando o achado pre-consentimento da matriz LGPD. Runtime provado: robots por rota fail-closed, zero fonts.google, titulos proprios. 251/251.",
   "aviso": "Declaracao ENCERRADA."
 }

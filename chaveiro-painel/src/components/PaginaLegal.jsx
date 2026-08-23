@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useDocumentHead } from '../hooks/useDocumentHead.js';
 import { KeyRound, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { ATUALIZADO_EM } from '../lib/legal.js';
 
@@ -7,6 +8,7 @@ import { ATUALIZADO_EM } from '../lib/legal.js';
  * `doc` estruturado de lib/legal.js e renderiza título, seções e listas.
  */
 export default function PaginaLegal({ doc }) {
+  useDocumentHead({ titulo: doc?.titulo, indexavel: true });
   return (
     <div className="min-h-dvh bg-dark-900">
       <header className="border-b border-dark-600">
