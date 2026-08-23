@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "SL-06-LOGIN-CADASTRO",
-  "titulo": "Dobra do cadastro em 360/390 — marca em linha no mobile; MUST_REVIEW via Codex REVISOR delta",
+  "sliceId": "SL-07-RECUPERACAO-TOKENS",
+  "titulo": "/redefinir-senha sem token ganha estado explicito; magic/verificar/convite auditados",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T10:57:38.489Z",
+  "declaradoEm": "2026-08-23T11:06:59.869Z",
   "baseCommitPorLane": {
-    "HARNESS": "f3780e690a1d22c8625b479ca609459af75640bf"
+    "HARNESS": "d0855fe699473c8f31bab68bbb996100dc7233bc"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Dos tres itens do mandato, dois ja medem resolvidos (residuais de sonda = 0 em tudo; campos sob banner = hit-test limpo pos-CONSENT-01). O residuo real e a dobra do cadastro: bloco de marca vertical de ~140px vira linha compacta (icone 40px + wordmark) SOMENTE em <lg, e o container aperta py no mobile. Nada muda em lg+ (la a marca vive no painel esquerdo). Prova: sonda antes/depois + alturaDoc; revisao obrigatoria Codex REVISOR sobre o delta.",
+  "notaDeMetodo": "O gap real: /recuperar-senha e /redefinir-senha compartilham componente e o roteiro era 'token ? redefinir : pedido' — link quebrado de redefinicao caia CALADO na tela de pedido, trocando a tarefa sem avisar. Estado explicito espelha o cartao de link-invalido do MagicLink (padrao ja aprovado), com h1 de tarefa (regra SL-03). magic/verificar/convite ja tem estados explicitos medidos pela sonda de SL-03; a fatia os audita por teste de rota, sem tocar neles.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -443,7 +443,7 @@
       "chaveiro-painel/src/pages/Estoque.jsx": "0a219e18c746767abab978c6f62afb9575711d00980e2113c26f4b410d4ffe93",
       "chaveiro-painel/src/pages/GestorHome.jsx": "57d36637e88e27012b8de8830f6738fa2e32845831dd28158a5cc71099cdf581",
       "chaveiro-painel/src/pages/Landing.jsx": "ce21558578beb0de7f11b87f091075a07f53ac6a4f01c3477c96a5206822e2ee",
-      "chaveiro-painel/src/pages/Login.jsx": "c3b145d431dabd07fad3d9c9015d4335da8bb683cddc095e79fd67acbc806c5e",
+      "chaveiro-painel/src/pages/Login.jsx": "cbdaa546cb86c1b6f3250c8b54c9f4272fc5914ab9b32b8ea32b0ca2058bc724",
       "chaveiro-painel/src/pages/MagicLink.jsx": "ca1608ecc86f8f5b1afa49f9dceed18c88f012ca6838a9b424d07acd716156a8",
       "chaveiro-painel/src/pages/Mais.jsx": "55f6e66fcbb2067231ef6776dc130efca2c410b71833301ce88212e1ebe3dec1",
       "chaveiro-painel/src/pages/MetricHub.jsx": "805e68a71427be76172e749d775ccda47a8d0f24c89820e62c6c0a1773d2df53",
@@ -553,7 +553,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "0e5551c2ac46b330b84e75d06b7eaba9a9ea973c975a13f867f87679e4fa0144",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a3a8a0c7f8ea6f2b2452bf6e6557f35cb763c4316c495c201059df67d699272f",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -562,8 +562,8 @@
       "docs/eos-v2/RUN_STATE.json": "432148fac44166e52a6f99b63d4975672a480d31c4c0fcace6869afbfc159d2e",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "9c5b8ed5ab39282d6547ec7676a17eb080e1e735a4dd37f30e0c2497563884c8",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "083d6430052732f646daf47b810408a8cc6c8a364f3cecf0b818eadb9f2b5ac7",
+      "docs/eos-v2/WRITE_SET.json": "887c6ebeb046ab3761717482ef9aed877491c1d30bcc41b8c792adf8244c7832",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "9b9012df30228e1c1c956c67aeea0c37223b0702a0e8cf8df8c32569f3b8fe91",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1936,6 +1936,15 @@
       "chaveiro-painel/telas/sl06-antes/anonimo__login__360x800.jpg": "136626:1787482487955",
       "chaveiro-painel/telas/sl06-antes/anonimo__login__390x844.jpg": "149229:1787482494353",
       "chaveiro-painel/telas/sl06-antes/sonda-anonimo.json": "8495:1787482508717",
+      "chaveiro-painel/telas/sl06/anonimo__login-modo-cadastrar__1440x900.jpg": "94086:1787482681856",
+      "chaveiro-painel/telas/sl06/anonimo__login-modo-cadastrar__1920x1080.jpg": "107682:1787482687320",
+      "chaveiro-painel/telas/sl06/anonimo__login-modo-cadastrar__360x800.jpg": "150665:1787482669951",
+      "chaveiro-painel/telas/sl06/anonimo__login-modo-cadastrar__390x844.jpg": "165716:1787482676349",
+      "chaveiro-painel/telas/sl06/anonimo__login__1440x900.jpg": "90395:1787482679141",
+      "chaveiro-painel/telas/sl06/anonimo__login__1920x1080.jpg": "99368:1787482684620",
+      "chaveiro-painel/telas/sl06/anonimo__login__360x800.jpg": "139800:1787482666898",
+      "chaveiro-painel/telas/sl06/anonimo__login__390x844.jpg": "160816:1787482673046",
+      "chaveiro-painel/telas/sl06/sonda-anonimo.json": "7953:1787482687328",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1440x900.jpg": "31776:1787449723423",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__1920x1080.jpg": "34802:1787449755600",
       "chaveiro-painel/telas/sweep-anon/anonimo__convite-x__360x800.jpg": "100624:1787449643425",
@@ -2279,15 +2288,24 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Login.jsx",
+      "caminho": "chaveiro-painel/src/pages/RecuperarSenha.jsx",
       "precisao": "BOUNDED",
-      "proposito": "marca mobile em linha + py-6 mobile no container do formulario",
+      "proposito": "estado explicito para /redefinir-senha sem token",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c3b145d431dabd07fad3d9c9015d4335da8bb683cddc095e79fd67acbc806c5e",
+      "shaNaDeclaracao": "b35c7c0febacf415f9d75af6f9c2e3b5399eba491de729387bd8af1b81935260",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/RecuperarSenha.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "teste de rota novo: 3 caminhos do componente compartilhado",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T10:57:38.771Z",
+  "validadoEm": "2026-08-23T11:07:00.087Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -2296,6 +2314,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Dobra do cadastro: -108px no mobile via marca em linha; submit de volta a dobra em 360/390. MUST_REVIEW: Codex REVISOR APROVADO (thread 01a02e48). Ressalva do revisor (metrica mede topo, nao visibilidade integral) coberta pela captura visual anexa.",
+  "nota": "Estado explicito LINK INCOMPLETO para /redefinir-senha sem token (era troca silenciosa de tarefa); roteiro rota×token com 4 testes que mordem; h1 nos estados pos-submit. 214/214.",
   "aviso": "Declaracao ENCERRADA."
 }

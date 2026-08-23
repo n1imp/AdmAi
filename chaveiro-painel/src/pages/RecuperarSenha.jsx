@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import {
   KeyRound,
+  XCircle,
   AtSign,
   Eye,
   EyeOff,
@@ -14,9 +15,39 @@ import api from '../lib/api.js';
 
 export default function RecuperarSenha() {
   const [params] = useSearchParams();
+  const { pathname } = useLocation();
   const token = params.get('token');
-  // Quando `token` está na URL, estamos na etapa de redefinição; senão, na de pedido.
-  return token ? <TelaRedefinir token={token} /> : <TelaRecuperar />;
+  if (token) return <TelaRedefinir token={token} />;
+  /* /redefinir-senha SEM token é link quebrado (e-mail truncou a URL, copia incompleta) — a
+     tela diz isso e oferece pedir outro, em vez de trocar a tarefa em silêncio pela de
+     pedido, que era o comportamento antigo e deixava o usuário sem saber o que houve. [SL-07] */
+  if (pathname === '/redefinir-senha') return <TelaLinkIncompleto />;
+  return <TelaRecuperar />;
+}
+
+function TelaLinkIncompleto() {
+  return (
+    <ContainerPublico>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <XCircle size={44} className="text-danger" />
+        <div>
+          <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
+            Link incompleto
+          </h1>
+          <p className="text-muted text-sm mt-1">
+            Este link de redefinição está sem o código de segurança — em geral o e-mail cortou o
+            endereço. Peça um novo link para continuar.
+          </p>
+        </div>
+        <Link to="/recuperar-senha" className="btn-primary w-full">
+          Pedir novo link
+        </Link>
+        <Link to="/login" className="btn-secondary w-full">
+          Voltar ao login
+        </Link>
+      </div>
+    </ContainerPublico>
+  );
 }
 
 function TelaRecuperar() {
@@ -49,9 +80,9 @@ function TelaRecuperar() {
         <div className="flex flex-col items-center gap-4 text-center">
           <CheckCircle size={44} className="text-success" />
           <div>
-            <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+            <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
               Verifique seu e-mail
-            </p>
+            </h1>
             <p className="text-muted text-sm mt-1">
               Se existe uma conta com esse e-mail, enviamos um link para redefinir a senha.
               Verifique também a caixa de spam.
@@ -148,9 +179,9 @@ function TelaRedefinir({ token }) {
         <div className="flex flex-col items-center gap-4 text-center">
           <CheckCircle size={44} className="text-success" />
           <div>
-            <p className="font-display font-bold text-white text-lg uppercase tracking-wide">
+            <h1 className="font-display font-bold text-white text-lg uppercase tracking-wide">
               Senha redefinida!
-            </p>
+            </h1>
             <p className="text-muted text-sm mt-1">
               Sua senha foi atualizada. Todas as sessões anteriores foram encerradas.
             </p>

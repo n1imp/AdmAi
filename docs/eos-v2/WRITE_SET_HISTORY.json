@@ -48288,9 +48288,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Dobra do cadastro: -108px no mobile via marca em linha; submit de volta a dobra em 360/390. MUST_REVIEW: Codex REVISOR APROVADO (thread 01a02e48). Ressalva do revisor (metrica mede topo, nao visibilidade integral) coberta pela captura visual anexa.",
       "declaradoEm": "2026-08-23T10:57:38.489Z"
+    },
+    {
+      "sliceId": "SL-07-RECUPERACAO-TOKENS",
+      "titulo": "/redefinir-senha sem token ganha estado explicito; magic/verificar/convite auditados",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Estado explicito LINK INCOMPLETO para /redefinir-senha sem token (era troca silenciosa de tarefa); roteiro rota×token com 4 testes que mordem; h1 nos estados pos-submit. 214/214.",
+      "declaradoEm": "2026-08-23T11:06:59.869Z"
     }
   ],
-  "geradoEm": "2026-08-23T11:06:30.608Z",
+  "geradoEm": "2026-08-23T11:09:49.747Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

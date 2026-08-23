@@ -681,13 +681,18 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "/redefinir-senha sem token: estado explicito LINK INCOMPLETO (h1 de tarefa, saida Pedir novo link) no lugar da troca silenciosa pela tela de pedido — sonda confirma nos 4 viewports.",
+        "Teste de rota 4/4 cobrindo o roteiro rota×token (incl. deep-link antigo /recuperar-senha?token=x); sabotagem do roteiro derruba 1 — morde.",
+        "Titulos dos estados pos-submit (Verifique seu e-mail / Senha redefinida!) promovidos a h1 — mesma regra de SL-03, estados que a sonda de URL nao alcanca.",
+        "magic/verificar/convite: estados explicitos ja medidos em SL-03 (Link invalido ou expirado / LINK INVALIDO / CONVITE INVALIDO) — auditados, intocados. Painel 214/214."
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T11:09:47.959Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
