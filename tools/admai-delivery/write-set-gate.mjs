@@ -80,6 +80,55 @@ export const CLASSES_DE_COMPARACAO = Object.freeze([
  */
 export const RAIZES_NAO_OBSERVADAS = Object.freeze(['node_modules', '.git']);
 
+/**
+ * EFEITO DE RUNTIME DA APLICAÇÃO ≠ ESCRITA DE ENGENHARIA.  [F0-02 · D-F0-02]
+ *
+ * Rodar as suítes de integração do bot faz a APLICAÇÃO gravar arquivos reais em uploads-docs/,
+ * uploads-ponto/ e uploads/ — efeito do produto funcionando, não do executor editando. Sem esta
+ * distinção, cada COMPARE de fatia que rode integração acusava `UNDECLARED_ARTIFACT_WRITE` em
+ * série, e a pressão levaria de volta ao erro do `.gitignore`: silenciar o detector.
+ *
+ * A CLASSIFICAÇÃO É POR RAIZ + FORMA DE NOME, decidida em D-F0-02 (Codex DECISOR, CONCORDO):
+ *   - só FILHOS DIRETOS das raízes — subdiretório nunca é runtime;
+ *   - só nomes com a forma que a aplicação de fato gera, todos server-side com `randomUUID()`:
+ *       uploads-docs/doc-<uuid4>.(pdf|jpg|png)        — documentos.js:54-56
+ *       uploads-ponto/ponto-<uuid4>.(jpg|png|webp)    — tecnicos.js:110-142
+ *       uploads/<uuid4>.<ext alfanumérica>            — inbound.js:321
+ *       uploads/produto-<uuid4>.(jpg|png|webp|gif)    — estoque.js:128 (produtor que a evidência
+ *                                                       original OMITIU; correção do Decisor)
+ *   - UUID v4 ESTRITO (versão 4, variante 89ab) — o permissivo [0-9a-f-]{36} aceitaria nomes que
+ *     `randomUUID()` nunca produz, e a isenção ficaria mais larga que o produtor.
+ *
+ * O QUE ISTO NÃO É: isenção invisível. Todo caminho classificado como runtime aparece no
+ * resultado estruturado e no relatório, com lista completa — a lição de CONTROLE_ARTEFATO.md é
+ * que isenção que se vê é auditável e isenção que apaga não é. Nome fora da forma sob as MESMAS
+ * raízes continua sendo engenharia e bloqueia como `UNDECLARED_ARTIFACT_WRITE`.
+ *
+ * LIMITE DECLARADO: escrita de engenharia deliberadamente nomeada como UUID v4 válido passa por
+ * runtime. Coerente com o modelo já aceito da dimensão (tamanho:mtime forjável): isto detecta
+ * acidente, não adversário.
+ */
+const UUID_V4 = '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+export const FORMAS_DE_RUNTIME = Object.freeze([
+  { raiz: 'chaveiro-bot/uploads-docs', forma: new RegExp(`^doc-${UUID_V4}\\.(pdf|jpg|png)$`) },
+  { raiz: 'chaveiro-bot/uploads-ponto', forma: new RegExp(`^ponto-${UUID_V4}\\.(jpg|png|webp)$`) },
+  { raiz: 'chaveiro-bot/uploads', forma: new RegExp(`^produto-${UUID_V4}\\.(jpg|png|webp|gif)$`) },
+  { raiz: 'chaveiro-bot/uploads', forma: new RegExp(`^${UUID_V4}\\.[a-z0-9]+$`) },
+]);
+
+/** Caminho RELATIVO À LANE → é efeito de runtime da aplicação? Puro; criação, alteração e
+ *  remoção passam pela mesma regra, porque a regra só olha o caminho. */
+export function ehEfeitoDeRuntime(caminho) {
+  for (const { raiz, forma } of FORMAS_DE_RUNTIME) {
+    if (!caminho.startsWith(`${raiz}/`)) continue;
+    const resto = caminho.slice(raiz.length + 1);
+    if (resto.includes('/')) continue;   // subdiretório não é runtime
+    if (forma.test(resto)) return true;
+  }
+  return false;
+}
+
+
 const sha = (caminho) =>
   (existsSync(caminho) ? createHash('sha256').update(readFileSync(caminho)).digest('hex') : null);
 
@@ -954,8 +1003,15 @@ export function compararRodada(decl = lerDeclaracao()) {
      Precedência: `UNDECLARED_WRITE` em fonte continua sendo a classe mais forte; artefato só
      decide a classe quando a fonte não acusou nada. Mas o campo aparece SEMPRE, porque isenção
      que se vê é auditável e isenção que apaga não é — mesmo princípio de `livroRazao`. */
+  /* Partição ANTES do cálculo de não-declarados: runtime sai do caminho bloqueante mas nunca
+     do relatório. A qualificação `LANE::` é removida só para a checagem de forma — nome idêntico
+     fora da raiz correta não ganha isenção. [D-F0-02] */
+  const efeitosDeRuntime = obs.artefatosDisponivel
+    ? (obs.artefatosObservados ?? []).filter((c) => ehEfeitoDeRuntime(c.replace(/^[A-Z_]+::/, '')))
+    : null;
   const artefatosNaoDeclarados = obs.artefatosDisponivel
     ? (obs.artefatosObservados ?? []).filter((c) => {
+        if (ehEfeitoDeRuntime(c.replace(/^[A-Z_]+::/, ''))) return false;
         const raizes = artefatosDeclarados(decl);
         return !raizes.some((raiz) => c === raiz || c.startsWith(raiz.replace(/\/?$/, '/')));
       })
@@ -973,7 +1029,8 @@ export function compararRodada(decl = lerDeclaracao()) {
     escopo: obs.escopo, lanes: obs.lanes, observado: obs.observado,
     livroRazao: obs.livroRazao, ignoradosAgora: obs.ignoradosAgora,
     artefatosObservados: obs.artefatosObservados ?? null,
-    artefatosNaoDeclarados
+    artefatosNaoDeclarados,
+    efeitosDeRuntime
   };
 }
 
@@ -1034,6 +1091,12 @@ export function executar(argv = []) {
     if (r.artefatosNaoDeclarados === null) console.log('  artefatos ignorados : SEM BASELINE — dimensao indisponivel');
     else if (r.artefatosNaoDeclarados.length) console.log(`  ARTEFATO IGNORADO E NAO DECLARADO : ${r.artefatosNaoDeclarados.slice(0, 8).join(', ')}${r.artefatosNaoDeclarados.length > 8 ? ` (+${r.artefatosNaoDeclarados.length - 8})` : ''}`);
     else if (r.artefatosObservados?.length) console.log(`  artefatos escritos e DECLARADOS : ${r.artefatosObservados.length} caminhos`);
+    if (r.efeitosDeRuntime?.length) {
+      console.log(
+        `  efeito de RUNTIME da aplicacao (nao bloqueia, sempre visivel) : ${r.efeitosDeRuntime.length} caminhos` +
+          ` — ${r.efeitosDeRuntime.slice(0, 3).join(', ')}${r.efeitosDeRuntime.length > 3 ? ' …' : ''}`
+      );
+    }
     console.log('  LIMITE: diferenca liquida contra o baseline, nao historico de escritas.');
     console.log('    arquivo escrito e depois restaurado ao conteudo do baseline e invisivel aqui.');
     return r.classe === 'UNDECLARED_WRITE' || r.classe === 'UNKNOWN_DIFFERENCE' ? 1 : 0;
@@ -1348,6 +1411,99 @@ export function executar(argv = []) {
 
     return { depois, gitCego, ignoraNodeModules, alterado, removido, base };
   })();
+
+  /* ── RUNTIME vs ENGENHARIA: os testes obrigatorios de D-F0-02 ──────────────
+     Repositorio sintetico com as MESMAS raizes relativas do produto. A regra e de caminho puro,
+     entao vale identica aqui e la — e o teste nao depende do estado real de uploads-*. */
+  const runtimeSintetico = (() => {
+    const dir = mkdtempSync(join(tmpdir(), 'ws-rt-'));
+    execFileSync('git', ['-C', dir, 'init', '-q']);
+    execFileSync('git', ['-C', dir, 'config', 'user.email', 'a@b.c']);
+    execFileSync('git', ['-C', dir, 'config', 'user.name', 't']);
+    writeFileSync(join(dir, '.gitignore'), 'chaveiro-bot/uploads-docs/\nchaveiro-bot/uploads-ponto/\nchaveiro-bot/uploads/\n');
+    writeFileSync(join(dir, 'fonte.txt'), 'x');
+    execFileSync('git', ['-C', dir, 'add', '-A']);
+    execFileSync('git', ['-C', dir, 'commit', '-q', '-m', 'base']);
+    for (const d of ['uploads-docs', 'uploads-ponto', 'uploads', 'uploads/sub']) {
+      mkdirSync(join(dir, 'chaveiro-bot', d), { recursive: true });
+    }
+    const U = '3b241101-e2bb-4255-8caf-4136c566a962';   // v4 valido, variante 8
+    const decl = () => ({
+      lanes: { A: dir },
+      baselinePorLane: { A: shasDaLane(dir) },
+      artefatosPorLane: { A: artefatosIgnorados(dir) },
+      baseCommitPorLane: { A: execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() },
+      entradas: []
+    });
+
+    // Rodada 1: as quatro formas validas + um arquivo de engenharia em cada raiz.
+    const d1 = decl();
+    writeFileSync(join(dir, 'chaveiro-bot/uploads-docs', `doc-${U}.pdf`), 'a');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads-ponto', `ponto-${U}.webp`), 'b');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads', `${U}.jpeg`), 'c');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads', `produto-${U}.gif`), 'd');
+    const soRuntime = compararRodada(d1);
+
+    // Rodada 2 (misto): runtime valido + engenharia nas mesmas raizes + near-misses.
+    const d2 = decl();
+    writeFileSync(join(dir, 'chaveiro-bot/uploads-docs', 'manual.txt'), 'eng');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads-docs', `doc-${U.replace('-4', '-1')}.pdf`), 'v1');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads-docs', `doc-${U}.exe`), 'ext');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads/sub', `${U}.jpg`), 'subdir');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads', `produto-${U}.png`), 'rt');
+    const misto = compararRodada(d2);
+
+    // Rodada 3: misto com UNDECLARED_WRITE de FONTE — a classe de fonte prevalece.
+    const d3 = decl();
+    writeFileSync(join(dir, 'clandestino-fonte.txt'), 'w');
+    writeFileSync(join(dir, 'chaveiro-bot/uploads', `${U}.png`), 'rt2');
+    const comFonte = compararRodada(d3);
+
+    // Rodada 4: ALTERACAO e REMOCAO de arquivo runtime passam pela mesma regra.
+    const d4 = decl();
+    writeFileSync(join(dir, 'chaveiro-bot/uploads', `${U}.jpeg`), 'ALTERADO');
+    rmSync(join(dir, 'chaveiro-bot/uploads', `produto-${U}.gif`), { force: true });
+    const mudanca = compararRodada(d4);
+
+    return { soRuntime, misto, comFonte, mudanca, U };
+  })();
+
+  const casosDeRuntime = [
+    /* Cada forma valida classifica como runtime, aparece no resultado e NAO bloqueia. */
+    ['as 4 formas validas classificam como runtime e nao bloqueiam',
+      runtimeSintetico.soRuntime.efeitosDeRuntime.length === 4
+      && runtimeSintetico.soRuntime.artefatosNaoDeclarados.length === 0
+      && !CLASSES_QUE_BLOQUEIAM.includes(runtimeSintetico.soRuntime.classe)],
+    ['runtime aparece SEMPRE no resultado estruturado (isencao visivel, lista completa)',
+      runtimeSintetico.soRuntime.efeitosDeRuntime.every((c) => c.startsWith('A::chaveiro-bot/upload'))],
+    ['produto-<uuid> (produtor que a evidencia original omitiu) esta coberto',
+      runtimeSintetico.soRuntime.efeitosDeRuntime.some((c) => c.includes('produto-'))],
+    /* Arquivo de engenharia dentro da raiz de runtime AINDA acusa — o .gitignore 2.0 nao passa. */
+    ['engenharia sob a raiz de runtime bloqueia: manual.txt',
+      runtimeSintetico.misto.artefatosNaoDeclarados.some((c) => c.endsWith('manual.txt'))],
+    ['near-miss bloqueia: UUID de versao errada',
+      runtimeSintetico.misto.artefatosNaoDeclarados.some((c) => c.includes('-e2bb-1255-'))],
+    ['near-miss bloqueia: extensao fora da tabela do produtor',
+      runtimeSintetico.misto.artefatosNaoDeclarados.some((c) => c.endsWith('.exe'))],
+    ['near-miss bloqueia: nome valido em SUBDIRETORIO',
+      runtimeSintetico.misto.artefatosNaoDeclarados.some((c) => c.includes('/sub/'))],
+    ['caso misto reporta AMBOS e a classe bloqueante prevalece',
+      runtimeSintetico.misto.classe === 'UNDECLARED_ARTIFACT_WRITE'
+      && runtimeSintetico.misto.efeitosDeRuntime.some((c) => c.endsWith('.png'))],
+    /* Precedencia: UNDECLARED_WRITE de fonte nao e rebaixado pela dimensao de artefato. */
+    ['misto com escrita de FONTE preserva UNDECLARED_WRITE e ainda reporta runtime',
+      runtimeSintetico.comFonte.classe === 'UNDECLARED_WRITE'
+      && runtimeSintetico.comFonte.efeitosDeRuntime.length === 1],
+    ['alteracao E remocao de runtime classificam pela mesma regra de caminho',
+      runtimeSintetico.mudanca.efeitosDeRuntime.length === 2
+      && runtimeSintetico.mudanca.artefatosNaoDeclarados.length === 0],
+    /* Multi-lane: a forma so vale sob a raiz certa — mesmo nome fora dela nao ganha isencao. */
+    ['nome runtime-shaped FORA da raiz nao recebe isencao',
+      ehEfeitoDeRuntime(`outra/raiz/doc-${runtimeSintetico.U}.pdf`) === false
+      && ehEfeitoDeRuntime(`chaveiro-bot/uploads-docs/doc-${runtimeSintetico.U}.pdf`) === true],
+    ['UUID permissivo NAO passa: variante fora de [89ab] e recusada',
+      ehEfeitoDeRuntime(`chaveiro-bot/uploads-docs/doc-${runtimeSintetico.U.replace('-8caf', '-7caf')}.pdf`) === false],
+  ];
 
   const declSemArtefatos = { lanes: { A: laneA }, baselinePorLane: { A: {} }, entradas: [] };
 
@@ -1786,7 +1942,7 @@ export function executar(argv = []) {
   rmSync(laneA, { recursive: true, force: true });
   rmSync(laneB, { recursive: true, force: true });
 
-  for (const [rotulo, cond] of [...sabotagens, ...casosComparacao, ...casosRetroativos, ...casosObservacao, ...casosDeArtefato, ...casosMultiLane]) {
+  for (const [rotulo, cond] of [...sabotagens, ...casosComparacao, ...casosRetroativos, ...casosObservacao, ...casosDeArtefato, ...casosDeRuntime, ...casosMultiLane]) {
     check(rotulo, cond, 'controle falhou');
   }
 

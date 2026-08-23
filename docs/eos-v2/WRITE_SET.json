@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "F0-03-06-HIGIENE",
-  "titulo": "RUN_STATE regenerado + referencia a availability desambiguada",
+  "sliceId": "F0-02-RUNTIME-SIDE-EFFECT",
+  "titulo": "Gate distingue efeito de runtime da aplicacao de escrita de engenharia",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T04:23:21.311Z",
+  "declaradoEm": "2026-08-23T04:28:03.078Z",
   "baseCommitPorLane": {
-    "HARNESS": "aa14e3b9886942a35a7b4327efac403e57121011"
+    "HARNESS": "decf9b65ad4d401285889007af8cc4e1a223eae6"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "RUN_STATE.json esta 24 commits atras do HEAD e o handoff manda regenerar antes de confiar em qualquer campo observado. Os comentarios de contrato.js e calculo.js dizem 'ver availability.mjs' sem caminho — o modulo vive em tools/admai-delivery/metric/, nao ao lado, e a exploracao desta sessao o deu por inexistente por causa disso.",
+  "notaDeMetodo": "Decisao D-F0-02 (Codex DECISOR, CONCORDO, confianca ALTA): classificacao por raiz + forma de nome server-generated com UUID v4 estrito, so filhos diretos, precedencia bloqueante preservada, listas estruturadas completas. Codex corrigiu a evidencia: quarto produtor produto-<uuid> em estoque.js:128 — verificado.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -179,9 +179,9 @@
       "chaveiro-bot/src/services/idempotencia.js": "896754cbba19ec6a570ff62a74e9a5cb1110003521976005f081c0092bf0d0fd",
       "chaveiro-bot/src/services/identidade.js": "ffa5ff28399aaace3fd109c47acf70758db157ba5c3cc80414facf5452398f39",
       "chaveiro-bot/src/services/inbound.js": "db42dd53b0bd8613ba937c4a859664a3bc495c12c9f21a179aa7e382aeaf638a",
-      "chaveiro-bot/src/services/metricas/calculo.js": "3aabefacf6416f420fcbebeb2f0fc7f1d5282c6b4b90cf07bca9a14c04cfefbd",
+      "chaveiro-bot/src/services/metricas/calculo.js": "96b29fc7d1985d5b3ac53fc0d1961afbcba4bcc5203b0cace1d12765bac02f7b",
       "chaveiro-bot/src/services/metricas/consulta.js": "448966c70119c75cff3f130e2841c06ac75e50e6d3849cfee1cb17601b41be46",
-      "chaveiro-bot/src/services/metricas/contrato.js": "b0daa7e8a86479373eabae213d607006fe5c2cded86e86070ad19614976fa8bb",
+      "chaveiro-bot/src/services/metricas/contrato.js": "f23be62b79aa540ae50f277968f6cd9667271164dcd45933c1fb3f1322d7a222",
       "chaveiro-bot/src/services/metricas/exposicao.js": "093726d6336c42082256c076fd02950cb2379c13bf0808e40058204d8db73a76",
       "chaveiro-bot/src/services/metricas/registro.js": "b0ff48790b507a62cd8f36b330e729aceab065665e23bdedf18f2c0e0cf512b3",
       "chaveiro-bot/src/services/notificacao.js": "14b9d8113b40c1e9fe6a30a808da589edf0ccb55dfa38c160995684a21ae219d",
@@ -548,11 +548,11 @@
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "039e5051f88cebf90dbad7994189ee3929de0caeda3cc69ee7d0ce272b8b7379",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RUN_STATE.json": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
+      "docs/eos-v2/RUN_STATE.json": "0af1b17f0443f79888e60708fe1f4f240a87e04e8773976aa3068c74b4f1856c",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "2d74f51b0a95ec1baf1e787c27e86895911ae1f093ddb9a1d0ac7fdc6ce6c0c9",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "7ecc06bba6595b17c7c35fcd4426b24ad2fc5a9c4814e17f64e9cd24dc20ed61",
+      "docs/eos-v2/WRITE_SET.json": "ea6d07fc204159e79f1fc3cbc575d52f1f1adbabad87583132c75e43bf7bd001",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "4c852da5732fe85015a3e9ee35e14d0add0134a4762a7d0fafe038b890864dd5",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1741,33 +1741,24 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/RUN_STATE.json",
+      "caminho": "tools/admai-delivery/write-set-gate.mjs",
       "precisao": "BOUNDED",
-      "proposito": "regenerado por run-state.mjs",
+      "proposito": "classe APPLICATION_RUNTIME_SIDE_EFFECT + selftests obrigatorios da decisao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "f2145c342a2d5fef8b6e600976f06a5026e9dcd0e0bf307ec18c42ef1f226e33",
+      "shaNaDeclaracao": "8e5a53371d5135edcc508575e51bcc8938c22280087b1c1f3b90c12594e26915",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/metricas/contrato.js",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "caminho completo na referencia",
+      "proposito": "registro da decisao material D-F0-02 (fallback designado — o plano ativo vive fora do repo)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "b0daa7e8a86479373eabae213d607006fe5c2cded86e86070ad19614976fa8bb",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/metricas/calculo.js",
-      "precisao": "BOUNDED",
-      "proposito": "caminho completo na referencia",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "3aabefacf6416f420fcbebeb2f0fc7f1d5282c6b4b90cf07bca9a14c04cfefbd",
+      "shaNaDeclaracao": "5ef1b89b5d4da189a93ddaf759bec43496438cb52b8a00ada951543c36389176",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T04:23:21.690Z",
+  "validadoEm": "2026-08-23T04:28:04.217Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1776,6 +1767,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "RUN_STATE regenerado apos 24 commits de defasagem (handoff mandava nao confiar no campo observado antigo). Comentarios de contrato.js e calculo.js agora apontam o caminho completo de availability.mjs — a ambiguidade fez a exploracao desta sessao dar o modulo por inexistente.",
+  "nota": "D-F0-02 aplicada: FORMAS_DE_RUNTIME (4 produtores, UUID v4 estrito, filhos diretos) + ehEfeitoDeRuntime + particao antes do calculo de nao-declarados + campo efeitosDeRuntime sempre visivel. 12 controles novos, selftest 121/121. Codex corrigiu a evidencia (produto-<uuid> em estoque.js:128) e a correcao foi verificada no fonte antes de entrar na regra.",
   "aviso": "Declaracao ENCERRADA."
 }
