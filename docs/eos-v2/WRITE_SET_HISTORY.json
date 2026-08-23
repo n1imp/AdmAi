@@ -51300,7 +51300,14 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "D2 amendment: LEGAL->DEFERRED_BY_D2 (finding preservado, NOT_ACCEPTED, nao PASS), WhatsApp->DEFERRED_BY_SCOPE/POST_MVP, novo estado DEFERRED_BY_D2 na taxonomia com regra de revisita, terminal ADMAI_RELEASE_CANDIDATE_READY.",
-      "declaradoEm": "2026-08-23T23:46:11.931Z"
+      "declaradoEm": "2026-08-23T23:46:11.931Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — D2 amendment do usuario",
+        "justificativa": "A declaracao listou o ledger .json e o registry, mas o estado novo DEFERRED_BY_D2 exigiu tocar tambem tools/admai-delivery/completion-ledger.mjs (taxonomia ESTADOS + regra de revisitCondition) — parte inseparavel de introduzir o estado que o amendment pediu, nao previsto na declaracao. Conteudo provado (ledger valida 4/4) e commitado (06c18cc).",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "Introduzir estado/enum novo no ledger declara o completion-ledger.mjs (dono da taxonomia) junto com o .json de dados."
+      }
     }
   ],
   "geradoEm": "2026-08-23T23:48:07.984Z",
