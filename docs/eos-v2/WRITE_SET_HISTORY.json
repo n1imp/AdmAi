@@ -48196,10 +48196,17 @@
       "provenance": "ORIGINAL_PRE_MUTATION",
       "bloqueiaIntegracao": true,
       "nota": "GAP-UX-A11Y-NOME-01 CLOSED. A parte mais valiosa da fatia foi descobrir que o achado estava INFLADO pela propria sonda — 13 superficies viraram 5 arquivos reais depois de a medida resolver associacao de label. Correcoes: aria-label nos 5 olhos, Campo envolvendo o controle (formulario inteiro de uma vez), De/Ate associados, e focavel-porem-oculto morto nos graficos (accessibilityLayer off + inert, com prova CDP de foco bloqueado).",
-      "declaradoEm": "2026-08-23T06:12:04.142Z"
+      "declaradoEm": "2026-08-23T06:12:04.142Z",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (writer) — fechamento da missao SL-01",
+        "justificativa": "A fatia declarou so o surface-registry, mas o passo de prettier reformatou TAMBEM os 6 arquivos da fatia-mae arquivada (paginas + sonda) DEPOIS do baseline — formatacao pura, sem mudanca semantica, nos mesmos arquivos cuja mutacao ja fora reconciliada na mae. Conteudo aceito; a ordem certa era formatar ANTES de declarar o fechamento, ou declarar os arquivos.",
+        "provenance": "ORIGINAL_PRE_MUTATION",
+        "correcaoDeProcesso": "prettier roda DENTRO da fatia que tocou os arquivos, nunca na fatia seguinte."
+      }
     }
   ],
-  "geradoEm": "2026-08-23T06:13:55.691Z",
+  "geradoEm": "2026-08-23T06:14:27.932Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
