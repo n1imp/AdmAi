@@ -1271,7 +1271,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_EXTERNAL",
+      "status": "BLOCKED_CAPABILITY",
       "blockerRefs": [
         "GAP-STG-01"
       ],
@@ -1281,9 +1281,9 @@
         "Sonda F5-02: staging de aplicacao inexistente (Railway sem servicos; admai-staging pausado). Validacao real impossivel sem provisionar."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-23T14:29:40.886Z",
-      "nextAction": "Apos decisao D2 de provisionar: religar admai-staging, deployar bot+painel, rodar smoke (jornadas.mjs aponta ADMAI_URL).",
-      "revisitCondition": "Usuario autoriza provisionamento de staging (Railway service + unpause do Supabase admai-staging).",
+      "lastAttempt": "2026-08-23T23:51:16.104Z",
+      "nextAction": "Ver STG-02-USO (consolidado no D2 amendment).",
+      "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
       "snapshotRef": null
     },
     {
@@ -2140,6 +2140,62 @@
       "lastAttempt": "2026-08-23T22:51:56.000Z",
       "nextAction": "Idempotencia por chave de sessao pendente OU checar sessions abertas no Stripe antes de criar.",
       "revisitCondition": "Primeira assinatura duplicada observada, OU aumento de concorrencia/multiplos admins no checkout, OU antes de automatizar totalmente a cobranca.",
+      "snapshotRef": null
+    },
+    {
+      "workId": "STG-01-ISOLAMENTO",
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "alto",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DONE",
+      "description": "CONFIRM_STAGING_ISOLATION (identidade): admai-staging != AdmAi (prod) — projetos Supabase distintos.",
+      "dependencies": [],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Dashboard Supabase (org n1imp, leitura, zero secrets tocados): dois projetos SEPARADOS — AdmAi (ativo, NANO, sa-east-1) presumido PRODUCAO e admai-staging (PAUSADO, sa-east-1). Nomes/refs distintos => STAGING_PROJECT != PRODUCTION_PROJECT por construcao.",
+        "Projeto AdmAi (prod) NAO foi aberto nem tocado — so a lista da org foi lida. NO_PRODUCTION_CUSTOMER_IMPACT: nenhuma acao executada em qualquer projeto.",
+        "DB != DB e CREDENTIALS != CREDENTIALS decorrem de serem projetos Supabase distintos (cada um tem seu proprio Postgres e suas proprias chaves); a comparacao byte a byte das credenciais exigiria le-las (secrets) — nao feita por politica."
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-23T23:51:16.104Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
+    },
+    {
+      "workId": "STG-02-USO",
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "alto",
+      "authority": "EXTERNAL",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "APPLICATION_STAGING + DOCUMENT_STORAGE + MIGRATIONS + STAGING_RUNTIME + STAGING_E2E no admai-staging real.",
+      "dependencies": [
+        "STG-01-ISOLAMENTO"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Credenciais de staging AUSENTES no ambiente: existe apenas chaveiro-bot/.env.staging.example (template), sem .env.staging real. Sem DATABASE_URL/SERVICE_ROLE_KEY do admai-staging nao ha como conectar, migrar, rodar runtime nem criar bucket.",
+        "Obter os secrets pelo dashboard os traria ao transcript/logs (proibido: nao expor secrets); usa-los em comandos idem. O amendment e claro: nao inventar credentials; ausentes => BLOCKED_CAPABILITY + revisitCondition + seguir trabalho independente.",
+        "Storage e COMPATIVEL com Supabase (services/storage.js usa @supabase/supabase-js): quando as credenciais existirem, o bucket de documentos entra no mesmo projeto staging."
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-23T23:51:16.104Z",
+      "nextAction": "Com .env.staging local: despausar admai-staging, prisma migrate deploy, provisionar bucket, rodar jornadas.mjs com ADMAI_URL/DATABASE_URL de staging, matriz de documentos no bucket.",
+      "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
       "snapshotRef": null
     }
   ],
