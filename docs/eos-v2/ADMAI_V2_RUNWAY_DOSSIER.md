@@ -16,8 +16,8 @@ Snapshot: branch `fix/seguranca-criticos`, pós-`c9287a8`. Evidência arquitetur
 | 26 modelos Prisma, **todos** `Int @id @default(autoincrement())` | `chaveiro-bot/prisma/schema.prisma` (única exceção: singleton `ConexaoBot`) |
 | **Não existem**: `Cliente`, `Orcamento`, `Agendamento`, `Lead/Oportunidade`, unidade/filial, event/outbox, tabela de idempotência, período de fechamento de comissão, histórico de invoice | schema completo |
 | Cliente final é **inline**: `Servico.clienteNome/clienteTelefone`, duplicado em `Avaliacao`; identidade por casamento de telefone com tolerância de 9º dígito | `schema.prisma:139-140,342-343`; `variantesTelefone` em `avaliacao.js:133`, `admin.js:463` |
-| O plano de métricas **já declara o futuro**: 11 métricas, 3 não-servíveis porque `sourceEntities` nomeia modelos inexistentes (`taxa-recompra`→Cliente; `taxa-conversao-orcamento`→Orcamento; `ocupacao-agenda`→Agendamento; família `CRM_FUTURE`→Lead/Oportunidade), com taxonomia `REQUIRES_CUSTOMER/SCHEDULING/BUDGET/WARRANTY/CRM` | `src/services/metricas/registro.js:381-456`, `contrato.js:45-56` |
-| A classe de disponibilidade é **DERIVADA do schema**, não anotada: entidade nova no schema flipa a métrica para servível sem tocar o plano | `tools/admai-delivery/metric/availability.mjs` |
+| O plano de métricas **já declara o futuro**: 12 métricas, 4 não-servíveis porque `sourceEntities` nomeia modelos inexistentes (`taxa-recompra`→Cliente; `taxa-conversao-orcamento`→Orcamento; `ocupacao-agenda`→Agendamento; família `CRM_FUTURE`→Lead/Oportunidade), com taxonomia `REQUIRES_CUSTOMER/SCHEDULING/BUDGET/WARRANTY/CRM` | `src/services/metricas/registro.js:381-456`, `contrato.js:45-56` |
+| A classe de disponibilidade é **DERIVADA do schema**, não anotada: entidade nova no schema satisfaz o **pré-requisito NOMINAL** da métrica sem tocar o plano — a própria ferramenta avisa que isso não confirma campos nem fórmula (`availability.mjs:180`); um modelo `Cliente` vazio produziria falso verde, e é por isso que a virada real exige a camada de cálculo | `tools/admai-delivery/metric/availability.mjs` |
 | Comissão é coluna denormalizada computada na escrita (`comissaoGerada`); a **taxa usada não é gravada**; pendente = `sum(comissaoGerada) − sum(Pagamento.valor)` derivado em leitura | `servicos.js:202`, `tecnicos.js:463-465` |
 | Idempotência é **Redis-only e fail-open** (`marcarSeNovo`, SET NX), usada só para dedup de webhook Stripe/WhatsApp; sem `Idempotency-Key` em endpoint de escrita | `services/idempotencia.js:8-38`; `billing.js:86`, `inbound.js:61` |
 | Quase-idempotência de negócio por **constraint + claim**: `Avaliacao.servicoId @unique` + upsert; aprovação por `updateMany {status:'pendente'}` atômico (corrida provada por sonda de mutação); estoque por `increment` atômico | `avaliacao.js:35`; `servicos.js:277-293` + `aprovacao_rejeicao_estoque.test.js:462`; `services/estoque.js:57-61` |
@@ -42,7 +42,8 @@ retrofit teria custo material (offline), o custo AGORA é maior ainda e não há
 
 O mecanismo que torna esse diferimento SEGURO já está construído e testado: o registro de métricas
 nomeia as entidades ausentes e `availability.mjs` deriva a classe do schema — quando `Cliente`
-nascer, `taxa-recompra` vira servível sem ninguém lembrar de nada.
+nascer, `taxa-recompra` sai de `REQUIRES_CUSTOMER` sozinha, **no plano nominal** (a ferramenta
+avisa que não confirma campos nem fórmula; a camada de cálculo continua sendo trabalho declarado).
 
 ## 3. Future Capability Registry — as 17
 
@@ -59,7 +60,7 @@ FOUNDATION_REQUIRED_NOW · DEFERRED_SAFELY · ARCHITECTURAL_RISK · UNKNOWN`) ·
 | 5 | `GARANTIAS` | vínculo a Servico | classe REQUIRES_WARRANTY na taxonomia; `finalizadoEm` | modelo Garantia + prazos | aditivo | DEFERRED_SAFELY | DEFER |
 | 6 | `OFFLINE_SYNC` | IDs estáveis client-generated + idempotência por operação + resolução de conflito | chaves de ARTEFATO já são uuid server-side (`doc-<uuid>`), padrão isolado | uuid por ENTIDADE sincronizável, `Idempotency-Key`, clock/merge | **26 modelos em Int autoincrement**: é a maior distância arquitetural do sistema. Retrofit = colunas uuid ADITIVAS só nas tabelas que sincronizam + unique, não big-bang | **ARCHITECTURAL_RISK** | DEFER — com o caminho aditivo registrado em §5; preparar agora violaria as condições 4 e 5 |
 | 7 | `PAGAMENTOS` (cliente final) | entidade de transação de serviço | Stripe SDK/webhook/idempotência de evento já operacionais para o SaaS | Transacao de serviço + conciliação | não confundir com billing do SaaS (separação já limpa) | DEFERRED_SAFELY | DEFER |
-| 8 | `FINANCEIRO_AVANCADO` | período de fechamento, extrato imutável | `MovimentacaoEstoque` prova que o padrão ledger é da casa; `Pagamento` + derivação de pendente funcionam | entidade de fechamento; **taxa de comissão não é snapshotada** (recuperável por divisão `comissaoGerada/valorLiquido`, com ressalva de arredondamento a 2dp) | mudar `Tecnico.comissao` não reescreve histórico (certo), mas a taxa vigente à época só existe por inferência | DEFERRED_SAFELY | DEFER — questão levada ao Codex (§6) |
+| 8 | `FINANCEIRO_AVANCADO` | período de fechamento, extrato imutável | `MovimentacaoEstoque` prova que o padrão ledger é da casa; `Pagamento` + derivação de pendente funcionam | entidade de fechamento; **taxa de comissão não é snapshotada** (recuperável por divisão `comissaoGerada/valorLiquido`, com ressalva de arredondamento a 2dp) | mudar `Tecnico.comissao` não reescreve histórico (certo), mas a taxa vigente à época só existe por inferência | MINOR_EXTENSION_REQUIRED | **PREPARADA** (`FIX-COMISSAO-SNAPSHOT`); fechamento de período segue DEFER |
 | 9 | `FORNECEDORES` | Fornecedor + compra | `Material.preco/unidade` | modelo + entrada de compra ligada à movimentação | aditivo | DEFERRED_SAFELY | DEFER |
 | 10 | `ESTOQUE_AVANCADO` | multi-depósito, lote, inventário | **ledger append-only já existe** (`MovimentacaoEstoque` com `saldoApos`, baixa atômica, origem rastreada) | localização/lote como dimensões novas | aditivo sobre ledger existente | MINOR_EXTENSION_REQUIRED | DEFER |
 | 11 | `PORTAL_CLIENTE` | Cliente + ator externo autenticado | avaliação pública por link já exercita acesso não-autenticado controlado | modelo de principal externo (hoje só `Usuario` interno) | fronteira de segurança NOVA — nunca improvisar sobre `Usuario` | DEFERRED_SAFELY | DEFER |
@@ -78,13 +79,13 @@ incertezas listadas são da V2, e a V2 não está autorizada).
 | # | Área | Veredito | Por quê (condição que decide) |
 | --- | --- | --- | --- |
 | 1 | IDs estáveis/client-generated | DEFER | c4/c5: converter 26 modelos agora é o maior custo do sistema para capacidade sem data; caminho aditivo registrado |
-| 2 | Idempotência | DEFER + invariante | c2: dedup é local a 2 webhooks; **invariante registrada**: `marcarSeNovo` é best-effort FAIL-OPEN — Redis fora = dedup desligado em silêncio. Revisita: provider real OU incidente de duplicata (item no ledger) |
+| 2 | Idempotência | **CORRIGIDA NO PRODUTO** (`FIX-IDEMP-PERDA`, consenso pós-revisão) | O Revisor derrubou o DEFER original: marcar-antes-de-processar DESCARTAVA o evento quando o handler falhava (o reenvio caía em "duplicado" por 24h). Remédio menor consensuado: desmarcar-na-falha nos dois consumidores + timeouts explícitos no cliente (sem eles, fail-open era espera indefinida). Recepção durável fica como preparação V2 com gatilho: incidente real, volume relevante ou necessidade de replay/auditoria. Modos residuais documentados no próprio serviço |
 | 3 | Domain events/outbox | DEFER | c1-consumidor/c3: nenhum consumidor; outbox sem leitor é infraestrutura exposta |
 | 4 | Fronteira de Cliente | DEFER | c2: extração é aditiva com backfill por telefone (§5); LGPD já opera no modelo atual |
 | 5 | Histórico/relações de serviço | DEFER | `Servico` já carrega ciclo completo (aprovação, início, fim, materiais, comissão) |
 | 6 | Fronteira de atribuição | DEFER | `tecnicoId` + claim atômico de aprovação cobrem o MVP |
-| 7 | Fronteira de transação financeira | DEFER | ver #8 do registry; questão da taxa ao Codex |
-| 8 | Movimentos de inventário | **JÁ FEITO** | ledger com `saldoApos` + atomicidade + origem — nada a preparar |
+| 7 | Fronteira de transação financeira | **PREPARADA em parte** (`FIX-COMISSAO-SNAPSHOT`) | O Revisor provou que a "recuperação por divisão" era mentira aritmética (toFixed(2): líquido 1,01 a 5% grava 0,05 → divisão devolve 4,95%; líquido zero nem divide). `comissaoTaxaAplicada` agora é snapshot imutável nos dois produtores; histórico anterior fica NULL — lacuna honesta. **Risco nomeado**: todo valor monetário é `Float` — classificado `ARCHITECTURAL_RISK` (conversão a decimal exato NÃO autorizada agora; item no ledger com revisita) |
+| 8 | Movimentos de inventário | **ESTAVA DECLARADO E NÃO ENTREGUE — corrigido** (`FIX-ESTOQUE-CORRIDA`) | O dossiê original repetiu a promessa do comentário do código; o Revisor provou que o piso e o `saldoApos` eram computados contra leitura stale (duas saídas de 7 sobre 10 → saldo real −4 com dois ledgers dizendo 3; sabotagem reproduziu −11). Agora: `SELECT FOR UPDATE` serializa movimentos do mesmo material; concorrência provada em integração |
 | 9 | Tenant vs unidade | DEFER | c5: sem risco concreto; costura (`local`) identificada |
 | 10 | Extensibilidade de ator/principal | DEFER | c3: principal externo sem portal é superfície de ataque sem produto |
 | 11 | Integration ports/adapters | **JÁ FEITO** (caso a caso) | gateway WhatsApp prova o padrão; generalizar sem consumidor é proibido pelo anti-overengineering |
@@ -105,18 +106,23 @@ incertezas listadas são da V2, e a V2 não está autorizada).
   congelamento dos serviços do período. Se o Codex confirmar a suficiência da recuperação por
   divisão, nenhum snapshot de taxa entra agora.
 - **Multiunidade** (14): `Unidade {empresaId}` + `unidadeId` opcional em Tecnico/Servico/Material;
-  a extensão de tenant ganha o segundo filtro SOMENTE quando a coluna existir (fail-closed:
-  ausência de unidade = escopo da empresa inteira, comportamento atual).
+  a extensão de tenant ganha o segundo filtro com semântica EXPLÍCITA de posse: papéis com
+  escopo global são NOMEADOS; para os demais, associação de unidade obrigatória e ausência =
+  NEGAR (correção do Revisor: "ausência = empresa inteira" não é fail-closed em relação ao
+  escopo de unidade — é o furo com outro nome).
 - **Cloud/mídia** (12): enfileirar o inbound Cloud na MESMA `filaMensagens` (produtor já existe);
   normalizar mídia no cloud-gateway antes do `inbound.js` (que não muda).
 
-## 6. Encaminhado ao Codex (uma cápsula REVISOR, não doze)
+## 6. Revisão Codex — RESOLVIDA (thread 01a02cf7 + rodada de evidência)
 
-1. **Área 2**: invariante documentada basta, ou a dedup de webhook merece persistência agora?
-2. **Área 7/#8**: a recuperação da taxa por divisão (`comissaoGerada/valorLiquido`, 2dp) é
-   suficiente como trilha, ou o snapshot da taxa é fundação barata que evita retrabalho material?
-3. **Confirmação do filtro**: alguma das 17 linhas ou 12 áreas está com veredito errado — em
-   especial, algum `DEFER` que feche uma porta cara?
+Veredito: `CORRECOES_NECESSARIAS` — três achados ALTA, todos VERIFICADOS no código antes de
+aceitos, todos corrigidos como fatias de produto FORA de F0.5 (`FIX-IDEMP-PERDA`,
+`FIX-COMISSAO-SNAPSHOT`, `FIX-ESTOQUE-CORRIDA`) com sabotagem provando que cada teste morde.
+Na rodada de evidência, o remédio menor da idempotência foi CONSENSUADO (a tabela durável ficou
+como preparação V2 com gatilho). Dois achados MÉDIA absorvidos neste documento (números 12/4 e
+semântica nominal da disponibilidade; fail-closed da multiunidade). Os demais DEFER foram
+confirmados pelo Revisor como defensáveis. Registro completo: D-F05-REV-01 em
+`AGENT_DECISIONS.md`.
 
 ## 7. Invariantes arquiteturais que a V2 NÃO pode quebrar
 
@@ -140,5 +146,8 @@ recusado por padrão — o repositório já provou o custo do contrário.
 
 - `NO_SPECULATIVE_V2_IMPLEMENTATION`: **PASS por construção** — o único write set desta fase
   (`F05-RUNWAY-DOSSIER`) declara apenas este arquivo. Verificação: `WRITE_SET_HISTORY.json`.
-- `ADMAI_V2_ARCHITECTURAL_RUNWAY_READY`: PASS condicionado à revisão Codex (§6) arquivada no
-  ledger (`RUNWAY-02-CODEX`).
+- `ADMAI_V2_ARCHITECTURAL_RUNWAY_READY`: **PASS** — revisão executada, correções aplicadas e
+  provadas, decisão arquivada. Nota de honestidade do gate NO_SPECULATIVE: as três correções
+  tocaram `src/**`, mas NÃO são fundações especulativas nem write sets desta fase — são defeitos
+  de features INCLUÍDAS descobertos PELA revisão, executados como fatias de release (fase F0 no
+  ledger), cada um com teste que morde provado por sabotagem.

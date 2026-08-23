@@ -46188,9 +46188,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Achado 2 aplicado como fundacao barata e nao-especulativa: comissaoTaxaAplicada Float? gravada pelos DOIS produtores (rota e WhatsApp), migracao aditiva no padrao das 27 existentes, aplicada em test e dev. Teste prova o caso aritmetico exato do achado e que liquido zero deixa de apagar a informacao. Historico permanece NULL — lacuna honesta.",
       "declaradoEm": "2026-08-23T05:39:37.864Z"
+    },
+    {
+      "sliceId": "F05-CORRECOES-REVISAO",
+      "titulo": "Dossie corrigido pela revisao + decisao registrada + gate RUNWAY_READY",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Dossie absorve a revisao: numeros 12/4, disponibilidade como pre-requisito NOMINAL, areas 2/7/8 reclassificadas com as tres correcoes implementadas, Float monetario nomeado ARCHITECTURAL_RISK, multiunidade com fail-closed explicito. D-F05-REV-01 registrado com as posicoes, o consenso e os DOIS defeitos meus que as sabotagens pegaram. Gate ADMAI_V2_ARCHITECTURAL_RUNWAY_READY: PASS.",
+      "declaradoEm": "2026-08-23T05:47:27.569Z"
     }
   ],
-  "geradoEm": "2026-08-23T05:46:21.439Z",
+  "geradoEm": "2026-08-23T05:49:10.860Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -18,6 +18,20 @@ Use este ledger somente quando uma missao nao possuir plano ou contrato ativo. D
 
 ## Registros
 
+### D-F05-REV-01 — revisao do runway V2 · 2026-08-23
+
+| Campo | Conteudo |
+| --- | --- |
+| `DECISAO_ID` | D-F05-REV-01 |
+| `MISSAO` | F0.5 do programa aprovado: dossie de runway com PREPARE_NOW/DEFER sob a regra das 7 condicoes; revisao Codex obrigatoria antes do gate. |
+| `EVIDENCIAS` | docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md @ 4a3ff2e; verificacoes linha a linha dos tres achados ANTES de aceitar (idempotencia marca-antes-de-processar; toFixed(2)+Float na comissao; piso stale no estoque com sabotagem reproduzindo -11). |
+| `POSICAO_CLAUDE` | Zero fundacoes; area 2 como invariante documentada; #8 defer com recuperacao por divisao; #10 'ja feito'. Na rodada de evidencia: remedio menor para a idempotencia (desmarcar-na-falha) em vez de tabela duravel. |
+| `POSICAO_CODEX` | CORRECOES_NECESSARIAS: 3 ALTA (perda de evento por marca-antes; divisao nao reconstitui taxa + Float monetario e ARCHITECTURAL_RISK; ledger de estoque prometia atomicidade que nao entregava) + 2 MEDIA (numeros 12/4; availability e pre-requisito nominal; multiunidade sem fail-closed real). Na rodada de evidencia: CONCORDO com o remedio menor, corrigindo minha invariante (flush FAVORECE retry) e exigindo timeouts para o fail-open ser declaravel + testes obrigatorios. |
+| `DECISAO_FINAL` | Tres correcoes de produto implementadas como fatias proprias fora de F0.5 (FIX-IDEMP-PERDA, FIX-COMISSAO-SNAPSHOT, FIX-ESTOQUE-CORRIDA), cada uma com sabotagem provando que o teste morde; dossie absorve as MEDIA; recepcao duravel e conversao decimal ficam como preparacao V2 com gatilho registrado no ledger. |
+| `THREAD` | Codex REVISOR 01a02cf7-842a-7e10-941e-3a7322620802 (+ rodada unica de evidencia na mesma thread) |
+| `IMPACTO` | services/idempotencia.js (+desmarcar, timeouts), routes/billing.js, services/inbound.js, services/estoque.js (FOR UPDATE), schema+migracao comissaoTaxaAplicada, dossie. Dois defeitos MEUS pegos pelas sabotagens no caminho: enableOfflineQueue:false anulava a primeira marca de cada processo; assert =4 no teste de rajada sobre-especificava a ordem do escalonador. |
+| `TESTES` | webhook_idempotencia_perda 6/6 com dupla sabotagem; estoque_concorrencia 3/3 x6 execucoes com sabotagem -11; servico_comissao_snapshot 2/2 com o caso aritmetico exato; vizinhos: inbound_idempotencia 7/7, billing 7/7, aprovacao_rejeicao 12/12, idor_escrita 7/7. |
+
 ### D-F0-02-RUNTIME-SIDE-EFFECT — 2026-08-23
 
 | Campo | Conteudo |

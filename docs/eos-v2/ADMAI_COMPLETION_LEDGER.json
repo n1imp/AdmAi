@@ -411,13 +411,15 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "ADMAI_V2_RUNWAY_DOSSIER.md @ 4a3ff2e + correcoes da revisao absorvidas"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T05:49:08.533Z",
       "nextAction": "escrever dossie com filtro deterministico primeiro",
       "revisitCondition": null,
       "snapshotRef": null
@@ -435,13 +437,16 @@
       "authority": "CODEX_D1",
       "owner": "claude",
       "requiredReviewer": "CODEX",
-      "status": "NOT_READY",
+      "status": "DONE",
       "blockerRefs": [],
       "findingRefs": [],
       "writeSetRef": null,
-      "evidenceRefs": [],
+      "evidenceRefs": [
+        "thread 01a02cf7: CORRECOES_NECESSARIAS -> 3 correcoes implementadas e provadas -> gate PASS",
+        "D-F05-REV-01"
+      ],
       "attemptCount": 0,
-      "lastAttempt": null,
+      "lastAttempt": "2026-08-23T05:49:08.534Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -1881,6 +1886,54 @@
       "lastAttempt": "2026-08-23T05:46:19.191Z",
       "nextAction": null,
       "revisitCondition": null,
+      "snapshotRef": null
+    },
+    {
+      "workId": "V2-PREP-RECEPCAO-DURAVEL",
+      "phase": "F0.5",
+      "domain": "billing",
+      "description": "Recepcao duravel de webhook (unicidade provider/evento + estado retryable) — preparacao V2 consensuada como diferida",
+      "dependencies": [],
+      "priority": "P2",
+      "risk": "baixo",
+      "authority": "CODEX_D1",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DEFERRED_BY_SCOPE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "D-F05-REV-01"
+      ],
+      "writeSetRef": null,
+      "evidenceRefs": [],
+      "attemptCount": 0,
+      "lastAttempt": null,
+      "nextAction": null,
+      "revisitCondition": "incidente real de evento perdido/duplicado, volume de webhook relevante, ou necessidade de replay/auditoria independente",
+      "snapshotRef": null
+    },
+    {
+      "workId": "V2-RISK-FLOAT-MONETARIO",
+      "phase": "F0.5",
+      "domain": "financeiro",
+      "description": "Valores monetarios em Float — ARCHITECTURAL_RISK nomeado; conversao a representacao exata NAO autorizada agora",
+      "dependencies": [],
+      "priority": "P2",
+      "risk": "medio",
+      "authority": "USER_D2",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DEFERRED_BY_SCOPE",
+      "blockerRefs": [],
+      "findingRefs": [
+        "D-F05-REV-01"
+      ],
+      "writeSetRef": null,
+      "evidenceRefs": [],
+      "attemptCount": 0,
+      "lastAttempt": null,
+      "nextAction": null,
+      "revisitCondition": "FINANCEIRO_AVANCADO entrar em escopo OU divergencia de centavos observada em conciliacao real",
       "snapshotRef": null
     }
   ]

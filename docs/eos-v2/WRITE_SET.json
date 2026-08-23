@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FIX-COMISSAO-SNAPSHOT",
-  "titulo": "Snapshot imutavel da taxa de comissao aplicada (achado 2 — gate de schema)",
+  "sliceId": "F05-CORRECOES-REVISAO",
+  "titulo": "Dossie corrigido pela revisao + decisao registrada + gate RUNWAY_READY",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T05:39:37.864Z",
+  "declaradoEm": "2026-08-23T05:47:27.569Z",
   "baseCommitPorLane": {
-    "HARNESS": "f5f42a1552257021309ea77bd5da59ca602ad64a"
+    "HARNESS": "c3e3aa7dd74a8d25e7590a49739c05937db5b5fe"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Divisao nao reconstitui a taxa: toFixed(2) + Float dao 4.95% onde a taxa era 5% (liquido 1.01), e liquido zero torna a divisao impossivel. Coluna ADITIVA nullable — historico permanece null, honesto. Escrita nos DOIS produtores (rota e WhatsApp). Migracao manual no padrao das 27 existentes; irreversibilidade da lacuna cresce por dia.",
+  "notaDeMetodo": "As tres correcoes de produto do consenso ja foram implementadas como fatias proprias FORA de F0.5 (FIX-*, fase F0 no ledger) — o gate NO_SPECULATIVE segue verdadeiro para os write sets DA FASE. O dossie absorve: numeros 12/4, availability como pre-requisito nominal, areas 2/7/8 reclassificadas com as correcoes, Float monetario nomeado ARCHITECTURAL_RISK, multiunidade com fail-closed explicito.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -79,9 +79,10 @@
       "chaveiro-bot/prisma/migrations/20260717000001_documentos_tecnico/migration.sql": "2d816f3d601701a1e8ba54d87a2fea1bf77f51299d788b28b63ea111c75a6cb9",
       "chaveiro-bot/prisma/migrations/20260718000000_usuario_preferencias/migration.sql": "3a70649f590acb76200f6d6b8455a39129d5c646e2c4cdf1d0a074293700cb01",
       "chaveiro-bot/prisma/migrations/20260803000000_usuario_telefone_unique/migration.sql": "2c21e061f28c768e0f1cf2a76186d6ca64d4574f8eaf72c4feafacf305089519",
+      "chaveiro-bot/prisma/migrations/20260823000100_servico_comissao_taxa_aplicada/migration.sql": "38f58ab3026d1e10aac04cbe8e540153a0daca9c8a6e251d7e61f81a836229df",
       "chaveiro-bot/prisma/migrations/migration_lock.toml": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
-      "chaveiro-bot/prisma/schema.prisma": "07ad02f4edd91c20771a695f93780421185410900480b1b3dd5586af604f2466",
+      "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
       "chaveiro-bot/railway.json": "52a096a722987c3946e711362abfff4ce1743c0bba7a437e348dc88ba3084a80",
@@ -132,7 +133,7 @@
       "chaveiro-bot/src/routes/estoque.js": "2d99713fe061b92bee1e28e74891e7547e112e141f36c9752365bfcbc98adc77",
       "chaveiro-bot/src/routes/google.js": "dc14bf1c077b0b48c9e0940aad501e77b005b452e5db0059dfeb086a3e7ad0c8",
       "chaveiro-bot/src/routes/metricas.js": "063be56c5c62fa2555e719e122e59be3ce494aa3d73e7b1fbc32b0e97fe71547",
-      "chaveiro-bot/src/routes/servicos.js": "7fed80c3d3658961ba87b55990250221f4096d42e8e79c8c6518d503bfcebd70",
+      "chaveiro-bot/src/routes/servicos.js": "eb99821e11c86503b0bcba78890ead997977e0ca17ca38890870d8664782d4d8",
       "chaveiro-bot/src/routes/tecnicos.js": "fc0d2d0a5cca97eb26983a6b60e23e860276f0c38bb7663debd20b6e681c3478",
       "chaveiro-bot/src/routes/whatsapp.js": "43319cfe463e5034b63cd44961fbb934d6c0f901de3823d66ad901605f34a54b",
       "chaveiro-bot/src/server.js": "90ec6dc7d1cb2306b849f66a35c11eefc73eebd3f72a3c7535da859f4bc3b871",
@@ -178,7 +179,7 @@
       "chaveiro-bot/src/services/google/oauth.js": "56981a1569a83eaca573b877199e15ce2b5e242a2290f7c02f4fb1e3713636bc",
       "chaveiro-bot/src/services/idempotencia.js": "5b584362b27c33a6a2d3dd6f77d9309bd75e1ab9efdbc391bf3756a95ffcb823",
       "chaveiro-bot/src/services/identidade.js": "ffa5ff28399aaace3fd109c47acf70758db157ba5c3cc80414facf5452398f39",
-      "chaveiro-bot/src/services/inbound.js": "8fe7536b6720501487a808ec32675a368fd480e898802b4bbd0a0d23a471f4d1",
+      "chaveiro-bot/src/services/inbound.js": "26d57c873a6d7ffb31a7c76b5c5080e66a238bf91fef8fa29d006e7583cf6a81",
       "chaveiro-bot/src/services/metricas/calculo.js": "96b29fc7d1985d5b3ac53fc0d1961afbcba4bcc5203b0cace1d12765bac02f7b",
       "chaveiro-bot/src/services/metricas/consulta.js": "448966c70119c75cff3f130e2841c06ac75e50e6d3849cfee1cb17601b41be46",
       "chaveiro-bot/src/services/metricas/contrato.js": "f23be62b79aa540ae50f277968f6cd9667271164dcd45933c1fb3f1322d7a222",
@@ -258,6 +259,7 @@
       "chaveiro-bot/test/integration/rls.test.js": "e2ca5f68066d9a667a9d4db1a65dd3e0053ddd173cbd0469073e57163f248906",
       "chaveiro-bot/test/integration/seguranca.test.js": "69b43cd7206f9be7f006b752d5050f858f335c0b8809b826e9776a0cf0430f1c",
       "chaveiro-bot/test/integration/servico_atual.test.js": "21a481cf594dea41705189cae8fd5735602f5ff3befdf74346725fcae68fe72a",
+      "chaveiro-bot/test/integration/servico_comissao_snapshot.test.js": "2afba0772b2ab75c08c4b9f07496504225456defbf0eeab2960995370612ab3d",
       "chaveiro-bot/test/integration/servicos_keyset.test.js": "669e28c47183517bce2c1321a9ef0b92fa6dcc594b444bbbbfa4937c3b00feea",
       "chaveiro-bot/test/integration/takeover_reset_pin.test.js": "872af06df4a59ae2f5ec38173c404581e80ed50521bbf47ce861d557570d515f",
       "chaveiro-bot/test/integration/tecnico_criacao.test.js": "5dc4c9086bb26fd12838d242223cf09d2331eabb7a308dee3d5dc81b48ba1f2b",
@@ -549,7 +551,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7053123a2621002780f9eaca590e332b3df9619e8b99629c4e29ff99934e94fd",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "d63d15e94020269d8e498510fe695a1daba0ac4b7a096206ea26bb0dfbce7dfc",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "c039544a7ae5193259e60d97f9b03b15fbdeb2c973e287ee9d6e87c30b812ea8",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -558,8 +560,8 @@
       "docs/eos-v2/RUN_STATE.json": "efaed44ecdf06c5e9bf2a2725ecd945189e8514e430da1bdbe1258bf39025da5",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a4edfeb8da88bb7eaed0c5d50b57c1652f4081899d4b3450492a0b3326dab0e2",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "99866586f0cfa701efffe1b2daa719c25fc140736998152e5bbd03c2addb2fd3",
+      "docs/eos-v2/WRITE_SET.json": "6d4c1f0ed04797b416c8413774de29d4f18c6894bd8313231cc155119c402e1d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "a457eb97a5bc0b9c53ed4ad478f0a51ede950d90f7899bd097e1ebdb5197f660",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -1746,59 +1748,27 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [
-    "chaveiro-bot/uploads-docs",
-    "chaveiro-bot/uploads-ponto",
-    "chaveiro-bot/uploads"
-  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/schema.prisma",
+      "caminho": "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md",
       "precisao": "BOUNDED",
-      "proposito": "comissaoTaxaAplicada Float? em Servico",
+      "proposito": "correcoes do Revisor absorvidas",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "07ad02f4edd91c20771a695f93780421185410900480b1b3dd5586af604f2466",
+      "shaNaDeclaracao": "c039544a7ae5193259e60d97f9b03b15fbdeb2c973e287ee9d6e87c30b812ea8",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/migrations/20260823000100_servico_comissao_taxa_aplicada/migration.sql",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "ALTER TABLE aditivo",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/servicos.js",
-      "precisao": "BOUNDED",
-      "proposito": "grava a taxa no produtor da rota",
+      "proposito": "D-F05-REV-01: veredito, rodada de evidencia, consenso, correcoes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7fed80c3d3658961ba87b55990250221f4096d42e8e79c8c6518d503bfcebd70",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/services/inbound.js",
-      "precisao": "BOUNDED",
-      "proposito": "grava a taxa no produtor do WhatsApp",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8fe7536b6720501487a808ec32675a368fd480e898802b4bbd0a0d23a471f4d1",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/servico_comissao_snapshot.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "taxa gravada na criacao; mudanca posterior nao reescreve",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "shaNaDeclaracao": "c894c873da84cd5bb511931cbfa47ef173b26d836607ee2e20740792d1f2de1a",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T05:39:38.099Z",
+  "validadoEm": "2026-08-23T05:47:27.841Z",
   "validadoPor": "write-set-gate.mjs",
   "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
@@ -1807,6 +1777,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Achado 2 aplicado como fundacao barata e nao-especulativa: comissaoTaxaAplicada Float? gravada pelos DOIS produtores (rota e WhatsApp), migracao aditiva no padrao das 27 existentes, aplicada em test e dev. Teste prova o caso aritmetico exato do achado e que liquido zero deixa de apagar a informacao. Historico permanece NULL — lacuna honesta.",
+  "nota": "Dossie absorve a revisao: numeros 12/4, disponibilidade como pre-requisito NOMINAL, areas 2/7/8 reclassificadas com as tres correcoes implementadas, Float monetario nomeado ARCHITECTURAL_RISK, multiunidade com fail-closed explicito. D-F05-REV-01 registrado com as posicoes, o consenso e os DOIS defeitos meus que as sabotagens pegaram. Gate ADMAI_V2_ARCHITECTURAL_RUNWAY_READY: PASS.",
   "aviso": "Declaracao ENCERRADA."
 }
