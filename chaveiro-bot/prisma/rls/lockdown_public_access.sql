@@ -104,12 +104,13 @@ REVOKE ALL    ON SCHEMA public FROM anon, authenticated;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 -- ── DEFAULT PRIVILEGES: neutraliza grants FUTUROS a anon/authenticated/PUBLIC ──
--- Qualificado FOR ROLE por CRIADOR DE DDL. Cobertura ampla [REVISOR F3]: owners de
--- relacoes (todas as relkinds, inclui sequences) + owners de routines + qualquer role
--- ja presente em pg_default_acl (grantor de defaults custom). Sem FOR ROLE nao seria
--- prova suficiente (D1). insufficient_privilege vira WARNING (executor nao-membro do
--- role); qualquer OUTRO erro sobe (nao mascaramos bug). O verify (parte C + catalogo)
--- confirma que nao sobrou default concedendo a anon/authenticated/PUBLIC.
+-- Qualificado FOR ROLE pelos CRIADORES DE DDL DE `public` — owners de relacoes (todas as
+-- relkinds, inclui sequences) + owners de routines de public. Escopo DELIBERADAMENTE
+-- limitado a esses roles [REVISOR DELTA]: NAO incluimos todo defaclrole (isso pegaria
+-- roles internos de Auth/Storage e o ADP global tocaria functions futuras deles em
+-- outros schemas — fora do boundary). Sem FOR ROLE nao seria prova suficiente (D1).
+-- insufficient_privilege e FATAL (fail-closed): se o executor nao puder alterar os
+-- defaults de um criador, o lockdown ABORTA — melhor abortar que deixar buraco silencioso.
 --
 -- Duas camadas:
 --   (a) IN SCHEMA public REVOKE ... FROM anon, authenticated, PUBLIC — neutraliza os
@@ -117,11 +118,8 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 --   (b) GLOBAL (sem IN SCHEMA) REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated,
 --       PUBLIC — SUPRIME o default EMBUTIDO de EXECUTE-a-PUBLIC em novas functions, que
 --       o IN SCHEMA nao materializa em PG15/16 [REVISOR F2, verificado empiricamente].
---       Fecha o residual (anon herdaria EXECUTE via PUBLIC). Trade-off consciente: o
---       global afeta functions FUTURAS criadas por ESTES roles em QUALQUER schema —
---       remove apenas o default de anon/authenticated/PUBLIC (nunca do owner nem do
---       service_role); AdmAi e PRISMA_ONLY e nao depende de EXECUTE por PUBLIC. Nao
---       revogamos de roles internos do Supabase (so os criadores de DDL de `public`).
+--       Fecha o residual. Como o conjunto e so os criadores de `public`, o alcance
+--       cross-schema fica restrito a esses roles (nunca owner/service_role/internos).
 DO $$
 DECLARE
   r text;
@@ -135,8 +133,6 @@ BEGIN
     SELECT pg_get_userbyid(p.proowner)
       FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE n.nspname = 'public'
-    UNION
-    SELECT pg_get_userbyid(defaclrole) FROM pg_default_acl
   ) x WHERE rol IS NOT NULL;
 
   FOREACH r IN ARRAY COALESCE(criadores, ARRAY[]::text[]) LOOP
@@ -151,7 +147,7 @@ BEGIN
         'ALTER DEFAULT PRIVILEGES FOR ROLE %I REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated, PUBLIC;', r);
     EXCEPTION
       WHEN insufficient_privilege THEN
-        RAISE WARNING 'STG-SEC-RLS-01: sem permissao p/ ALTER DEFAULT PRIVILEGES FOR ROLE % — ajuste manual + reverifique.', r;
+        RAISE EXCEPTION 'STG-SEC-RLS-01: sem permissao p/ ALTER DEFAULT PRIVILEGES FOR ROLE % — rode como um role membro/owner desse criador (ex.: postgres). Abortado (fail-closed).', r;
     END;
   END LOOP;
 END $$;

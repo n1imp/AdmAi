@@ -1,20 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-01-REV1",
-  "titulo": "STG-SEC-RLS-01: correcoes da revisao Codex REVISOR (thread 01a03185) — 6 achados endereçados",
+  "sliceId": "STG-SEC-RLS-01-REV2",
+  "titulo": "STG-SEC-RLS-01: correcoes da DELTA review (fail-closed + escopo de criadores + ledger)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T02:25:24.613Z",
+  "declaradoEm": "2026-08-24T02:32:35.968Z",
   "baseCommitPorLane": {
-    "HARNESS": "bc1ea2e92d2ce8dd7b38ec25cad00d77d92c6700"
+    "HARNESS": "c33d723a2ab1755efd3cbd8e59a0dc1a388e5cc2"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "F1 verify prova grants por coluna (has_any_column_privilege). F2 residual PUBLIC-execute FECHADO via ADP global (verificado). F3 cobertura de criadores ampliada + catalogo escopado. F4 wrapper apply-rls-lockdown.mjs com guard vinculado a conexao (reusa validate-staging). F5 mutacao exige 401/403/404. F6 B2 grant direto + A2 zero-policies + rollback executavel. Re-validado local PG16 A-E PASS. Aplicacao staging BLOCKED_CAPABILITY. DELTA review pendente.",
+  "notaDeMetodo": "F3 insufficient_privilege agora FATAL (fail-closed). Conjunto de criadores restrito a owners de public (relacoes+routines), sem defaclrole (nao pega roles internos Auth/Storage); apply e verify usam o MESMO conjunto; catalogo filtra defaults globais(0)|public. Ledger: linha antiga de residual marcada SUPERSEDED. Re-validado local PG16 A-E PASS.",
   "baselinePorLane": {
     "HARNESS": {
-      "chaveiro-bot/scripts/apply-rls-lockdown.mjs": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -84,8 +83,8 @@
       "chaveiro-bot/prisma/migrations/migration_lock.toml": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48",
       "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
-      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "341cfe6446dfe207ff83c6a306f95d0dc6cfe03e4e45d2db5d8757a330c53256",
-      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "1bf3030c5e7d82ff32d0c90fb775455f98df2016a4a6ca4336498b4bdcf586c2",
+      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "56a347f4fcf8d4b9593058c5f1a8e5c8a28485248e2630d384c1f22ed710b669",
+      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "33a072e2bc1151f05c64fafc5e2f0130742478fb8cf40df46eacbba254689f2d",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -93,6 +92,7 @@
       "chaveiro-bot/scripts/__tests__/audit-gate.test.js": "31a2b0d448a230b1a618f81315cddb9e2a49a532691950c6544b8746166d9e3f",
       "chaveiro-bot/scripts/__tests__/backfill-uploads.test.js": "06958c0e453f9fbe9284c6a6de3f1e05d36301183f8753e8d54c721918d9ae72",
       "chaveiro-bot/scripts/__tests__/seed-demo.test.js": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
+      "chaveiro-bot/scripts/apply-rls-lockdown.mjs": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
       "chaveiro-bot/scripts/audit-allowlist.json": "79f22a37cfa88b8bb611b152971868cd45a989f163a9857acb9d512ca82fef7c",
       "chaveiro-bot/scripts/audit-gate-helpers.mjs": "8dadf1871387a61477360e497e6841aef2f02f0f6c414b9ab01bf1e0cb1aa720",
       "chaveiro-bot/scripts/audit-gate.mjs": "aaffd4b4e04f64abffb5fe16c1015a628ca762e640cf008a48f2a500f49c6064",
@@ -591,7 +591,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "e9c20409afe516234766f9a7348af2d704dd1fbe1ee6ae42ddb9abd33c3544a2",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "802df3c89f5673b71f40e084b29ab092709c32345ea76018d9827f64fdda6d2b",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -605,8 +605,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "39a9b095ab39bd5ad45fbba5326e01ac225878976b9c7b858594065d3805a3f3",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5b47f07c5a0dd1cae4e213f47361e8b5322f4278017d08d49aee5ab4969474be",
+      "docs/eos-v2/WRITE_SET.json": "129146be18aa4e3f0dc9a4226aba8dd735a8bfc138b584ca166e8a4432e40f7d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "374ab3aa3ae42b196f0d138ed93bee37229c7f528fd3fec580c8d9254690d592",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2534,9 +2534,9 @@
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access.sql",
       "precisao": "edicao",
-      "proposito": "F2 ADP global fecha residual; F3 cobertura de criadores ampliada",
+      "proposito": "F3 fatal + escopo de criadores restrito a public",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "341cfe6446dfe207ff83c6a306f95d0dc6cfe03e4e45d2db5d8757a330c53256",
+      "shaNaDeclaracao": "56a347f4fcf8d4b9593058c5f1a8e5c8a28485248e2630d384c1f22ed710b669",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2545,42 +2545,9 @@
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/prisma/rls/verify_lockdown.sql",
       "precisao": "edicao",
-      "proposito": "F1 colunas; F2 EXECUTE provado; F3 catalogo; F6 B2 direto + A2 zero-policies",
+      "proposito": "catalogo com mesmo conjunto + filtro de namespace",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1bf3030c5e7d82ff32d0c90fb775455f98df2016a4a6ca4336498b4bdcf586c2",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
-      "precisao": "edicao",
-      "proposito": "F5 mutacoes exigem negacao por autorizacao (401/403/404)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown.mjs",
-      "precisao": "arquivo-novo",
-      "proposito": "F4 wrapper de aplicacao com guard vinculado a conexao real",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md",
-      "precisao": "edicao",
-      "proposito": "F4 wrapper como caminho primario; F6 rollback executavel; bullets de verify atualizados",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
+      "shaNaDeclaracao": "33a072e2bc1151f05c64fafc5e2f0130742478fb8cf40df46eacbba254689f2d",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2589,20 +2556,9 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "Registrar revisao + correcoes + residual fechado; nextAction DELTA",
+      "proposito": "marcar residual antigo como SUPERSEDED",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e9c20409afe516234766f9a7348af2d704dd1fbe1ee6ae42ddb9abd33c3544a2",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "edicao",
-      "proposito": "Registrar rodada REVISOR + correcoes + trade-off F2",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
+      "shaNaDeclaracao": "802df3c89f5673b71f40e084b29ab092709c32345ea76018d9827f64fdda6d2b",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2615,6 +2571,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "REVISOR round 1 (thread 01a03185): 6 achados endereçados + re-validado local PG16 A-E PASS; residual PUBLIC-execute FECHADO. DELTA pendente.",
+  "nota": "DELTA fixes: F3 fail-closed + escopo de criadores public + ledger superseded; re-validado PG16 A-E PASS",
   "aviso": "Declaracao ENCERRADA."
 }

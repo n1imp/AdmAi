@@ -51406,9 +51406,23 @@
       "bloqueiaIntegracao": false,
       "nota": "REVISOR round 1 (thread 01a03185): 6 achados endereçados + re-validado local PG16 A-E PASS; residual PUBLIC-execute FECHADO. DELTA pendente.",
       "declaradoEm": "2026-08-24T02:25:24.613Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-REV2",
+      "titulo": "STG-SEC-RLS-01: correcoes da DELTA review (fail-closed + escopo de criadores + ledger)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "DELTA fixes: F3 fail-closed + escopo de criadores public + ledger superseded; re-validado PG16 A-E PASS",
+      "declaradoEm": "2026-08-24T02:32:35.968Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:25:26.879Z",
+  "geradoEm": "2026-08-24T02:32:38.177Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

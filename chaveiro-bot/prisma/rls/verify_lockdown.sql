@@ -164,9 +164,12 @@ BEGIN
       falhas := falhas || format('%s EXECUTE na nova function', grantee); END IF;
   END LOOP;
 
+  -- Mesmo conjunto de criadores do lockdown (owners de public) e defaults SO globais(0)
+  -- ou do schema public [REVISOR DELTA] — nao inspeciona defaults de outros schemas.
   SELECT count(*) INTO n_cat FROM (
     SELECT pg_get_userbyid(d.defaclrole) AS rol, (aclexplode(d.defaclacl)).grantee::regrole::text AS g, d.defaclobjtype AS t
     FROM pg_default_acl d
+    WHERE d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace
   ) defs
   JOIN (
     SELECT pg_get_userbyid(c.relowner) AS rol FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
