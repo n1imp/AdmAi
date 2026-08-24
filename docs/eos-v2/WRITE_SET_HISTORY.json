@@ -51546,9 +51546,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Diagnostico supabase_admin ADP + D1 (B + D-detectivo + D-forte ajustado, thread 01a035ce); STG-MIG-RECON DONE; v2 em fatia propria",
       "declaradoEm": "2026-08-24T22:07:52.155Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-V2",
+      "titulo": "Artefatos v2 do lockdown (D1 01a035ce): excecao supabase_admin hard-assert + choke point USAGE + canario + detector",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "v2 build (D1 01a035ce): lockdown v2 + verify v2 (canario/detector) + wrapper v2; local PG16 A-G PASS; REVISOR a seguir",
+      "declaradoEm": "2026-08-24T22:12:36.940Z"
     }
   ],
-  "geradoEm": "2026-08-24T22:11:53.005Z",
+  "geradoEm": "2026-08-24T22:18:52.081Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

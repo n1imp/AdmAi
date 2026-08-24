@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-SUPADMIN-DIAG",
-  "titulo": "Blocker de capability supabase_admin ADP: diagnostico + decisao D1 + fechamento externo do STG-MIG-RECON",
+  "sliceId": "STG-SEC-RLS-V2",
+  "titulo": "Artefatos v2 do lockdown (D1 01a035ce): excecao supabase_admin hard-assert + choke point USAGE + canario + detector",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T22:07:52.155Z",
+  "declaradoEm": "2026-08-24T22:12:36.940Z",
   "baseCommitPorLane": {
-    "HARNESS": "c630677de1bc0d5b4b05a35885a4fa54864dcbe7"
+    "HARNESS": "f6da941009a42715c7f25496919153c132f6786f"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Apply externo do lockdown abortou fail-closed em ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin (rollback total provado). Root cause: clausula defaclrole do DELTA2 puxou role de plataforma que o postgres hosted nao administra. Repo: zero uso de supabase_admin; DDL toda como postgres. Registrar: STG-MIG-RECON DONE (prova externa 28/28), finding SCHEMA-LAG CLOSED, STG-SEC-RLS-01 BLOCKED_CAPABILITY(DEFAULT_PRIVILEGES_SUPABASE_ADMIN). Diagnostico + decisao D1 (thread em curso) + possivel artifact v2 em fatia posterior com REVISOR.",
+  "notaDeMetodo": "v1 CONGELADO (intocado). v2: lockdown com (a) ADP tolerando SO supabase_admin via hard-assert com warning detalhado, (b) REVOKE USAGE ON SCHEMA public FROM PUBLIC + snapshot/regrant atomico exceto anon/authenticated + asserts before/after; verify_v2 com canario adversarial (grants maximos deliberados -> 42501 sem USAGE), checks de USAGE, excecao unica no catalogo de defaults, detector de baseline (26+_prisma_migrations); wrapper v2. Validacao local PG16 antes do REVISOR.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -554,7 +554,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "7fa1a512d2008aa8bc331c9a52f0a24cc214a8a57bfd1279b4443dc97b60be21",
+      "docs/agent-environment/AGENT_DECISIONS.md": "79c2ffa173e38a45794dd09707972bd366db1db2fb572ffbca6e8a1f3cb56415",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -593,7 +593,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "fb90caf4148fb7ef1567e617082ba90ef2ecc7ab203fddc4f89ebe592d90af5c",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "8f4189d1145730c49f71682294a83271ed1c0ed67a939d484ba79c3c4fc31531",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
@@ -608,11 +608,12 @@
       "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md": "18b6d28b9aace39ce62c07b33cb26796d142f65afa3b6aa7b04369d57aeb3a14",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
       "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "20048c7530318a8e5e26d33273cd738dda8d3541b91424cb9776a5e2f04dcd2d",
+      "docs/eos-v2/STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md": "aec0ad9c6b94ca34b8fcce45ebee4a2ac3fa59129a0c6cb57602488e50fad1b9",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "68e5101df79c4d3de5910ddd698b53e082adb28a48df9725523c23fb2de34327",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "0d698ee44a43a3614564073ad98ef7b4d42c829a22d96eb3db778792de4b8299",
+      "docs/eos-v2/WRITE_SET.json": "00e5991fb646b9961c0162f497b573c7bf914275c355f734460a5f14537b9e2d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b44b5b512d0fa89c5ef64ab9489629bea42f68b05eded736914c6d9f3b850005",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2503,9 +2504,27 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md",
+      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql",
       "precisao": "arquivo-novo",
-      "proposito": "diagnostico completo (root cause, capability model, matriz, alternativas, decisao D1)",
+      "proposito": "lockdown v2",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql",
+      "precisao": "arquivo-novo",
+      "proposito": "verify v2 (canario + usage + excecao + detector)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs",
+      "precisao": "arquivo-novo",
+      "proposito": "wrapper v2 (guard vinculado a conexao)",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -2514,18 +2533,18 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "STG-MIG-RECON DONE; STG-SEC-RLS-01 BLOCKED_CAPABILITY(supabase_admin ADP)",
+      "proposito": "evidencias v2 + REVISOR",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "fb90caf4148fb7ef1567e617082ba90ef2ecc7ab203fddc4f89ebe592d90af5c",
+      "shaNaDeclaracao": "8f4189d1145730c49f71682294a83271ed1c0ed67a939d484ba79c3c4fc31531",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "edicao",
-      "proposito": "D-STG-SEC-SUPABASE-ADMIN-ADP",
+      "proposito": "resultado do REVISOR v2",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7fa1a512d2008aa8bc331c9a52f0a24cc214a8a57bfd1279b4443dc97b60be21",
+      "shaNaDeclaracao": "79c2ffa173e38a45794dd09707972bd366db1db2fb572ffbca6e8a1f3cb56415",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2536,6 +2555,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Diagnostico supabase_admin ADP + D1 (B + D-detectivo + D-forte ajustado, thread 01a035ce); STG-MIG-RECON DONE; v2 em fatia propria",
+  "nota": "v2 build (D1 01a035ce): lockdown v2 + verify v2 (canario/detector) + wrapper v2; local PG16 A-G PASS; REVISOR a seguir",
   "aviso": "Declaracao ENCERRADA."
 }
