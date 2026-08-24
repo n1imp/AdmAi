@@ -51476,9 +51476,37 @@
       "bloqueiaIntegracao": false,
       "nota": "FE-STRUCT parte 1: runtime identity + root cause + registry 83/83 + report + harness fixes (clicarQuandoHabilitado, requestSubmit, timeline diag, fechar leak-proof). Achado de PRODUTO no processo (limiter prefix-match) segue em write set proprio pos-D1.",
       "declaradoEm": "2026-08-24T15:06:51.302Z"
+    },
+    {
+      "sliceId": "FE-STRUCT-LIMITER-2FA",
+      "titulo": "Fix: rotas 2FA nao herdam mais authLimiter/authIpLimiter por prefix-match (D1 Codex 01a0346e)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "D-FE-STRUCT-LIMITER-2FA: mount exato (D1 01a0346e); teste 5/5 com sabotagem que morde; colaterais 36/36; E2E 9/9",
+      "declaradoEm": "2026-08-24T15:44:29.242Z"
+    },
+    {
+      "sliceId": "FE-STRUCT-FECHAR-AWAIT",
+      "titulo": "Harness: fechar() awaitable + await nos 9 call sites + varredura de fim de suite (0 vazamentos)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "fechar awaitable + sweep final; 9/9 + 0 vazados (3 execucoes completas verdes)",
+      "declaradoEm": "2026-08-24T16:02:49.506Z"
     }
   ],
-  "geradoEm": "2026-08-24T15:42:37.952Z",
+  "geradoEm": "2026-08-24T16:02:52.128Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

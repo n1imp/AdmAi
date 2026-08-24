@@ -60,15 +60,23 @@ Usuários/admin (`/usuarios*`, `/permissoes/catalogo`, convites).
 Prova viva agregada: jornadas E2E no stack real (login, wizard de serviço, ponto, 402, 2FA,
 deep-link, mobile 360, documentos) + 252 testes do painel + 348 de integração do bot.
 
-## Achado real do ciclo (e correção)
+## Achados reais do ciclo (e correções)
 
-- **HARNESS-2FA-RACE (teste, não produto):** `clicarTexto` clicava o botão "Verificar" do 2FA
-  ainda `disabled` (React sem flush do estado que o habilita) — click em botão disabled é no-op
-  SILENCIOSO; a jornada morria no timeout sem request. Duas falhas consecutivas medidas; fluxo
-  provado correto por sonda isolada (400 "Código inválido" renderizado). Correção test-only:
-  `clicarQuandoHabilitado` em `e2e/jornadas.mjs`. Zero mudança de produto.
+- **D-FE-STRUCT-LIMITER-2FA (PRODUTO, backend — decidido por Codex D1 thread `01a0346e`):**
+  `app.use('/api/auth/login', authIpLimiter, authLimiter)` prefix-casava as rotas 2FA
+  (`/login/2fa`, `/2fa-telefone`, `/2fa/recuperar`), onde o `authLimiter` sem identidade mapeada
+  degradava para balde **por IP de 5 falhas/15min compartilhado** entre login e 2FA (prova viva:
+  desafios distintos → 401,401,429×5). Cross-flow lockout via NAT, contra os dois designs
+  documentados. Fix: mount exato `app.post(...)`; regressão `limiter_2fa_dedicado.test.js` (5
+  casos; sabotagem morde: mount antigo → 3/5 falham); 36/36 nas suítes colaterais de auth.
+- **HARNESS-2FA (testes, 3 defeitos):** click em botão `disabled` era no-op silencioso (race do
+  flush do React) → `clicarQuandoHabilitado` + submissão por `requestSubmit`; timeout de
+  `esperarTexto` sem contexto → linha do tempo (path+token+tela) no erro; `fechar()` vazava
+  processos Chrome no Windows (`child.kill()` não mata a árvore; 704 zumbis acumulados
+  degradando a máquina — a causa ambiental da flakiness) → taskkill /T + varredura por
+  `user-data-dir` único.
 
-## Zero mudanças de produto/visual
+## Visual intocado
 
-Nenhum arquivo de produto (src) do painel ou do bot foi alterado neste ciclo. `VISUAL_DIFF = ZERO`
-por construção.
+`VISUAL_DIFF = ZERO`: nenhuma mudança em UI/UX; a única mudança de produto é a correção do mount
+de limiters no backend (segurança/disponibilidade, sem efeito visual).

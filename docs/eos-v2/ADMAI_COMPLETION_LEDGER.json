@@ -2457,6 +2457,21 @@
       "nextAction": null, "revisitCondition": null, "snapshotRef": null
     },
     {
+      "workId": "FE-STRUCT-LIMITER-2FA",
+      "phase": "F5", "domain": "seguranca", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": "codex",
+      "status": "DONE",
+      "description": "Fix de PRODUTO achado pelo ciclo FE-STRUCT: rotas 2FA herdavam authLimiter/authIpLimiter por prefix-match de app.use('/api/auth/login') — authLimiter sem identidade degradava p/ balde IP 5 falhas/15min COMPARTILHADO entre login e 2FA (cross-flow lockout via NAT), contra os dois designs documentados.",
+      "dependencies": ["FE-STRUCT-09"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": [
+        "Prova viva: 7 POSTs /auth/login/2fa com desafios DISTINTOS -> 401,401,429x5 (balde IP). Era a causa raiz das falhas intermitentes da jornada 2FA (mensagem 'Muitas tentativas' != /invalid/; painel de marketing do Login mascarava a tela).",
+        "Decisao D1: Codex DECISOR thread 01a0346e, CONCORDO, opcao A — mount EXATO app.post('/api/auth/login', authIpLimiter, authLimiter); 2FA fica so com twoFactorLimiter (por desafio) + global. Mint de desafio continua atras dos limiters de credencial; nada enfraquecido.",
+        "Teste limiter_2fa_dedicado.test.js 5/5 (desafios distintos sem 429; mesmo desafio 429 na 6a com mensagem do twoFactorLimiter; falhas de senha nao contaminam 2FA; /login exato segue 429; /2fa/recuperar coberto). SABOTAGEM MORDE: mount antigo -> 3/5 falham. Colaterais 36/36 (auth, recuperacao_2fa, conta_2fa_fluxo_completo, login_disambiguacao_leak, seguranca_baratos). E2E final 9/9."
+      ],
+      "attemptCount": 1, "lastAttempt": "2026-08-24T16:40:00.000Z",
+      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+    },
+    {
       "workId": "FE-STRUCT-11",
       "phase": "SWEEP", "domain": "produto", "priority": "P1", "risk": "baixo",
       "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,

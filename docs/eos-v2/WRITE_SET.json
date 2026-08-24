@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FE-STRUCT-01",
-  "titulo": "FE/BE structural reconciliation: harness 2FA race fix + registry + report + ledger",
+  "sliceId": "FE-STRUCT-FECHAR-AWAIT",
+  "titulo": "Harness: fechar() awaitable + await nos 9 call sites + varredura de fim de suite (0 vazamentos)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T15:06:51.302Z",
+  "declaradoEm": "2026-08-24T16:02:49.506Z",
   "baseCommitPorLane": {
-    "HARNESS": "0ce64e23e81499c52b0255cba77b4ce875c7ff3e"
+    "HARNESS": "6bf6cfa4cbd12784aadf8b1074d04761070b4227"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Workstream ADMAI-FE-STRUCTURAL-01. Root cause do usuario = LOCAL_RUNTIME (provado); contratos 83/83 MATCH; unico defeito real achado e no HARNESS (clicarTexto clica botao disabled antes do React habilitar — silencioso). Fix test-only em jornadas.mjs (clicar quando habilitado). Zero mudanca de produto, zero visual. Registry + relatorio + itens FE-STRUCT no ledger.",
+  "notaDeMetodo": "Pos-medicao: fire-and-forget deixava varreduras orfas no process.exit (1 chrome/browser sobrevivia a corrida do shutdown). fechar() virou Promise awaited; cinturao final de suite varre perfis jornada-. Validado: 9/9 + 0 chrome.exe vazados. Escrita ocorreu antes desta declaracao (iteracao rapida de diagnostico) — reconciliar como ordem violada.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -110,7 +110,7 @@
       "chaveiro-bot/scripts/validate-staging.mjs": "b1e58ca43029c6b00410cfb04a3ed5055ceb33f30551229813d677d5638ab67b",
       "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "22eb4b31f0ae701203670d55619669262ad0b7f7393684f583a5aa7b0e8177a7",
       "chaveiro-bot/src/__tests__/security-headers.test.js": "201df3fa21f912e9cc68f45c9008d12c5acaec9c10e3bf22296a238608026de5",
-      "chaveiro-bot/src/app.js": "33f5407dda81ca712e45758c6f8f947481de12d944ad72c71a67b21c65bfe623",
+      "chaveiro-bot/src/app.js": "9b7cd5d7446e64405e17707f9b8aa14a788cd8ca056fafddf53fafa43b9f6495",
       "chaveiro-bot/src/config/__tests__/env.test.js": "0b34f7e58024cdf4e0ed23fa749abef14288e6338a3a57d3965e0725ab058835",
       "chaveiro-bot/src/config/__tests__/sentry.test.js": "a27c1c1d76917b349a72b3b91144e31f7c2ff04c7c532851df6af270d11be980",
       "chaveiro-bot/src/config/__tests__/sentryTransport.test.js": "364df4f9eecfa5babe0fb75cc1bfd01c0cc75e9d76c9a23df2d1dd9e11b1840e",
@@ -257,6 +257,7 @@
       "chaveiro-bot/test/integration/inbound_idempotencia.test.js": "9226493aabe26eccbd99f3c5ef4ec3369bffad30734fffa795d6a37f9922bf85",
       "chaveiro-bot/test/integration/inbound_numero_unico.test.js": "99916a494b9b7c9e9ec58524ae68e532ff017fadd530aef10a9f9e980efa0a55",
       "chaveiro-bot/test/integration/lgpd.test.js": "f689f8f0813ca5a318d8002ce4cf97955cb533e78519b5f3709b40f4bc27a02f",
+      "chaveiro-bot/test/integration/limiter_2fa_dedicado.test.js": "b3fbbbad76b028878d50651b0e4708d7f80fbb7e73b64f0f20eee6b818f3b6ec",
       "chaveiro-bot/test/integration/login_disambiguacao_leak.test.js": "9f28db944c863a685589fc617fc617fa9dc6d028cd0b2af784ac1f4be4501619",
       "chaveiro-bot/test/integration/materiais_servico_funcionario.test.js": "4434ab27f4873800ebcf70277ef484913a00f4e445472cb63d1e955851a79fb2",
       "chaveiro-bot/test/integration/me_metricas.test.js": "2adf79da7d90bb6b743be9f20db937fd4fe14b0cea0eab82088a904edc2ae60c",
@@ -349,7 +350,7 @@
       "chaveiro-painel/e2e/README.md": "79845a3f619d91cdd8b47b9eb2abb7e281ac8b57d13b01a46b6268e894284164",
       "chaveiro-painel/e2e/capturar.mjs": "ae785ff8f4b71bdda2b6c146836c0c10465d2dfd4830e080c1d4d1c634d581a6",
       "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
-      "chaveiro-painel/e2e/jornadas.mjs": "4eda6421b57684ea1edb7a1d1c6253a4d5f1eca12e772f8c2a8e7b8858066905",
+      "chaveiro-painel/e2e/jornadas.mjs": "ddd675f1681cf43f79f11573808e9bf3153404bf0d68e1f0cba298e2f6766e90",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
       "chaveiro-painel/index.html": "d786acd8e9810c307751d15dc9b8ac2b09bcb42d2761aa6b9f25534715c85e88",
@@ -552,7 +553,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "cb4267a32e49b90bc4e9ce78ecf4780cf0163c9b72fd605539ce5f6e57940187",
+      "docs/agent-environment/AGENT_DECISIONS.md": "a91e50aba32a8cba48bf66526ae503096516ec050d1d5205935cde2f9326633b",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -591,7 +592,9 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "950f665396b8cf52aedee4ac29d924c9735aa9ad4168f2a418ab00101b8cbe69",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a95db816adb6bc353500cd93ff40e9b9f8a7592fee62fb5b2506d417ad65c6d6",
+      "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
+      "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -606,8 +609,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "77c6d4287acced595c6ba6e651bccaf5b5d76fc33fd5b96b453d04036207b5e1",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "a1e08ebd444ea814d3d74d32a2e3a851ce28826765712ba6a12b0bd8f1f109b8",
+      "docs/eos-v2/WRITE_SET.json": "e770d3167281c7bfefb5fec113b72660291b9b3412ccd4d634471996c8672956",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "d85a1e4a264947d7df945880a6fcd03b94dc2d802686e2e464356f6bd5ae11d0",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2500,37 +2503,12 @@
       "lane": "HARNESS",
       "caminho": "chaveiro-painel/e2e/jornadas.mjs",
       "precisao": "edicao",
-      "proposito": "fix da race: aguardar botao habilitado antes de clicar (jornada 2FA)",
+      "proposito": "fechar awaitable + sweep final",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "4eda6421b57684ea1edb7a1d1c6253a4d5f1eca12e772f8c2a8e7b8858066905",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md",
-      "precisao": "arquivo-novo",
-      "proposito": "registry FE<->BE (83/83 MATCH, zero UNKNOWN em auth/core)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md",
-      "precisao": "arquivo-novo",
-      "proposito": "relatorio do §46",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
-      "precisao": "edicao",
-      "proposito": "itens FE-STRUCT-01..12",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "950f665396b8cf52aedee4ac29d924c9735aa9ad4168f2a418ab00101b8cbe69",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "ddd675f1681cf43f79f11573808e9bf3153404bf0d68e1f0cba298e2f6766e90",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2540,6 +2518,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "FE-STRUCT parte 1: runtime identity + root cause + registry 83/83 + report + harness fixes (clicarQuandoHabilitado, requestSubmit, timeline diag, fechar leak-proof). Achado de PRODUTO no processo (limiter prefix-match) segue em write set proprio pos-D1.",
+  "nota": "fechar awaitable + sweep final; 9/9 + 0 vazados (3 execucoes completas verdes)",
   "aviso": "Declaracao ENCERRADA."
 }

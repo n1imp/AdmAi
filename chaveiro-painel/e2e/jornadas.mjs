@@ -205,33 +205,38 @@ async function abrirNavegador({ largura = 1280, altura = 800, mobile = false } =
     clicarQuandoHabilitado,
     consentirNecessarios,
     loginUi,
-    fechar: () => {
-      cdp.close();
-      /* Windows: child.kill() termina SO o processo raiz — os filhos do Chrome (renderer/GPU)
-         NAO morrem com o pai e viram zumbis (medimos 704 chrome.exe acumulados em 2 dias de
-         jornadas/capturas, degradando a maquina ate as proprias jornadas flakarem por timeout).
-         taskkill /T tem corrida na propria arvore ("nao ha ocorrencia da tarefa") e ainda vaza
-         2-3 filhos por browser — por isso a varredura FINAL e pelo user-data-dir, que e unico
-         por instancia: mata exatamente os processos desta sessao, nunca o Chrome real do usuario. */
-      if (process.platform === 'win32') {
-        execFile('taskkill', ['/PID', String(chrome.pid), '/T', '/F'], () => {
-          /* -like do PowerShell trata \ literalmente (escape e com crase) — dobrar barras
-             quebrava o match e a varredura nao achava nada. So a aspa simples precisa escapar. */
-          const alvo = perfil.replace(/'/g, "''");
-          execFile(
-            'powershell',
-            [
-              '-NoProfile',
-              '-Command',
-              `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Where-Object { $_.CommandLine -like '*${alvo}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
-            ],
-            () => {}
-          );
-        });
-      } else {
-        chrome.kill();
-      }
-    },
+    /* AWAITABLE de proposito: o runner precisa ESPERAR a limpeza — fire-and-forget deixava as
+       varreduras das ultimas jornadas orfas quando o processo da suite saia (process.exit),
+       vazando ~2-3 chrome.exe por browser mesmo com a varredura correta. */
+    fechar: () =>
+      new Promise((resolver) => {
+        cdp.close();
+        /* Windows: child.kill() termina SO o processo raiz — os filhos do Chrome (renderer/GPU)
+           NAO morrem com o pai e viram zumbis (medimos 704 chrome.exe acumulados em 2 dias de
+           jornadas/capturas, degradando a maquina ate as proprias jornadas flakarem por timeout).
+           taskkill /T tem corrida na propria arvore ("nao ha ocorrencia da tarefa") e ainda vaza
+           2-3 filhos por browser — por isso a varredura FINAL e pelo user-data-dir, que e unico
+           por instancia: mata exatamente os processos desta sessao, nunca o Chrome real do usuario. */
+        if (process.platform === 'win32') {
+          execFile('taskkill', ['/PID', String(chrome.pid), '/T', '/F'], () => {
+            /* -like do PowerShell trata \ literalmente (escape e com crase) — dobrar barras
+               quebrava o match e a varredura nao achava nada. So a aspa simples precisa escapar. */
+            const alvo = perfil.replace(/'/g, "''");
+            execFile(
+              'powershell',
+              [
+                '-NoProfile',
+                '-Command',
+                `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Where-Object { $_.CommandLine -like '*${alvo}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+              ],
+              () => resolver()
+            );
+          });
+        } else {
+          chrome.kill();
+          resolver();
+        }
+      }),
   };
 }
 
@@ -262,7 +267,7 @@ const JORNADAS = [
         if (/Apenas necessários/.test(t)) throw new Error('banner não saiu após a escolha');
         return `empresa Jornada E2E ${unico} criada e dentro do painel`;
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -277,7 +282,7 @@ const JORNADAS = [
         if (token) throw new Error('token gravado com senha errada');
         return 'erro visível, storage limpo';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -319,7 +324,7 @@ const JORNADAS = [
         await n.esperarTexto(new RegExp(`Servico jornada ${unico}`), 10000);
         return 'serviço criado pela UI e listado';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -339,7 +344,7 @@ const JORNADAS = [
         if (antes === depois) throw new Error('nada mudou após bater ponto');
         return 'batida registrada, tela refletiu';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -368,7 +373,7 @@ const JORNADAS = [
         await n.esperarTexto(/^|Assinar/i, 4000);
         return 'produto degrada com explicação; /assinatura renderiza status + ação';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -412,7 +417,7 @@ const JORNADAS = [
         if (token) throw new Error('sessão criada com código 2FA errado');
         return 'desafio renderizou, código errado rejeitado, sem sessão';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -433,7 +438,7 @@ const JORNADAS = [
         if (rota !== '/aprovacoes') throw new Error(`caiu em ${rota}, não em /aprovacoes`);
         return 'destino preservado através do login';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -449,7 +454,7 @@ const JORNADAS = [
         await n.esperarTexto(/técnicos|cadastrados/i, 8000);
         return 'núcleo navegável em 360px';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -466,7 +471,7 @@ const JORNADAS = [
         if (t.replace(/\s+/g, '').length < 40) throw new Error('página vazia');
         return 'superfície viva com a sessão real';
       } finally {
-        n.fechar();
+        await n.fechar();
       }
     },
   },
@@ -489,4 +494,22 @@ console.log(
     ? `\n${JORNADAS.length} jornadas: todas OK`
     : `\n${falhas} de ${JORNADAS.length} jornadas FALHARAM`
 );
+
+/* Cinturao final de higiene (Windows): mesmo com taskkill /T + varredura por perfil AWAITADAS,
+   o shutdown do Chrome tem corridas que deixam ~1 processo por browser (root ou crashpad/gpu).
+   Esta varredura unica de fim de suite mata qualquer chrome.exe com perfil `jornada-` —
+   os perfis sao exclusivos deste driver, nunca o Chrome real do usuario. */
+if (process.platform === 'win32') {
+  await new Promise((resolver) => {
+    execFile(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Where-Object { $_.CommandLine -match 'jornada-' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+      ],
+      () => resolver()
+    );
+  });
+}
 process.exit(falhas === 0 ? 0 : 1);

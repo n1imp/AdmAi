@@ -129,7 +129,17 @@ export function criarApp() {
   // Dois tetos compostos: por IDENTIDADE (5/15min, evita brute force de uma
   // conta) e por ORIGEM (30/15min, evita varredura de muitas contas de um IP).
   // O limitador por identidade sozinho é evadível variando o identificador.
-  app.use('/api/auth/login', authIpLimiter, authLimiter);
+  /* [D-FE-STRUCT-LIMITER-2FA, Codex thread 01a0346e] app.post EXATO, não app.use com prefixo:
+     `app.use('/api/auth/login')` casava também /login/2fa, /login/2fa-telefone e
+     /login/2fa/recuperar por prefix-match — e nessas subrotas o authLimiter não acha identidade
+     (CAMPOS_POR_ROTA não as mapeia) e degrada para um balde por IP de 5 falhas/15min
+     COMPARTILHADO entre login e 2FA: senha errada de uma pessoa bloqueava o 2FA do escritório
+     inteiro (cross-flow lockout via NAT), contra os dois designs documentados (twoFactorLimiter
+     dedicado por DESAFIO; authIpLimiter "folgado de propósito" p/ não bloquear escritório).
+     As etapas 2FA ficam só com o twoFactorLimiter (abaixo) + limiter global de /api. Obter um
+     desafio NOVO continua exigindo credenciais válidas AQUI — o funil de mint já é limitado na
+     porta certa. app.post sem handler terminal roda os middlewares e segue ao apiRouter. */
+  app.post('/api/auth/login', authIpLimiter, authLimiter);
   // EV-057: cadastroLimiter conta TODA tentativa (sucesso incluso) — authLimiter/
   // authIpLimiter usam skipSuccessfulRequests e nunca contavam um registro
   // bem-sucedido, permitindo abuso de trial via criação ilimitada de empresas.

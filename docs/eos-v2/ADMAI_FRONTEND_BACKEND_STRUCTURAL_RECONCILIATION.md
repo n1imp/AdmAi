@@ -6,12 +6,20 @@ zero arquivos de produto alterados).
 
 ## EXECUTIVE RESULT
 
-**Não existe defeito estrutural frontend↔backend.** Os contratos estão alinhados (83/83 MATCH,
-zero UNKNOWN em auth/core) e o login local funciona de ponta a ponta — provado em 4 camadas
-independentes (API, browser real, sessão stale, build stale). O problema relatado pelo usuário é
-**`LOCAL_RUNTIME_DIVERGENCE`** (processos-sobra de ciclos anteriores + assimetria IPv4/IPv6 de
-portas + estado de browser/credencial), não quebra de contrato. O único defeito REAL encontrado
-foi no **harness de E2E** (race de click em botão disabled) — corrigido test-only.
+**Os contratos frontend↔backend estão alinhados** (83/83 MATCH, zero UNKNOWN em auth/core) e o
+login local funciona de ponta a ponta — provado em 4 camadas independentes (API, browser real,
+sessão stale, build stale). O problema relatado pelo usuário é **`LOCAL_RUNTIME_DIVERGENCE`**
+(processos-sobra de ciclos anteriores + assimetria IPv4/IPv6 de portas + estado de
+browser/credencial), não quebra de contrato.
+
+A investigação achou e corrigiu **um defeito REAL de produto no backend** —
+**D-FE-STRUCT-LIMITER-2FA**: `app.use('/api/auth/login', authIpLimiter, authLimiter)` casava por
+prefixo também as rotas 2FA (`/login/2fa`, `/2fa-telefone`, `/2fa/recuperar`), onde o
+`authLimiter` sem identidade mapeada degradava para um balde **por IP de 5 falhas/15min
+compartilhado entre login e 2FA** — a falha de senha de uma pessoa bloqueava o 2FA do IP/NAT
+inteiro, contra os dois designs documentados. Corrigido com mount exato (decisão D1 Codex thread
+`01a0346e`), teste de regressão que **morde** (sabotagem: 3/5 falham com o mount antigo) e 36/36
+nas suítes colaterais. E **3 defeitos de harness** E2E corrigidos (test-only).
 
 ## LOCAL RUNTIME IDENTITY (provada)
 
@@ -69,12 +77,14 @@ sessão hidratada por `/me` + `localStorage admai_token` + evento `admai:logout`
 
 | Tipo | Arquivo | Mudança |
 | --- | --- | --- |
-| Runtime (não-repo) | — | mortos: preview 4173 + cadeia backend morta; `dist/` stale removido |
-| Teste (harness) | `chaveiro-painel/e2e/jornadas.mjs` | `clicarQuandoHabilitado` (espera o botão habilitar antes do click) + uso na jornada 2FA + timeout 8s |
-| Docs | `docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md` (novo), este relatório, ledger | registro |
+| Runtime (não-repo) | — | mortos: preview 4173 + cadeias backend zumbis; `dist/` stale removido; **704→12 chrome.exe** (zumbis de headless acumulados em 2 dias — a real causa da flakiness das jornadas) |
+| **Produto (backend)** | `chaveiro-bot/src/app.js` | **D-FE-STRUCT-LIMITER-2FA** (D1 Codex `01a0346e`): mount EXATO `app.post('/api/auth/login', authIpLimiter, authLimiter)` — as etapas 2FA deixam de herdar os limiters de credencial por prefix-match (ficam só com o `twoFactorLimiter` dedicado por desafio + global) |
+| Teste (produto) | `chaveiro-bot/test/integration/limiter_2fa_dedicado.test.js` (novo) | 5 casos obrigatórios do D1; **sabotagem morde** (mount antigo → 3/5 falham) |
+| Teste (harness) | `chaveiro-painel/e2e/jornadas.mjs` | `clicarQuandoHabilitado`; submissão 2FA por `requestSubmit` (mata a corrida do submit nativo); `esperarTexto` com linha do tempo (path+token+tela) no erro; `fechar()` à prova de vazamento no Windows (taskkill /T + varredura por `user-data-dir`; `-like` do PS trata `\` literal) |
+| Docs | registry (novo), este relatório, ledger, AGENT_DECISIONS | registro |
 
-**Zero arquivos de produto** (`src/` de painel ou bot). Sem bypass, sem enfraquecimento, sem
-mudança de backend.
+**Zero mudança visual; zero mudança em 2FA/refresh/rotação/UI.** A única mudança de produto é a
+correção do mount de limiters — restaura o design documentado, decidida por Codex D1.
 
 ## TESTS / NEGATIVE CONTROLS
 
