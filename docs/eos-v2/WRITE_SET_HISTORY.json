@@ -51392,9 +51392,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-MIG-RECON: classificacao SCHEMA_LIKELY_EQUIVALENT_UNTRACKED + estrategia de baseline segura; execucao BLOCKED_CAPABILITY",
       "declaradoEm": "2026-08-24T02:11:28.491Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-REV1",
+      "titulo": "STG-SEC-RLS-01: correcoes da revisao Codex REVISOR (thread 01a03185) — 6 achados endereçados",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "REVISOR round 1 (thread 01a03185): 6 achados endereçados + re-validado local PG16 A-E PASS; residual PUBLIC-execute FECHADO. DELTA pendente.",
+      "declaradoEm": "2026-08-24T02:25:24.613Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:12:28.751Z",
+  "geradoEm": "2026-08-24T02:25:26.879Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

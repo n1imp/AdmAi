@@ -1,19 +1,20 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-MIG-RECON-01",
-  "titulo": "Migration reconciliation (§7): classificacao + estrategia de baseline segura (sem migrate deploy cego)",
+  "sliceId": "STG-SEC-RLS-01-REV1",
+  "titulo": "STG-SEC-RLS-01: correcoes da revisao Codex REVISOR (thread 01a03185) — 6 achados endereçados",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T02:11:28.491Z",
+  "declaradoEm": "2026-08-24T02:25:24.613Z",
   "baseCommitPorLane": {
-    "HARNESS": "34a92db95ca4a25973ffea5fe484feadddc8a2ab"
+    "HARNESS": "bc1ea2e92d2ce8dd7b38ec25cad00d77d92c6700"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Repo tem 28 migrations consistentes (migrate status local: schema up to date). Staging tem as 26 tabelas mas _prisma_migrations vazio => SCHEMA_LIKELY_EQUIVALENT_UNTRACKED. Estrategia: preflight com prisma migrate diff (precisa staging) -> se vazio, baseline por migrate resolve --applied (sem DDL); se drift, Codex D1. NAO rodar migrate deploy cego (amendment §7). Doc + item no ledger. Execucao no staging BLOCKED_CAPABILITY.",
+  "notaDeMetodo": "F1 verify prova grants por coluna (has_any_column_privilege). F2 residual PUBLIC-execute FECHADO via ADP global (verificado). F3 cobertura de criadores ampliada + catalogo escopado. F4 wrapper apply-rls-lockdown.mjs com guard vinculado a conexao (reusa validate-staging). F5 mutacao exige 401/403/404. F6 B2 grant direto + A2 zero-policies + rollback executavel. Re-validado local PG16 A-E PASS. Aplicacao staging BLOCKED_CAPABILITY. DELTA review pendente.",
   "baselinePorLane": {
     "HARNESS": {
+      "chaveiro-bot/scripts/apply-rls-lockdown.mjs": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -81,10 +82,10 @@
       "chaveiro-bot/prisma/migrations/20260803000000_usuario_telefone_unique/migration.sql": "2c21e061f28c768e0f1cf2a76186d6ca64d4574f8eaf72c4feafacf305089519",
       "chaveiro-bot/prisma/migrations/20260823000100_servico_comissao_taxa_aplicada/migration.sql": "38f58ab3026d1e10aac04cbe8e540153a0daca9c8a6e251d7e61f81a836229df",
       "chaveiro-bot/prisma/migrations/migration_lock.toml": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48",
-      "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "5b6a2d6e955c0eadf1af987a735f1500864318160fea77433d1c1bbcea81ae96",
+      "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
-      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "dd22942214c1ba8c6dd0b7550861a1cbb594fec84f181474158040becf45dc84",
-      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "13668a42cfd7e4d07eaf8b8487ae2cc6c742ab9840dcfd07af7c0b7ec321d9a4",
+      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "341cfe6446dfe207ff83c6a306f95d0dc6cfe03e4e45d2db5d8757a330c53256",
+      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "1bf3030c5e7d82ff32d0c90fb775455f98df2016a4a6ca4336498b4bdcf586c2",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -104,7 +105,7 @@
       "chaveiro-bot/scripts/seed-demo.mjs": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
       "chaveiro-bot/scripts/smoke-pooler.mjs": "359b8cf59844294359d11c56ed279fc804efadbb3497d6b4d7c1ce5f8c9d3690",
       "chaveiro-bot/scripts/smoke-storage.mjs": "2d50ac7c7ce580f1dafaf0fcb22a383d37c8d186efd4129be2314bb5604bbef7",
-      "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "45b557b494d9d7e60c17fb6b3c530831bf6fbbdb9aecf5d4e62016fc039b8bc7",
+      "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "ddc187cf4ee430ee0421262ca8425c81d1b626fb096066925506cece9df10e91",
       "chaveiro-bot/scripts/validate-staging.mjs": "b1e58ca43029c6b00410cfb04a3ed5055ceb33f30551229813d677d5638ab67b",
       "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "22eb4b31f0ae701203670d55619669262ad0b7f7393684f583a5aa7b0e8177a7",
@@ -551,7 +552,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "054ac89bcb490a8dc8b8b5662941154eb4ad1c80efe51b7c90ddc407f1f120f3",
+      "docs/agent-environment/AGENT_DECISIONS.md": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -590,7 +591,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "144ad12217da3bd222c158dad6461548643c5289fef5eb3cbd3e98b516c6e35b",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "e9c20409afe516234766f9a7348af2d704dd1fbe1ee6ae42ddb9abd33c3544a2",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -599,12 +600,13 @@
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "8277916929327d1329784d5fa5c4d11b9a9023be16405b2253066ab25efdcedc",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
+      "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "81e5b9773bf63f58c1e379e46f3e0d9c687fc950f0d41cc947b3552c27d6bf0a",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "93c054483a2a294ea0a072b4c37a682499378566693e07781918a027444ac07a",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "3ea3e3cc62b3f40a2f74c35a5e17959abb9a10c4cb0b05226d2890ba1de98e35",
+      "docs/eos-v2/WRITE_SET.json": "39a9b095ab39bd5ad45fbba5326e01ac225878976b9c7b858594065d3805a3f3",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5b47f07c5a0dd1cae4e213f47361e8b5322f4278017d08d49aee5ab4969474be",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2530,21 +2532,80 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md",
+      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access.sql",
+      "precisao": "edicao",
+      "proposito": "F2 ADP global fecha residual; F3 cobertura de criadores ampliada",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "341cfe6446dfe207ff83c6a306f95d0dc6cfe03e4e45d2db5d8757a330c53256",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown.sql",
+      "precisao": "edicao",
+      "proposito": "F1 colunas; F2 EXECUTE provado; F3 catalogo; F6 B2 direto + A2 zero-policies",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1bf3030c5e7d82ff32d0c90fb775455f98df2016a4a6ca4336498b4bdcf586c2",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
+      "precisao": "edicao",
+      "proposito": "F5 mutacoes exigem negacao por autorizacao (401/403/404)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown.mjs",
       "precisao": "arquivo-novo",
-      "proposito": "Classificacao + estrategia de baseline + comandos preflight/resolve + arvore de decisao drift",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
+      "proposito": "F4 wrapper de aplicacao com guard vinculado a conexao real",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md",
+      "precisao": "edicao",
+      "proposito": "F4 wrapper como caminho primario; F6 rollback executavel; bullets de verify atualizados",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "Novo item STG-MIG-RECON (BLOCKED_CAPABILITY, apos o boundary de seguranca)",
+      "proposito": "Registrar revisao + correcoes + residual fechado; nextAction DELTA",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "144ad12217da3bd222c158dad6461548643c5289fef5eb3cbd3e98b516c6e35b",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "e9c20409afe516234766f9a7348af2d704dd1fbe1ee6ae42ddb9abd33c3544a2",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "edicao",
+      "proposito": "Registrar rodada REVISOR + correcoes + trade-off F2",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2554,6 +2615,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "STG-MIG-RECON: classificacao SCHEMA_LIKELY_EQUIVALENT_UNTRACKED + estrategia de baseline segura; execucao BLOCKED_CAPABILITY",
+  "nota": "REVISOR round 1 (thread 01a03185): 6 achados endereçados + re-validado local PG16 A-E PASS; residual PUBLIC-execute FECHADO. DELTA pendente.",
   "aviso": "Declaracao ENCERRADA."
 }

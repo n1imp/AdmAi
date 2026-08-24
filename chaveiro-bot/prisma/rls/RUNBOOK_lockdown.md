@@ -58,7 +58,19 @@ node --env-file=<arquivo local com STAGING_SUPABASE_URL/ANON_KEY> \
 
 ---
 
-## 2. Aplicar o lockdown
+## 2. Aplicar o lockdown — via wrapper com guard vinculado à conexão (recomendado)
+
+Caminho primário: `scripts/apply-rls-lockdown.mjs` revalida as travas anti-produção contra as
+**URLs reais** do `.env.staging` (ALLOW_STAGING_WRITES + STAGING_REF == `qsuufuulxfkkeasgxhcv` +
+PROD_HOST_BLOCKLIST + porta), conecta pela **direta (5432)**, aplica o lockdown (COMMIT) e roda o
+verify (BEGIN…ROLLBACK). O guard não depende de um literal digitado pelo operador. [REVISOR F4]
+
+```bash
+node scripts/apply-rls-lockdown.mjs            # aplica + verifica
+node scripts/apply-rls-lockdown.mjs --verify-only
+```
+
+Alternativa (psql direto), com o guard interno do SQL (mais fraco — literal do operador):
 
 ```bash
 PSQL -v staging_ref=qsuufuulxfkkeasgxhcv -f prisma/rls/lockdown_public_access.sql
@@ -70,16 +82,21 @@ Idempotente: reexecutar é inócuo. Aborta se faltar tabela ou se houver policy 
 
 ## 3. Verificação determinística (grupos 2–4 do D1)
 
+O wrapper já roda o verify. Para rodar isolado via psql:
+
 ```bash
 PSQL -f prisma/rls/verify_lockdown.sql
 ```
 
 Prova, tudo dentro de `BEGIN…ROLLBACK` (nada persiste):
 - **A** 26/26 `relrowsecurity=true`, `relforcerowsecurity=false`;
-- **B** privilégio **efetivo** (`has_*_privilege`, inclui PUBLIC e memberships) = zero
-  para `anon`/`authenticated`/`PUBLIC` em tabelas/sequences/routines;
-- **B2** schema sem USAGE p/ anon/authenticated e sem CREATE p/ PUBLIC;
-- **C** defaults neutralizados (novos objetos não concedem a anon/auth/PUBLIC);
+- **A2** zero policies nas 26 após a aplicação (o lockdown não cria policy);
+- **B** privilégio **efetivo** (`has_*_privilege` + `has_any_column_privilege`, inclui PUBLIC e
+  memberships) = zero para `anon`/`authenticated`/`PUBLIC` em tabelas/**colunas**/sequences/routines;
+- **B2** PUBLIC sem CREATE; `anon`/`authenticated` sem grant **direto** de schema (USAGE via PUBLIC
+  tolerado — sem privilégio de objeto não dá acesso);
+- **C** defaults neutralizados: novos objetos sem privilégio efetivo p/ anon/authenticated/PUBLIC
+  (inclui **EXECUTE** — residual fechado via ADP global) + catálogo dos roles criadores;
 - **D** negative controls comportamentais (`SET LOCAL ROLE`): SELECT nas 26 +
   INSERT/UPDATE/DELETE em Usuario + EXECUTE → `insufficient_privilege`;
 - **E** RLS deny-all independente do grant (mesmo com grant, RLS zera as linhas).
@@ -122,7 +139,13 @@ Um rollback **nunca** restaura grants de `anon`/`authenticated` (D1). Em regress
 app por RLS, desabilite RLS mantendo os revokes (a exposição externa segue fechada):
 
 ```sql
-DO $$ DECLARE t text; modelos text[] := ARRAY[/* as 26 */]; BEGIN
+DO $$ DECLARE t text; modelos text[] := ARRAY[
+  'Empresa','EmpresaWhatsapp','Tecnico','DocumentoTecnico','Servico','Material',
+  'MovimentacaoEstoque','ServicoMaterial','Usuario','ContaSocial','Notificacao','Pagamento',
+  'SessaoConversa','Avaliacao','ConexaoBot','RegistroPonto','BatidaPonto','GoogleConta',
+  'AvaliacaoGoogle','AnaliseAvaliacoes','CodigoRecuperacaoTotp','Assinatura','ConviteUsuario',
+  'SessaoUsuario','RefreshToken','AuditLog'];
+BEGIN
   FOREACH t IN ARRAY modelos LOOP EXECUTE format('ALTER TABLE public.%I DISABLE ROW LEVEL SECURITY;', t); END LOOP;
 END $$;
 ```

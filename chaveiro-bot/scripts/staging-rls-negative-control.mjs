@@ -95,18 +95,18 @@ async function main() {
   }
 
   // Mutacoes representativas em Usuario (so no modo fechado — nunca tentamos escrever no aberto).
+  // [REVISOR F5] Exigir negacao por AUTORIZACAO (401/403) ou tabela nao exposta (404).
+  // Um 400 (payload), 2xx (permitido) ou 5xx NAO conta como negacao por privilegio.
   if (!EXPECT_OPEN) {
-    const post = await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` });
-    linhas.push(`POST Usuario           -> ${post.status}`);
-    if (post.status >= 200 && post.status < 300) falhas.push(`POST Usuario NAO negado (status ${post.status}) — canario pode ter sido criado!`);
-
-    const patch = await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' });
-    linhas.push(`PATCH Usuario(id=-999999) -> ${patch.status}`);
-    if (patch.status >= 200 && patch.status < 300) falhas.push(`PATCH Usuario NAO negado (status ${patch.status})`);
-
-    const del = await req('DELETE', 'Usuario?id=eq.-999999');
-    linhas.push(`DELETE Usuario(id=-999999) -> ${del.status}`);
-    if (del.status >= 200 && del.status < 300) falhas.push(`DELETE Usuario NAO negado (status ${del.status})`);
+    const negadoAcesso = (s) => s === 401 || s === 403 || s === 404;
+    const checaMut = (nome, res) => {
+      linhas.push(`${nome} -> ${res.status}`);
+      if (!negadoAcesso(res.status))
+        falhas.push(`${nome} NAO negado por privilegio (status ${res.status}; esperado 401/403/404)`);
+    };
+    checaMut('POST Usuario', await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` }));
+    checaMut('PATCH Usuario(id=eq.-999999)', await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' }));
+    checaMut('DELETE Usuario(id=eq.-999999)', await req('DELETE', 'Usuario?id=eq.-999999'));
   }
 
   console.log(`\nSTG-SEC-RLS-01 negative control (${EXPECT_OPEN ? 'EXPECT_OPEN' : 'EXPECT_DENIED'}) @ ${REF_ESPERADO}`);

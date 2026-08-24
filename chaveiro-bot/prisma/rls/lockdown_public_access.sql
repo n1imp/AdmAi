@@ -104,31 +104,42 @@ REVOKE ALL    ON SCHEMA public FROM anon, authenticated;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 -- ── DEFAULT PRIVILEGES: neutraliza grants FUTUROS a anon/authenticated/PUBLIC ──
--- Qualificado FOR ROLE por criador de DDL (owner das relacoes atuais de public).
--- Um ALTER DEFAULT PRIVILEGES sem FOR ROLE nao seria prova suficiente (D1). Se o
--- executor nao for membro de algum owner, avisamos e seguimos (insufficient_privilege);
--- qualquer OUTRO erro sobe (nao mascaramos bug). O verify pega residuais.
+-- Qualificado FOR ROLE por CRIADOR DE DDL. Cobertura ampla [REVISOR F3]: owners de
+-- relacoes (todas as relkinds, inclui sequences) + owners de routines + qualquer role
+-- ja presente em pg_default_acl (grantor de defaults custom). Sem FOR ROLE nao seria
+-- prova suficiente (D1). insufficient_privilege vira WARNING (executor nao-membro do
+-- role); qualquer OUTRO erro sobe (nao mascaramos bug). O verify (parte C + catalogo)
+-- confirma que nao sobrou default concedendo a anon/authenticated/PUBLIC.
 --
--- ⚠️ RESIDUAL CONHECIDO (PostgreSQL 15/16): o default EMBUTIDO que concede EXECUTE em
---    novas FUNCTIONS ao pseudo-role PUBLIC NAO e suprimivel por ALTER DEFAULT PRIVILEGES
---    ... IN SCHEMA ... REVOKE ... FROM PUBLIC (nao materializa entrada em pg_default_acl).
---    O que ESTE bloco neutraliza e o default INJETADO pelo Supabase (grants a
---    anon/authenticated), que TEM entrada e e revogavel. Consequencia: futuras functions
---    em `public` herdariam EXECUTE de PUBLIC (=> anon, via PUBLIC + USAGE herdado).
---    Mitigacao: o app e PRISMA_ONLY e NAO cria functions em `public`; as functions
---    existentes ficam travadas pelo REVOKE ALL ON ALL ROUTINES acima. Revisitar se o
---    schema `public` passar a expor functions RPC. (verify_lockdown.sql parte C reporta.)
+-- Duas camadas:
+--   (a) IN SCHEMA public REVOKE ... FROM anon, authenticated, PUBLIC — neutraliza os
+--       defaults INJETADOS (ex.: Supabase concede a anon/authenticated em public).
+--   (b) GLOBAL (sem IN SCHEMA) REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated,
+--       PUBLIC — SUPRIME o default EMBUTIDO de EXECUTE-a-PUBLIC em novas functions, que
+--       o IN SCHEMA nao materializa em PG15/16 [REVISOR F2, verificado empiricamente].
+--       Fecha o residual (anon herdaria EXECUTE via PUBLIC). Trade-off consciente: o
+--       global afeta functions FUTURAS criadas por ESTES roles em QUALQUER schema —
+--       remove apenas o default de anon/authenticated/PUBLIC (nunca do owner nem do
+--       service_role); AdmAi e PRISMA_ONLY e nao depende de EXECUTE por PUBLIC. Nao
+--       revogamos de roles internos do Supabase (so os criadores de DDL de `public`).
 DO $$
 DECLARE
   r text;
+  criadores text[];
 BEGIN
-  FOR r IN
-    SELECT DISTINCT pg_get_userbyid(c.relowner)
-    FROM pg_class c
-    JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE n.nspname = 'public'
-      AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
-  LOOP
+  SELECT array_agg(DISTINCT rol) INTO criadores FROM (
+    SELECT pg_get_userbyid(c.relowner) AS rol
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v','m','f','S')
+    UNION
+    SELECT pg_get_userbyid(p.proowner)
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+    UNION
+    SELECT pg_get_userbyid(defaclrole) FROM pg_default_acl
+  ) x WHERE rol IS NOT NULL;
+
+  FOREACH r IN ARRAY COALESCE(criadores, ARRAY[]::text[]) LOOP
     BEGIN
       EXECUTE format(
         'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE ALL ON TABLES    FROM anon, authenticated, PUBLIC;', r);
@@ -136,6 +147,8 @@ BEGIN
         'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated, PUBLIC;', r);
       EXECUTE format(
         'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE ALL ON ROUTINES  FROM anon, authenticated, PUBLIC;', r);
+      EXECUTE format(
+        'ALTER DEFAULT PRIVILEGES FOR ROLE %I REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated, PUBLIC;', r);
     EXCEPTION
       WHEN insufficient_privilege THEN
         RAISE WARNING 'STG-SEC-RLS-01: sem permissao p/ ALTER DEFAULT PRIVILEGES FOR ROLE % — ajuste manual + reverifique.', r;

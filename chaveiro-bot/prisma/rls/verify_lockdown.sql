@@ -62,6 +62,13 @@ BEGIN
           falhas := falhas || format('%s tem %s em %s', grantee, priv, rec.relname);
         END IF;
       END LOOP;
+      -- [REVISOR F1] Grants por COLUNA sao separados do nivel-tabela — has_table_privilege
+      -- nao os pega. Prova que nenhuma coluna sobrou concedida a anon/authenticated/PUBLIC.
+      FOREACH priv IN ARRAY ARRAY['SELECT','INSERT','UPDATE','REFERENCES'] LOOP
+        IF has_any_column_privilege(grantee, rec.oid, priv) THEN
+          falhas := falhas || format('%s tem %s por COLUNA em %s', grantee, priv, rec.relname);
+        END IF;
+      END LOOP;
     END LOOP;
     -- sequences
     FOR rec IN
@@ -96,46 +103,84 @@ END $$;
 -- objeto (B) + RLS (A), USAGE de schema sozinho nao da acesso a nada — provado em D.
 -- O que importa aqui: PUBLIC nao pode CRIAR objetos em public.
 DO $$
-DECLARE falhas text[] := '{}';
+DECLARE falhas text[] := '{}'; n_direto int;
 BEGIN
   IF has_schema_privilege('public','public','CREATE') THEN falhas := falhas || 'PUBLIC CREATE schema'::text; END IF;
+  -- [REVISOR F6] anon/authenticated nao podem ter grant DIRETO no schema (o lockdown os revoga).
+  SELECT count(*) INTO n_direto FROM (
+    SELECT (aclexplode(nspacl)).grantee::regrole::text g FROM pg_namespace WHERE nspname = 'public'
+  ) x WHERE g IN ('anon','authenticated');
+  IF n_direto > 0 THEN falhas := falhas || format('%s grant(s) DIRETO(s) de schema a anon/authenticated', n_direto); END IF;
   IF array_length(falhas,1) IS NOT NULL THEN RAISE EXCEPTION 'B2) schema: %', falhas; END IF;
-  RAISE NOTICE 'B2) PASS — PUBLIC sem CREATE no schema (USAGE via PUBLIC tolerado; sem acesso a objeto)';
+  RAISE NOTICE 'B2) PASS — PUBLIC sem CREATE; anon/authenticated sem grant DIRETO de schema (USAGE via PUBLIC tolerado; sem acesso a objeto)';
 END $$;
 
--- ── C) Prova de DEFAULTS: novos objetos NAO concedem a anon/authenticated ──────
--- Cria table/sequence/function nesta transacao (efemeros — rollback no fim). A
--- assercao precisa: nenhum grant EXPLICITO a anon/authenticated nos novos objetos
--- (e o que o default INJETADO pelo Supabase faria; o lockdown o neutraliza). O
--- default EMBUTIDO que da EXECUTE em functions ao PUBLIC nao e suprimivel por ADP
--- em PG15/16 — reportado como RESIDUAL conhecido, nao como falha (o app nao cria
--- functions em public; existentes ja travadas pelo REVOKE).
+-- ── A2) POS-CONDICAO: zero policies nas 26 apos a aplicacao [REVISOR F6] ────────
+-- O lockdown nao cria policies; confirma que segue zero (senao alguem as adicionou).
 DO $$
 DECLARE
-  n_anon_auth int;
-  pub_exec boolean;
+  t text; com_policy text[] := '{}'; n int;
+  modelos text[] := ARRAY[
+    'Empresa','EmpresaWhatsapp','Tecnico','DocumentoTecnico','Servico','Material',
+    'MovimentacaoEstoque','ServicoMaterial','Usuario','ContaSocial','Notificacao','Pagamento',
+    'SessaoConversa','Avaliacao','ConexaoBot','RegistroPonto','BatidaPonto','GoogleConta',
+    'AvaliacaoGoogle','AnaliseAvaliacoes','CodigoRecuperacaoTotp','Assinatura','ConviteUsuario',
+    'SessaoUsuario','RefreshToken','AuditLog'
+  ];
+BEGIN
+  FOREACH t IN ARRAY modelos LOOP
+    SELECT count(*) INTO n FROM pg_policies WHERE schemaname='public' AND tablename=t;
+    IF n > 0 THEN com_policy := com_policy || t; END IF;
+  END LOOP;
+  IF array_length(com_policy,1) IS NOT NULL THEN RAISE EXCEPTION 'A2) policies inesperadas nas 26: %', com_policy; END IF;
+  RAISE NOTICE 'A2) PASS — zero policies nas 26 (RLS deny-all puro, como projetado)';
+END $$;
+
+-- ── C) Prova de DEFAULTS: novos objetos sem privilegio p/ anon/auth/PUBLIC ─────
+-- Cria table/sequence/function nesta transacao (efemeros — rollback no fim) e prova,
+-- por privilegio EFETIVO, que anon/authenticated/PUBLIC nao ganham NADA — inclusive
+-- EXECUTE em function (residual FECHADO via ADP global [REVISOR F2]). Mais um check de
+-- CATALOGO [REVISOR F3], escopado aos roles CRIADORES de DDL de public (evita falso
+-- positivo de defaults internos do Supabase em outros contextos): nenhum default deles
+-- concede a anon/authenticated, nem EXECUTE a PUBLIC em functions.
+DO $$
+DECLARE
+  grantee text; grantees text[] := ARRAY['anon','authenticated','public'];
+  falhas text[] := '{}';
+  n_cat int;
 BEGIN
   CREATE TABLE public._stg_sec_probe_tbl (id int);
   CREATE SEQUENCE public._stg_sec_probe_seq;
   CREATE FUNCTION public._stg_sec_probe_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';
 
-  SELECT count(*) INTO n_anon_auth FROM (
-    SELECT (aclexplode(relacl)).grantee::regrole::text AS g
-      FROM pg_class WHERE oid IN ('public._stg_sec_probe_tbl'::regclass, 'public._stg_sec_probe_seq'::regclass)
-    UNION ALL
-    SELECT (aclexplode(proacl)).grantee::regrole::text
-      FROM pg_proc WHERE oid = 'public._stg_sec_probe_fn()'::regprocedure
-  ) x WHERE g IN ('anon','authenticated');
+  FOREACH grantee IN ARRAY grantees LOOP
+    IF has_table_privilege(grantee, 'public._stg_sec_probe_tbl', 'SELECT') THEN
+      falhas := falhas || format('%s SELECT na nova table', grantee); END IF;
+    IF has_any_column_privilege(grantee, 'public._stg_sec_probe_tbl', 'SELECT') THEN
+      falhas := falhas || format('%s SELECT por coluna na nova table', grantee); END IF;
+    IF has_sequence_privilege(grantee, 'public._stg_sec_probe_seq', 'USAGE') THEN
+      falhas := falhas || format('%s USAGE na nova sequence', grantee); END IF;
+    IF has_function_privilege(grantee, 'public._stg_sec_probe_fn()', 'EXECUTE') THEN
+      falhas := falhas || format('%s EXECUTE na nova function', grantee); END IF;
+  END LOOP;
 
-  IF n_anon_auth > 0 THEN
-    RAISE EXCEPTION 'C) novos objetos concedem a anon/authenticated (% grants) — default injetado do Supabase ainda ativo', n_anon_auth;
+  SELECT count(*) INTO n_cat FROM (
+    SELECT pg_get_userbyid(d.defaclrole) AS rol, (aclexplode(d.defaclacl)).grantee::regrole::text AS g, d.defaclobjtype AS t
+    FROM pg_default_acl d
+  ) defs
+  JOIN (
+    SELECT pg_get_userbyid(c.relowner) AS rol FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','f','S')
+    UNION
+    SELECT pg_get_userbyid(p.proowner) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'
+  ) cr ON cr.rol = defs.rol
+  WHERE defs.g IN ('anon','authenticated') OR (defs.g = 'public' AND defs.t = 'f');
+  IF n_cat > 0 THEN
+    falhas := falhas || format('%s default(s) de criadores de DDL concedendo a anon/authenticated ou PUBLIC-execute', n_cat);
   END IF;
 
-  SELECT has_function_privilege('public', 'public._stg_sec_probe_fn()', 'EXECUTE') INTO pub_exec;
-  IF pub_exec THEN
-    RAISE NOTICE 'C) RESIDUAL conhecido (PG15/16): PUBLIC herda EXECUTE embutido em novas functions. App nao cria functions em public; existentes travadas pelo REVOKE. Revisitar se public expor RPC.';
-  END IF;
-  RAISE NOTICE 'C) PASS — novos objetos nao concedem a anon/authenticated (default injetado do Supabase neutralizado)';
+  IF array_length(falhas,1) IS NOT NULL THEN RAISE EXCEPTION 'C) defaults nao neutralizados: %', falhas; END IF;
+  RAISE NOTICE 'C) PASS — novos objetos sem privilegio efetivo p/ anon/authenticated/PUBLIC (inclui EXECUTE; residual FECHADO via ADP global)';
 END $$;
 
 -- ── D) Negative controls comportamentais (SET LOCAL ROLE) ─────────────────────
@@ -177,10 +222,14 @@ BEGIN
     BEGIN EXECUTE format('SET LOCAL ROLE %I', rl); EXECUTE 'DELETE FROM public."Usuario" WHERE id = -999999';
       falhas := falhas || format('%s DELETE Usuario PERMITIDO', rl); RESET ROLE;
     EXCEPTION WHEN insufficient_privilege THEN NULL; WHEN OTHERS THEN falhas := falhas || format('%s DELETE erro nao-privilegio: %s', rl, SQLERRM); END;
+    -- EXECUTE da probe function (criada na parte C) — residual FECHADO via ADP global [REVISOR F2]
+    BEGIN EXECUTE format('SET LOCAL ROLE %I', rl); PERFORM public._stg_sec_probe_fn();
+      falhas := falhas || format('%s EXECUTE probe_fn PERMITIDO', rl); RESET ROLE;
+    EXCEPTION WHEN insufficient_privilege THEN NULL; WHEN OTHERS THEN falhas := falhas || format('%s EXECUTE erro nao-privilegio: %s', rl, SQLERRM); END;
   END LOOP;
   RESET ROLE;
   IF array_length(falhas,1) IS NOT NULL THEN RAISE EXCEPTION 'D) negative control: %', falhas; END IF;
-  RAISE NOTICE 'D) PASS — anon/authenticated negados em SELECT(26)/INSERT/UPDATE/DELETE em public';
+  RAISE NOTICE 'D) PASS — anon/authenticated negados em SELECT(26)/INSERT/UPDATE/DELETE/EXECUTE em public';
 END $$;
 
 -- ── E) RLS deny-all INDEPENDENTE do grant: mesmo com grant, RLS zera as linhas ─
