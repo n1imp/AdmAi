@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "D2-WPP-GATING",
-  "titulo": "WhatsApp POST_MVP atras de feature gating no painel + prova de nao-bloqueio do MVP",
+  "sliceId": "ADMAI-RELEASE-CANDIDATE",
+  "titulo": "Terminal ADMAI_RELEASE_CANDIDATE_READY: sweep + proposal atualizados pelo D2 amendment",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T23:54:45.826Z",
+  "declaradoEm": "2026-08-24T00:14:54.275Z",
   "baseCommitPorLane": {
-    "HARNESS": "e612b0119402ee81bd6a5499bbf57359a6abfe24"
+    "HARNESS": "29904d2399db12308f80fd38f6c9eab3d0065292"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Backend ja gateado (WHATSAPP_HABILITADO !== true no inbound; startup nao abre provider). Falta a UI: flag WHATSAPP (default OFF) esconde o card do hub e o passo do tour que mira /configuracao/whatsapp — assim o MVP nao promete a superintegracao diferida e o tour nao mira elemento ausente. Prova das 5 propriedades do amendment: startup do bot sem provider; navegacao sem o card; nenhum fluxo obrigatorio depende do WhatsApp; jornadas E2E 9/9 sem provider. A pagina /configuracao/whatsapp segue acessivel por URL (informativa) mas fora da navegacao no MVP. EXPANSAO: featureFlags.test.js afirma o conjunto FECHADO de flags — adicionar WHATSAPP exige atualizar o contrato do teste (3->4 diferidas).",
+  "notaDeMetodo": "Fronteira de trabalho seguro VAZIA (zero NOT_READY/READY/IN_PROGRESS). Sweep tecnico verde. Atualiza RELEASE_BLOCKERS_SWEEP e o proposal para o terminal do ciclo = ADMAI_RELEASE_CANDIDATE_READY (LEGAL DEFERRED_BY_D2 impede RELEASE_READY; WhatsApp POST_MVP fora do escopo; staging por capability). Nenhuma acao de producao.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -390,7 +390,7 @@
       "chaveiro-painel/src/components/Sidebar.jsx": "7c910c49352fee8e5cb49f585de201388d510584931655a3373ba39257dd1583",
       "chaveiro-painel/src/components/Skeleton.jsx": "22daaa01d2e3ba2c7572bae5f8eb1e3693a55db53a51dffe89353d6d99f28cbc",
       "chaveiro-painel/src/components/Toast.jsx": "2aa8623475b7bfe09aec8ec88539ef85ffe4f5bf823e864dd21f49c41d38dcc2",
-      "chaveiro-painel/src/components/TourGuide.jsx": "0a6be863df2d4a2522d97df0299ecab4e6b328e6c1fcd8708dfd28959a58efde",
+      "chaveiro-painel/src/components/TourGuide.jsx": "f021986b08dab8ce866e52aa3fbc8a9b89131bad6d62b0a3d672844b25f22fbd",
       "chaveiro-painel/src/components/WelcomeCard.jsx": "6719ef24e2a0f2ca5e0deef8b16b74f4ff30c5f300c47dff5c898b94a811a5b3",
       "chaveiro-painel/src/components/Wizard.jsx": "5d31afe2419e12d45145405fe2465a0ab17750ae8aaed1e5df6eaa5a583285d0",
       "chaveiro-painel/src/components/__tests__/CookieBanner.test.jsx": "41a2f0e2198b86d5a14c37f25a7a79c1b0bf15600d1eeb48b636ddbd7024115a",
@@ -436,14 +436,14 @@
       "chaveiro-painel/src/index.css": "3bcf3068f6a87d49a801d10d8e3c047e7f550c71742e19004df1cd7a90654680",
       "chaveiro-painel/src/lib/__tests__/api.test.js": "aaa30f79e5fbe53122a9cdd1ee85b7b944ea56f9750ad13372d58fa77df33aca",
       "chaveiro-painel/src/lib/__tests__/crispBootstrap.test.js": "268e67250477eff56c501ecb36ef5f0c31affaae05022a5216cd7fe56516e2f8",
-      "chaveiro-painel/src/lib/__tests__/featureFlags.test.js": "d912746eccc44e56bf39cc3ea3bb3c92e87f7587ace401a0ca4519c68a20e60d",
+      "chaveiro-painel/src/lib/__tests__/featureFlags.test.js": "af24655a3996122542550bd129dea1476491d72e9833eaaba6701082669df777",
       "chaveiro-painel/src/lib/__tests__/jwt.test.js": "082f2d45dfca68abbdba8ebb815f782589fe95f244fe3a94566888afd0800ce6",
       "chaveiro-painel/src/lib/__tests__/primeiroAcesso.test.js": "88958dada1eee3c56c2e03cdaa9587af10f81bf7192f78323a06845858c87e63",
       "chaveiro-painel/src/lib/__tests__/senha.test.js": "0023e631f440e01ef576b6e30736f0378751aed053aa11ec3089d6926af83f07",
       "chaveiro-painel/src/lib/api.js": "76b084573fc4047ca92d9872e6357ca2bb515913af2b34c53844914398a512e0",
       "chaveiro-painel/src/lib/cookiePolicy.js": "cb96b21e3917ace6e1bbbbc013b8489b638950cc6ccfce626caacbdb99eca30f",
       "chaveiro-painel/src/lib/crispBootstrap.js": "0e72fa2f35fd4a68bff8da3091aee9f06b102c1b267457d3d29db52b439f4def",
-      "chaveiro-painel/src/lib/featureFlags.js": "f99ee8fcf6dfca93b5503648c5ce14a9255361dd11e0a4730825244a1947b8d4",
+      "chaveiro-painel/src/lib/featureFlags.js": "ff67b7823faace4c45077d2811cce7711037caaf87cce50d549859b619860ebc",
       "chaveiro-painel/src/lib/jwt.js": "98870afd5e5b8bbbdf565d503d862fcbc35fa080ce24bf6158dc55aedaa5cf0f",
       "chaveiro-painel/src/lib/legal.js": "8fb4d6df60c9d05814ebd4aadb8f94ea68208fe7e132242062a06e3b82f98418",
       "chaveiro-painel/src/lib/moeda.js": "9c8444f4a636d6d982f4b7e15eff1a062e26817c3a2628bb0fb45482775aee3f",
@@ -457,7 +457,7 @@
       "chaveiro-painel/src/pages/Avaliacoes.jsx": "88016655a4959a22df955a1ee4f677a659002941948c1cad711ba35271b7eba5",
       "chaveiro-painel/src/pages/Catalogo.jsx": "9c549fb4fa5605e516be309f6fcc3a249518e763958d9484cfd5da2a3cad4feb",
       "chaveiro-painel/src/pages/CatalogoModais.jsx": "6dfacaec3d924fc2e45e3900838836c7df34a2290b35f60509e40623ee7acc57",
-      "chaveiro-painel/src/pages/Configuracao.jsx": "816d38d0d17c3a75a63066b183f05bccfb833ea2e125dc104449b1ae281a8874",
+      "chaveiro-painel/src/pages/Configuracao.jsx": "12f5cee4aa8a827abdcef4c1a26c86370c3f1c47aa49cf8280eabc28e999bdcf",
       "chaveiro-painel/src/pages/ConfiguracaoBot.jsx": "fb6a8e8aacbae15ccb10a8d9991ef3ba3f069321674515d05d47ae051df7446f",
       "chaveiro-painel/src/pages/ConviteAceitar.jsx": "63435d36d57e2d3ab1206a45491c7573365c553e891c166e9cb85f8216d4c00a",
       "chaveiro-painel/src/pages/Cookies.jsx": "8cf25ce45f5a26f364dc7c8348f062edfb5bdf93b81238e7965ea6ef6487a6fc",
@@ -496,7 +496,7 @@
       "chaveiro-painel/src/pages/VerificarEmail.jsx": "a20d7f4e2b4be08ab1e08c8e2796115410e8876be5f4e5d1f6027d76390c1f5b",
       "chaveiro-painel/src/pages/__tests__/Aprovacoes.test.jsx": "0548ccc4f8208b0bfddd87f004e03e037f2d7af8ff1023ee8973db9474025d7f",
       "chaveiro-painel/src/pages/__tests__/Assinatura.test.jsx": "e2052c08931c70a116cb59c97b9b7b74458bfb8613b8f1514240959108f25e9d",
-      "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx": "36fd171a4de74819cfad749e1e0e00147c95dd94c1f0f776cf4877bf65fb4fc3",
+      "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx": "a770a13e308d57846c8fcb40bbc4b90487298092059dd95eb85ffd5ff1ab421b",
       "chaveiro-painel/src/pages/__tests__/Dashboard.test.jsx": "70b1028532edca205634bc0348e118cebca7b3cf51084eeafbfab7e0b454ba9e",
       "chaveiro-painel/src/pages/__tests__/DashboardWidgets.test.jsx": "36342c765e9009b1d77bcd626b78e780002d6eff9441d94f3327f221e8d8c35d",
       "chaveiro-painel/src/pages/__tests__/DashboardWidgetsOps.test.jsx": "10849c93127637368f888859a504f9f0cbb3919d9da95a7dbb841e73fa8d16d5",
@@ -586,7 +586,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "8c7aa5a4f4d1a44d4ee121593871b1db87605067f6c42c6dc77228d5b6dbb078",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "e8524a14a054f4d498f66d68b9a77bf96b9584e8ccbc4e6964b696822db0e590",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -598,8 +598,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d61f60aa410427787e3b129034088e02b442c7e006f5365f1aa91566be7b2f36",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5b4d4212507d2a84721b14cc1e238f24b53822d0a1dd16b748a7dd9de1d526e0",
+      "docs/eos-v2/WRITE_SET.json": "2336e9031820655afe3aa0775ea0cd27b8772f2e72b0c2017ffc1e49234aab9c",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "bf5f686e9e14ac0654fbee1d32c640167d5ac9fece3c97b751f8ce9fe6ea97e4",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2522,62 +2522,36 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [
-    "chaveiro-painel/telas"
-  ],
+  "artefatos": [],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/lib/featureFlags.js",
+      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
       "precisao": "BOUNDED",
-      "proposito": "flag WHATSAPP (default OFF)",
+      "proposito": "bloqueios recomputados pos-amendment",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "f99ee8fcf6dfca93b5503648c5ce14a9255361dd11e0a4730825244a1947b8d4",
+      "shaNaDeclaracao": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Configuracao.jsx",
+      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
       "precisao": "BOUNDED",
-      "proposito": "card WhatsApp e secao Integracoes atras do flag",
+      "proposito": "terminal CANDIDATE_READY + reclassificacoes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "816d38d0d17c3a75a63066b183f05bccfb833ea2e125dc104449b1ae281a8874",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/components/TourGuide.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "passo do WhatsApp condicional ao flag",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0a6be863df2d4a2522d97df0299ecab4e6b328e6c1fcd8708dfd28959a58efde",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "sem flag: zero card WhatsApp, zero promessa; tour sem o passo",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "36fd171a4de74819cfad749e1e0e00147c95dd94c1f0f776cf4877bf65fb4fc3",
+      "shaNaDeclaracao": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T23:54:46.071Z",
+  "validadoEm": "2026-08-24T00:14:54.603Z",
   "validadoPor": "write-set-gate.mjs",
-  "expansoesAutorizadas": [
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/lib/__tests__/featureFlags.test.js"
-    }
-  ],
-  "comparacao": "AUTHORIZED_EXPANSION",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "WhatsApp POST_MVP atras do flag WHATSAPP (OFF): card do hub e passo do tour condicionais; backend ja gateado. 5 propriedades provadas — startup ok (whatsapp:desconectado), 9/9 jornadas sem provider, unit 4/4. Painel 252/252.",
+  "nota": "ADMAI_RELEASE_CANDIDATE_READY atingido: fronteira de trabalho seguro vazia, sweep tecnico verde, proposal e sweep de bloqueios recomputados pelo D2 amendment. RELEASE_READY segue bloqueado por LEGAL (DEFERRED_BY_D2); zero acao de producao.",
   "aviso": "Declaracao ENCERRADA."
 }

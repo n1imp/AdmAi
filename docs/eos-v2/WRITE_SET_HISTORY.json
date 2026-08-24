@@ -51322,9 +51322,23 @@
       "bloqueiaIntegracao": false,
       "nota": "WhatsApp POST_MVP atras do flag WHATSAPP (OFF): card do hub e passo do tour condicionais; backend ja gateado. 5 propriedades provadas — startup ok (whatsapp:desconectado), 9/9 jornadas sem provider, unit 4/4. Painel 252/252.",
       "declaradoEm": "2026-08-23T23:54:45.826Z"
+    },
+    {
+      "sliceId": "ADMAI-RELEASE-CANDIDATE",
+      "titulo": "Terminal ADMAI_RELEASE_CANDIDATE_READY: sweep + proposal atualizados pelo D2 amendment",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "ADMAI_RELEASE_CANDIDATE_READY atingido: fronteira de trabalho seguro vazia, sweep tecnico verde, proposal e sweep de bloqueios recomputados pelo D2 amendment. RELEASE_READY segue bloqueado por LEGAL (DEFERRED_BY_D2); zero acao de producao.",
+      "declaradoEm": "2026-08-24T00:14:54.275Z"
     }
   ],
-  "geradoEm": "2026-08-24T00:12:11.965Z",
+  "geradoEm": "2026-08-24T00:17:35.092Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,48 +1,49 @@
-# Sweep global de bloqueios — ADMAI_RELEASE_READY  (2026-08-23)
+# Sweep global de bloqueios — ADMAI_RELEASE_CANDIDATE_READY  (2026-08-24, pós D2 amendment)
 
-Reconstrução de TODAS as fontes (ledger, surface-registry, findings, DOCS_RECONCILIATION_F6,
-SECURITY_HARDENING_BACKLOG) do que ainda impede `ADMAI_RELEASE_READY`. Invariante:
-`ZERO_FORGOTTEN_BLOCKER` — todo bloqueio tem fonte-de-verdade, tipo e condição de revisita.
+Reconstrução de TODAS as fontes do que ainda impede o release, sob o D2 amendment de 2026-08-23
+(LEGAL → DEFERRED_BY_D2; WhatsApp → SUPERINTEGRATION POST_MVP; staging existente autorizado).
+Invariante `ZERO_FORGOTTEN_BLOCKER`: todo bloqueio tem fonte, tipo e revisitCondition.
 
-`ADMAI_RELEASE_READY` **não** pode ser declarado enquanto esta lista de bloqueios D2/externo
-não estiver vazia. O terminal legítimo é `USER_DECISION_PROPOSAL`, não um READY maquiado.
+**Terminal do ciclo: `ADMAI_RELEASE_CANDIDATE_READY`** — não `ADMAI_RELEASE_READY`, porque
+`LEGAL_ACCEPTANCE = NOT_ACCEPTED` (D2-LEGAL DEFERRED_BY_D2). A fronteira de trabalho seguro está
+**vazia**: nada resta em NOT_READY/READY/IN_PROGRESS; os itens abaixo dependem de decisão do
+usuário, credenciais ou provisionamento.
 
-## Bloqueios que impedem o READY (7)
+## Bloqueios do RELEASE_CANDIDATE (o que precisa esvaziar para chegar lá) — nenhum
 
-| # | Bloqueio | Tipo | Fonte-de-verdade | Destrava |
+O candidato técnico está **atingido**: todo o trabalho de engenharia local e autorizado do MVP
+está DONE e verificado. Não há bloqueio técnico pendente para `ADMAI_RELEASE_CANDIDATE_READY`.
+
+## Bloqueios entre CANDIDATE e RELEASE_READY / PRODUÇÃO — 6
+
+| # | Bloqueio | Tipo | Fonte | Destrava |
 | --- | --- | --- | --- | --- |
-| 1 | Textos legais reais (razão social, CNPJ, DPO, prazos) | D2-DECISÃO | GAP-LEGAL-MODELO-01 (registry) · D2-LEGAL (ledger) | conteúdo validado por advogado; ponto único de injeção já preparado (`lib/legal.js`) |
-| 2 | Staging de aplicação verificado | BLOCKED_EXTERNAL | F5-03-STAGING-VALIDA · sonda F5 | provisionar Railway service + unpause Supabase `admai-staging` (custo → decisão) |
-| 3 | Bucket DOCUMENTOS produção | BLOCKED_EXTERNAL | D2-DOC-BUCKET · GAP-DOC-01 | `npm run bucket:provision` com credenciais prod |
-| 4 | Provider WhatsApp ponta real | BLOCKED_EXTERNAL | D2-WPP-PROVIDER · GAP-WPP-RT | provider Evolution/Cloud conectado (split de uploads F6-04 já feito como pré-requisito) |
-| 5 | Backfill de assinaturas em produção | D2-DECISÃO | D2-BACKFILL-PROD · Gate 5 | usuário autoriza execução + escolhe política (`--politica`); script + dry-run provados (F6-05) |
-| 6 | Backup de produção (Supabase Free sem cobertura) | D2-DECISÃO | D2-Q010-BACKUP · RUNBOOK §3 | upgrade Pro/PITR ou cron externo; drill local provado (F6-07) |
-| 7 | Promoção (push/merge/deploy) | D2-DECISÃO | D2-PROMOTION | `ADMAI_RELEASE_READY` atingido **E** decisão explícita do usuário |
+| 1 | Aceitação legal (Termos/Privacidade reais) | DEFERRED_BY_D2 | D2-LEGAL · GAP-LEGAL-MODELO-01 | conteúdo validado por advogado OU novo D2; finding preservado, `NOT_ACCEPTED`, nunca PASS |
+| 2 | Uso do staging (migrations, runtime, E2E real) | BLOCKED_CAPABILITY | STG-02-USO | `.env.staging` local com credenciais do admai-staging (uso via `--env-file`, sem expor) |
+| 3 | Bucket de documentos no staging + matriz real | BLOCKED_CAPABILITY | STG-03-DOC-BUCKET | idem #2 (Storage já é compatível com Supabase; comportamento provado local em F4-03) |
+| 4 | Backfill de assinaturas em produção | BLOCKED_D2 | D2-BACKFILL-PROD | autorização + política; script + dry-run provados (F6-05) |
+| 5 | Backup de produção (Supabase Free) | BLOCKED_D2 | D2-Q010-BACKUP | upgrade Pro/PITR ou cron externo; drill local provado (F6-07) |
+| 6 | Promoção (push/merge/deploy) | BLOCKED_D2 | D2-PROMOTION | resolução do #1 + decisão explícita do usuário |
 
-## Diferidos por escopo (não bloqueiam; ficam com revisita) — 6
+`D2-DOC-BUCKET` (bucket de **produção**) permanece BLOCKED_EXTERNAL, distinto do #3 (staging).
 
-- **SEC-HB-RESTANTES** — itens C do backlog (enumeração 409, unsafe-inline CSP, trust-proxy, etc.):
-  risco baixo, revisita por condição própria em `SECURITY_HARDENING_BACKLOG.md`.
-- **EV-057-ABUSO-CADASTRO** — abuso de cadastro em massa: risco aceito pelo usuário (EV-058).
-- **F-MAR-070-DEDUP** — EXECUTION_STATE duplicado entre worktrees (lane EOS congelada).
-- **CLOUD-INBOUND-FILA** — paridade de fila no Meta Cloud inbound: robustez de feature INCLUÍDA,
-  condicionada ao provider (#4).
-- **V2-PREP-RECEPCAO-DURAVEL / V2-RISK-FLOAT-MONETARIO** — capacidades V2 (dossiê F0.5): DEFER;
-  Float monetário é ARCHITECTURAL_RISK nomeado, sem consumidor no escopo congelado.
+## Diferidos por escopo (não bloqueiam; com revisita) — 8
 
-## Reconciliação com o freeze (ADMAI_SCOPE_FREEZE v1.0.0)
+- **WHATSAPP_SUPERINTEGRATION** (D2-WPP-PROVIDER) — POST_MVP por decisão do usuário; implementação
+  preservada atrás do flag `WHATSAPP` (OFF). Não-bloqueio do MVP **provado** (D2-WPP-GATING).
+- **CLOUD-INBOUND-FILA** — robustez de fila do inbound Cloud, condicionada ao provider (POST_MVP).
+- **SEC-HB restantes, EV-057, F-MAR-070, V2-PREP-RECEPCAO-DURAVEL, V2-RISK-FLOAT-MONETARIO,
+  P2-CHECKOUT-CONCORRENTE** — todos com revisitCondition própria no ledger.
 
-- **Nada fora do escopo foi construído.** Todo trabalho desta execução caiu dentro das 49
-  superfícies + os fluxos de runtime já existentes; a única superfície NOVA (`/assinatura`, SL-10)
-  é a "superfície mínima de billing" que o usuário aprovou explicitamente (2026-08-23), sobre 3
-  endpoints que já existiam.
-- **Registry final**: 50 superfícies · KEEP 48 · REFINE 2 (só as legais, exceção D2) · REDESIGN 0.
-- **Achados compartilhados**: 9 de 10 CLOSED; o único aberto é GAP-LEGAL (= bloqueio #1).
-- **Escopo negado permanece negado**: CRM, Orçamentos, Agenda, Offline etc. continuam fora — zero
-  linha de código adicionada para eles.
+## Isolamento de staging (CONFIRM_STAGING_ISOLATION) — provado
 
-## Estado dos gates de fase
+`STG-01-ISOLAMENTO` DONE: `admai-staging` e `AdmAi` (prod) são projetos Supabase **distintos** na
+org n1imp (nomes/refs diferentes ⇒ DB e credenciais próprios de cada um). O projeto de produção
+**não foi tocado** — só a lista da org foi lida, zero secrets, `NO_PRODUCTION_CUSTOMER_IMPACT`.
+A comparação byte a byte de credenciais exigiria lê-las (secrets) e não foi feita por política.
 
-F0 · F0.5 · F1 · GATE-F2-ENTRY · GATE-F3-EXPERIENCE · GATE-F4-RUNTIME · GATE-F5-STAGING (parcial,
-staging BLOCKED_EXTERNAL honesto): **DONE**. Falta apenas GATE-F6-RELEASE-ENG (depende do Gate 6
-adversarial) antes do terminal.
+## Reconciliação com o freeze + amendment
+
+Registry: 50 superfícies, KEEP 48, REFINE 2 (só as legais, agora DEFERRED_BY_D2), REDESIGN 0.
+Achados: 9 de 10 CLOSED; o único aberto é GAP-LEGAL (= bloqueio #1). Nada fora do escopo
+congelado; WhatsApp permanece implementado mas gated. Gate 6 adversarial APROVADO.

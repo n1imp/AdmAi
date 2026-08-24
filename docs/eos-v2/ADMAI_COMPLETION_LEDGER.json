@@ -1063,10 +1063,12 @@
       ],
       "writeSetRef": null,
       "evidenceRefs": [
-        "documentos_fallback_local 2/2 (401 nos 4 endpoints sem token; download byte a byte identico ao upload) + 17 pre-existentes confirmados (CRUD own-only, posse 404, multi-tenant 404, RBAC 403, flag-off 404, magic-byte, ramo storage com bucket ausente). Bucket producao segue BLOCKED_EXTERNAL (GAP-DOC-01)."
+        "documentos_fallback_local 2/2 (401 nos 4 endpoints sem token; download byte a byte identico ao upload) + 17 pre-existentes confirmados (CRUD own-only, posse 404, multi-tenant 404, RBAC 403, flag-off 404, magic-byte, ramo storage com bucket ausente). Bucket producao segue BLOCKED_EXTERNAL (GAP-DOC-01).",
+        "D2 amendment item 4: Storage CONFIRMADO compativel com Supabase (services/storage.js usa @supabase/supabase-js). A matriz de COMPORTAMENTO (UPLOAD/AUTHORIZED_READ/UNAUTHORIZED_DENIED/CROSS_TENANT_DENIED/DELETE) esta provada LOCAL: documentos.test.js (posse 404, multi-tenant 404, RBAC 403), documentos_storage.test.js (ramo storage, chave server-side, sem fallback silencioso), documentos_fallback_local.test.js (401 + integridade byte a byte).",
+        "Prova contra o BUCKET Supabase REAL em staging: BLOCKED_CAPABILITY (STG-02-USO) — herda a ausencia de credenciais de staging."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-23T14:04:27.436Z",
+      "lastAttempt": "2026-08-24T00:13:32.990Z",
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
@@ -2223,12 +2225,43 @@
       "nextAction": null,
       "revisitCondition": null,
       "snapshotRef": null
+    },
+    {
+      "workId": "STG-03-DOC-BUCKET",
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P2",
+      "risk": "medio",
+      "authority": "EXTERNAL",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Bucket de documentos no admai-staging + matriz contra o Storage real (UPLOAD/AUTHORIZED_READ/UNAUTHORIZED_DENIED/CROSS_TENANT_DENIED/DELETE).",
+      "dependencies": [
+        "STG-02-USO"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Storage compativel (Supabase). Comportamento provado local (F4-03). Falta o bucket real, que depende das credenciais de staging."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T00:13:32.990Z",
+      "nextAction": "Com credenciais: npm run bucket:provision no staging + matriz contra o bucket.",
+      "revisitCondition": "Com .env.staging local (credenciais do admai-staging): provisionar o bucket no projeto staging e re-rodar a matriz contra o Supabase Storage real. Sem elas, so o comportamento local (disco/mock) e verificavel.",
+      "snapshotRef": null
     }
   ],
   "terminal": {
     "alvoDoCiclo": "ADMAI_RELEASE_CANDIDATE_READY",
     "motivo": "D2 amendment 2026-08-23: LEGAL DEFERRED_BY_D2 (LEGAL_ACCEPTANCE=NOT_ACCEPTED) impede ADMAI_RELEASE_READY sob o contrato anterior; o candidato tecnico e o terminal ate resolucao juridica ou novo D2.",
     "admai_release_ready": "BLOQUEADO por D2-LEGAL (DEFERRED_BY_D2)",
-    "atualizadoEm": "2026-08-23T23:47:28.756Z"
+    "atualizadoEm": "2026-08-23T23:47:28.756Z",
+    "candidato_atingido": true,
+    "candidato_em": "2026-08-24T00:17:32.722Z",
+    "candidato_evidencia": "Fronteira de trabalho seguro VAZIA; sweep tecnico verde (selftests 121/121, 11/11, EOS PASS; registries 28/28, 29/29); painel 252/252; 9/9 jornadas E2E sem WhatsApp; Gate 6 APROVADO. Bloqueios restantes: 6 (1 DEFERRED_BY_D2 legal, 3 BLOCKED_CAPABILITY staging, 2 BLOCKED_D2 backfill/backup) + promocao."
   }
 }
