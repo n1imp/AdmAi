@@ -51350,9 +51350,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-UNBLOCK-01: descoberta secret-safe exaurida (§11); STG-CREDENTIALS permanece BLOCKED_CAPABILITY; estado autoritativo reconstruido (Gate 6 13/13, selftests 121/121·11/11·52/52)",
       "declaradoEm": "2026-08-24T00:52:34.110Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-AUDIT",
+      "titulo": "STG-SEC-RLS-01: access-model audit + finding registrado (fatos, pre-decisao Codex)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "STG-SEC-RLS-01 audit: access model (PRISMA_ONLY nas 26; anon/authenticated nao usados) + finding registrado + prefixo STG-SEC-. Fix versionado apos Codex D1.",
+      "declaradoEm": "2026-08-24T01:36:41.571Z"
     }
   ],
-  "geradoEm": "2026-08-24T00:55:58.420Z",
+  "geradoEm": "2026-08-24T01:37:12.359Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,19 +1,20 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-UNBLOCK-01",
-  "titulo": "Staging unblock cycle — safe-source discovery exhausted; block strengthened + evidence",
+  "sliceId": "STG-SEC-RLS-01-AUDIT",
+  "titulo": "STG-SEC-RLS-01: access-model audit + finding registrado (fatos, pre-decisao Codex)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T00:52:34.110Z",
+  "declaradoEm": "2026-08-24T01:36:41.571Z",
   "baseCommitPorLane": {
-    "HARNESS": "c876527b00921593a1b50f2e40d7af33aa5665cf"
+    "HARNESS": "7b6c6bd88275ac49f24591d16fe6eb6d62947778"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Descoberta secret-safe (nunca ler/ecoar valores) do §11: CLI supabase ABSENT, ~/.supabase ABSENT, projeto linkado ABSENT, e todos os nomes de env (SUPABASE_ACCESS_TOKEN/SUPABASE_DB_PASSWORD/SUPABASE_SERVICE_ROLE_KEY/STAGING_DATABASE_URL/DATABASE_URL/DIRECT_URL/STAGING_REF) ABSENT. Senha do banco do admai-staging e nao-recuperavel por CLI/API (so reset — mutacao nao autorizada). => STAGING_CREDENTIALS BLOCKED_CAPABILITY. Sem tocar producao, sem inventar credencial, sem expor secret. Registro atualiza ledger + sweep + proposal e regista reconstrucao da postura de seguranca local (Gate 6 13/13, selftests 121/121·11/11·52/52).",
+  "notaDeMetodo": "Auditoria deterministica do access model (PRISMA_ONLY nas 26; anon/authenticated nao usados) + registro do finding BLOQUEANTE. Decisao-independente. Novo prefixo de finding STG-SEC- registrado no completion-ledger.mjs (regra: introduzir enum/prefixo novo declara o tool junto). Fix versionado vem em write set separado apos Codex D1.",
   "baselinePorLane": {
     "HARNESS": {
+      "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -586,20 +587,20 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "954fd01d76fabb5c9f69807cb9c95dde6b6f5326a9e47b5e4cd7c7ab9daa7321",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "6a5faa04a30f5a9b721e59700d1906dbcf365107ee75a432aa544ec88729d255",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "e76c74bbaaf6d2aeedbc59b9e98074c82e2ff44f282ccd213551effd5c79c8fe",
+      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "8277916929327d1329784d5fa5c4d11b9a9023be16405b2253066ab25efdcedc",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "8a42bc8bdf44b36c00adc8fd8d5226060e0dec06d4ee6e87a03e57c907017827",
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a62b62837dc4d5c47a39feb01f9384f698a9422c823370fbab98285e4cf1dc5a",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "417c30f907d9e92b2a4a21b62758ee570a959315708f645775a1e172c97d6f0b",
+      "docs/eos-v2/WRITE_SET.json": "ff61c0837aa112da6a1a04b7fa895b96fb5c11db0a4a3527d09c8fdcb2aabcaf",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "c226ce545cb588d62edd2ca1082b246682c22a8b365ce82db4c099000fe8c87b",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -634,7 +635,7 @@
       "docs/legal/POLITICA_DE_PRIVACIDADE.md": "fc49fa5dd1136739df60a8821c9134943d668780400df7ea35f4fc09876ed156",
       "docs/legal/TERMOS_DE_USO.md": "8319a785c25ed56fe49f4aefc47fe201992f139d49d4655041c62e25e189ee79",
       "tools/admai-delivery/cli.mjs": "aa40b0e063b11d21dc6fb3dcc2c48d819ac2644e59be88a0ec55236edb6e88ec",
-      "tools/admai-delivery/completion-ledger.mjs": "62d832fdc6c4e45016de93887b989bee4aff0d0084aa94ef7546237cf0679598",
+      "tools/admai-delivery/completion-ledger.mjs": "fb553afd29a1f139df74418f8e84021207ea26908088b4e642ed581b238a5209",
       "tools/admai-delivery/deepspec.mjs": "bf96d32444dc566e7f586228e8aaf5256382f9626bcd91f919ad04a78b15da63",
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
@@ -2525,30 +2526,36 @@
   "entradas": [
     {
       "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md",
+      "precisao": "arquivo-novo",
+      "proposito": "Access model + finding STG-SEC-RLS-01 + fluxo do amendment",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "Registrar safeSourceAttempts/missingVariableNames no bloqueio STG-CREDENTIALS; bump attemptCount/lastAttempt; refinar revisitCondition; nota de reconstrucao da postura local",
+      "proposito": "Novo item STG-SEC-RLS-01 (IN_PROGRESS, finding BLOQUEANTE)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "954fd01d76fabb5c9f69807cb9c95dde6b6f5326a9e47b5e4cd7c7ab9daa7321",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "6a5faa04a30f5a9b721e59700d1906dbcf365107ee75a432aa544ec88729d255",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
+      "caminho": "tools/admai-delivery/completion-ledger.mjs",
       "precisao": "edicao",
-      "proposito": "Fortalecer bloqueios #2/#3 com a exaustao de fontes seguras deste ciclo",
+      "proposito": "Registrar prefixo de finding STG-SEC- (dono conhecido)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e76c74bbaaf6d2aeedbc59b9e98074c82e2ff44f282ccd213551effd5c79c8fe",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
-      "precisao": "edicao",
-      "proposito": "Acao minima de desbloqueio precisa + reconstrucao de estado autoritativo deste ciclo",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8a42bc8bdf44b36c00adc8fd8d5226060e0dec06d4ee6e87a03e57c907017827",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "fb553afd29a1f139df74418f8e84021207ea26908088b4e642ed581b238a5209",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2558,6 +2565,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "STG-UNBLOCK-01: descoberta secret-safe exaurida (§11); STG-CREDENTIALS permanece BLOCKED_CAPABILITY; estado autoritativo reconstruido (Gate 6 13/13, selftests 121/121·11/11·52/52)",
+  "nota": "STG-SEC-RLS-01 audit: access model (PRISMA_ONLY nas 26; anon/authenticated nao usados) + finding registrado + prefixo STG-SEC-. Fix versionado apos Codex D1.",
   "aviso": "Declaracao ENCERRADA."
 }

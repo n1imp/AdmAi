@@ -2258,6 +2258,36 @@
       "nextAction": "Com credenciais: npm run bucket:provision no staging + matriz contra o bucket.",
       "revisitCondition": "Com .env.staging local (credenciais do admai-staging): provisionar o bucket no projeto staging e re-rodar a matriz contra o Supabase Storage real. Sem elas, so o comportamento local (disco/mock) e verificavel.",
       "snapshotRef": null
+    },
+    {
+      "workId": "STG-SEC-RLS-01",
+      "phase": "F5",
+      "domain": "seguranca",
+      "priority": "P0",
+      "risk": "alto",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": "codex",
+      "status": "IN_PROGRESS",
+      "description": "Finding BLOQUEANTE de seguranca: 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated (Advisor rls_disabled_in_public ERROR EXTERNAL). Exposicao externa direta via PostgREST/anon key, contornando o backend. Corrigir com artefato versionado reproduzivel (repo + staging).",
+      "dependencies": [],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [
+        "STG-SEC-RLS-01"
+      ],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "ADMAI_DATABASE_ACCESS_MODEL (auditoria deterministica do repo): as 26 tabelas sao PRISMA_ONLY; Storage via service-role (server-side, so .storage.from); frontend sem @supabase/*; env.js sem SUPABASE_ANON_KEY; zero supabase.from/.rpc/rest/v1. anon/authenticated NAO usados => revogar grants tem risco de compat ZERO. Detalhe em docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md.",
+        "Artefato existente prisma/rls/enable_rls.sql (isolamento inter-tenant, 12 tabelas, role app_rw NOBYPASSRLS) NAO fecha este finding: nao cobre Usuario/Empresa/RefreshToken/etc. e nao revoga anon/authenticated. Concern separado, mantido como esta.",
+        "PRODUCTION_RLS_STATE = UNKNOWN (nao inferir; producao nao tocada)."
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T00:52:46.508Z",
+      "nextAction": "Codex D1 DECISOR (boundary A/B/C) -> implementar artefato SQL versionado + runbook (Write Set) -> aplicar no staging + negative control (anon key -> /rest/v1 DENIED + sabotagem morde) -> so entao reconciliacao de migration.",
+      "revisitCondition": "Aplicacao no banco de staging e negative-control exigem credenciais/execucao SQL no admai-staging (BLOCKED_CAPABILITY enquanto ausentes, ver STG-02-USO). O artefato versionado no repo e produzivel sem credenciais e fecha a parte NO_REPOSITORY do amendment.",
+      "snapshotRef": null
     }
   ],
   "terminal": {
