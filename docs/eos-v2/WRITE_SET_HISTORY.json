@@ -51308,9 +51308,23 @@
         "provenance": "ORIGINAL_PRE_MUTATION",
         "correcaoDeProcesso": "Introduzir estado/enum novo no ledger declara o completion-ledger.mjs (dono da taxonomia) junto com o .json de dados."
       }
+    },
+    {
+      "sliceId": "D2-WPP-GATING",
+      "titulo": "WhatsApp POST_MVP atras de feature gating no painel + prova de nao-bloqueio do MVP",
+      "estado": "CLOSED",
+      "comparacao": "AUTHORIZED_EXPANSION",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "WhatsApp POST_MVP atras do flag WHATSAPP (OFF): card do hub e passo do tour condicionais; backend ja gateado. 5 propriedades provadas — startup ok (whatsapp:desconectado), 9/9 jornadas sem provider, unit 4/4. Painel 252/252.",
+      "declaradoEm": "2026-08-23T23:54:45.826Z"
     }
   ],
-  "geradoEm": "2026-08-23T23:48:07.984Z",
+  "geradoEm": "2026-08-24T00:12:11.965Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

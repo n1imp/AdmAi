@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "D2-AMENDMENT-RECLASS",
-  "titulo": "D2 amendment: LEGAL->DEFERRED_BY_D2, WhatsApp->POST_MVP, terminal ADMAI_RELEASE_CANDIDATE_READY",
+  "sliceId": "D2-WPP-GATING",
+  "titulo": "WhatsApp POST_MVP atras de feature gating no painel + prova de nao-bloqueio do MVP",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-23T23:46:11.931Z",
+  "declaradoEm": "2026-08-23T23:54:45.826Z",
   "baseCommitPorLane": {
-    "HARNESS": "65dec56578cc2b99777d75643faf7b87e7002f71"
+    "HARNESS": "e612b0119402ee81bd6a5499bbf57359a6abfe24"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Duas decisoes soberanas do usuario: (1) GAP-LEGAL-MODELO-01 vira DEFERRED_BY_D2 preservando finding+evidence (NAO PASS, LEGAL_ACCEPTANCE=NOT_ACCEPTED), terminal passa de ADMAI_RELEASE_READY para ADMAI_RELEASE_CANDIDATE_READY ate resolucao juridica; (2) WhatsApp vira SUPERINTEGRATION POST_MVP / DEFERRED_BY_SCOPE, sai dos acceptance requirements, implementacao preservada atras de feature gating. So mexe no ledger/registry — reclassificacao, nao codigo.",
+  "notaDeMetodo": "Backend ja gateado (WHATSAPP_HABILITADO !== true no inbound; startup nao abre provider). Falta a UI: flag WHATSAPP (default OFF) esconde o card do hub e o passo do tour que mira /configuracao/whatsapp — assim o MVP nao promete a superintegracao diferida e o tour nao mira elemento ausente. Prova das 5 propriedades do amendment: startup do bot sem provider; navegacao sem o card; nenhum fluxo obrigatorio depende do WhatsApp; jornadas E2E 9/9 sem provider. A pagina /configuracao/whatsapp segue acessivel por URL (informativa) mas fora da navegacao no MVP. EXPANSAO: featureFlags.test.js afirma o conjunto FECHADO de flags — adicionar WHATSAPP exige atualizar o contrato do teste (3->4 diferidas).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -586,7 +586,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7268f7325d0b3708d0f05669c6dcd8e55e65df4ee84e587ffb795914461412c7",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "8c7aa5a4f4d1a44d4ee121593871b1db87605067f6c42c6dc77228d5b6dbb078",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -598,8 +598,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "9fd6121be3f422d0408f29d95537f6e5ebc21e37fc306503cf76102f8a76af4b",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b69d5a97e2bf042225d698e3b4fb75e78f11908f3520fcd7bdd484c1adcc7fa9",
+      "docs/eos-v2/WRITE_SET.json": "d61f60aa410427787e3b129034088e02b442c7e006f5365f1aa91566be7b2f36",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5b4d4212507d2a84721b14cc1e238f24b53822d0a1dd16b748a7dd9de1d526e0",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -634,7 +634,7 @@
       "docs/legal/POLITICA_DE_PRIVACIDADE.md": "fc49fa5dd1136739df60a8821c9134943d668780400df7ea35f4fc09876ed156",
       "docs/legal/TERMOS_DE_USO.md": "8319a785c25ed56fe49f4aefc47fe201992f139d49d4655041c62e25e189ee79",
       "tools/admai-delivery/cli.mjs": "aa40b0e063b11d21dc6fb3dcc2c48d819ac2644e59be88a0ec55236edb6e88ec",
-      "tools/admai-delivery/completion-ledger.mjs": "3cb440f37adf9bd591994edd0980afd74f0ee1ddcfde1ac7f131b83381677251",
+      "tools/admai-delivery/completion-ledger.mjs": "62d832fdc6c4e45016de93887b989bee4aff0d0084aa94ef7546237cf0679598",
       "tools/admai-delivery/deepspec.mjs": "bf96d32444dc566e7f586228e8aaf5256382f9626bcd91f919ad04a78b15da63",
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
@@ -649,7 +649,7 @@
       "tools/admai-delivery/run-state.mjs": "3139f7b4a4f91ddf92c19baf41fa732ba727131daa087b8c169bfea973857502",
       "tools/admai-delivery/snapshot.mjs": "a49208025308db1dac0a6411fd0bf5bc92b88212c4384b1049115633129df44c",
       "tools/admai-delivery/stale-check.mjs": "db72535393cc0a996ee1c20ce63531d9ea93784f89744fb1bd6f6b7f53e84923",
-      "tools/admai-delivery/surface-registry.mjs": "c1f741abf97d5ccba354a209e5e5f456dc2763fd04032bf1ff0d78964bbd2dc2",
+      "tools/admai-delivery/surface-registry.mjs": "d464eaa240c7ac9982e626e3c0a646cec32d3f0f82033518581d0ed281c7dd61",
       "tools/admai-delivery/tenant-coverage.mjs": "23f6752f6b90e53a8556a219167b80f9f70b54b83629c3774a7bbd430b36152b",
       "tools/admai-delivery/test-orchestrator.mjs": "a7a90cf201e915079da3be3eca2f0ff773a639c984a8b359e82092d7fb90483b",
       "tools/admai-delivery/write-scope.mjs": "c363b850b4da1d22d04fce75372de56044745d034e65fb39d9554a4b5d80f0c7",
@@ -2522,36 +2522,62 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [],
+  "artefatos": [
+    "chaveiro-painel/telas"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "caminho": "chaveiro-painel/src/lib/featureFlags.js",
       "precisao": "BOUNDED",
-      "proposito": "reclassificar LEGAL e WhatsApp; novo terminal",
+      "proposito": "flag WHATSAPP (default OFF)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7268f7325d0b3708d0f05669c6dcd8e55e65df4ee84e587ffb795914461412c7",
+      "shaNaDeclaracao": "f99ee8fcf6dfca93b5503648c5ce14a9255361dd11e0a4730825244a1947b8d4",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/surface-registry.mjs",
+      "caminho": "chaveiro-painel/src/pages/Configuracao.jsx",
       "precisao": "BOUNDED",
-      "proposito": "GAP-LEGAL-MODELO-01 e WhatsApp: nota da reclassificacao D2",
+      "proposito": "card WhatsApp e secao Integracoes atras do flag",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c1f741abf97d5ccba354a209e5e5f456dc2763fd04032bf1ff0d78964bbd2dc2",
+      "shaNaDeclaracao": "816d38d0d17c3a75a63066b183f05bccfb833ea2e125dc104449b1ae281a8874",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/TourGuide.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "passo do WhatsApp condicional ao flag",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0a6be863df2d4a2522d97df0299ecab4e6b328e6c1fcd8708dfd28959a58efde",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "sem flag: zero card WhatsApp, zero promessa; tour sem o passo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "36fd171a4de74819cfad749e1e0e00147c95dd94c1f0f776cf4877bf65fb4fc3",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-23T23:46:12.239Z",
+  "validadoEm": "2026-08-23T23:54:46.071Z",
   "validadoPor": "write-set-gate.mjs",
-  "comparacao": "UNDECLARED_WRITE",
+  "expansoesAutorizadas": [
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/__tests__/featureFlags.test.js"
+    }
+  ],
+  "comparacao": "AUTHORIZED_EXPANSION",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": true,
-  "nota": "D2 amendment: LEGAL->DEFERRED_BY_D2 (finding preservado, NOT_ACCEPTED, nao PASS), WhatsApp->DEFERRED_BY_SCOPE/POST_MVP, novo estado DEFERRED_BY_D2 na taxonomia com regra de revisita, terminal ADMAI_RELEASE_CANDIDATE_READY.",
+  "bloqueiaIntegracao": false,
+  "nota": "WhatsApp POST_MVP atras do flag WHATSAPP (OFF): card do hub e passo do tour condicionais; backend ja gateado. 5 propriedades provadas — startup ok (whatsapp:desconectado), 9/9 jornadas sem provider, unit 4/4. Painel 252/252.",
   "aviso": "Declaracao ENCERRADA."
 }

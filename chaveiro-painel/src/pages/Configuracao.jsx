@@ -206,9 +206,13 @@ export default function Configuracao() {
   const toast = useToast();
   const { isAdmin, pode } = useAuth();
 
-  const secoes = SECOES.map((s) =>
-    s.titulo === 'Conta' && isAdmin ? { ...s, cards: [...s.cards, CARD_USUARIOS] } : s
-  );
+  const secoes = SECOES
+    // [D2 amendment] WhatsApp é POST_MVP: sem o flag, a seção Integrações (só WhatsApp hoje)
+    // não aparece — o MVP não promete a superintegração diferida.
+    .filter((s) => s.titulo !== 'Integrações' || featureAtiva('WHATSAPP'))
+    .map((s) =>
+      s.titulo === 'Conta' && isAdmin ? { ...s, cards: [...s.cards, CARD_USUARIOS] } : s
+    );
 
   function abrir(card) {
     if (card.to) navigate(card.to);

@@ -2197,6 +2197,32 @@
       "nextAction": "Com .env.staging local: despausar admai-staging, prisma migrate deploy, provisionar bucket, rodar jornadas.mjs com ADMAI_URL/DATABASE_URL de staging, matriz de documentos no bucket.",
       "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
       "snapshotRef": null
+    },
+    {
+      "workId": "D2-WPP-GATING",
+      "phase": "F6",
+      "domain": "produto",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "DONE",
+      "description": "WhatsApp POST_MVP atras de feature gating + prova das 5 propriedades de nao-bloqueio do MVP.",
+      "dependencies": [],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Backend ja gateado: inbound.js retorna cedo com WHATSAPP_HABILITADO !== true; server.js nao abre provider no boot. UI agora atras do flag WHATSAPP (default OFF): card do hub e passo do tour so aparecem com o flag; pagina /configuracao/whatsapp segue por URL (informativa), fora da navegacao no MVP.",
+        "Prova 1 (core MVP nao bloqueia) + 5 (E2E principal): 9/9 jornadas no stack real SEM provider (onboarding, servico, ponto, assinatura, 2FA, deep-link, mobile, documentos). Prova 2 (startup): /health status ok com whatsapp:desconectado. Prova 3 (navigation): jornada mobile navega sem o card. Prova 4 (fluxo obrigatorio): nenhum passo obrigatorio do MVP toca WhatsApp — os 9 fluxos completam.",
+        "Unit: Configuracao 4/4 (flag OFF -> sem card/promessa; flag ON -> card reaparece como alvo do tour); featureFlags conjunto fechado 3->4 (WHATSAPP OFF). Painel 252/252."
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T00:11:46.545Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     }
   ],
   "terminal": {

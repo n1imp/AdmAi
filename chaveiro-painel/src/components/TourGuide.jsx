@@ -1,4 +1,5 @@
 // TourGuide — tour de onboarding interativo (estilo Intercom/Appcues) usando driver.js.
+import { featureAtiva } from '../lib/featureFlags.js';
 //
 // NAVIGATION-AWARE: cada passo declara a `route` em que deve acontecer. Ao avançar
 // (ou voltar), o tour NAVEGA para a aba correspondente via React Router, espera o
@@ -247,7 +248,11 @@ export function startTour({ force = false, navigate } = {}) {
     doneBtnText: 'Concluir',
     /* O primeiro passo não tem para onde voltar — renderizar "Voltar" habilitado ali é um
        botão que mente. driver.js aceita showButtons por passo. [SL-11] */
-    steps: PASSOS.map((p, i) => ({
+    // [D2 amendment] O passo do WhatsApp só entra com o flag: sem ele, o tour não mira um
+    // elemento (a[href=/configuracao/whatsapp]) que o hub não renderiza no MVP.
+    steps: PASSOS.filter(
+      (p) => p.route !== '/configuracao/whatsapp' || featureAtiva('WHATSAPP')
+    ).map((p, i) => ({
       element: p.element,
       popover: i === 0 ? { ...p.popover, showButtons: ['next', 'close'] } : p.popover,
     })),

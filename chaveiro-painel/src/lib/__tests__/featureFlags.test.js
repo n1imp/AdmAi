@@ -10,12 +10,13 @@ import { describe, it, expect } from 'vitest';
 import { FLAGS, featureAtiva } from '../featureFlags.js';
 
 describe('featureFlags', () => {
-  it('as três diferidas nascem DESLIGADAS sem configuração', () => {
+  it('as quatro diferidas nascem DESLIGADAS sem configuração', () => {
     /* O ambiente de teste não define nenhuma `VITE_FEATURE_*`. É exatamente o cenário de um build
        onde alguém esqueceu de configurar — e o resultado tem de ser "não vai ao ar". */
     expect(FLAGS.METRIC_HUBS).toBe(false);
     expect(FLAGS.GOOGLE_REVIEWS).toBe(false);
     expect(FLAGS.NOTIFICACOES).toBe(false);
+    expect(FLAGS.WHATSAPP).toBe(false); // [D2 amendment] superintegração POST_MVP
   });
 
   it('só a string `true` liga — qualquer outro valor é não', () => {
@@ -34,9 +35,14 @@ describe('featureFlags', () => {
     expect(featureAtiva('qualquer-coisa')).toBe(true);
   });
 
-  it('o conjunto de flags é FECHADO: só as três diferidas', () => {
+  it('o conjunto de flags é FECHADO: só as quatro diferidas', () => {
     /* Flag nova aparecendo aqui sem decisão de escopo é sinal de que alguém retirou algo do
        release sem registrar. O teste força a conversa. */
-    expect(Object.keys(FLAGS).sort()).toEqual(['GOOGLE_REVIEWS', 'METRIC_HUBS', 'NOTIFICACOES']);
+    expect(Object.keys(FLAGS).sort()).toEqual([
+      'GOOGLE_REVIEWS',
+      'METRIC_HUBS',
+      'NOTIFICACOES',
+      'WHATSAPP',
+    ]);
   });
 });

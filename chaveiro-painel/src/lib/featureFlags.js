@@ -38,6 +38,9 @@ export const FLAGS = Object.freeze({
   METRIC_HUBS: ligada(import.meta.env.VITE_FEATURE_METRIC_HUBS),
   GOOGLE_REVIEWS: ligada(import.meta.env.VITE_FEATURE_GOOGLE_REVIEWS),
   NOTIFICACOES: ligada(import.meta.env.VITE_FEATURE_NOTIFICACOES),
+  /* [D2 amendment] WhatsApp e SUPERINTEGRATION POST_MVP: fora dos acceptance requirements do
+     release. OFF por padrao — a implementacao existe atras deste flag. */
+  WHATSAPP: ligada(import.meta.env.VITE_FEATURE_WHATSAPP),
 });
 
 /** @param {keyof typeof FLAGS} nome */
