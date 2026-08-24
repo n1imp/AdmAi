@@ -1,7 +1,16 @@
 # USER_DECISION_PROPOSAL — PROMOTE_ADMAI_TO_PRODUCTION
 
-**Data:** 2026-08-24 (pós D2 amendment) · **Branch:** `fix/seguranca-criticos` · **Escopo:** ADMAI_SCOPE_FREEZE v1.0.0
+**Data:** 2026-08-24 (pós ciclo STG-UNBLOCK) · **Branch:** `fix/seguranca-criticos` · **Escopo:** ADMAI_SCOPE_FREEZE v1.0.0
 **Terminal do ciclo:** `ADMAI_RELEASE_CANDIDATE_READY`
+
+> **Ciclo STG-UNBLOCK (2026-08-24):** a diretiva de desbloqueio de staging foi executada até o
+> limite seguro. A descoberta secret-safe de credenciais (§11) foi **exaurida** sem tocar produção
+> nem expor secret — `supabase` CLI, token, env store e projeto linkado **todos ausentes**; a senha
+> do banco do `admai-staging` é não-recuperável por CLI/API (só reset). Logo `STAGING_CREDENTIALS`
+> permanece `BLOCKED_CAPABILITY` e **`REAL_STAGING_ACCEPTANCE_PROVEN` não foi alcançável**. O estado
+> autoritativo foi reconstruído neste HEAD: Gate 6 lock+correções **13/13** (regressão TOCTOU morde),
+> selftests **121/121 · 11/11 · 52/52**. Uma única ação do usuário desbloqueia todo o encadeamento
+> de staging — ver bloqueio #2 abaixo.
 
 ## Veredito
 
@@ -54,8 +63,12 @@ Cada um com passo-a-passo executável e critério de aceite. Fonte completa:
   SUPABASE_SERVICE_ROLE_KEY) num `.env.staging` LOCAL fora do git; despausar o projeto; rodar
   `prisma migrate deploy` e `jornadas.mjs` com `ADMAI_URL`/`DATABASE_URL` de staging.
 - **Aceite:** migrations aplicadas + 9/9 jornadas contra staging.
-- **Nota:** isolamento já provado (STG-01: staging≠prod). Obter os secrets pelo dashboard os
-  traria ao transcript (proibido) — por isso o uso via `--env-file` sem ecoar é o caminho seguro.
+- **Nota:** isolamento já provado (STG-01: staging≠prod). Canal secret-safe (qualquer um dos dois):
+  (a) escrever as credenciais num `.env.staging` LOCAL — já **git-ignored** (verificado neste ciclo:
+  `git check-ignore` confirma bot/painel/raiz); ou (b) exportá-las como env vars locais antes de me
+  invocar. Uso via `--env-file`/env, sem nunca ler nem ecoar o conteúdo. Obter os secrets pelo
+  dashboard os traria ao transcript (proibido); e a senha do banco **não** é recuperável por CLI/API
+  (só reset), então não existe caminho automático — é a única coisa que depende de você.
 
 ### 3. Bucket de documentos no staging + matriz real — BLOCKED_CAPABILITY
 - **Passo:** com o `.env.staging` do #2, `npm run bucket:provision` no projeto staging; rodar a

@@ -1,4 +1,4 @@
-# Sweep global de bloqueios — ADMAI_RELEASE_CANDIDATE_READY  (2026-08-24, pós D2 amendment)
+# Sweep global de bloqueios — ADMAI_RELEASE_CANDIDATE_READY  (2026-08-24, pós ciclo STG-UNBLOCK)
 
 Reconstrução de TODAS as fontes do que ainda impede o release, sob o D2 amendment de 2026-08-23
 (LEGAL → DEFERRED_BY_D2; WhatsApp → SUPERINTEGRATION POST_MVP; staging existente autorizado).
@@ -19,7 +19,7 @@ está DONE e verificado. Não há bloqueio técnico pendente para `ADMAI_RELEASE
 | # | Bloqueio | Tipo | Fonte | Destrava |
 | --- | --- | --- | --- | --- |
 | 1 | Aceitação legal (Termos/Privacidade reais) | DEFERRED_BY_D2 | D2-LEGAL · GAP-LEGAL-MODELO-01 | conteúdo validado por advogado OU novo D2; finding preservado, `NOT_ACCEPTED`, nunca PASS |
-| 2 | Uso do staging (migrations, runtime, E2E real) | BLOCKED_CAPABILITY | STG-02-USO | `.env.staging` local com credenciais do admai-staging (uso via `--env-file`, sem expor) |
+| 2 | Uso do staging (migrations, runtime, E2E real) | BLOCKED_CAPABILITY | STG-02-USO | canal secret-safe do usuário: `.env.staging` local (já git-ignored) **ou** env vars locais; uso via `--env-file`, sem ler/ecoar |
 | 3 | Bucket de documentos no staging + matriz real | BLOCKED_CAPABILITY | STG-03-DOC-BUCKET | idem #2 (Storage já é compatível com Supabase; comportamento provado local em F4-03) |
 | 4 | Backfill de assinaturas em produção | BLOCKED_D2 | D2-BACKFILL-PROD | autorização + política; script + dry-run provados (F6-05) |
 | 5 | Backup de produção (Supabase Free) | BLOCKED_D2 | D2-Q010-BACKUP | upgrade Pro/PITR ou cron externo; drill local provado (F6-07) |
@@ -41,6 +41,32 @@ está DONE e verificado. Não há bloqueio técnico pendente para `ADMAI_RELEASE
 org n1imp (nomes/refs diferentes ⇒ DB e credenciais próprios de cada um). O projeto de produção
 **não foi tocado** — só a lista da org foi lida, zero secrets, `NO_PRODUCTION_CUSTOMER_IMPACT`.
 A comparação byte a byte de credenciais exigiria lê-las (secrets) e não foi feita por política.
+
+## Descoberta secret-safe de credenciais (ciclo STG-UNBLOCK, 2026-08-24) — exaurida
+
+A diretiva STAGING UNBLOCK exige tentar todas as fontes seguras (§11) antes de declarar
+`BLOCKED_CAPABILITY`. Feito, sem tocar produção e sem expor nenhum valor (só nomes/estados):
+
+| Fonte (prioridade §11) | Resultado |
+| --- | --- |
+| `.env.staging` local | ABSENT (só o template `.env.staging.example`) |
+| Secret store por env (7 nomes) | TODOS ABSENT (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`, `STAGING_DATABASE_URL`, `DATABASE_URL`, `DIRECT_URL`, `STAGING_REF`) |
+| CLI/provider auth | `supabase` CLI **ABSENT**; `~/.supabase` ABSENT; sem projeto linkado / `config.toml` |
+| Mecanismo provider-native sem exposição | Inexistente: sem CLI para invocar; e a **senha do banco** do `admai-staging` é **não-recuperável** por CLI/API após a criação (só reset — mutação não autorizada). O dashboard exporia service-role em screenshot/transcript (§13/§16). |
+
+`missingVariableNames = {DATABASE_URL, DIRECT_URL, SUPABASE_SERVICE_ROLE_KEY}` do `admai-staging`.
+Conclusão: `STAGING_CREDENTIALS = BLOCKED_CAPABILITY` — bloqueio de **capacidade**, não de trabalho.
+`STAGING_CREDENTIALS_READY` **não** foi atingido; todo o encadeamento §21–§51 (migrations → runtime →
+bucket → E2E real) permanece bloqueado no primeiro gate. **`REAL_STAGING_ACCEPTANCE_PROVEN` não é
+alcançável neste ciclo.**
+
+### Estado autoritativo reconstruído neste HEAD (`c876527`) — §2/§68
+
+Não confiei nos números do último estado; re-executei o que é local e determinístico:
+Gate 6 (lock + correções) **13/13** — inclui a regressão TOCTOU de 2 conexões que **morde**;
+selftests write-set-gate **121/121**, completion-ledger **11/11**, EOS **52/52**. As versões
+**reais em staging** dessas provas continuam bloqueadas por credencial; a postura de segurança
+**local** está verde e defendida.
 
 ## Reconciliação com o freeze + amendment
 

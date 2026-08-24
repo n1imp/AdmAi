@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "ADMAI-RELEASE-CANDIDATE",
-  "titulo": "Terminal ADMAI_RELEASE_CANDIDATE_READY: sweep + proposal atualizados pelo D2 amendment",
+  "sliceId": "STG-UNBLOCK-01",
+  "titulo": "Staging unblock cycle — safe-source discovery exhausted; block strengthened + evidence",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T00:14:54.275Z",
+  "declaradoEm": "2026-08-24T00:52:34.110Z",
   "baseCommitPorLane": {
-    "HARNESS": "29904d2399db12308f80fd38f6c9eab3d0065292"
+    "HARNESS": "c876527b00921593a1b50f2e40d7af33aa5665cf"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Fronteira de trabalho seguro VAZIA (zero NOT_READY/READY/IN_PROGRESS). Sweep tecnico verde. Atualiza RELEASE_BLOCKERS_SWEEP e o proposal para o terminal do ciclo = ADMAI_RELEASE_CANDIDATE_READY (LEGAL DEFERRED_BY_D2 impede RELEASE_READY; WhatsApp POST_MVP fora do escopo; staging por capability). Nenhuma acao de producao.",
+  "notaDeMetodo": "Descoberta secret-safe (nunca ler/ecoar valores) do §11: CLI supabase ABSENT, ~/.supabase ABSENT, projeto linkado ABSENT, e todos os nomes de env (SUPABASE_ACCESS_TOKEN/SUPABASE_DB_PASSWORD/SUPABASE_SERVICE_ROLE_KEY/STAGING_DATABASE_URL/DATABASE_URL/DIRECT_URL/STAGING_REF) ABSENT. Senha do banco do admai-staging e nao-recuperavel por CLI/API (so reset — mutacao nao autorizada). => STAGING_CREDENTIALS BLOCKED_CAPABILITY. Sem tocar producao, sem inventar credencial, sem expor secret. Registro atualiza ledger + sweep + proposal e regista reconstrucao da postura de seguranca local (Gate 6 13/13, selftests 121/121·11/11·52/52).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -586,20 +586,20 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "e8524a14a054f4d498f66d68b9a77bf96b9584e8ccbc4e6964b696822db0e590",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "954fd01d76fabb5c9f69807cb9c95dde6b6f5326a9e47b5e4cd7c7ab9daa7321",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
+      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "e76c74bbaaf6d2aeedbc59b9e98074c82e2ff44f282ccd213551effd5c79c8fe",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "8a42bc8bdf44b36c00adc8fd8d5226060e0dec06d4ee6e87a03e57c907017827",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "2336e9031820655afe3aa0775ea0cd27b8772f2e72b0c2017ffc1e49234aab9c",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "bf5f686e9e14ac0654fbee1d32c640167d5ac9fece3c97b751f8ce9fe6ea97e4",
+      "docs/eos-v2/WRITE_SET.json": "a62b62837dc4d5c47a39feb01f9384f698a9422c823370fbab98285e4cf1dc5a",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "417c30f907d9e92b2a4a21b62758ee570a959315708f645775a1e172c97d6f0b",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2522,36 +2522,42 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
-  "artefatos": [],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
-      "precisao": "BOUNDED",
-      "proposito": "bloqueios recomputados pos-amendment",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "precisao": "edicao",
+      "proposito": "Registrar safeSourceAttempts/missingVariableNames no bloqueio STG-CREDENTIALS; bump attemptCount/lastAttempt; refinar revisitCondition; nota de reconstrucao da postura local",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c874d4d64e674dce326b75b1d5c3586cd0109a18b42352bfac29e19d84650eb0",
+      "shaNaDeclaracao": "954fd01d76fabb5c9f69807cb9c95dde6b6f5326a9e47b5e4cd7c7ab9daa7321",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
+      "precisao": "edicao",
+      "proposito": "Fortalecer bloqueios #2/#3 com a exaustao de fontes seguras deste ciclo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e76c74bbaaf6d2aeedbc59b9e98074c82e2ff44f282ccd213551effd5c79c8fe",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
-      "precisao": "BOUNDED",
-      "proposito": "terminal CANDIDATE_READY + reclassificacoes",
+      "precisao": "edicao",
+      "proposito": "Acao minima de desbloqueio precisa + reconstrucao de estado autoritativo deste ciclo",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "528da59363eea02cfe60b17a047372884726a23e5a9ff2570a5d31ca5810e143",
+      "shaNaDeclaracao": "8a42bc8bdf44b36c00adc8fd8d5226060e0dec06d4ee6e87a03e57c907017827",
       "sujoNaDeclaracao": false
     }
   ],
-  "validadoEm": "2026-08-24T00:14:54.603Z",
-  "validadoPor": "write-set-gate.mjs",
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "ADMAI_RELEASE_CANDIDATE_READY atingido: fronteira de trabalho seguro vazia, sweep tecnico verde, proposal e sweep de bloqueios recomputados pelo D2 amendment. RELEASE_READY segue bloqueado por LEGAL (DEFERRED_BY_D2); zero acao de producao.",
+  "nota": "STG-UNBLOCK-01: descoberta secret-safe exaurida (§11); STG-CREDENTIALS permanece BLOCKED_CAPABILITY; estado autoritativo reconstruido (Gate 6 13/13, selftests 121/121·11/11·52/52)",
   "aviso": "Declaracao ENCERRADA."
 }

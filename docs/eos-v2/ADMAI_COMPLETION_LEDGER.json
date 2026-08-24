@@ -1280,10 +1280,11 @@
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Sonda F5-02: staging de aplicacao inexistente (Railway sem servicos; admai-staging pausado). Validacao real impossivel sem provisionar."
+        "Sonda F5-02: staging de aplicacao inexistente (Railway sem servicos; admai-staging pausado). Validacao real impossivel sem provisionar.",
+        "[Ciclo STG-UNBLOCK 2026-08-24] Consolidado em STG-02-USO: descoberta secret-safe de credenciais exaurida neste ciclo (CLI/token/env/config todos ABSENT). Sem canal para conectar ao admai-staging real."
       ],
-      "attemptCount": 0,
-      "lastAttempt": "2026-08-23T23:51:16.104Z",
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T00:52:46.508Z",
       "nextAction": "Ver STG-02-USO (consolidado no D2 amendment).",
       "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
       "snapshotRef": null
@@ -2192,12 +2193,15 @@
       "evidenceRefs": [
         "Credenciais de staging AUSENTES no ambiente: existe apenas chaveiro-bot/.env.staging.example (template), sem .env.staging real. Sem DATABASE_URL/SERVICE_ROLE_KEY do admai-staging nao ha como conectar, migrar, rodar runtime nem criar bucket.",
         "Obter os secrets pelo dashboard os traria ao transcript/logs (proibido: nao expor secrets); usa-los em comandos idem. O amendment e claro: nao inventar credentials; ausentes => BLOCKED_CAPABILITY + revisitCondition + seguir trabalho independente.",
-        "Storage e COMPATIVEL com Supabase (services/storage.js usa @supabase/supabase-js): quando as credenciais existirem, o bucket de documentos entra no mesmo projeto staging."
+        "Storage e COMPATIVEL com Supabase (services/storage.js usa @supabase/supabase-js): quando as credenciais existirem, o bucket de documentos entra no mesmo projeto staging.",
+        "[Ciclo STG-UNBLOCK 2026-08-24] Descoberta secret-safe do §11 EXAURIDA (nomes/estados, nunca valores): supabase CLI ABSENT; ~/.supabase ABSENT; projeto linkado/config.toml ABSENT; SUPABASE_ACCESS_TOKEN/SUPABASE_DB_PASSWORD/SUPABASE_SERVICE_ROLE_KEY/STAGING_DATABASE_URL/DATABASE_URL/DIRECT_URL/STAGING_REF todos ABSENT no ambiente. missingVariableNames = {DATABASE_URL, DIRECT_URL, SUPABASE_SERVICE_ROLE_KEY do admai-staging}.",
+        "[Ciclo STG-UNBLOCK] A senha do banco do admai-staging e NAO-RECUPERAVEL por CLI/API do Supabase apos a criacao (so ha reset — mutacao de estado nao autorizada e que quebraria conexoes existentes). Logo nao existe canal automatico secret-safe para o DATABASE_URL; o dashboard exporia service-role em screenshot/transcript (§13/§16). Bloqueio confirmado por construcao, nao por cautela.",
+        "[Ciclo STG-UNBLOCK] Postura de seguranca LOCAL reconstruida e verde neste HEAD (c876527): Gate 6 lock+correcoes 13/13 (inclui a regressao TOCTOU de 2 conexoes que morde); selftests write-set-gate 121/121, completion-ledger 11/11, EOS 52/52. As versoes REAIS em staging destas provas permanecem bloqueadas por credencial."
       ],
-      "attemptCount": 1,
-      "lastAttempt": "2026-08-23T23:51:16.104Z",
-      "nextAction": "Com .env.staging local: despausar admai-staging, prisma migrate deploy, provisionar bucket, rodar jornadas.mjs com ADMAI_URL/DATABASE_URL de staging, matriz de documentos no bucket.",
-      "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
+      "attemptCount": 2,
+      "lastAttempt": "2026-08-24T00:52:46.508Z",
+      "nextAction": "Com .env.staging local (ou SUPABASE_ACCESS_TOKEN + senha do banco como env locais): despausar admai-staging, prisma migrate deploy, provisionar bucket, rodar jornadas.mjs com ADMAI_URL/DATABASE_URL de staging, matriz de documentos no bucket.",
+      "revisitCondition": "Canal secret-safe do usuario (qualquer um): (a) colocar DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging num .env.staging LOCAL (ja git-ignored, verificado) e eu uso via --env-file sem nunca ler/ecoar; ou (b) exportar essas variaveis no ambiente local antes de me invocar. Sem isso, obter os secrets exigiria o dashboard, que os traria ao transcript — proibido; e a senha do banco nao e recuperavel por CLI/API (so reset).",
       "snapshotRef": null
     },
     {
@@ -2246,10 +2250,11 @@
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Storage compativel (Supabase). Comportamento provado local (F4-03). Falta o bucket real, que depende das credenciais de staging."
+        "Storage compativel (Supabase). Comportamento provado local (F4-03). Falta o bucket real, que depende das credenciais de staging.",
+        "[Ciclo STG-UNBLOCK 2026-08-24] Bloqueio herdado de STG-02-USO re-confirmado: sem credenciais do admai-staging (descoberta secret-safe exaurida — ver STG-02-USO) nao ha como provisionar bucket nem rodar a matriz contra o Storage real. bucket:provision ja usa --env-file=.env.staging (chaveiro-bot/package.json) — pronto para o momento em que o arquivo existir."
       ],
-      "attemptCount": 0,
-      "lastAttempt": "2026-08-24T00:13:32.990Z",
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T00:52:46.508Z",
       "nextAction": "Com credenciais: npm run bucket:provision no staging + matriz contra o bucket.",
       "revisitCondition": "Com .env.staging local (credenciais do admai-staging): provisionar o bucket no projeto staging e re-rodar a matriz contra o Supabase Storage real. Sem elas, so o comportamento local (disco/mock) e verificavel.",
       "snapshotRef": null
@@ -2259,9 +2264,10 @@
     "alvoDoCiclo": "ADMAI_RELEASE_CANDIDATE_READY",
     "motivo": "D2 amendment 2026-08-23: LEGAL DEFERRED_BY_D2 (LEGAL_ACCEPTANCE=NOT_ACCEPTED) impede ADMAI_RELEASE_READY sob o contrato anterior; o candidato tecnico e o terminal ate resolucao juridica ou novo D2.",
     "admai_release_ready": "BLOQUEADO por D2-LEGAL (DEFERRED_BY_D2)",
-    "atualizadoEm": "2026-08-23T23:47:28.756Z",
+    "atualizadoEm": "2026-08-24T00:52:46.508Z",
     "candidato_atingido": true,
     "candidato_em": "2026-08-24T00:17:32.722Z",
-    "candidato_evidencia": "Fronteira de trabalho seguro VAZIA; sweep tecnico verde (selftests 121/121, 11/11, EOS PASS; registries 28/28, 29/29); painel 252/252; 9/9 jornadas E2E sem WhatsApp; Gate 6 APROVADO. Bloqueios restantes: 6 (1 DEFERRED_BY_D2 legal, 3 BLOCKED_CAPABILITY staging, 2 BLOCKED_D2 backfill/backup) + promocao."
+    "candidato_evidencia": "Fronteira de trabalho seguro VAZIA; sweep tecnico verde (selftests 121/121, 11/11, EOS PASS; registries 28/28, 29/29); painel 252/252; 9/9 jornadas E2E sem WhatsApp; Gate 6 APROVADO. Bloqueios restantes: 6 (1 DEFERRED_BY_D2 legal, 3 BLOCKED_CAPABILITY staging, 2 BLOCKED_D2 backfill/backup) + promocao.",
+    "ciclo_stg_unblock": "2026-08-24: tentativa de desbloqueio de staging (diretiva STAGING UNBLOCK). Descoberta secret-safe do §11 EXAURIDA sem tocar producao nem expor secret => STAGING_CREDENTIALS permanece BLOCKED_CAPABILITY (credenciais do admai-staging ausentes; senha do banco nao-recuperavel por CLI/API). Estado autoritativo RECONSTRUIDO neste HEAD (c876527): Gate 6 lock+correcoes 13/13, selftests 121/121·11/11·52/52. Nenhum item de staging pode avancar sem o canal secret-safe do usuario (revisitCondition em STG-02-USO). REAL_STAGING_ACCEPTANCE_PROVEN nao alcancavel neste ciclo — bloqueio de capacidade, nao de trabalho."
   }
 }
