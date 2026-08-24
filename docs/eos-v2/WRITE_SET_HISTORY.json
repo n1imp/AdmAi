@@ -51532,9 +51532,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Diagnostico 22 checksums = LINE_ENDING_DRIFT provado 22/22; DELTA D1 CONCORDO; reparo LF gerado dos blobs + .gitattributes eol=lf",
       "declaradoEm": "2026-08-24T20:52:53.882Z"
+    },
+    {
+      "sliceId": "STG-SEC-SUPADMIN-DIAG",
+      "titulo": "Blocker de capability supabase_admin ADP: diagnostico + decisao D1 + fechamento externo do STG-MIG-RECON",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Diagnostico supabase_admin ADP + D1 (B + D-detectivo + D-forte ajustado, thread 01a035ce); STG-MIG-RECON DONE; v2 em fatia propria",
+      "declaradoEm": "2026-08-24T22:07:52.155Z"
     }
   ],
-  "geradoEm": "2026-08-24T20:57:19.726Z",
+  "geradoEm": "2026-08-24T22:11:53.005Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

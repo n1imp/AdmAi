@@ -2268,8 +2268,8 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": "codex",
-      "status": "BLOCKED_DEPENDENCY",
-      "description": "Finding BLOQUEANTE de seguranca: 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated (Advisor rls_disabled_in_public ERROR EXTERNAL). Artefato APROVADO e validado byte-a-byte no staging; preflight externo abortou fail-closed (DocumentoTecnico ausente) => READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON). Finding ABERTO ate os gates reais.",
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Finding BLOQUEANTE de seguranca: 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated. Migrations reconciliadas (26/26 tabelas presentes, 0 policies); apply externo do lockdown ABORTOU fail-closed em ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin (postgres hosted sem authority sobre defaults de role de plataforma) com ROLLBACK TOTAL provado (0 RLS; PARTIAL_LOCKDOWN=NO). => BLOCKED_CAPABILITY(DEFAULT_PRIVILEGES_SUPABASE_ADMIN). NAO e falha do RLS, nem drift, nem migration. Finding ABERTO; resolucao via D-STG-SEC-SUPABASE-ADMIN-ADP.",
       "dependencies": [
         "STG-MIG-RECON"
       ],
@@ -2309,8 +2309,8 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": "codex",
-      "status": "IN_PROGRESS",
-      "description": "Reconciliacao de migration do admai-staging — EXTERNAL_RECON_REQUIRED: evidencia externa real mostra 23/28 migrations aplicadas (ultima 20260707000001, 2026-07-10) e DocumentoTecnico AUSENTE. Classificacao: STAGING_SCHEMA_BEHIND_REPOSITORY. Aplicacao pelo executor externo (SQL via integracao Supabase), protocolo decidido por Codex D1.",
+      "status": "DONE",
+      "description": "Reconciliacao de migration do admai-staging — CONCLUIDA COM PROVA EXTERNA: 22 checksums CRLF normalizados p/ LF; 5 pendentes aplicadas em ordem (A-prime); _prisma_migrations = 28 concluidas, zero failed/rolled-back; DocumentoTecnico existe com as 2 FKs; todas as colunas/indices novos presentes (finalizadoEm/iniciadoEm, preferencias, Usuario_telefone_key UNIQUE, comissaoTaxaAplicada). Finding STG-MIG-SCHEMA-LAG-01 CLOSED.",
       "dependencies": [],
       "blockerRefs": [],
       "findingRefs": [
@@ -2328,8 +2328,8 @@
       ],
       "attemptCount": 2,
       "lastAttempt": "2026-08-24T17:30:00.000Z",
-      "nextAction": "Executor externo: snapshot das 23 linhas -> rodar o reparo de checksums (22 updates fail-closed) -> conferir 23/23 == LF canonico -> aplicar as 5 pendentes NA ORDEM (A-prime) -> 28/28 LF-consistentes -> re-preflight lockdown -> lockdown -> verify -> negative control -> Advisor.",
-      "revisitCondition": "Evidencia externa do apply (checksums verificados, 5 aplicadas, migrate-status-clean) retorna e fecha este item; qualquer CHECKSUM_MISMATCH nas 23 aplicadas e BLOCKING e volta para D1 antes de aplicar pendentes.",
+      "nextAction": null,
+      "revisitCondition": null,
       "snapshotRef": null
     },
     {
