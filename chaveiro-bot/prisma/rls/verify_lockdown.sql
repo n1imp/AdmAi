@@ -172,10 +172,16 @@ BEGIN
     WHERE d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace
   ) defs
   JOIN (
+    -- MESMO conjunto de criadores do lockdown [REVISOR DELTA2]: owners de public +
+    -- current_user + roles com default global(0)/public (governam DDL futura em public).
     SELECT pg_get_userbyid(c.relowner) AS rol FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
       WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','f','S')
     UNION
     SELECT pg_get_userbyid(p.proowner) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'
+    UNION
+    SELECT current_user
+    UNION
+    SELECT pg_get_userbyid(defaclrole) FROM pg_default_acl WHERE defaclnamespace = 0 OR defaclnamespace = 'public'::regnamespace
   ) cr ON cr.rol = defs.rol
   WHERE defs.g IN ('anon','authenticated') OR (defs.g = 'public' AND defs.t = 'f');
   IF n_cat > 0 THEN

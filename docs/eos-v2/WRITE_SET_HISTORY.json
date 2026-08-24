@@ -51420,9 +51420,23 @@
       "bloqueiaIntegracao": false,
       "nota": "DELTA fixes: F3 fail-closed + escopo de criadores public + ledger superseded; re-validado PG16 A-E PASS",
       "declaradoEm": "2026-08-24T02:32:35.968Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-REV3",
+      "titulo": "STG-SEC-RLS-01: DELTA2 — conjunto de criadores completo (owners+current_user+defaclrole global/public)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "DELTA2: conjunto de criadores completo (owners+current_user+defaclrole global/public), mesmo em apply e verify; PG16 A-E PASS",
+      "declaradoEm": "2026-08-24T02:36:27.623Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:32:38.177Z",
+  "geradoEm": "2026-08-24T02:36:29.726Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

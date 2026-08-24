@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-01-REV2",
-  "titulo": "STG-SEC-RLS-01: correcoes da DELTA review (fail-closed + escopo de criadores + ledger)",
+  "sliceId": "STG-SEC-RLS-01-REV3",
+  "titulo": "STG-SEC-RLS-01: DELTA2 — conjunto de criadores completo (owners+current_user+defaclrole global/public)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T02:32:35.968Z",
+  "declaradoEm": "2026-08-24T02:36:27.623Z",
   "baseCommitPorLane": {
-    "HARNESS": "c33d723a2ab1755efd3cbd8e59a0dc1a388e5cc2"
+    "HARNESS": "e28d71dc17c80142e6f40b2d2e328dfd68b344cd"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "F3 insufficient_privilege agora FATAL (fail-closed). Conjunto de criadores restrito a owners de public (relacoes+routines), sem defaclrole (nao pega roles internos Auth/Storage); apply e verify usam o MESMO conjunto; catalogo filtra defaults globais(0)|public. Ledger: linha antiga de residual marcada SUPERSEDED. Re-validado local PG16 A-E PASS.",
+  "notaDeMetodo": "Conjunto de criadores agora inclui owners de public + current_user + defaclrole filtrado a namespace global(0)/public (pega role com default expondo anon sem objeto atual; sem puxar internos de outros schemas). apply e verify usam o MESMO conjunto. Handler fatal mantido. Ledger F3 atualizado. Re-validado PG16 A-E PASS.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -83,8 +83,8 @@
       "chaveiro-bot/prisma/migrations/migration_lock.toml": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48",
       "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
-      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "56a347f4fcf8d4b9593058c5f1a8e5c8a28485248e2630d384c1f22ed710b669",
-      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "33a072e2bc1151f05c64fafc5e2f0130742478fb8cf40df46eacbba254689f2d",
+      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "1a195f3625baca2f471a3414d16277716adaf383c3ca473e89d46093bc1ff47f",
+      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "9fb63780ed6f84faafe44cb11f6d5353090c72839ec9ad8c4c4fe003a23e3ff0",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -591,7 +591,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "802df3c89f5673b71f40e084b29ab092709c32345ea76018d9827f64fdda6d2b",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a154d24d1c19f5c17d773998b35fb83f5c3986cf47ba93b923baeec8822a73c6",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -605,8 +605,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "129146be18aa4e3f0dc9a4226aba8dd735a8bfc138b584ca166e8a4432e40f7d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "374ab3aa3ae42b196f0d138ed93bee37229c7f528fd3fec580c8d9254690d592",
+      "docs/eos-v2/WRITE_SET.json": "17b568237bcc8f7ce295077743a15bb9c73de87bf81c3f8afae8a8c62fdbba4d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "56b30d6fb69aa89835bc6988b0cde3636d5ce09e0068f75a59a8d07d8078a330",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2534,9 +2534,9 @@
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access.sql",
       "precisao": "edicao",
-      "proposito": "F3 fatal + escopo de criadores restrito a public",
+      "proposito": "conjunto de criadores completo + filtro de namespace",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "56a347f4fcf8d4b9593058c5f1a8e5c8a28485248e2630d384c1f22ed710b669",
+      "shaNaDeclaracao": "1a195f3625baca2f471a3414d16277716adaf383c3ca473e89d46093bc1ff47f",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2545,9 +2545,9 @@
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/prisma/rls/verify_lockdown.sql",
       "precisao": "edicao",
-      "proposito": "catalogo com mesmo conjunto + filtro de namespace",
+      "proposito": "mesmo conjunto no catalogo",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "33a072e2bc1151f05c64fafc5e2f0130742478fb8cf40df46eacbba254689f2d",
+      "shaNaDeclaracao": "9fb63780ed6f84faafe44cb11f6d5353090c72839ec9ad8c4c4fe003a23e3ff0",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2556,9 +2556,9 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "marcar residual antigo como SUPERSEDED",
+      "proposito": "F3 descricao atualizada",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "802df3c89f5673b71f40e084b29ab092709c32345ea76018d9827f64fdda6d2b",
+      "shaNaDeclaracao": "a154d24d1c19f5c17d773998b35fb83f5c3986cf47ba93b923baeec8822a73c6",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
@@ -2571,6 +2571,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "DELTA fixes: F3 fail-closed + escopo de criadores public + ledger superseded; re-validado PG16 A-E PASS",
+  "nota": "DELTA2: conjunto de criadores completo (owners+current_user+defaclrole global/public), mesmo em apply e verify; PG16 A-E PASS",
   "aviso": "Declaracao ENCERRADA."
 }

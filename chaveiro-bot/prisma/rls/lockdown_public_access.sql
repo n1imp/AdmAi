@@ -126,13 +126,25 @@ DECLARE
   criadores text[];
 BEGIN
   SELECT array_agg(DISTINCT rol) INTO criadores FROM (
+    -- owners de objetos de public (relacoes todas relkinds + sequences)
     SELECT pg_get_userbyid(c.relowner) AS rol
       FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
       WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v','m','f','S')
     UNION
+    -- owners de routines de public
     SELECT pg_get_userbyid(p.proowner)
       FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE n.nspname = 'public'
+    UNION
+    -- o executor atual (pode criar DDL futura em public sem ter objeto hoje)
+    SELECT current_user
+    UNION
+    -- roles com default privileges GLOBAIS(0) ou de public (governam DDL futura em
+    -- public), inclusive sem objeto atual [REVISOR DELTA2]. Filtro de namespace evita
+    -- puxar roles internos (Auth/Storage) que so tem defaults em OUTROS schemas.
+    SELECT pg_get_userbyid(defaclrole)
+      FROM pg_default_acl
+      WHERE defaclnamespace = 0 OR defaclnamespace = 'public'::regnamespace
   ) x WHERE rol IS NOT NULL;
 
   FOREACH r IN ARRAY COALESCE(criadores, ARRAY[]::text[]) LOOP
