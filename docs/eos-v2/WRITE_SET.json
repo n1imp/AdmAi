@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-01-FIX",
-  "titulo": "STG-SEC-RLS-01: artefato versionado (REVOKE anon/authenticated/PUBLIC + ENABLE RLS no-force) + verificacao + negative control + runbook",
+  "sliceId": "STG-MIG-RECON-01",
+  "titulo": "Migration reconciliation (§7): classificacao + estrategia de baseline segura (sem migrate deploy cego)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T01:39:57.105Z",
+  "declaradoEm": "2026-08-24T02:11:28.491Z",
   "baseCommitPorLane": {
-    "HARNESS": "54acae3c988c2b79c42bcafb83a10c7d7402900b"
+    "HARNESS": "34a92db95ca4a25973ffea5fe484feadddc8a2ab"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Implementa a decisao D1 Codex (thread 01a03164, CONCORDO, opcao C ancorada em B). SQL standalone idempotente transacional (nao migration Prisma). Verificacao de pos-condicoes + negative controls SQL. Negative control PostgREST (anon key) com sabotagem. Runbook com preflight + 7 grupos de teste. enable_rls.sql intacto. Aplicacao no banco de staging fica BLOCKED_CAPABILITY (credenciais).",
+  "notaDeMetodo": "Repo tem 28 migrations consistentes (migrate status local: schema up to date). Staging tem as 26 tabelas mas _prisma_migrations vazio => SCHEMA_LIKELY_EQUIVALENT_UNTRACKED. Estrategia: preflight com prisma migrate diff (precisa staging) -> se vazio, baseline por migrate resolve --applied (sem DDL); se drift, Codex D1. NAO rodar migrate deploy cego (amendment §7). Doc + item no ledger. Execucao no staging BLOCKED_CAPABILITY.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -81,7 +81,10 @@
       "chaveiro-bot/prisma/migrations/20260803000000_usuario_telefone_unique/migration.sql": "2c21e061f28c768e0f1cf2a76186d6ca64d4574f8eaf72c4feafacf305089519",
       "chaveiro-bot/prisma/migrations/20260823000100_servico_comissao_taxa_aplicada/migration.sql": "38f58ab3026d1e10aac04cbe8e540153a0daca9c8a6e251d7e61f81a836229df",
       "chaveiro-bot/prisma/migrations/migration_lock.toml": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48",
+      "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "5b6a2d6e955c0eadf1af987a735f1500864318160fea77433d1c1bbcea81ae96",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
+      "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "dd22942214c1ba8c6dd0b7550861a1cbb594fec84f181474158040becf45dc84",
+      "chaveiro-bot/prisma/rls/verify_lockdown.sql": "13668a42cfd7e4d07eaf8b8487ae2cc6c742ab9840dcfd07af7c0b7ec321d9a4",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -101,6 +104,7 @@
       "chaveiro-bot/scripts/seed-demo.mjs": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
       "chaveiro-bot/scripts/smoke-pooler.mjs": "359b8cf59844294359d11c56ed279fc804efadbb3497d6b4d7c1ce5f8c9d3690",
       "chaveiro-bot/scripts/smoke-storage.mjs": "2d50ac7c7ce580f1dafaf0fcb22a383d37c8d186efd4129be2314bb5604bbef7",
+      "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "45b557b494d9d7e60c17fb6b3c530831bf6fbbdb9aecf5d4e62016fc039b8bc7",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "ddc187cf4ee430ee0421262ca8425c81d1b626fb096066925506cece9df10e91",
       "chaveiro-bot/scripts/validate-staging.mjs": "b1e58ca43029c6b00410cfb04a3ed5055ceb33f30551229813d677d5638ab67b",
       "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "22eb4b31f0ae701203670d55619669262ad0b7f7393684f583a5aa7b0e8177a7",
@@ -547,7 +551,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "71849b438c16bb47c6eff0b470c0fa3e2a786f16fee32f7cbf7f28743ad64e8b",
+      "docs/agent-environment/AGENT_DECISIONS.md": "054ac89bcb490a8dc8b8b5662941154eb4ad1c80efe51b7c90ddc407f1f120f3",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -586,7 +590,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "6a5faa04a30f5a9b721e59700d1906dbcf365107ee75a432aa544ec88729d255",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "144ad12217da3bd222c158dad6461548643c5289fef5eb3cbd3e98b516c6e35b",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
@@ -599,8 +603,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "fe3c1864f6cd6d12f98c628798920575413e99f67c407226193f45956aff3666",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "f0992e5c125e7279c49c1318e7a96449e4e3231f257f5a3a217d351ff8ecfcc2",
+      "docs/eos-v2/WRITE_SET.json": "93c054483a2a294ea0a072b4c37a682499378566693e07781918a027444ac07a",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "3ea3e3cc62b3f40a2f74c35a5e17959abb9a10c4cb0b05226d2890ba1de98e35",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2526,36 +2530,9 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access.sql",
+      "caminho": "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md",
       "precisao": "arquivo-novo",
-      "proposito": "Fix: REVOKE integral de anon/authenticated/PUBLIC + ENABLE RLS NO FORCE nas 26; guard de policies preexistentes",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown.sql",
-      "precisao": "arquivo-novo",
-      "proposito": "Pos-condicoes + negative controls SQL (SET LOCAL ROLE anon/authenticated -> insufficient_privilege; RLS deny-all)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
-      "precisao": "arquivo-novo",
-      "proposito": "Negative control PostgREST: anon key -> /rest/v1 das 26 DENIED (nunca 200 []); POST/PATCH/DELETE negados; sabotagem morde",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md",
-      "precisao": "arquivo-novo",
-      "proposito": "Runbook: aplicacao staging-only (ref guard, ON_ERROR_STOP), preflight, 7 grupos de teste, rollback",
+      "proposito": "Classificacao + estrategia de baseline + comandos preflight/resolve + arvore de decisao drift",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -2564,18 +2541,9 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "STG-SEC-RLS-01: decisao D1 + refs de artefato; parte repo pronta, aplicacao BLOCKED_CAPABILITY",
+      "proposito": "Novo item STG-MIG-RECON (BLOCKED_CAPABILITY, apos o boundary de seguranca)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6a5faa04a30f5a9b721e59700d1906dbcf365107ee75a432aa544ec88729d255",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "edicao",
-      "proposito": "Registrar D-STG-SEC-RLS-01 (thread 01a03164, boundary)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "71849b438c16bb47c6eff0b470c0fa3e2a786f16fee32f7cbf7f28743ad64e8b",
+      "shaNaDeclaracao": "144ad12217da3bd222c158dad6461548643c5289fef5eb3cbd3e98b516c6e35b",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2586,6 +2554,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "STG-SEC-RLS-01 fix: lockdown+verify+negcontrol+runbook (decisao D1 thread 01a03164); validado local contra PG16 (A-E PASS); aplicacao staging BLOCKED_CAPABILITY",
+  "nota": "STG-MIG-RECON: classificacao SCHEMA_LIKELY_EQUIVALENT_UNTRACKED + estrategia de baseline segura; execucao BLOCKED_CAPABILITY",
   "aviso": "Declaracao ENCERRADA."
 }

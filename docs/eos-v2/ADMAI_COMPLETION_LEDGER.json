@@ -2292,6 +2292,35 @@
       "nextAction": "PENDENTE (BLOCKED_CAPABILITY, requer credenciais de staging): aplicar lockdown_public_access.sql no admai-staging (-v staging_ref=qsuufuulxfkkeasgxhcv), rodar verify_lockdown.sql, rodar staging-rls-negative-control.mjs (expect-open ANTES + denied DEPOIS) com a anon key, re-rodar o Security Advisor (zero rls_disabled_in_public). Codex REVISOR sobre o diff aplicado. So depois: reconciliacao de migration (baseline nao rastreado).",
       "revisitCondition": "Parte NO_REPOSITORY concluida e validada localmente contra Postgres real. A aplicacao no admai-staging + negative-control com anon key + re-run do Advisor exigem credenciais/execucao SQL no staging (BLOCKED_CAPABILITY, ver STG-02-USO): DIRECT_URL do admai-staging + a anon key (publishable). Enquanto ausentes, o finding permanece ABERTO (nao fecha sem: protecao existe + negative control morde + fluxo backend funciona).",
       "snapshotRef": null
+    },
+    {
+      "workId": "STG-MIG-RECON",
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Reconciliacao de migration do admai-staging (amendment §7): 26 tabelas existem mas _prisma_migrations vazio (baseline nao rastreado). Baseline seguro sem migrate deploy cego.",
+      "dependencies": [
+        "STG-SEC-RLS-01"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Repo: 28 migrations, cadeia consistente (prisma migrate status local: schema up to date). Staging: 26 tabelas, _prisma_migrations=0 => SCHEMA_LIKELY_EQUIVALENT_UNTRACKED. Estrategia + comandos em docs/eos-v2/STG_MIGRATION_RECONCILIATION.md.",
+        "Ordem (amendment §8): so APOS STG-SEC-RLS-01 CLOSED. Preflight: prisma migrate diff (from-url staging vs to-migrations repo). Vazio => baseline por migrate resolve --applied (sem DDL). Drift => Codex D1. NUNCA migrate deploy cego."
+      ],
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T00:52:46.508Z",
+      "nextAction": "Com DIRECT_URL de staging: rodar prisma migrate diff (preflight); se vazio, migrate resolve --applied nas 28; se drift, coletar diff -> Codex D1. Depois do boundary de seguranca.",
+      "revisitCondition": "Execucao (preflight + baseline) exige DIRECT_URL do admai-staging (BLOCKED_CAPABILITY, ver STG-02-USO). Classificacao e estrategia ja prontas no repo.",
+      "snapshotRef": null
     }
   ],
   "terminal": {

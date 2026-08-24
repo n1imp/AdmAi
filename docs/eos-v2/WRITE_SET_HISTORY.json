@@ -51378,9 +51378,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-SEC-RLS-01 fix: lockdown+verify+negcontrol+runbook (decisao D1 thread 01a03164); validado local contra PG16 (A-E PASS); aplicacao staging BLOCKED_CAPABILITY",
       "declaradoEm": "2026-08-24T01:39:57.105Z"
+    },
+    {
+      "sliceId": "STG-MIG-RECON-01",
+      "titulo": "Migration reconciliation (§7): classificacao + estrategia de baseline segura (sem migrate deploy cego)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "STG-MIG-RECON: classificacao SCHEMA_LIKELY_EQUIVALENT_UNTRACKED + estrategia de baseline segura; execucao BLOCKED_CAPABILITY",
+      "declaradoEm": "2026-08-24T02:11:28.491Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:05:48.989Z",
+  "geradoEm": "2026-08-24T02:12:28.751Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
