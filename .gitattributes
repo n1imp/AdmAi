@@ -3,3 +3,9 @@
 # em /bin/sh no container — CRLF causaria "bad interpreter".
 *.sh    text eol=lf
 gradlew text eol=lf
+
+# [STG-MIG-CHECKSUM-DIAG, D1 thread 01a034d7] Migrations do Prisma SEMPRE LF: o checksum
+# da _prisma_migrations e o sha256 dos bytes do script como CHECKED OUT — com autocrlf,
+# checkouts Windows gravavam hashes CRLF e criaram drift de linha na history do staging
+# (22/23 divergentes, diagnostico 2026-08-24). eol=lf mata essa classe na origem.
+chaveiro-bot/prisma/migrations/**/*.sql text eol=lf

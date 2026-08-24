@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-MIG-RECON-EXT",
-  "titulo": "STG-MIG-RECON: evidencia externa (23 aplicadas, 5 pendentes, DocumentoTecnico ausente) + pacote de apply externo",
+  "sliceId": "STG-MIG-CHECKSUM-DIAG",
+  "titulo": "Diagnostico dos 22 checksums (LINE_ENDING_DRIFT provado 22/22) + reparo LF + .gitattributes (DELTA D1 01a034d7)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T17:38:10.803Z",
+  "declaradoEm": "2026-08-24T20:52:53.882Z",
   "baseCommitPorLane": {
-    "HARNESS": "46c113e37542f848886409f70011622745a077c6"
+    "HARNESS": "84c65f3821828e549f18c89803467f82fca6b5df"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Evidencia externa refuta history-vazia: staging esta ATRAS do repo (23/28; falta DocumentoTecnico). Reclassificar STG-MIG-RECON p/ IN_PROGRESS/EXTERNAL_RECON_REQUIRED com finding STG-MIG-SCHEMA-LAG-01 (novo prefixo STG-MIG- no ledger tool, regra da casa); STG-SEC-RLS-01 ganha dependencia. Doc de reconciliacao atualizado + pacote externo com as 5 migrations (SHA-256, analise, protocolo D1 Codex).",
+  "notaDeMetodo": "Prova deterministica: sha256(blob LF->CRLF) == checksum do staging nas 22; controle LF_MATCH; classe B excluida (git log pos-2026-07-11 vazio nas 23). DELTA Codex CONCORDO: destravar pendentes; LF nas 5 novas; reparo atomico das 22 p/ LF ANTES das pendentes (lock 72707369, WHERE name+checksum exato, assert 22 rows, snapshot); fatia .gitattributes eol=lf p/ migrations. Artefato de reparo gerado; pacote atualizado; ledger+decisions.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -553,7 +553,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "a91e50aba32a8cba48bf66526ae503096516ec050d1d5205935cde2f9326633b",
+      "docs/agent-environment/AGENT_DECISIONS.md": "0f63b0a1aef4a2f5454874db48d8123842b48e76225dd0f0c1ad864d92a62fd3",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -592,7 +592,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a95db816adb6bc353500cd93ff40e9b9f8a7592fee62fb5b2506d417ad65c6d6",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "d9c392b99f8cc96162fe8e4129c0af09805bd1556c50f3e87c8e29a761fb6d27",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
@@ -603,14 +603,15 @@
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "bbe9687e8acad463e7a5853ff408e43ef772bc115ba01927fc330261844a1cb9",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
-      "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "81e5b9773bf63f58c1e379e46f3e0d9c687fc950f0d41cc947b3552c27d6bf0a",
+      "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "ba8da3144e076079469f0268362ee189ebf616e0f29eb6bce785257203cd4d04",
+      "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md": "fe22849646c0a820824e191bf34ecbec3a070563a70a22929a05b06534049d20",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
       "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "20048c7530318a8e5e26d33273cd738dda8d3541b91424cb9776a5e2f04dcd2d",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d1b7f9d83df9d19b6a999206294e005b765a44fa3507c6de162700a5094b3cf5",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "c77345923ba855e8a8238eaf3509377cdf4945fc39c03f2dd9fac4d9f905c100",
+      "docs/eos-v2/WRITE_SET.json": "2a4b45fc799a47d70bd53b372a31d0872f5b8d85b6c8900b43c86066c025f354",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "ec67317d96cd30937ac1f3ec7453e803d1e0f2325cb72f843c95377c780a0f80",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -645,7 +646,7 @@
       "docs/legal/POLITICA_DE_PRIVACIDADE.md": "fc49fa5dd1136739df60a8821c9134943d668780400df7ea35f4fc09876ed156",
       "docs/legal/TERMOS_DE_USO.md": "8319a785c25ed56fe49f4aefc47fe201992f139d49d4655041c62e25e189ee79",
       "tools/admai-delivery/cli.mjs": "aa40b0e063b11d21dc6fb3dcc2c48d819ac2644e59be88a0ec55236edb6e88ec",
-      "tools/admai-delivery/completion-ledger.mjs": "fb553afd29a1f139df74418f8e84021207ea26908088b4e642ed581b238a5209",
+      "tools/admai-delivery/completion-ledger.mjs": "fc9ed0671ef997cbe1e73555b5357868e52ccca177b717e93201dcb9de028108",
       "tools/admai-delivery/deepspec.mjs": "bf96d32444dc566e7f586228e8aaf5256382f9626bcd91f919ad04a78b15da63",
       "tools/admai-delivery/eos-frontier.mjs": "afe05129f369aa195c3347f722a99a7695e9304dbf0e41239eb5972af9ec36e2",
       "tools/admai-delivery/evidence-bundle.mjs": "7107b5337d802cd9752490222fceadf144d43c2d63070e578721b7aa2965c71d",
@@ -2501,47 +2502,47 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
-      "precisao": "edicao",
-      "proposito": "reclassificar STG-MIG-RECON + dependencia em STG-SEC-RLS-01",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a95db816adb6bc353500cd93ff40e9b9f8a7592fee62fb5b2506d417ad65c6d6",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "tools/admai-delivery/completion-ledger.mjs",
-      "precisao": "edicao",
-      "proposito": "registrar prefixo de finding STG-MIG-",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "fb553afd29a1f139df74418f8e84021207ea26908088b4e642ed581b238a5209",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md",
-      "precisao": "edicao",
-      "proposito": "nova evidencia + classificacao STAGING_SCHEMA_BEHIND_REPOSITORY + inventario/checksums",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "81e5b9773bf63f58c1e379e46f3e0d9c687fc950f0d41cc947b3552c27d6bf0a",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md",
+      "caminho": "chaveiro-bot/prisma/repair/2026-08-24_checksums_lf_staging.sql",
       "precisao": "arquivo-novo",
-      "proposito": "pacote externo: pendentes, hashes, analise por migration, protocolo D1",
+      "proposito": "reparo atomico das 22 linhas (staging-only, fail-closed)",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
+      "caminho": ".gitattributes",
+      "precisao": "edicao",
+      "proposito": "migrations *.sql text eol=lf (mata a classe de drift)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b3564aad824b3239319f74f764a6f96a7151e331d14b18322e3c3cd8b5cb57d5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md",
+      "precisao": "edicao",
+      "proposito": "diagnostico + etapa de reparo + ordem revisada",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fe22849646c0a820824e191bf34ecbec3a070563a70a22929a05b06534049d20",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "precisao": "edicao",
+      "proposito": "evidencia do diagnostico + gate destravado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d9c392b99f8cc96162fe8e4129c0af09805bd1556c50f3e87c8e29a761fb6d27",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "edicao",
-      "proposito": "D-STG-MIG-EXTERNAL-APPLY (thread Codex)",
+      "proposito": "DELTA da D-STG-MIG-EXTERNAL-APPLY",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a91e50aba32a8cba48bf66526ae503096516ec050d1d5205935cde2f9326633b",
+      "shaNaDeclaracao": "0f63b0a1aef4a2f5454874db48d8123842b48e76225dd0f0c1ad864d92a62fd3",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2552,6 +2553,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "STG-MIG-RECON-EXT: evidencia externa (23/28, DocumentoTecnico ausente) + D1 A-prime (thread 01a034d7) + pacote externo com checksums canonicos LF",
+  "nota": "Diagnostico 22 checksums = LINE_ENDING_DRIFT provado 22/22; DELTA D1 CONCORDO; reparo LF gerado dos blobs + .gitattributes eol=lf",
   "aviso": "Declaracao ENCERRADA."
 }

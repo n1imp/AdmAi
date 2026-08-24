@@ -51518,9 +51518,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-MIG-RECON-EXT: evidencia externa (23/28, DocumentoTecnico ausente) + D1 A-prime (thread 01a034d7) + pacote externo com checksums canonicos LF",
       "declaradoEm": "2026-08-24T17:38:10.803Z"
+    },
+    {
+      "sliceId": "STG-MIG-CHECKSUM-DIAG",
+      "titulo": "Diagnostico dos 22 checksums (LINE_ENDING_DRIFT provado 22/22) + reparo LF + .gitattributes (DELTA D1 01a034d7)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Diagnostico 22 checksums = LINE_ENDING_DRIFT provado 22/22; DELTA D1 CONCORDO; reparo LF gerado dos blobs + .gitattributes eol=lf",
+      "declaradoEm": "2026-08-24T20:52:53.882Z"
     }
   ],
-  "geradoEm": "2026-08-24T17:43:26.975Z",
+  "geradoEm": "2026-08-24T20:57:19.726Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

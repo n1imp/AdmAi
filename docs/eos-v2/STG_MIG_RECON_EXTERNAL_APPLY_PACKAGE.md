@@ -50,6 +50,34 @@ canônico. O `checksum` da `_prisma_migrations` do Prisma 7.9.1 é SHA-256 dos b
 Qualquer mismatch = **MIGRATION_HISTORY_DIVERGENCE (BLOCKING)** — parar antes de qualquer apply.
 `MIGRATION_NAME_MATCH != MIGRATION_CONTENT_MATCH`.
 
+### ✅ DIAGNÓSTICO DA DIVERGÊNCIA (2026-08-24 — fechado, zero UNKNOWN)
+
+O preflight externo achou **22/23 divergentes** (só `20260705000000_session_auth_tables` batia).
+Diagnóstico determinístico: para **todas as 22**, `sha256(blob LF → CRLF)` == checksum do staging,
+**exato (22/22)**; o controle positivo é `LF_MATCH`. Blobs git são LF puros (sem BOM);
+`core.autocrlf=true` no checkout Windows explica o mecanismo; **classe B excluída** (zero commits
+tocando as 23 aplicadas após 2026-07-10, data do apply). **Causa: `A. LINE_ENDING_DRIFT` nas 22**
+— conteúdo SQL byte-idêntico modulo newline. As 22 linhas históricas foram hasheadas de um
+checkout CRLF em julho; a `session_auth_tables` foi hasheada como LF.
+
+**DELTA D1 (thread `01a034d7`, CONCORDO):** (1) preflight de checksum **SATISFEITO** por
+"equivalência canônica comprovada" — pendentes **destravadas**; (2) as 5 novas linhas usam o
+SHA-256 **LF canônico** (tabela acima, inalterada); (3) **REPARAR as 22 linhas para LF ANTES das
+pendentes** — o matcher do Prisma 7.9.1 normaliza o script local para LF na comparação, então
+checksum LF armazenado funciona de checkout LF **e** CRLF (o CRLF armazenado, não). Artefato de
+reparo (staging-only, fail-closed): `chaveiro-bot/prisma/repair/2026-08-24_checksums_lf_staging.sql`
+— transação única com `pg_try_advisory_xact_lock(72707369)`, preflight (23 concluídas, sem
+falhas/rollback/duplicatas), 22 UPDATEs com `WHERE migration_name = <nome> AND checksum =
+<CRLF exato> AND finished_at IS NOT NULL AND rolled_back_at IS NULL` (ROW_COUNT=1 cada, senão
+abort), total==22 asseverado, só a coluna `checksum` muda. **Snapshot completo das 23 linhas antes
+de rodar é pré-requisito operacional.** Registro da correção: mapa nome→(CRLF antigo, LF novo)
+está no próprio artefato. Fatia de repo complementar aplicada: `.gitattributes` com
+`chaveiro-bot/prisma/migrations/**/*.sql text eol=lf` (mata a classe na origem).
+
+**ORDEM REVISADA:** snapshot → **reparo dos 22 checksums** → conferir 23/23 == LF canônico →
+aplicar as **5 pendentes** (A-prime, inalterado) → 28/28 LF-consistentes → re-preflight lockdown →
+lockdown → verify → negative control → Advisor.
+
 ### 5 PENDENTES — ordem obrigatória de aplicação
 
 | Ordem | migration_name | SHA-256 canônico (LF) | Risco |
