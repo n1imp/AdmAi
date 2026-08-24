@@ -81,6 +81,9 @@ const PREFIXOS_DE_REF = Object.freeze([
   // [STG-SEC amendment 2026-08-24] Classe de finding de seguranca descoberto no ambiente de
   // staging (ex.: STG-SEC-RLS-01 — RLS desabilitada + grants anon/authenticated). Dono: Claude.
   'STG-SEC-',
+  // [STG-MIG-RECON 2026-08-24] Classe de finding de estado de migration do staging (ex.:
+  // STG-MIG-SCHEMA-LAG-01 — staging 23/28 migrations, DocumentoTecnico ausente). Dono: Claude.
+  'STG-MIG-',
 ]);
 
 export function lerLedger(caminho = CAMINHO_LEDGER) {

@@ -2268,9 +2268,11 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": "codex",
-      "status": "BLOCKED_CAPABILITY",
-      "description": "Finding BLOQUEANTE de seguranca: 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated (Advisor rls_disabled_in_public ERROR EXTERNAL). Exposicao externa direta via PostgREST/anon key, contornando o backend. Artefato de correcao PRONTO e APROVADO pelo REVISOR; aplicacao no staging real BLOCKED_CAPABILITY (credenciais). Finding ABERTO ate os gates reais.",
-      "dependencies": [],
+      "status": "BLOCKED_DEPENDENCY",
+      "description": "Finding BLOQUEANTE de seguranca: 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated (Advisor rls_disabled_in_public ERROR EXTERNAL). Artefato APROVADO e validado byte-a-byte no staging; preflight externo abortou fail-closed (DocumentoTecnico ausente) => READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON). Finding ABERTO ate os gates reais.",
+      "dependencies": [
+        "STG-MIG-RECON"
+      ],
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
@@ -2289,7 +2291,8 @@
         "REVISAO Codex REVISOR (thread 01a03185, VEREDITO CORRECOES_NECESSARIAS) — 6 achados, todos ENDERECADOS e re-validados contra PG16 local: F1 grants por COLUNA (REVOKE ALL ja os remove — verificado; verify agora prova com has_any_column_privilege); F2 residual PUBLIC-execute FECHADO (ADP GLOBAL sem IN SCHEMA suprime o built-in — verificado empiricamente; Part C/D provam EXECUTE negado); F3 conjunto de criadores = owners de public (relacoes+sequences+routines) + current_user + defaclrole FILTRADO a namespace global(0)/public (nunca os internos de Auth/Storage de outros schemas); apply e verify usam o MESMO conjunto; insufficient_privilege e FATAL (fail-closed); check de catalogo escopado a global/public; F4 guard vinculado a conexao real via scripts/apply-rls-lockdown.mjs (reusa travas de validate-staging: ALLOW_STAGING_WRITES+STAGING_REF+PROD_HOST_BLOCKLIST); F5 negative-control de mutacao exige 401/403/404 (nao qualquer nao-2xx); F6 B2 checa grant DIRETO de schema + A2 zero-policies pos-condicao + rollback com as 26 executavel. Re-validacao local: A/A2/B/B2/C/D/E TODOS PASS; residual agora FECHADO.",
         "RESIDUAL REVISADO: o PUBLIC-execute em novas functions foi FECHADO via ADP global FOR ROLE <criadores> REVOKE EXECUTE ON FUNCTIONS FROM anon,authenticated,PUBLIC. Trade-off consciente: afeta functions futuras desses roles em qualquer schema (so remove default de anon/authenticated/PUBLIC, nunca do owner/service_role); AdmAi nao depende de EXECUTE por PUBLIC.",
         "REPO APROVADO: Codex REVISOR VEREDITO APROVADO apos DECISOR + REVISOR + 3 deltas (thread 01a03185). Sem achados remanescentes no artefato; enable_rls.sql intacto; conjunto de criadores completo e identico em apply/verify (owners+current_user+defaclrole global/public); fail-closed. O finding permanece ABERTO: so fecha apos os gates REAIS no admai-staging (aplicacao + verify + negative control com anon key + positive control backend + re-run do Advisor).",
-        "[Ciclo REMEDIATION 2026-08-24] READY_FOR_EXTERNAL_APPLY (§51): credenciais de staging RE-CONFIRMADAS ausentes (sem .env.staging, sem env vars, sem CLI). Artefato RE-PROVADO local no HEAD 405d5cf contra Postgres 16 (Docker, nao staging/prod): A1 verify A/A2/B/B2/C/D/E PASS; A2 backend-owner INSERT/SELECT/UPDATE/DELETE operacional pos-lockdown + anon negado (42501). Handoff externo com hashes+comandos+pos-condicoes em docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md. NAO e PASS — so a aplicacao real fecha o finding."
+        "[Ciclo REMEDIATION 2026-08-24] READY_FOR_EXTERNAL_APPLY (§51): credenciais de staging RE-CONFIRMADAS ausentes (sem .env.staging, sem env vars, sem CLI). Artefato RE-PROVADO local no HEAD 405d5cf contra Postgres 16 (Docker, nao staging/prod): A1 verify A/A2/B/B2/C/D/E PASS; A2 backend-owner INSERT/SELECT/UPDATE/DELETE operacional pos-lockdown + anon negado (42501). Handoff externo com hashes+comandos+pos-condicoes em docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md. NAO e PASS — so a aplicacao real fecha o finding.",
+        "[Evidencia EXTERNA 2026-08-24] Preflight read-only real no admai-staging: artefatos validados byte-a-byte (SHA-256 confere); 25/26 tabelas existem, DocumentoTecnico AUSENTE; zero policies; lockdown NAO aplicado — o guard fail-closed abortou CORRETAMENTE. Status agora: READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON) — nao mais bloqueio so por credencial. NAO remover DocumentoTecnico da lista nem criar variante 25-tabelas: o problema e o migration state (finding STG-MIG-SCHEMA-LAG-01), nao o lockdown."
       ],
       "attemptCount": 2,
       "lastAttempt": "2026-08-24T00:52:46.508Z",
@@ -2301,29 +2304,30 @@
       "workId": "STG-MIG-RECON",
       "phase": "F5",
       "domain": "infra",
-      "priority": "P1",
+      "priority": "P0",
       "risk": "medio",
       "authority": "CLAUDE",
       "owner": "claude",
-      "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
-      "description": "Reconciliacao de migration do admai-staging (amendment §7): 26 tabelas existem mas _prisma_migrations vazio (baseline nao rastreado). Baseline seguro sem migrate deploy cego.",
-      "dependencies": [
-        "STG-SEC-RLS-01"
+      "requiredReviewer": "codex",
+      "status": "IN_PROGRESS",
+      "description": "Reconciliacao de migration do admai-staging — EXTERNAL_RECON_REQUIRED: evidencia externa real mostra 23/28 migrations aplicadas (ultima 20260707000001, 2026-07-10) e DocumentoTecnico AUSENTE. Classificacao: STAGING_SCHEMA_BEHIND_REPOSITORY. Aplicacao pelo executor externo (SQL via integracao Supabase), protocolo decidido por Codex D1.",
+      "dependencies": [],
+      "blockerRefs": [],
+      "findingRefs": [
+        "STG-MIG-SCHEMA-LAG-01"
       ],
-      "blockerRefs": [
-        "STG-CREDENTIALS"
-      ],
-      "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Repo: 28 migrations, cadeia consistente (prisma migrate status local: schema up to date). Staging: 26 tabelas, _prisma_migrations=0 => SCHEMA_LIKELY_EQUIVALENT_UNTRACKED. Estrategia + comandos em docs/eos-v2/STG_MIGRATION_RECONCILIATION.md.",
-        "Ordem (amendment §8): so APOS STG-SEC-RLS-01 CLOSED. Preflight: prisma migrate diff (from-url staging vs to-migrations repo). Vazio => baseline por migrate resolve --applied (sem DDL). Drift => Codex D1. NUNCA migrate deploy cego."
+        "[SUPERSEDED] Hipotese anterior SCHEMA_LIKELY_EQUIVALENT_UNTRACKED (_prisma_migrations=0) REFUTADA pela consulta real: staging tem 23 migrations aplicadas em ordem IDENTICA aos primeiros 23 diretorios do repo. Mantido como historico.",
+        "FINDING STG-MIG-SCHEMA-LAG-01: DocumentoTecnico e esperado pelo artefato RLS aprovado (lista das 26) mas AUSENTE no admai-staging real; 5 migrations pendentes (servico_em_andamento, documentos_tecnico, usuario_preferencias, usuario_telefone_unique, servico_comissao_taxa_aplicada) — todas aditivas, sem DML/drop. DOCUMENTO_TECNICO_ORIGIN = 20260717000001_documentos_tecnico (CREATE TABLE + FKs Empresa RESTRICT/Tecnico CASCADE); nenhuma migration POSTERIOR depende dela (verificado lendo os SQLs).",
+        "Precondicao de dados na 20260803 (usuario_telefone_unique): CREATE UNIQUE INDEX falha com telefones duplicados — checagem obrigatoria antes (query documentada no proprio SQL).",
+        "Inventario + SHA-256 dos 28 migration.sql computados (bytes LF do repo) para o executor comparar com a coluna checksum da _prisma_migrations. Pacote: docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md.",
+        "CONSEQUENCIA: STG-SEC-RLS-01 agora e BLOCKED_DEPENDENCY(STG-MIG-RECON) — o preflight fail-closed do lockdown abortou corretamente por tabela ausente. NAO fazer variante 25-tabelas; o problema e o migration state, nao o lockdown."
       ],
-      "attemptCount": 1,
-      "lastAttempt": "2026-08-24T00:52:46.508Z",
-      "nextAction": "Com DIRECT_URL de staging: rodar prisma migrate diff (preflight); se vazio, migrate resolve --applied nas 28; se drift, coletar diff -> Codex D1. Depois do boundary de seguranca.",
-      "revisitCondition": "Execucao (preflight + baseline) exige DIRECT_URL do admai-staging (BLOCKED_CAPABILITY, ver STG-02-USO). Classificacao e estrategia ja prontas no repo.",
+      "attemptCount": 2,
+      "lastAttempt": "2026-08-24T17:30:00.000Z",
+      "nextAction": "Executor externo: verificar checksums das 23 aplicadas -> aplicar as 5 pendentes NA ORDEM (protocolo D1: transacao por migration = SQL integral + linha na _prisma_migrations; falha => rollback + parar cadeia) -> DocumentoTecnico existe -> re-preflight do lockdown -> lockdown aprovado -> verify -> negative control -> Advisor.",
+      "revisitCondition": "Evidencia externa do apply (checksums verificados, 5 aplicadas, migrate-status-clean) retorna e fecha este item; qualquer CHECKSUM_MISMATCH nas 23 aplicadas e BLOCKING e volta para D1 antes de aplicar pendentes.",
       "snapshotRef": null
     },
     {

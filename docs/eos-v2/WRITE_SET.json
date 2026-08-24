@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FE-STRUCT-FECHAR-AWAIT",
-  "titulo": "Harness: fechar() awaitable + await nos 9 call sites + varredura de fim de suite (0 vazamentos)",
+  "sliceId": "STG-MIG-RECON-EXT",
+  "titulo": "STG-MIG-RECON: evidencia externa (23 aplicadas, 5 pendentes, DocumentoTecnico ausente) + pacote de apply externo",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T16:02:49.506Z",
+  "declaradoEm": "2026-08-24T17:38:10.803Z",
   "baseCommitPorLane": {
-    "HARNESS": "6bf6cfa4cbd12784aadf8b1074d04761070b4227"
+    "HARNESS": "46c113e37542f848886409f70011622745a077c6"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Pos-medicao: fire-and-forget deixava varreduras orfas no process.exit (1 chrome/browser sobrevivia a corrida do shutdown). fechar() virou Promise awaited; cinturao final de suite varre perfis jornada-. Validado: 9/9 + 0 chrome.exe vazados. Escrita ocorreu antes desta declaracao (iteracao rapida de diagnostico) — reconciliar como ordem violada.",
+  "notaDeMetodo": "Evidencia externa refuta history-vazia: staging esta ATRAS do repo (23/28; falta DocumentoTecnico). Reclassificar STG-MIG-RECON p/ IN_PROGRESS/EXTERNAL_RECON_REQUIRED com finding STG-MIG-SCHEMA-LAG-01 (novo prefixo STG-MIG- no ledger tool, regra da casa); STG-SEC-RLS-01 ganha dependencia. Doc de reconciliacao atualizado + pacote externo com as 5 migrations (SHA-256, analise, protocolo D1 Codex).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -609,8 +609,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "e770d3167281c7bfefb5fec113b72660291b9b3412ccd4d634471996c8672956",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "d85a1e4a264947d7df945880a6fcd03b94dc2d802686e2e464356f6bd5ae11d0",
+      "docs/eos-v2/WRITE_SET.json": "d1b7f9d83df9d19b6a999206294e005b765a44fa3507c6de162700a5094b3cf5",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "c77345923ba855e8a8238eaf3509377cdf4945fc39c03f2dd9fac4d9f905c100",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2501,14 +2501,48 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/e2e/jornadas.mjs",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "fechar awaitable + sweep final",
+      "proposito": "reclassificar STG-MIG-RECON + dependencia em STG-SEC-RLS-01",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ddd675f1681cf43f79f11573808e9bf3153404bf0d68e1f0cba298e2f6766e90",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "a95db816adb6bc353500cd93ff40e9b9f8a7592fee62fb5b2506d417ad65c6d6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "tools/admai-delivery/completion-ledger.mjs",
+      "precisao": "edicao",
+      "proposito": "registrar prefixo de finding STG-MIG-",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fb553afd29a1f139df74418f8e84021207ea26908088b4e642ed581b238a5209",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md",
+      "precisao": "edicao",
+      "proposito": "nova evidencia + classificacao STAGING_SCHEMA_BEHIND_REPOSITORY + inventario/checksums",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "81e5b9773bf63f58c1e379e46f3e0d9c687fc950f0d41cc947b3552c27d6bf0a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md",
+      "precisao": "arquivo-novo",
+      "proposito": "pacote externo: pendentes, hashes, analise por migration, protocolo D1",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "edicao",
+      "proposito": "D-STG-MIG-EXTERNAL-APPLY (thread Codex)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a91e50aba32a8cba48bf66526ae503096516ec050d1d5205935cde2f9326633b",
+      "sujoNaDeclaracao": false
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2518,6 +2552,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "fechar awaitable + sweep final; 9/9 + 0 vazados (3 execucoes completas verdes)",
+  "nota": "STG-MIG-RECON-EXT: evidencia externa (23/28, DocumentoTecnico ausente) + D1 A-prime (thread 01a034d7) + pacote externo com checksums canonicos LF",
   "aviso": "Declaracao ENCERRADA."
 }

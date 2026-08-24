@@ -1,7 +1,28 @@
 # STG — Reconciliação de migrations (admai-staging) · amendment §7
 
-**Data:** 2026-08-24 · **Ordem:** só APÓS `STG-SEC-RLS-01 = CLOSED` (amendment §8).
-**Regra dura:** **não** rodar `prisma migrate deploy` cego. Reconciliar primeiro.
+**Data:** 2026-08-24 (atualizado com evidência EXTERNA real) · **Regra dura:** **não** rodar
+`prisma migrate deploy` cego. Reconciliar primeiro.
+
+> ## ⚠️ ATUALIZAÇÃO — evidência externa real (2026-08-24, ciclo STG-MIG-RECON-EXT)
+>
+> A consulta real ao `admai-staging` **refutou** a hipótese abaixo (`_prisma_migrations` = 0):
+> o staging tem **23 migrations aplicadas**, em ordem **idêntica** aos primeiros 23 diretórios do
+> repo (última: `20260707000001_drop_material_nome_unique_global`, finished_at 2026-07-10).
+> `DocumentoTecnico` **não existe**. Zero policies. Classificação nova:
+> **`STAGING_SCHEMA_BEHIND_REPOSITORY`** — **5 migrations pendentes** (todas aditivas, sem
+> DML/drop): `20260717000000_servico_em_andamento`, `20260717000001_documentos_tecnico`
+> (origem do `DocumentoTecnico`), `20260718000000_usuario_preferencias`,
+> `20260803000000_usuario_telefone_unique` (**pré-condição de dados**: telefones únicos),
+> `20260823000100_servico_comissao_taxa_aplicada`. Finding: **`STG-MIG-SCHEMA-LAG-01`**.
+> Consequência: o preflight fail-closed do lockdown RLS abortou **corretamente**;
+> `STG-SEC-RLS-01 = READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON)`.
+> A ordem original ("§8: security antes de migration") **inverte-se por necessidade técnica**:
+> o lockdown exige as 26 tabelas ⇒ migrations pendentes aplicam **primeiro**, depois o lockdown.
+> A estratégia de *baseline por `migrate resolve`* abaixo fica **SUPERSEDED** (era para schema
+> equivalente sem history; o caso real é history correta + schema atrasado ⇒ **aplicar as
+> pendentes**). Protocolo e pacote do executor externo:
+> `docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md` (decisão D1 registrada em
+> `AGENT_DECISIONS.md`, D-STG-MIG-EXTERNAL-APPLY).
 
 ## Evidência
 
