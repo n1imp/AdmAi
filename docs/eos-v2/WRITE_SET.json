@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-V2",
-  "titulo": "Artefatos v2 do lockdown (D1 01a035ce): excecao supabase_admin hard-assert + choke point USAGE + canario + detector",
+  "sliceId": "STG-SEC-RLS-V2-REV1",
+  "titulo": "Correcoes da revisao v2 (thread 01a035db): G completo, PUBLIC nos defaults, docs->v2, authenticated no negcontrol, E nao-vacuo",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T22:12:36.940Z",
+  "declaradoEm": "2026-08-24T22:24:29.987Z",
   "baseCommitPorLane": {
-    "HARNESS": "f6da941009a42715c7f25496919153c132f6786f"
+    "HARNESS": "e138a224b4d8a8dcdc661f78198471f5307076b1"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "v1 CONGELADO (intocado). v2: lockdown com (a) ADP tolerando SO supabase_admin via hard-assert com warning detalhado, (b) REVOKE USAGE ON SCHEMA public FROM PUBLIC + snapshot/regrant atomico exceto anon/authenticated + asserts before/after; verify_v2 com canario adversarial (grants maximos deliberados -> 42501 sem USAGE), checks de USAGE, excecao unica no catalogo de defaults, detector de baseline (26+_prisma_migrations); wrapper v2. Validacao local PG16 antes do REVISOR.",
+  "notaDeMetodo": "5 achados do REVISOR: (1) G exige presenca da baseline + isencao EXATA dos probes + todas as relkinds; (2) aclexplode grantee OID 0 = PUBLIC normalizado e incluido na deteccao (lockdown warnings + verify C); (3) handoff/ledger re-apontados para artefatos v2; (4) staging-rls-negative-control ganha modo authenticated (JWT via env, nunca ecoado) e wrapper corrige a mensagem; (5) E usa canario proprio com 1 linha (nao-vacuo). Revalidacao local + DELTA.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -85,7 +85,9 @@
       "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
       "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "1a195f3625baca2f471a3414d16277716adaf383c3ca473e89d46093bc1ff47f",
+      "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql": "6bbf25877c9e1ea428b491f33795ee3909c4b94b6c75114ee42d51ec7c1432f4",
       "chaveiro-bot/prisma/rls/verify_lockdown.sql": "9fb63780ed6f84faafe44cb11f6d5353090c72839ec9ad8c4c4fe003a23e3ff0",
+      "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql": "28c28a1c62646e80f9c797c6b27f472344df7a05aafcf4c7da4d158240e7c3e5",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -93,6 +95,7 @@
       "chaveiro-bot/scripts/__tests__/audit-gate.test.js": "31a2b0d448a230b1a618f81315cddb9e2a49a532691950c6544b8746166d9e3f",
       "chaveiro-bot/scripts/__tests__/backfill-uploads.test.js": "06958c0e453f9fbe9284c6a6de3f1e05d36301183f8753e8d54c721918d9ae72",
       "chaveiro-bot/scripts/__tests__/seed-demo.test.js": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
+      "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs": "9fee54bd4a2e62d96c22766dc2454bd160a46021af76dcde0fdd2c031955ef2a",
       "chaveiro-bot/scripts/apply-rls-lockdown.mjs": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
       "chaveiro-bot/scripts/audit-allowlist.json": "79f22a37cfa88b8bb611b152971868cd45a989f163a9857acb9d512ca82fef7c",
       "chaveiro-bot/scripts/audit-gate-helpers.mjs": "8dadf1871387a61477360e497e6841aef2f02f0f6c414b9ab01bf1e0cb1aa720",
@@ -593,7 +596,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "8f4189d1145730c49f71682294a83271ed1c0ed67a939d484ba79c3c4fc31531",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "b50c5065d3dc8706bd343ba4b14c7d134dcddf561c89f88529057f5442d9f681",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
@@ -612,8 +615,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "00e5991fb646b9961c0162f497b573c7bf914275c355f734460a5f14537b9e2d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b44b5b512d0fa89c5ef64ab9489629bea42f68b05eded736914c6d9f3b850005",
+      "docs/eos-v2/WRITE_SET.json": "e24b614a512e442c194afdbc7aad78e9af6758fa1247784d60760346cbfd46d7",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "f069bdd4afd1aba07a3e548bd4ff76ccaa10d0b25e03bc549783b68a949644c6",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2504,45 +2507,63 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql",
-      "precisao": "arquivo-novo",
-      "proposito": "lockdown v2",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql",
+      "precisao": "edicao",
+      "proposito": "achados 1, 2, 5",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "28c28a1c62646e80f9c797c6b27f472344df7a05aafcf4c7da4d158240e7c3e5",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql",
-      "precisao": "arquivo-novo",
-      "proposito": "verify v2 (canario + usage + excecao + detector)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql",
+      "precisao": "edicao",
+      "proposito": "achado 2 (warnings com PUBLIC)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6bbf25877c9e1ea428b491f33795ee3909c4b94b6c75114ee42d51ec7c1432f4",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
+      "precisao": "edicao",
+      "proposito": "achado 4 (modo authenticated)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs",
-      "precisao": "arquivo-novo",
-      "proposito": "wrapper v2 (guard vinculado a conexao)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "precisao": "edicao",
+      "proposito": "achado 4 (mensagem correta)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9fee54bd4a2e62d96c22766dc2454bd160a46021af76dcde0fdd2c031955ef2a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md",
+      "precisao": "edicao",
+      "proposito": "achado 3 (fluxo operacional -> v2)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "20048c7530318a8e5e26d33273cd738dda8d3541b91424cb9776a5e2f04dcd2d",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "evidencias v2 + REVISOR",
+      "proposito": "achado 3 (nextAction -> v2) + evidencias",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8f4189d1145730c49f71682294a83271ed1c0ed67a939d484ba79c3c4fc31531",
+      "shaNaDeclaracao": "b50c5065d3dc8706bd343ba4b14c7d134dcddf561c89f88529057f5442d9f681",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "edicao",
-      "proposito": "resultado do REVISOR v2",
+      "proposito": "registro da rodada REVISOR v2",
       "existiaNaDeclaracao": true,
       "shaNaDeclaracao": "79c2ffa173e38a45794dd09707972bd366db1db2fb572ffbca6e8a1f3cb56415",
       "sujoNaDeclaracao": false
@@ -2555,6 +2576,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "v2 build (D1 01a035ce): lockdown v2 + verify v2 (canario/detector) + wrapper v2; local PG16 A-G PASS; REVISOR a seguir",
+  "nota": "Correcoes da revisao v2 (5 achados thread 01a035db); local A-G PASS; DELTA a seguir",
   "aviso": "Declaracao ENCERRADA."
 }

@@ -81,7 +81,7 @@ async function main() {
   } finally {
     await client.query('ROLLBACK');
   }
-  console.log('\n✅ STG-SEC-RLS-01 v2: verify PASS. Rode staging-rls-negative-control.mjs (anon key + token authenticated) e re-rode o Security Advisor.');
+  console.log('\n✅ STG-SEC-RLS-01 v2: verify PASS. Rode staging-rls-negative-control.mjs — matriz anon SEMPRE; para o gate authenticated-unprivileged, defina STAGING_AUTHENTICATED_JWT (obrigatorio p/ fechar). Depois re-rode o Security Advisor.');
 }
 
 main().then(() => client.end()).catch((e) => { console.error('\n❌ FALHOU:', e.message); client.end?.(); process.exit(1); });

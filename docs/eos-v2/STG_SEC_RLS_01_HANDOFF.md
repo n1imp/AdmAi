@@ -1,5 +1,24 @@
 # STG-SEC-RLS-01 — Handoff `READY_FOR_EXTERNAL_APPLY`
 
+> ## ⚠️ SUPERSEDED PELO v2 (2026-08-24) — NÃO aplicar os artefatos v1 deste handoff
+>
+> O apply real do **v1** abortou fail-closed (rollback total) em `ALTER DEFAULT PRIVILEGES FOR
+> ROLE supabase_admin` — o `postgres` do Supabase hosted não tem authority sobre defaults do role
+> de plataforma. Reaplicar o v1 abortará de novo no mesmo ponto. **Fluxo operacional vigente = v2**
+> (D1 thread `01a035ce`; diagnóstico em `STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md`):
+>
+> 1. `node scripts/apply-rls-lockdown-v2.mjs` — aplica `prisma/rls/lockdown_public_access_v2.sql`
+>    (exceção hard-assert p/ `supabase_admin` + **choke point**: `REVOKE USAGE ON SCHEMA public
+>    FROM PUBLIC` com snapshot/regrant atômico exceto `anon`/`authenticated`) e roda
+>    `verify_lockdown_v2.sql` (A/A2/B/B2v2/C/D/E/F-canário/G-baseline).
+> 2. `staging-rls-negative-control.mjs` — matriz `anon` sempre; gate `authenticated-unprivileged`
+>    exige `STAGING_AUTHENTICATED_JWT` (obrigatório para fechar).
+> 3. Positive controls: Prisma/Express CRUD + **Storage via `service_role`** (smoke obrigatório).
+> 4. Security Advisor: zero `rls_disabled_in_public` nas 26.
+> 5. Defaults do `supabase_admin` na origem: `BLOCKED_CAPABILITY_NON_BLOCKING` (provider/Support).
+>
+> Os artefatos v1 abaixo permanecem como registro histórico congelado (hashes válidos).
+
 **Estado:** o patch de segurança está **pronto, aprovado (Codex REVISOR) e re-provado localmente**;
 falta **apenas a aplicação no staging real**, que depende de credenciais ausentes. Isto **não é
 PASS** — o finding `STG-SEC-RLS-01` permanece **ABERTO** até os gates reais de staging passarem.

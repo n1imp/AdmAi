@@ -51560,9 +51560,23 @@
       "bloqueiaIntegracao": false,
       "nota": "v2 build (D1 01a035ce): lockdown v2 + verify v2 (canario/detector) + wrapper v2; local PG16 A-G PASS; REVISOR a seguir",
       "declaradoEm": "2026-08-24T22:12:36.940Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-V2-REV1",
+      "titulo": "Correcoes da revisao v2 (thread 01a035db): G completo, PUBLIC nos defaults, docs->v2, authenticated no negcontrol, E nao-vacuo",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Correcoes da revisao v2 (5 achados thread 01a035db); local A-G PASS; DELTA a seguir",
+      "declaradoEm": "2026-08-24T22:24:29.987Z"
     }
   ],
-  "geradoEm": "2026-08-24T22:18:52.081Z",
+  "geradoEm": "2026-08-24T22:28:44.008Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

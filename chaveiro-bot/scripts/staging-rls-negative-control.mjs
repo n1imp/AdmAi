@@ -11,21 +11,26 @@
  *                   o controle detecta a exposicao. Sai != 0 se JA estiver fechado.
  *   (default)     : DEPOIS do lockdown, exige que TODAS estejam NEGADAS.
  *
- * NUNCA imprime a key. Le do ambiente (sem ecoar):
- *   STAGING_SUPABASE_URL       (ex.: https://qsuufuulxfkkeasgxhcv.supabase.co)
- *   STAGING_SUPABASE_ANON_KEY  (publishable/anon key do admai-staging)
+ * NUNCA imprime key/token. Le do ambiente (sem ecoar):
+ *   STAGING_SUPABASE_URL           (ex.: https://qsuufuulxfkkeasgxhcv.supabase.co)
+ *   STAGING_SUPABASE_ANON_KEY      (publishable/anon key do admai-staging)
+ *   STAGING_AUTHENTICATED_JWT      (OPCIONAL: JWT de um usuario autenticado SEM
+ *                                   privilegios — quando presente, a matriz roda
+ *                                   TAMBEM como `authenticated` [D1 v2/REVISOR:
+ *                                   authenticated-unprivileged nao pode acessar])
  *
  * Uso:
  *   node --env-file=.env.staging.negcontrol scripts/staging-rls-negative-control.mjs
  *   node --env-file=... scripts/staging-rls-negative-control.mjs --expect-open
  *
- * (o --env-file evita a key na linha de comando/history; o arquivo fica fora do git.)
+ * (o --env-file evita key/token na linha de comando/history; o arquivo fica fora do git.)
  */
 
 const EXPECT_OPEN = process.argv.includes('--expect-open');
 
 const URL_BASE = process.env.STAGING_SUPABASE_URL;
 const ANON = process.env.STAGING_SUPABASE_ANON_KEY;
+const AUTH_JWT = process.env.STAGING_AUTHENTICATED_JWT || null;
 const REF_ESPERADO = 'qsuufuulxfkkeasgxhcv';
 
 if (!URL_BASE || !ANON) {
@@ -50,10 +55,15 @@ const TABELAS = [
 // Tabelas sensiveis destacadas no amendment (usadas no modo --expect-open).
 const SENSIVEIS = ['Usuario', 'RefreshToken', 'SessaoUsuario', 'CodigoRecuperacaoTotp', 'Pagamento', 'AuditLog'];
 
-const headers = { apikey: ANON, Authorization: `Bearer ${ANON}` };
+// Dois principais: 'anon' (bearer = anon key) e, quando o JWT estiver presente,
+// 'authenticated' (apikey = anon key; bearer = JWT do usuario sem privilegios).
+function headersDe(principal) {
+  const bearer = principal === 'authenticated' ? AUTH_JWT : ANON;
+  return { apikey: ANON, Authorization: `Bearer ${bearer}` };
+}
 
-async function req(method, path, body) {
-  const opts = { method, headers: { ...headers } };
+async function req(method, path, body, principal = 'anon') {
+  const opts = { method, headers: { ...headersDe(principal) } };
   if (body !== undefined) {
     opts.headers['Content-Type'] = 'application/json';
     opts.headers.Prefer = 'return=representation';
@@ -79,34 +89,43 @@ function negado(res) {
 const falhas = [];
 const linhas = [];
 
-async function main() {
-  // GET nas 26
+async function matriz(principal) {
+  // GET nas 26 sob o principal dado.
   for (const t of TABELAS) {
-    const res = await req('GET', `${t}?select=*&limit=1`);
+    const res = await req('GET', `${t}?select=*&limit=1`, undefined, principal);
     const aberto = acessivel(res);
-    linhas.push(`GET ${t.padEnd(22)} -> ${res.status}${res.arrayLen !== null ? ` [array:${res.arrayLen}]` : ''}`);
+    linhas.push(`[${principal}] GET ${t.padEnd(22)} -> ${res.status}${res.arrayLen !== null ? ` [array:${res.arrayLen}]` : ''}`);
     if (EXPECT_OPEN) {
-      if (SENSIVEIS.includes(t) && !aberto) {
+      if (principal === 'anon' && SENSIVEIS.includes(t) && !aberto) {
         falhas.push(`--expect-open: ${t} deveria estar ACESSIVEL (status ${res.status}) — nada a provar/morder`);
       }
     } else if (aberto || !negado(res)) {
-      falhas.push(`${t}: NAO negado (status ${res.status}${res.arrayLen !== null ? `, array:${res.arrayLen}` : ''})`);
+      falhas.push(`[${principal}] ${t}: NAO negado (status ${res.status}${res.arrayLen !== null ? `, array:${res.arrayLen}` : ''})`);
     }
   }
 
-  // Mutacoes representativas em Usuario (so no modo fechado — nunca tentamos escrever no aberto).
+  // Mutacoes representativas em Usuario (so no modo fechado — nunca escrevemos no aberto).
   // [REVISOR F5] Exigir negacao por AUTORIZACAO (401/403) ou tabela nao exposta (404).
-  // Um 400 (payload), 2xx (permitido) ou 5xx NAO conta como negacao por privilegio.
   if (!EXPECT_OPEN) {
     const negadoAcesso = (s) => s === 401 || s === 403 || s === 404;
     const checaMut = (nome, res) => {
-      linhas.push(`${nome} -> ${res.status}`);
+      linhas.push(`[${principal}] ${nome} -> ${res.status}`);
       if (!negadoAcesso(res.status))
-        falhas.push(`${nome} NAO negado por privilegio (status ${res.status}; esperado 401/403/404)`);
+        falhas.push(`[${principal}] ${nome} NAO negado por privilegio (status ${res.status}; esperado 401/403/404)`);
     };
-    checaMut('POST Usuario', await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` }));
-    checaMut('PATCH Usuario(id=eq.-999999)', await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' }));
-    checaMut('DELETE Usuario(id=eq.-999999)', await req('DELETE', 'Usuario?id=eq.-999999'));
+    checaMut('POST Usuario', await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` }, principal));
+    checaMut('PATCH Usuario(id=eq.-999999)', await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' }, principal));
+    checaMut('DELETE Usuario(id=eq.-999999)', await req('DELETE', 'Usuario?id=eq.-999999', undefined, principal));
+  }
+}
+
+async function main() {
+  await matriz('anon');
+  // [D1 v2/REVISOR achado 4] authenticated-unprivileged tambem nao pode acessar.
+  if (AUTH_JWT) {
+    await matriz('authenticated');
+  } else if (!EXPECT_OPEN) {
+    linhas.push('[authenticated] PULADO — defina STAGING_AUTHENTICATED_JWT para rodar o controle authenticated-unprivileged (obrigatorio p/ fechar o gate)');
   }
 
   console.log(`\nSTG-SEC-RLS-01 negative control (${EXPECT_OPEN ? 'EXPECT_OPEN' : 'EXPECT_DENIED'}) @ ${REF_ESPERADO}`);

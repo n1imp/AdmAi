@@ -2298,7 +2298,7 @@
       ],
       "attemptCount": 2,
       "lastAttempt": "2026-08-24T00:52:46.508Z",
-      "nextAction": "Codex DELTA REVIEW das 6 correcoes (thread da revisao 01a03185). Depois, PENDENTE (BLOCKED_CAPABILITY, requer credenciais de staging): node scripts/apply-rls-lockdown.mjs no admai-staging (guard vinculado a conexao), rodar staging-rls-negative-control.mjs (expect-open ANTES + denied DEPOIS) com a anon key, re-rodar o Security Advisor (zero rls_disabled_in_public). So depois: reconciliacao de migration (STG-MIG-RECON).",
+      "nextAction": "[v2 — NAO reaplicar v1] Executor externo: node scripts/apply-rls-lockdown-v2.mjs (lockdown v2 + verify v2 A-G) -> staging-rls-negative-control.mjs (anon SEMPRE; gate authenticated exige STAGING_AUTHENTICATED_JWT) -> positive controls (Prisma/Express + Storage via service_role) -> Security Advisor (zero rls_disabled_in_public nas 26). Pos-review v2: DELTA das correcoes (thread 01a035db). Defaults do supabase_admin na origem = BLOCKED_CAPABILITY_NON_BLOCKING (provider).",
       "revisitCondition": "Parte NO_REPOSITORY concluida e validada localmente contra Postgres real. A aplicacao no admai-staging + negative-control com anon key + re-run do Advisor exigem credenciais/execucao SQL no staging (BLOCKED_CAPABILITY, ver STG-02-USO): DIRECT_URL do admai-staging + a anon key (publishable). Enquanto ausentes, o finding permanece ABERTO (nao fecha sem: protecao existe + negative control morde + fluxo backend funciona).",
       "snapshotRef": null
     },

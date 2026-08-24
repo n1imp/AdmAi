@@ -148,17 +148,20 @@ BEGIN
       falhas := falhas || format('%s EXECUTE na nova function', grantee); END IF;
   END LOOP;
 
-  -- Catalogo de defaults global(0)/public que ainda concedam a anon/authenticated:
-  -- a UNICA origem tolerada e supabase_admin (WARNING, nunca silencioso).
+  -- Catalogo de defaults global(0)/public que ainda concedam a anon/authenticated
+  -- ou ao pseudo-grantee PUBLIC [REVISOR v2 achado 2: OID 0 = PUBLIC nao aparecia
+  -- no cast ::regrole — normalizado explicitamente; PUBLIC e herdado por TODOS os
+  -- roles, entao default p/ PUBLIC e tao perigoso quanto p/ anon]. A UNICA origem
+  -- tolerada e supabase_admin (WARNING detalhado, nunca silencioso).
   FOR rec IN
     SELECT pg_get_userbyid(d.defaclrole) AS rol,
-           (aclexplode(d.defaclacl)).grantee::regrole::text AS g,
+           CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE a.grantee::regrole::text END AS g,
            d.defaclobjtype AS t,
-           (aclexplode(d.defaclacl)).privilege_type AS priv
-    FROM pg_default_acl d
+           a.privilege_type AS priv
+    FROM pg_default_acl d, LATERAL aclexplode(d.defaclacl) a
     WHERE d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace
   LOOP
-    IF rec.g IN ('anon','authenticated') THEN
+    IF rec.g IN ('anon','authenticated','PUBLIC') THEN
       IF rec.rol = 'supabase_admin' THEN
         RAISE WARNING 'C) EXCECAO tolerada (choke point neutraliza): default de supabase_admin tipo=% grantee=% priv=%', rec.t, rec.g, rec.priv;
       ELSE
@@ -214,27 +217,38 @@ BEGIN
   RAISE NOTICE 'D) PASS — anon/authenticated negados em SELECT(26)/INSERT/UPDATE/DELETE/EXECUTE';
 END $$;
 
--- ── E) RLS deny-all independente do grant (grant efemero + USAGE efemero) ─────
+-- ── E) RLS deny-all independente do grant (canario proprio, NAO-VACUO) ────────
+-- [REVISOR v2 achado 5] Provar com "Usuario" era vacuo se a tabela estivesse vazia
+-- (0 == 0 com ou sem RLS). Canario proprio com 1 linha CONHECIDA: dono ve 1; anon,
+-- MESMO com grant de objeto + USAGE de schema, ve 0 (RLS sem policy = deny-all).
 DO $$
-DECLARE n int; total int;
+DECLARE n int;
 BEGIN
-  SELECT count(*) INTO total FROM public."Usuario";
-  GRANT USAGE ON SCHEMA public TO anon;             -- efemero (rollback)
-  GRANT SELECT ON public."Usuario" TO anon;         -- efemero (rollback)
+  CREATE TABLE public._stg_rls_canario_tbl (id int);
+  INSERT INTO public._stg_rls_canario_tbl VALUES (1);
+  ALTER TABLE public._stg_rls_canario_tbl ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public._stg_rls_canario_tbl NO FORCE ROW LEVEL SECURITY;
+  -- Controle positivo do dado: o dono (bypassa RLS por ownership/NO FORCE) ve a linha.
+  SELECT count(*) INTO n FROM public._stg_rls_canario_tbl;
+  IF n <> 1 THEN RAISE EXCEPTION 'E) setup invalido: dono deveria ver 1 linha, viu %', n; END IF;
+
+  GRANT USAGE ON SCHEMA public TO anon;                       -- efemero (revogado abaixo)
+  GRANT SELECT ON public._stg_rls_canario_tbl TO anon;        -- efemero (revogado abaixo)
   SET LOCAL ROLE anon;
-  EXECUTE 'SELECT count(*) FROM public."Usuario"' INTO n;
+  EXECUTE 'SELECT count(*) FROM public._stg_rls_canario_tbl' INTO n;
   RESET ROLE;
-  IF n <> 0 THEN RAISE EXCEPTION 'E) RLS nao barrou com grant+usage presentes: % de %', n, total; END IF;
+  IF n <> 0 THEN RAISE EXCEPTION 'E) RLS nao barrou com grant+usage presentes: anon viu % linha(s) de 1', n; END IF;
+
   /* LIMPEZA EXPLICITA: os grants "efemeros" desta parte so seriam desfeitos no ROLLBACK
      FINAL — e a parte F roda DEPOIS, na MESMA transacao. Sem revogar aqui, o USAGE
-     concedido para o teste E vazava para F e o canario "passava" a ser acessivel
+     concedido para o teste E vazava para F e o canario de F "passava" a ser acessivel
      (defeito real pego pela validacao local do harness). */
-  REVOKE SELECT ON public."Usuario" FROM anon;
+  REVOKE SELECT ON public._stg_rls_canario_tbl FROM anon;
   REVOKE USAGE ON SCHEMA public FROM anon;
   IF has_schema_privilege('anon','public','USAGE') THEN
     RAISE EXCEPTION 'E) limpeza falhou: anon ainda com USAGE — abortado';
   END IF;
-  RAISE NOTICE 'E) PASS — com grant+usage presentes, RLS sem policy manteve deny-all (0 de %); grants efemeros revogados', total;
+  RAISE NOTICE 'E) PASS — dono ve 1; anon com grant+usage ve 0 (RLS deny-all NAO-VACUO); grants efemeros revogados';
 END $$;
 
 -- ── F) CANARIO ADVERSARIAL do choke point (prova vinculante do D1 v2) ─────────
@@ -297,13 +311,15 @@ BEGIN
   RAISE NOTICE 'F) PASS — canario com grants MAXIMOS deliberados permanece inacessivel (42501 por falta de USAGE): exposicao futura via defaults de supabase_admin NEUTRALIZADA';
 END $$;
 
--- ── G) Detector de baseline: nenhuma relacao inesperada em public ─────────────
--- Baseline = 26 tabelas de dominio + _prisma_migrations. Qualquer TABELA fora
--- da baseline => FAIL (novo objeto nao revisado — rodar apos migration/extension/
--- feature de plataforma e antes de release). Probes desta transacao sao isentas.
+-- ── G) Detector de baseline: inventario COMPLETO de public == baseline ────────
+-- [REVISOR v2 achado 1] Prova nos DOIS sentidos e para TODAS as relkinds visiveis
+-- (r/p/v/m/f): (a) toda relacao da baseline PRESENTE; (b) NENHUMA relacao fora da
+-- baseline — a isencao e EXATA (so as probes nomeadas desta transacao + temp),
+-- nunca um prefixo aberto. Rodar apos migration/extension/feature e antes de release.
 DO $$
 DECLARE
-  rec record; inesperadas text[] := '{}';
+  rec record; t text;
+  inesperadas text[] := '{}'; ausentes text[] := '{}';
   baseline text[] := ARRAY[
     'Empresa','EmpresaWhatsapp','Tecnico','DocumentoTecnico','Servico','Material',
     'MovimentacaoEstoque','ServicoMaterial','Usuario','ContaSocial','Notificacao','Pagamento',
@@ -311,20 +327,31 @@ DECLARE
     'AvaliacaoGoogle','AnaliseAvaliacoes','CodigoRecuperacaoTotp','Assinatura','ConviteUsuario',
     'SessaoUsuario','RefreshToken','AuditLog','_prisma_migrations'
   ];
+  probes text[] := ARRAY['_stg_sec_probe_tbl','_stg_sec_probe_seq','_stg_canario_tbl',
+                         '_stg_canario_seq','_stg_rls_canario_tbl'];
 BEGIN
+  -- (a) presenca: toda a baseline precisa existir como tabela.
+  FOREACH t IN ARRAY baseline LOOP
+    IF to_regclass(format('public.%I', t)) IS NULL THEN ausentes := ausentes || t; END IF;
+  END LOOP;
+  IF array_length(ausentes,1) IS NOT NULL THEN
+    RAISE EXCEPTION 'G) baseline INCOMPLETA em public (ausentes): %', ausentes;
+  END IF;
+  -- (b) excedentes: qualquer relacao visivel fora da baseline (exceto as probes
+  -- EXATAS desta transacao e objetos temporarios) => FAIL.
   FOR rec IN
-    SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE n.nspname='public' AND c.relkind IN ('r','p')
+    SELECT c.relname, c.relkind FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','f')
       AND c.relname <> ALL (baseline)
-      AND c.relname NOT LIKE '\_stg\_%'
+      AND c.relname <> ALL (probes)
       AND c.relpersistence <> 't'
   LOOP
-    inesperadas := inesperadas || rec.relname;
+    inesperadas := inesperadas || format('%s(%s)', rec.relname, rec.relkind);
   END LOOP;
   IF array_length(inesperadas,1) IS NOT NULL THEN
-    RAISE EXCEPTION 'G) tabelas FORA da baseline em public (revisar antes de aceitar): %', inesperadas;
+    RAISE EXCEPTION 'G) relacoes FORA da baseline em public (revisar antes de aceitar): %', inesperadas;
   END IF;
-  RAISE NOTICE 'G) PASS — inventario de public == baseline (26 + _prisma_migrations)';
+  RAISE NOTICE 'G) PASS — inventario completo de public (r/p/v/m/f) == baseline (26 + _prisma_migrations), presenca e excedentes provados';
 END $$;
 
 ROLLBACK;

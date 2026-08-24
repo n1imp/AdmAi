@@ -141,14 +141,17 @@ BEGIN
           RAISE WARNING 'STG-SEC-RLS-01 v2: EXCECAO tolerada — sem authority p/ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin (role de plataforma). Defaults residuais abaixo ficam INOCUOS pelo choke point de USAGE; correcao na origem = provider (BLOCKED_CAPABILITY_NON_BLOCKING).';
           FOR det IN
             SELECT n.nspname AS ns, d.defaclobjtype AS tipo,
-                   (aclexplode(d.defaclacl)).grantee::regrole::text AS grantee,
-                   (aclexplode(d.defaclacl)).privilege_type AS priv
+                   CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE a.grantee::regrole::text END AS grantee,
+                   a.privilege_type AS priv
             FROM pg_default_acl d
-            LEFT JOIN pg_namespace n ON n.oid = d.defaclnamespace
+            LEFT JOIN pg_namespace n ON n.oid = d.defaclnamespace,
+            LATERAL aclexplode(d.defaclacl) a
             WHERE d.defaclrole = 'supabase_admin'::regrole
               AND (d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace)
           LOOP
-            IF det.grantee IN ('anon','authenticated') THEN
+            -- [REVISOR v2 achado 2] PUBLIC (OID 0) normalizado e incluido: default p/
+            -- PUBLIC e herdado por todos os roles — tao perigoso quanto p/ anon.
+            IF det.grantee IN ('anon','authenticated','PUBLIC') THEN
               RAISE WARNING 'STG-SEC-RLS-01 v2: default residual supabase_admin ns=% tipo=% grantee=% priv=%',
                 COALESCE(det.ns, '(global)'), det.tipo, det.grantee, det.priv;
             END IF;
