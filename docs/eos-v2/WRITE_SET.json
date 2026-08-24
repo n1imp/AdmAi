@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-01-FINAL",
-  "titulo": "STG-SEC-RLS-01: repo APROVADO pelo REVISOR; consolidar ledger + sweep + proposal",
+  "sliceId": "STG-SEC-HANDOFF-01",
+  "titulo": "Fronteira A: handoff READY_FOR_EXTERNAL_APPLY (§51) + itens de aceitacao de staging no ledger",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T02:39:02.583Z",
+  "declaradoEm": "2026-08-24T13:05:14.186Z",
   "baseCommitPorLane": {
-    "HARNESS": "e8319265e54f3308edb3fd246b8c4316ffbb323b"
+    "HARNESS": "405d5cf41a6ec37f39e42820ffc3034ff52ec820"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Codex REVISOR VEREDITO APROVADO (thread 01a03185): artefato pronto para aplicacao quando houver credenciais; finding ABERTO ate os gates reais de staging. Status do item -> BLOCKED_CAPABILITY (repo done+aprovado; aplicacao bloqueada). Sweep e proposal incluem o finding + STG-MIG-RECON.",
+  "notaDeMetodo": "Sem credenciais (confirmado). Artefato aprovado re-provado local (A1 A-E PASS; A2 backend-owner operacional + anon negado). Materializa handoff externo (hashes+comandos+pos-condicoes+Advisor+zero-prod), marca STG-SEC-RLS-01 READY_FOR_EXTERNAL_APPLY (BLOCKED_CAPABILITY), adiciona itens de aceitacao (STG-RUNTIME/E2E/TENANT/MOBILE/FINAL-SWEEP) e referencia o handoff no sweep+proposal.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -552,7 +552,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
+      "docs/agent-environment/AGENT_DECISIONS.md": "cb4267a32e49b90bc4e9ce78ecf4780cf0163c9b72fd605539ce5f6e57940187",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -591,22 +591,22 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "a154d24d1c19f5c17d773998b35fb83f5c3986cf47ba93b923baeec8822a73c6",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "c69f2a9de082ba94f0035818cab229adf95a76491b7a9bcab22157b0b6c2376c",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
       "docs/eos-v2/EXECUTION_STATE.md": "609954198664674e71262901133b5e14732b871b90a9245a66fe8748755258bd",
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
-      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "8277916929327d1329784d5fa5c4d11b9a9023be16405b2253066ab25efdcedc",
+      "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "c2f499d132c36fc05a301e3d575f57c934190b4ab2ebdde5130ca332f81c3288",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
       "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "81e5b9773bf63f58c1e379e46f3e0d9c687fc950f0d41cc947b3552c27d6bf0a",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
-      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
+      "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "2d57862eeb5b47cfd38a12103f08129eb352e161b479db24ae2806cc19dded43",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "5099eff7dae927576097b64602d4bb5e08a0ad1d6891486361abdfd2c6ab1b1f",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "314cfb4c46b1857f927be7eafb584b2a9acbf47a110628b97530fe32dc9efbff",
+      "docs/eos-v2/WRITE_SET.json": "c05a23160050f7e0a354c801a98f32135b71ee4be8b51947f215f13fab89fc48",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "2540e601be6f25e3c1817c60e0f263055bae8c05f4660167ed1a943dd41446de",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2532,38 +2532,38 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
-      "precisao": "edicao",
-      "proposito": "STG-SEC-RLS-01 status BLOCKED_CAPABILITY + evidencia APROVADO; nextAction gates reais",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a154d24d1c19f5c17d773998b35fb83f5c3986cf47ba93b923baeec8822a73c6",
+      "caminho": "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md",
+      "precisao": "arquivo-novo",
+      "proposito": "Handoff externo §51 (A-J)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "Registrar VEREDITO APROVADO do repo",
+      "proposito": "STG-SEC-RLS-01 READY_FOR_EXTERNAL_APPLY + A1/A2 re-proof + itens de aceitacao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
+      "shaNaDeclaracao": "c69f2a9de082ba94f0035818cab229adf95a76491b7a9bcab22157b0b6c2376c",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
       "precisao": "edicao",
-      "proposito": "Adicionar STG-SEC-RLS-01 (repo aprovado, aplicacao bloqueada) + STG-MIG-RECON",
+      "proposito": "referenciar o handoff",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8277916929327d1329784d5fa5c4d11b9a9023be16405b2253066ab25efdcedc",
+      "shaNaDeclaracao": "c2f499d132c36fc05a301e3d575f57c934190b4ab2ebdde5130ca332f81c3288",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
       "precisao": "edicao",
-      "proposito": "Bloco de seguranca de staging + passo-a-passo de aplicacao",
+      "proposito": "referenciar o handoff",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
+      "shaNaDeclaracao": "2d57862eeb5b47cfd38a12103f08129eb352e161b479db24ae2806cc19dded43",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2574,6 +2574,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "STG-SEC-RLS-01 repo APROVADO (REVISOR thread 01a03185); ledger BLOCKED_CAPABILITY; sweep+proposal com finding + STG-MIG-RECON",
+  "nota": "Fronteira A: handoff READY_FOR_EXTERNAL_APPLY (§51) + A1/A2 re-proof + 7 itens de aceitacao de staging (BLOCKED_CAPABILITY)",
   "aviso": "Declaracao ENCERRADA."
 }

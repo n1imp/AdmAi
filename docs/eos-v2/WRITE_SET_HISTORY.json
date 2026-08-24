@@ -51448,9 +51448,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-SEC-RLS-01 repo APROVADO (REVISOR thread 01a03185); ledger BLOCKED_CAPABILITY; sweep+proposal com finding + STG-MIG-RECON",
       "declaradoEm": "2026-08-24T02:39:02.583Z"
+    },
+    {
+      "sliceId": "STG-SEC-HANDOFF-01",
+      "titulo": "Fronteira A: handoff READY_FOR_EXTERNAL_APPLY (§51) + itens de aceitacao de staging no ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Fronteira A: handoff READY_FOR_EXTERNAL_APPLY (§51) + A1/A2 re-proof + 7 itens de aceitacao de staging (BLOCKED_CAPABILITY)",
+      "declaradoEm": "2026-08-24T13:05:14.186Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:42:09.794Z",
+  "geradoEm": "2026-08-24T13:08:12.982Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

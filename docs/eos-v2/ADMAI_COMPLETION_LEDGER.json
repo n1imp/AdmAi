@@ -2288,7 +2288,8 @@
         "[SUPERSEDED pela revisao REVISOR] Conclusao ANTERIOR (incorreta): supunha-se o PUBLIC-execute em novas functions como residual aceito/nao-suprimivel via ADP IN SCHEMA. A revisao mostrou que ADP GLOBAL suprime — o residual foi FECHADO (ver evidencias abaixo). Mantido so como historico.",
         "REVISAO Codex REVISOR (thread 01a03185, VEREDITO CORRECOES_NECESSARIAS) — 6 achados, todos ENDERECADOS e re-validados contra PG16 local: F1 grants por COLUNA (REVOKE ALL ja os remove — verificado; verify agora prova com has_any_column_privilege); F2 residual PUBLIC-execute FECHADO (ADP GLOBAL sem IN SCHEMA suprime o built-in — verificado empiricamente; Part C/D provam EXECUTE negado); F3 conjunto de criadores = owners de public (relacoes+sequences+routines) + current_user + defaclrole FILTRADO a namespace global(0)/public (nunca os internos de Auth/Storage de outros schemas); apply e verify usam o MESMO conjunto; insufficient_privilege e FATAL (fail-closed); check de catalogo escopado a global/public; F4 guard vinculado a conexao real via scripts/apply-rls-lockdown.mjs (reusa travas de validate-staging: ALLOW_STAGING_WRITES+STAGING_REF+PROD_HOST_BLOCKLIST); F5 negative-control de mutacao exige 401/403/404 (nao qualquer nao-2xx); F6 B2 checa grant DIRETO de schema + A2 zero-policies pos-condicao + rollback com as 26 executavel. Re-validacao local: A/A2/B/B2/C/D/E TODOS PASS; residual agora FECHADO.",
         "RESIDUAL REVISADO: o PUBLIC-execute em novas functions foi FECHADO via ADP global FOR ROLE <criadores> REVOKE EXECUTE ON FUNCTIONS FROM anon,authenticated,PUBLIC. Trade-off consciente: afeta functions futuras desses roles em qualquer schema (so remove default de anon/authenticated/PUBLIC, nunca do owner/service_role); AdmAi nao depende de EXECUTE por PUBLIC.",
-        "REPO APROVADO: Codex REVISOR VEREDITO APROVADO apos DECISOR + REVISOR + 3 deltas (thread 01a03185). Sem achados remanescentes no artefato; enable_rls.sql intacto; conjunto de criadores completo e identico em apply/verify (owners+current_user+defaclrole global/public); fail-closed. O finding permanece ABERTO: so fecha apos os gates REAIS no admai-staging (aplicacao + verify + negative control com anon key + positive control backend + re-run do Advisor)."
+        "REPO APROVADO: Codex REVISOR VEREDITO APROVADO apos DECISOR + REVISOR + 3 deltas (thread 01a03185). Sem achados remanescentes no artefato; enable_rls.sql intacto; conjunto de criadores completo e identico em apply/verify (owners+current_user+defaclrole global/public); fail-closed. O finding permanece ABERTO: so fecha apos os gates REAIS no admai-staging (aplicacao + verify + negative control com anon key + positive control backend + re-run do Advisor).",
+        "[Ciclo REMEDIATION 2026-08-24] READY_FOR_EXTERNAL_APPLY (§51): credenciais de staging RE-CONFIRMADAS ausentes (sem .env.staging, sem env vars, sem CLI). Artefato RE-PROVADO local no HEAD 405d5cf contra Postgres 16 (Docker, nao staging/prod): A1 verify A/A2/B/B2/C/D/E PASS; A2 backend-owner INSERT/SELECT/UPDATE/DELETE operacional pos-lockdown + anon negado (42501). Handoff externo com hashes+comandos+pos-condicoes em docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md. NAO e PASS — so a aplicacao real fecha o finding."
       ],
       "attemptCount": 2,
       "lastAttempt": "2026-08-24T00:52:46.508Z",
@@ -2324,6 +2325,92 @@
       "nextAction": "Com DIRECT_URL de staging: rodar prisma migrate diff (preflight); se vazio, migrate resolve --applied nas 28; se drift, coletar diff -> Codex D1. Depois do boundary de seguranca.",
       "revisitCondition": "Execucao (preflight + baseline) exige DIRECT_URL do admai-staging (BLOCKED_CAPABILITY, ver STG-02-USO). Classificacao e estrategia ja prontas no repo.",
       "snapshotRef": null
+    },
+    {
+      "workId": "STG-RUNTIME",
+      "phase": "F5", "domain": "infra", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "STAGING_OPERATIONAL: app contra admai-staging (startup, /health, DB/auth/storage connectivity, schema esperado, sem dependencia de producao nos paths testados).",
+      "dependencies": ["STG-SEC-RLS-01", "STG-MIG-RECON"],
+      "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Provado LOCAL (stack real): 9/9 jornadas + /health ok. Falta contra staging real."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Com .env.staging: subir app contra staging e provar os gates de STAGING_OPERATIONAL.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-E2E-OWNER",
+      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Owner E2E no staging real: login->dashboard->tecnico/servico->aprovacao->financeiro->estoque->auditoria; persistencia.",
+      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Driver chaveiro-painel/e2e/jornadas.mjs provado LOCAL. Falta contra staging real."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Rodar jornadas.mjs (papel dono) contra staging.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-E2E-MANAGER",
+      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Gestor E2E no staging real: login->GestorHome->servicos->aprovacao->indicadores permitidos; owner-only negado.",
+      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Provado LOCAL. Falta contra staging real."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Rodar jornadas.mjs (papel gestor) contra staging.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-E2E-EMPLOYEE",
+      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Funcionario E2E no staging real: login->MeuPainel->ponto->servico->acoes permitidas; paths privilegiados negados.",
+      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Provado LOCAL. Falta contra staging real."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Rodar jornadas.mjs (papel funcionario) contra staging.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-TENANT-NEGATIVE",
+      "phase": "F5", "domain": "seguranca", "priority": "P0", "risk": "alto",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Isolamento inter-tenant + negativa de seguranca no staging real (Company A vs B): A nao le/edita/deleta/aprova/acessa docs/financeiro/estoque de B; rota sem auth/wrong role/cross-tenant/campo sensivel/doc privado/PostgREST direto/2FA bypass/refresh revogado/paywall bypass NEGADOS. Nao confiar so no frontend. RLS_ENABLED != TENANT_ISOLATION_PROVEN.",
+      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Isolamento por req.db/prismaParaEmpresa provado por integracao LOCAL. Falta a negativa E2E contra staging real com fixtures A/B sinteticas."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Criar fixtures sinteticas A/B e provar a matriz negativa contra staging.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-MOBILE",
+      "phase": "F5", "domain": "ux", "priority": "P2", "risk": "baixo",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Mobile 360/390 + desktop sanity 1440/1920 no staging real (navigation/forms/dialogs/overflow/touch targets), com positive control (empty render = invalido).",
+      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Provado LOCAL (sonda 4 viewports + jornada mobile). Falta contra staging real."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Rodar viewports contra staging.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "STG-FINAL-SWEEP",
+      "phase": "SWEEP", "domain": "infra", "priority": "P1", "risk": "baixo",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "BLOCKED_CAPABILITY",
+      "description": "Sweep global pos-staging: Advisor final, reconciliar ledger/findings/blockers, secret persistence, ZERO_FORGOTTEN_BLOCKER; entao REAL_STAGING_ACCEPTANCE_PROVEN + ADMAI_RELEASE_CANDIDATE_READY. Nao declarar ADMAI_RELEASE_READY (LEGAL NOT_ACCEPTED).",
+      "dependencies": ["STG-SEC-RLS-01", "STG-MIG-RECON", "STG-03-DOC-BUCKET", "STG-RUNTIME", "STG-E2E-OWNER", "STG-E2E-MANAGER", "STG-E2E-EMPLOYEE", "STG-TENANT-NEGATIVE", "STG-MOBILE"],
+      "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": ["Depende do fechamento de todos os gates de staging acima."],
+      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "nextAction": "Apos todos os gates de staging: sweep global + terminal.",
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
     }
   ],
   "terminal": {
@@ -2335,6 +2422,7 @@
     "candidato_em": "2026-08-24T00:17:32.722Z",
     "candidato_evidencia": "Fronteira de trabalho seguro VAZIA; sweep tecnico verde (selftests 121/121, 11/11, EOS PASS; registries 28/28, 29/29); painel 252/252; 9/9 jornadas E2E sem WhatsApp; Gate 6 APROVADO. Bloqueios restantes: 6 (1 DEFERRED_BY_D2 legal, 3 BLOCKED_CAPABILITY staging, 2 BLOCKED_D2 backfill/backup) + promocao.",
     "ciclo_stg_unblock": "2026-08-24: tentativa de desbloqueio de staging (diretiva STAGING UNBLOCK). Descoberta secret-safe do §11 EXAURIDA sem tocar producao nem expor secret => STAGING_CREDENTIALS permanece BLOCKED_CAPABILITY (credenciais do admai-staging ausentes; senha do banco nao-recuperavel por CLI/API). Estado autoritativo RECONSTRUIDO neste HEAD (c876527): Gate 6 lock+correcoes 13/13, selftests 121/121·11/11·52/52. Nenhum item de staging pode avancar sem o canal secret-safe do usuario (revisitCondition em STG-02-USO). REAL_STAGING_ACCEPTANCE_PROVEN nao alcancavel neste ciclo — bloqueio de capacidade, nao de trabalho.",
-    "ciclo_stg_sec": "2026-08-24: amendment STAGING SECURITY. Finding BLOQUEANTE STG-SEC-RLS-01 (26 tabelas public do admai-staging com RLS off + grants anon/authenticated). Auditoria deterministica (PRISMA_ONLY; anon/authenticated nao usados) -> Codex D1 DECISOR (thread 01a03164, CONCORDO, opcao C ancorada em B). Artefato versionado (lockdown+verify+apply-wrapper+negcontrol+runbook) IMPLEMENTADO, VALIDADO contra Postgres 16 local (A-E PASS; buraco reproduzido e fechado) e APROVADO pelo Codex REVISOR (thread 01a03185: DECISOR+REVISOR+3 deltas -> APROVADO). Aplicacao no admai-staging + negative-control com anon key + re-run do Advisor: BLOCKED_CAPABILITY (credenciais). Finding ABERTO ate a aplicacao/prova no staging. Reconciliacao de migration (STG-MIG-RECON) classificada + estrategia pronta, apos o boundary."
+    "ciclo_stg_sec": "2026-08-24: amendment STAGING SECURITY. Finding BLOQUEANTE STG-SEC-RLS-01 (26 tabelas public do admai-staging com RLS off + grants anon/authenticated). Auditoria deterministica (PRISMA_ONLY; anon/authenticated nao usados) -> Codex D1 DECISOR (thread 01a03164, CONCORDO, opcao C ancorada em B). Artefato versionado (lockdown+verify+apply-wrapper+negcontrol+runbook) IMPLEMENTADO, VALIDADO contra Postgres 16 local (A-E PASS; buraco reproduzido e fechado) e APROVADO pelo Codex REVISOR (thread 01a03185: DECISOR+REVISOR+3 deltas -> APROVADO). Aplicacao no admai-staging + negative-control com anon key + re-run do Advisor: BLOCKED_CAPABILITY (credenciais). Finding ABERTO ate a aplicacao/prova no staging. Reconciliacao de migration (STG-MIG-RECON) classificada + estrategia pronta, apos o boundary.",
+    "ciclo_stg_remediation": "2026-08-24: diretiva STAGING REMEDIATION & REAL ACCEPTANCE. Credenciais RE-CONFIRMADAS ausentes. Fronteira A (sem credenciais) executada: A1 re-prova do lockdown aprovado local (verify A-E PASS no HEAD 405d5cf); A2 backend-owner operacional pos-lockdown (INSERT/SELECT/UPDATE/DELETE) + anon negado; A3 handoff READY_FOR_EXTERNAL_APPLY (docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md, §51 A-J com hashes/comandos/pos-condicoes); A4 itens de aceitacao (STG-RUNTIME/E2E-OWNER/MANAGER/EMPLOYEE/TENANT-NEGATIVE/MOBILE/FINAL-SWEEP) adicionados como BLOCKED_CAPABILITY. Fronteira B (apply real -> security accepted -> migration -> storage -> runtime -> E2E -> REAL_STAGING_ACCEPTANCE_PROVEN) inteira BLOCKED_CAPABILITY. Producao intocada. LOCAL_PROOF != STAGING_PROOF."
   }
 }

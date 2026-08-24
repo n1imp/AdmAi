@@ -43,6 +43,11 @@ ENABLE RLS (NO FORCE, sem policy). **Artefato versionado APROVADO** pelo Codex R
 UNKNOWN`** (produção não tocada). Finding **ABERTO** até aplicar no staging + negative control com
 anon key + re-run do Advisor. Detalhe: `docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md`.
 
+**`READY_FOR_EXTERNAL_APPLY` (§51):** re-provado local no HEAD `405d5cf` (verify A–E PASS + backend-owner
+operacional pós-lockdown + anon negado). Pacote de aplicação externa (ref, artefatos+hashes, comandos,
+pós-condições, estado esperado do Advisor, negative controls, zero-produção):
+`docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md`. Não é PASS — só a aplicação real fecha o finding.
+
 ## Diferidos por escopo (não bloqueiam; com revisita) — 8
 
 - **WHATSAPP_SUPERINTEGRATION** (D2-WPP-PROVIDER) — POST_MVP por decisão do usuário; implementação

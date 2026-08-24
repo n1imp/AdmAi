@@ -89,9 +89,12 @@ Cada um com passo-a-passo executável e critério de aceite. Fonte completa:
   (depois, prova negação) com a anon key; re-rodar o Security Advisor.
 - **Aceite:** 26/26 RLS on; anon/authenticated sem privilégio; Data API nega as 26; Advisor zera
   `rls_disabled_in_public`; fluxo backend (Prisma/Express) segue funcionando.
-- **Nota:** artefato **repo APROVADO** pelo Codex REVISOR (thread 01a03185) + validado local (PG16,
-  A–E PASS). `enable_rls.sql` (isolamento inter-tenant) fica intacto. Produção não tocada
-  (`PRODUCTION_RLS_STATE = UNKNOWN`). Fonte: `docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md`.
+- **Nota:** artefato **repo APROVADO** pelo Codex REVISOR (thread 01a03185) + re-validado local (PG16,
+  verify A–E PASS + backend-owner operacional pós-lockdown + anon negado). `READY_FOR_EXTERNAL_APPLY` —
+  pacote de aplicação (ref/artefatos+hashes/comandos/pós-condições/Advisor/zero-produção) em
+  `docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md`. `enable_rls.sql` (isolamento inter-tenant) fica intacto.
+  Produção não tocada (`PRODUCTION_RLS_STATE = UNKNOWN`). Access model:
+  `docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md`.
 
 ### 2c. Reconciliação de migration do staging — BLOCKED_CAPABILITY
 - **Passo (com o `.env.staging` do #2, após 2b):** `prisma migrate diff` (preflight); se vazio,
