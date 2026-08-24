@@ -51336,9 +51336,23 @@
       "bloqueiaIntegracao": false,
       "nota": "ADMAI_RELEASE_CANDIDATE_READY atingido: fronteira de trabalho seguro vazia, sweep tecnico verde, proposal e sweep de bloqueios recomputados pelo D2 amendment. RELEASE_READY segue bloqueado por LEGAL (DEFERRED_BY_D2); zero acao de producao.",
       "declaradoEm": "2026-08-24T00:14:54.275Z"
+    },
+    {
+      "sliceId": "STG-UNBLOCK-01",
+      "titulo": "Staging unblock cycle — safe-source discovery exhausted; block strengthened + evidence",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "STG-UNBLOCK-01: descoberta secret-safe exaurida (§11); STG-CREDENTIALS permanece BLOCKED_CAPABILITY; estado autoritativo reconstruido (Gate 6 13/13, selftests 121/121·11/11·52/52)",
+      "declaradoEm": "2026-08-24T00:52:34.110Z"
     }
   ],
-  "geradoEm": "2026-08-24T00:17:35.092Z",
+  "geradoEm": "2026-08-24T00:55:58.420Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
