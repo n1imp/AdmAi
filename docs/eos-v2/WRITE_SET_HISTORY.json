@@ -51364,9 +51364,23 @@
       "bloqueiaIntegracao": false,
       "nota": "STG-SEC-RLS-01 audit: access model (PRISMA_ONLY nas 26; anon/authenticated nao usados) + finding registrado + prefixo STG-SEC-. Fix versionado apos Codex D1.",
       "declaradoEm": "2026-08-24T01:36:41.571Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-FIX",
+      "titulo": "STG-SEC-RLS-01: artefato versionado (REVOKE anon/authenticated/PUBLIC + ENABLE RLS no-force) + verificacao + negative control + runbook",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "STG-SEC-RLS-01 fix: lockdown+verify+negcontrol+runbook (decisao D1 thread 01a03164); validado local contra PG16 (A-E PASS); aplicacao staging BLOCKED_CAPABILITY",
+      "declaradoEm": "2026-08-24T01:39:57.105Z"
     }
   ],
-  "geradoEm": "2026-08-24T01:37:12.359Z",
+  "geradoEm": "2026-08-24T02:05:48.989Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
