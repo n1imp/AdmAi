@@ -97,11 +97,27 @@ async function abrirNavegador({ largura = 1280, altura = 800, mobile = false } =
   const esperarTexto = async (re, ms = 8000) => {
     const padrao = re instanceof RegExp ? re : new RegExp(re, 'i');
     const fim = Date.now() + ms;
+    /* Diagnóstico no próprio erro: sem isto, um timeout dizia só "não apareceu" e o estado real
+       da tela se perdia. A LINHA DO TEMPO de (path + início do texto) captura navegações no meio
+       da espera — foi o que revelou a página saltando para a Landing durante a caça ao 2FA. */
+    const linhaDoTempo = [];
+    let ultimoMarco = '';
     while (Date.now() < fim) {
+      const amostra = await aval(
+        `JSON.stringify({ p: location.pathname, k: !!localStorage.getItem('admai_token'), t: document.body.innerText.slice(0, 60).replace(/\\s+/g, ' ') })`
+      );
+      const { p, k, t } = JSON.parse(amostra);
       if (padrao.test(await texto())) return true;
+      const marco = `${p}|${t.slice(0, 30)}`;
+      if (marco !== ultimoMarco) {
+        linhaDoTempo.push(`${Date.now() % 100000} ${p} token:${k} "${t}"`);
+        ultimoMarco = marco;
+      }
       await espera(250);
     }
-    throw new Error(`texto não apareceu: ${padrao}`);
+    throw new Error(
+      `texto não apareceu: ${padrao} | linha do tempo: ${linhaDoTempo.slice(-6).join(' >> ')}`
+    );
   };
   const esperarCampo = async (seletor, ms = 8000) => {
     const fim = Date.now() + ms;
@@ -140,6 +156,27 @@ async function abrirNavegador({ largura = 1280, altura = 800, mobile = false } =
     })()`).then((r) => {
       if (r !== 'ok') throw new Error(`controle não encontrado: ${padrao}`);
     });
+  /* Race real medida (2 execuções seguidas): botões gateados por estado (ex.: Verificar do 2FA,
+     disabled até codigo.length===6) podem receber o click ANTES do React flush que os habilita —
+     click em botão disabled é um no-op SILENCIOSO e o teste morre no timeout sem request algum.
+     Este helper espera o alvo existir E estar habilitado antes de clicar. */
+  const clicarQuandoHabilitado = async (padrao, seletor = 'button', ms = 5000) => {
+    const fim = Date.now() + ms;
+    while (Date.now() < fim) {
+      const r = await aval(`(() => {
+        const re = new RegExp(${JSON.stringify(padrao)}, 'i');
+        const el = [...document.querySelectorAll(${JSON.stringify(seletor)})]
+          .find((e) => re.test(e.textContent.replace(/\\s+/g, ' ').trim()) && e.getBoundingClientRect().height > 0);
+        if (!el) return 'AUSENTE';
+        if (el.disabled) return 'DESABILITADO';
+        el.click();
+        return 'ok';
+      })()`);
+      if (r === 'ok') return;
+      await espera(150);
+    }
+    throw new Error(`controle não habilitou a tempo: ${padrao}`);
+  };
   const consentirNecessarios = async () => {
     try {
       await clicarTexto('^Apenas necessários$');
@@ -165,11 +202,35 @@ async function abrirNavegador({ largura = 1280, altura = 800, mobile = false } =
     esperarTexto,
     digitar,
     clicarTexto,
+    clicarQuandoHabilitado,
     consentirNecessarios,
     loginUi,
     fechar: () => {
       cdp.close();
-      chrome.kill();
+      /* Windows: child.kill() termina SO o processo raiz — os filhos do Chrome (renderer/GPU)
+         NAO morrem com o pai e viram zumbis (medimos 704 chrome.exe acumulados em 2 dias de
+         jornadas/capturas, degradando a maquina ate as proprias jornadas flakarem por timeout).
+         taskkill /T tem corrida na propria arvore ("nao ha ocorrencia da tarefa") e ainda vaza
+         2-3 filhos por browser — por isso a varredura FINAL e pelo user-data-dir, que e unico
+         por instancia: mata exatamente os processos desta sessao, nunca o Chrome real do usuario. */
+      if (process.platform === 'win32') {
+        execFile('taskkill', ['/PID', String(chrome.pid), '/T', '/F'], () => {
+          /* -like do PowerShell trata \ literalmente (escape e com crase) — dobrar barras
+             quebrava o match e a varredura nao achava nada. So a aspa simples precisa escapar. */
+          const alvo = perfil.replace(/'/g, "''");
+          execFile(
+            'powershell',
+            [
+              '-NoProfile',
+              '-Command',
+              `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Where-Object { $_.CommandLine -like '*${alvo}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+            ],
+            () => {}
+          );
+        });
+      } else {
+        chrome.kill();
+      }
     },
   };
 }
@@ -331,8 +392,22 @@ const JORNADAS = [
         await n.loginUi(`jornada${unico}`, 'SenhaForte1!');
         await n.esperarTexto(/verificação|código|duas etapas|autenticador/i, 8000);
         await n.digitar('input[placeholder="000000"]', '000000');
-        await n.clicarTexto('Confirmar|Verificar', 'button[type="submit"], button');
-        await n.esperarTexto(/inválid|incorret/i, 6000);
+        const aposDigitar = await n.aval(
+          `JSON.stringify({ campo: !!document.querySelector('input[placeholder="000000"]'), tela: document.body.innerText.slice(0,50).replace(/\\s+/g,' ') })`
+        );
+        /* Submissao por requestSubmit (evento submit via root handler do React) — elimina a
+           corrida do click no botao disabled->enabled. O retorno E VERIFICADO: 'SEM_FORM'
+           significa que o desafio sumiu ANTES da submissao (estado resetado). */
+        const rSubmit = await n.aval(`(() => {
+          const campo = document.querySelector('input[placeholder="000000"]');
+          const form = campo && campo.closest('form');
+          if (!form) return 'SEM_FORM';
+          form.requestSubmit();
+          return 'ok';
+        })()`);
+        if (rSubmit !== 'ok')
+          throw new Error(`desafio sumiu antes da submissao: ${rSubmit} | aposDigitar: ${aposDigitar}`);
+        await n.esperarTexto(/inválid|incorret/i, 8000);
         const token = await n.aval(`localStorage.getItem('admai_token')`);
         if (token) throw new Error('sessão criada com código 2FA errado');
         return 'desafio renderizou, código errado rejeitado, sem sessão';

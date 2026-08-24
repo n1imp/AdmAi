@@ -2411,6 +2411,64 @@
       "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Apos todos os gates de staging: sweep global + terminal.",
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+    },
+    {
+      "workId": "FE-STRUCT-01",
+      "phase": "F5", "domain": "infra", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "DONE",
+      "description": "LOCAL_RUNTIME_IDENTITY + LOCAL_LOGIN_ROOT_CAUSE (workstream ADMAI-FE-STRUCTURAL-01): provar o runtime local e fechar LOCAL-AUTH-BLOCKER-01.",
+      "dependencies": [], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": [
+        "Runtime provado: vite dev 5173 do worktree atual (cmdline), backend 3000 /health ok; sobras MORTAS (cadeia backend morta 12:05, vite preview 4173 com dist stale de 13:18 bound so [::1]); dist stale removido; assimetria IPv4/IPv6 documentada (5173 so 127.0.0.1).",
+        "ROOT CAUSE = LOCAL_RUNTIME_DIVERGENCE, nao contrato: login provado em 4 camadas (curl API 200 token+cookie; browser CDP perfil novo -> dashboard; sessao stale pre-Gate6 -> recuperacao limpa sem loop; preview stale -> funciona com espera). Causas provaveis do sintoma do usuario: porta/aba errada, credencial inexistente no admai_dev (so fixtures demo), estado de browser antigo. Receita: 127.0.0.1:5173 + conta demo.",
+        "Descoberta ambiental critica: 704 chrome.exe zumbis acumulados (child.kill() no Windows nao mata a arvore) degradando a maquina — causa real da flakiness das jornadas. Limpos (704->12, so o Chrome real do usuario)."
+      ],
+      "attemptCount": 1, "lastAttempt": "2026-08-24T16:00:00.000Z",
+      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+    },
+    {
+      "workId": "FE-STRUCT-02",
+      "phase": "F5", "domain": "contratos", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "DONE",
+      "description": "AUTH_CONTRACT_AUDIT + AUTH_CLIENT/SESSION/ROUTE_GUARD/RBAC/CORE_API reconciliation (cobre FE-STRUCT-02,04,05,06,07,08): registry completo FE<->BE.",
+      "dependencies": ["FE-STRUCT-01"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": [
+        "ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md: 83/83 MATCH (sweep deterministico api.* x rotas; 12 falsos-MISS resolvidos — routers montados na raiz com path /api completo + templates de querystring). Zero UNKNOWN em auth/core. Zero MISMATCH. Nenhuma mudanca de produto necessaria.",
+        "Auth chain auditada com provas vivas: login/2FA desafio/refresh single-flight/hidratacao/erros semanticos 402-403/register/recuperar/alternativos — todos MATCH. RBAC: backend autoridade, frontend Guards=UX. Estados semanticos derivados do codigo real."
+      ],
+      "attemptCount": 1, "lastAttempt": "2026-08-24T16:00:00.000Z",
+      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+    },
+    {
+      "workId": "FE-STRUCT-09",
+      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "DONE",
+      "description": "LOCAL_AUTH_PROOF + INTERNAL_APP_SMOKE (cobre FE-STRUCT-03,09,10): jornadas E2E no stack real + correcao de 3 defeitos do HARNESS achados no processo.",
+      "dependencies": ["FE-STRUCT-01"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": [
+        "Suite de jornadas 9/9 OK no stack real (onboarding, senha errada, wizard dono, ponto tecnica, 402/assinatura, 2FA errado, deep-link, mobile 360, documentos) apos correcoes do harness. Produto correto provado por sondas isoladas instrumentadas em todos os casos que flakearam (402: renderiza status+acao; 2FA: 400 Codigo invalido renderizado; sem sessao).",
+        "3 defeitos de HARNESS corrigidos em e2e/jornadas.mjs (test-only): (1) clicarQuandoHabilitado — click em botao disabled era no-op silencioso (race do React flush); (2) esperarTexto agora inclui url+token+tela no erro de timeout (o diagnostico que resolveu a caca); (3) fechar() a prova de vazamento no Windows — taskkill /T tem corrida e vazava 2-3 filhos por browser (704 zumbis acumulados em 2 dias); varredura final por user-data-dir unico (0 sobreviventes, verificado isolado). Armadilha documentada: -like do PowerShell trata a barra invertida literalmente.",
+        "Painel unit 252/252 pos-mudancas (harness nao toca produto)."
+      ],
+      "attemptCount": 6, "lastAttempt": "2026-08-24T16:10:00.000Z",
+      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+    },
+    {
+      "workId": "FE-STRUCT-11",
+      "phase": "SWEEP", "domain": "produto", "priority": "P1", "risk": "baixo",
+      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "status": "DONE",
+      "description": "VISUAL_PRESERVATION_PROOF + FINAL_STRUCTURAL_SWEEP (cobre FE-STRUCT-11,12): NO_VISUAL_CHANGE cumprido.",
+      "dependencies": ["FE-STRUCT-02", "FE-STRUCT-09"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "evidenceRefs": [
+        "VISUAL_DIFF = ZERO por construcao: NENHUM arquivo de produto (src/ do painel ou do bot) foi alterado no ciclo — apenas e2e/jornadas.mjs (harness) e docs. git diff prova. Zero bypass, zero enfraquecimento de seguranca, backend intocado.",
+        "Sweep estrutural final: relatorio docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md (§46 completo); ZERO blocker estrutural aberto; staging inalterado (STG-SEC-RLS-01 READY_FOR_EXTERNAL_APPLY); Legal DEFERRED_BY_D2 e WhatsApp POST_MVP preservados."
+      ],
+      "attemptCount": 1, "lastAttempt": "2026-08-24T16:10:00.000Z",
+      "nextAction": null, "revisitCondition": null, "snapshotRef": null
     }
   ],
   "terminal": {

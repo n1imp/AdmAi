@@ -51462,9 +51462,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Fronteira A: handoff READY_FOR_EXTERNAL_APPLY (§51) + A1/A2 re-proof + 7 itens de aceitacao de staging (BLOCKED_CAPABILITY)",
       "declaradoEm": "2026-08-24T13:05:14.186Z"
+    },
+    {
+      "sliceId": "FE-STRUCT-01",
+      "titulo": "FE/BE structural reconciliation: harness 2FA race fix + registry + report + ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FE-STRUCT parte 1: runtime identity + root cause + registry 83/83 + report + harness fixes (clicarQuandoHabilitado, requestSubmit, timeline diag, fechar leak-proof). Achado de PRODUTO no processo (limiter prefix-match) segue em write set proprio pos-D1.",
+      "declaradoEm": "2026-08-24T15:06:51.302Z"
     }
   ],
-  "geradoEm": "2026-08-24T13:08:12.982Z",
+  "geradoEm": "2026-08-24T15:42:37.952Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
