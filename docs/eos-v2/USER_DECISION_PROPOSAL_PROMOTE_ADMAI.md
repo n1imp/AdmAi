@@ -11,6 +11,14 @@
 > autoritativo foi reconstruído neste HEAD: Gate 6 lock+correções **13/13** (regressão TOCTOU morde),
 > selftests **121/121 · 11/11 · 52/52**. Uma única ação do usuário desbloqueia todo o encadeamento
 > de staging — ver bloqueio #2 abaixo.
+>
+> **Ciclo STG-SECURITY (2026-08-24):** com a evidência do `admai-staging` (RLS off + grants
+> anon/authenticated nas 26 tabelas), abriu-se o finding **BLOQUEANTE STG-SEC-RLS-01**. O artefato de
+> correção (REVOKE + RLS no-force + verify + wrapper de aplicação + negative control + runbook) foi
+> implementado, validado contra Postgres 16 local (A–E PASS) e **APROVADO pelo Codex REVISOR** (thread
+> 01a03185: DECISOR + REVISOR + 3 deltas). Aplicação no staging + negative control com anon key +
+> re-run do Advisor seguem **BLOCKED_CAPABILITY** (credenciais); o finding continua **ABERTO** até isso.
+> Produção não foi tocada (`PRODUCTION_RLS_STATE = UNKNOWN`).
 
 ## Veredito
 
@@ -45,7 +53,7 @@ atrás do flag `WHATSAPP` (OFF), com não-bloqueio do MVP provado (9/9 jornadas 
 
 Painel: 252 testes verdes. Bot: 348+ testes de integração + unit verdes. Fronteira de trabalho seguro: VAZIA.
 
-## Bloqueios entre CANDIDATE e RELEASE_READY / PRODUÇÃO — 6
+## Bloqueios entre CANDIDATE e RELEASE_READY / PRODUÇÃO — 8
 
 (WhatsApp saiu da lista: POST_MVP.)
 
@@ -69,6 +77,28 @@ Cada um com passo-a-passo executável e critério de aceite. Fonte completa:
   invocar. Uso via `--env-file`/env, sem nunca ler nem ecoar o conteúdo. Obter os secrets pelo
   dashboard os traria ao transcript (proibido); e a senha do banco **não** é recuperável por CLI/API
   (só reset), então não existe caminho automático — é a única coisa que depende de você.
+- **Nota (migration):** o staging já tem as 26 tabelas mas `_prisma_migrations` vazio ⇒ **não**
+  rodar `migrate deploy` cego; usar o baseline do bloqueio **2c**.
+
+### 2b. Segurança de staging (STG-SEC-RLS-01) — BLOCKED_CAPABILITY · finding BLOQUEANTE ABERTO
+- **O quê:** 26 tabelas `public` do `admai-staging` com RLS off + grants full de `anon`/`authenticated`
+  (Advisor `rls_disabled_in_public` ERROR/EXTERNAL) — exposição externa direta via PostgREST/anon key.
+- **Passo (com o `.env.staging` do #2):** `node scripts/apply-rls-lockdown.mjs` (guard vinculado à
+  conexão aplica `prisma/rls/lockdown_public_access.sql` + `verify_lockdown.sql`); depois
+  `node scripts/staging-rls-negative-control.mjs --expect-open` (antes, prova a exposição) e sem flag
+  (depois, prova negação) com a anon key; re-rodar o Security Advisor.
+- **Aceite:** 26/26 RLS on; anon/authenticated sem privilégio; Data API nega as 26; Advisor zera
+  `rls_disabled_in_public`; fluxo backend (Prisma/Express) segue funcionando.
+- **Nota:** artefato **repo APROVADO** pelo Codex REVISOR (thread 01a03185) + validado local (PG16,
+  A–E PASS). `enable_rls.sql` (isolamento inter-tenant) fica intacto. Produção não tocada
+  (`PRODUCTION_RLS_STATE = UNKNOWN`). Fonte: `docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md`.
+
+### 2c. Reconciliação de migration do staging — BLOCKED_CAPABILITY
+- **Passo (com o `.env.staging` do #2, após 2b):** `prisma migrate diff` (preflight); se vazio,
+  baseline via `prisma migrate resolve --applied` para as 28 migrations (sem DDL); se drift → Codex D1.
+- **Aceite:** `_prisma_migrations` populado, `migrate status` "up to date", sem DDL destrutivo.
+- **Nota:** estratégia pronta em `docs/eos-v2/STG_MIGRATION_RECONCILIATION.md`. **Nunca** `migrate
+  deploy` cego (o schema já existe).
 
 ### 3. Bucket de documentos no staging + matriz real — BLOCKED_CAPABILITY
 - **Passo:** com o `.env.staging` do #2, `npm run bucket:provision` no projeto staging; rodar a

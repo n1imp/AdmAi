@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-01-REV3",
-  "titulo": "STG-SEC-RLS-01: DELTA2 — conjunto de criadores completo (owners+current_user+defaclrole global/public)",
+  "sliceId": "STG-SEC-RLS-01-FINAL",
+  "titulo": "STG-SEC-RLS-01: repo APROVADO pelo REVISOR; consolidar ledger + sweep + proposal",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T02:36:27.623Z",
+  "declaradoEm": "2026-08-24T02:39:02.583Z",
   "baseCommitPorLane": {
-    "HARNESS": "e28d71dc17c80142e6f40b2d2e328dfd68b344cd"
+    "HARNESS": "e8319265e54f3308edb3fd246b8c4316ffbb323b"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Conjunto de criadores agora inclui owners de public + current_user + defaclrole filtrado a namespace global(0)/public (pega role com default expondo anon sem objeto atual; sem puxar internos de outros schemas). apply e verify usam o MESMO conjunto. Handler fatal mantido. Ledger F3 atualizado. Re-validado PG16 A-E PASS.",
+  "notaDeMetodo": "Codex REVISOR VEREDITO APROVADO (thread 01a03185): artefato pronto para aplicacao quando houver credenciais; finding ABERTO ate os gates reais de staging. Status do item -> BLOCKED_CAPABILITY (repo done+aprovado; aplicacao bloqueada). Sweep e proposal incluem o finding + STG-MIG-RECON.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -605,8 +605,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "17b568237bcc8f7ce295077743a15bb9c73de87bf81c3f8afae8a8c62fdbba4d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "56b30d6fb69aa89835bc6988b0cde3636d5ce09e0068f75a59a8d07d8078a330",
+      "docs/eos-v2/WRITE_SET.json": "5099eff7dae927576097b64602d4bb5e08a0ad1d6891486361abdfd2c6ab1b1f",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "314cfb4c46b1857f927be7eafb584b2a9acbf47a110628b97530fe32dc9efbff",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2532,36 +2532,39 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access.sql",
-      "precisao": "edicao",
-      "proposito": "conjunto de criadores completo + filtro de namespace",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1a195f3625baca2f471a3414d16277716adaf383c3ca473e89d46093bc1ff47f",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown.sql",
-      "precisao": "edicao",
-      "proposito": "mesmo conjunto no catalogo",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9fb63780ed6f84faafe44cb11f6d5353090c72839ec9ad8c4c4fe003a23e3ff0",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "edicao",
-      "proposito": "F3 descricao atualizada",
+      "proposito": "STG-SEC-RLS-01 status BLOCKED_CAPABILITY + evidencia APROVADO; nextAction gates reais",
       "existiaNaDeclaracao": true,
       "shaNaDeclaracao": "a154d24d1c19f5c17d773998b35fb83f5c3986cf47ba93b923baeec8822a73c6",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "edicao",
+      "proposito": "Registrar VEREDITO APROVADO do repo",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "661f83f7370a98733c6227ebf8b25bd40407e13662456fa4051a60d313626cdb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md",
+      "precisao": "edicao",
+      "proposito": "Adicionar STG-SEC-RLS-01 (repo aprovado, aplicacao bloqueada) + STG-MIG-RECON",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8277916929327d1329784d5fa5c4d11b9a9023be16405b2253066ab25efdcedc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md",
+      "precisao": "edicao",
+      "proposito": "Bloco de seguranca de staging + passo-a-passo de aplicacao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "eaa17b78bc36ee1f4ff8e27bda05f3c216f29ea99846d6e8c05c8d68f3f27d79",
+      "sujoNaDeclaracao": false
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2571,6 +2574,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "DELTA2: conjunto de criadores completo (owners+current_user+defaclrole global/public), mesmo em apply e verify; PG16 A-E PASS",
+  "nota": "STG-SEC-RLS-01 repo APROVADO (REVISOR thread 01a03185); ledger BLOCKED_CAPABILITY; sweep+proposal com finding + STG-MIG-RECON",
   "aviso": "Declaracao ENCERRADA."
 }

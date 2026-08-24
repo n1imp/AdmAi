@@ -14,18 +14,34 @@ usuário, credenciais ou provisionamento.
 O candidato técnico está **atingido**: todo o trabalho de engenharia local e autorizado do MVP
 está DONE e verificado. Não há bloqueio técnico pendente para `ADMAI_RELEASE_CANDIDATE_READY`.
 
-## Bloqueios entre CANDIDATE e RELEASE_READY / PRODUÇÃO — 6
+## Bloqueios entre CANDIDATE e RELEASE_READY / PRODUÇÃO — 8
 
 | # | Bloqueio | Tipo | Fonte | Destrava |
 | --- | --- | --- | --- | --- |
 | 1 | Aceitação legal (Termos/Privacidade reais) | DEFERRED_BY_D2 | D2-LEGAL · GAP-LEGAL-MODELO-01 | conteúdo validado por advogado OU novo D2; finding preservado, `NOT_ACCEPTED`, nunca PASS |
 | 2 | Uso do staging (migrations, runtime, E2E real) | BLOCKED_CAPABILITY | STG-02-USO | canal secret-safe do usuário: `.env.staging` local (já git-ignored) **ou** env vars locais; uso via `--env-file`, sem ler/ecoar |
+| 2b | **Segurança de staging (STG-SEC-RLS-01)** — RLS off + grants anon/authenticated nas 26 | BLOCKED_CAPABILITY (finding BLOQUEANTE ABERTO) | STG-SEC-RLS-01 | artefato **repo APROVADO** (Codex REVISOR); aplicar no admai-staging via `apply-rls-lockdown.mjs` + verify + negative control (anon key) + Advisor. Depende de #2 |
+| 2c | Reconciliação de migration do staging (baseline não rastreado) | BLOCKED_CAPABILITY | STG-MIG-RECON | estratégia pronta (baseline via `migrate resolve`, sem `deploy` cego); depende de #2 e do boundary 2b |
 | 3 | Bucket de documentos no staging + matriz real | BLOCKED_CAPABILITY | STG-03-DOC-BUCKET | idem #2 (Storage já é compatível com Supabase; comportamento provado local em F4-03) |
 | 4 | Backfill de assinaturas em produção | BLOCKED_D2 | D2-BACKFILL-PROD | autorização + política; script + dry-run provados (F6-05) |
 | 5 | Backup de produção (Supabase Free) | BLOCKED_D2 | D2-Q010-BACKUP | upgrade Pro/PITR ou cron externo; drill local provado (F6-07) |
 | 6 | Promoção (push/merge/deploy) | BLOCKED_D2 | D2-PROMOTION | resolução do #1 + decisão explícita do usuário |
 
 `D2-DOC-BUCKET` (bucket de **produção**) permanece BLOCKED_EXTERNAL, distinto do #3 (staging).
+
+### STG-SEC-RLS-01 — finding BLOQUEANTE de segurança (staging) — repo APROVADO
+
+Evidência direta do `admai-staging` (ref `qsuufuulxfkkeasgxhcv`): 26 tabelas `public` com RLS
+DISABLED + grants full de `anon`/`authenticated` (Advisor `rls_disabled_in_public` ERROR/EXTERNAL)
+⇒ qualquer um com a anon key lê/escreve tudo via PostgREST, contornando o backend. Auditoria:
+todas as 26 são PRISMA_ONLY; `anon`/`authenticated` não são usados pela app ⇒ revogar tem risco
+ZERO. **Decisão D1** (Codex, thread 01a03164): REVOKE integral de anon/authenticated/PUBLIC +
+ENABLE RLS (NO FORCE, sem policy). **Artefato versionado APROVADO** pelo Codex REVISOR (thread
+01a03185, após 3 deltas): `prisma/rls/lockdown_public_access.sql` + `verify_lockdown.sql` +
+`scripts/apply-rls-lockdown.mjs` (guard vinculado à conexão) + `staging-rls-negative-control.mjs`
++ `RUNBOOK_lockdown.md`; validado contra Postgres 16 local (A–E PASS). **`PRODUCTION_RLS_STATE =
+UNKNOWN`** (produção não tocada). Finding **ABERTO** até aplicar no staging + negative control com
+anon key + re-run do Advisor. Detalhe: `docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md`.
 
 ## Diferidos por escopo (não bloqueiam; com revisita) — 8
 

@@ -51434,9 +51434,23 @@
       "bloqueiaIntegracao": false,
       "nota": "DELTA2: conjunto de criadores completo (owners+current_user+defaclrole global/public), mesmo em apply e verify; PG16 A-E PASS",
       "declaradoEm": "2026-08-24T02:36:27.623Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-01-FINAL",
+      "titulo": "STG-SEC-RLS-01: repo APROVADO pelo REVISOR; consolidar ledger + sweep + proposal",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "STG-SEC-RLS-01 repo APROVADO (REVISOR thread 01a03185); ledger BLOCKED_CAPABILITY; sweep+proposal com finding + STG-MIG-RECON",
+      "declaradoEm": "2026-08-24T02:39:02.583Z"
     }
   ],
-  "geradoEm": "2026-08-24T02:36:29.726Z",
+  "geradoEm": "2026-08-24T02:42:09.794Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
