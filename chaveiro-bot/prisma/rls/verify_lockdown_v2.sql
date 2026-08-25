@@ -330,9 +330,14 @@ DECLARE
   probes text[] := ARRAY['_stg_sec_probe_tbl','_stg_sec_probe_seq','_stg_canario_tbl',
                          '_stg_canario_seq','_stg_rls_canario_tbl'];
 BEGIN
-  -- (a) presenca: toda a baseline precisa existir como tabela.
+  -- (a) presenca: toda a baseline precisa existir COMO TABELA (relkind r/p) —
+  -- [REVISOR DELTA] to_regclass sozinho aceitaria view/indice homonimo, que depois
+  -- escaparia dos excedentes por constar da baseline.
   FOREACH t IN ARRAY baseline LOOP
-    IF to_regclass(format('public.%I', t)) IS NULL THEN ausentes := ausentes || t; END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relname = t AND c.relkind IN ('r','p')
+    ) THEN ausentes := ausentes || t; END IF;
   END LOOP;
   IF array_length(ausentes,1) IS NOT NULL THEN
     RAISE EXCEPTION 'G) baseline INCOMPLETA em public (ausentes): %', ausentes;

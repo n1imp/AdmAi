@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-V2-REV1",
-  "titulo": "Correcoes da revisao v2 (thread 01a035db): G completo, PUBLIC nos defaults, docs->v2, authenticated no negcontrol, E nao-vacuo",
+  "sliceId": "STG-SEC-RLS-V2-REV2",
+  "titulo": "DELTA da revisao v2 (thread 01a035db): G exige relkind r/p (presenca) + gate authenticated sem falso PASS",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-24T22:24:29.987Z",
+  "declaradoEm": "2026-08-25T00:26:52.006Z",
   "baseCommitPorLane": {
-    "HARNESS": "e138a224b4d8a8dcdc661f78198471f5307076b1"
+    "HARNESS": "dcff6a1def1558751293944a1fd9f1fd8a0a851e"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "5 achados do REVISOR: (1) G exige presenca da baseline + isencao EXATA dos probes + todas as relkinds; (2) aclexplode grantee OID 0 = PUBLIC normalizado e incluido na deteccao (lockdown warnings + verify C); (3) handoff/ledger re-apontados para artefatos v2; (4) staging-rls-negative-control ganha modo authenticated (JWT via env, nunca ecoado) e wrapper corrige a mensagem; (5) E usa canario proprio com 1 linha (nao-vacuo). Revalidacao local + DELTA.",
+  "notaDeMetodo": "2 achados residuais do REVISOR DELTA sobre dcff6a1: (1) verify_lockdown_v2.sql parte G — a presenca da baseline passa de to_regclass (que aceitaria view/indice homonimo) para EXISTS em pg_class com relkind IN ('r','p'); sabotagem provada: AuditLog e _prisma_migrations como view homonima -> 'baseline INCOMPLETA'. (2) staging-rls-negative-control.mjs — gate authenticated-unprivileged: JWT AUSENTE no modo fechado agora e FALHA (nao exit-0 falso PASS); com JWT presente exige controle positivo GET /auth/v1/user==200 antes da matriz. Baseline pre-mutacao destes 2 paths = git HEAD dcff6a1 (edicoes aplicadas em sessao retomada, recuperaveis via git). Revalidacao local completa A-G PASS com mock supabase_admin + defaults PUBLIC; sem regressao. NAO aplica staging; NAO toca producao; v1 congelado intocado.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -85,9 +85,9 @@
       "chaveiro-bot/prisma/rls/RUNBOOK_lockdown.md": "6d121df7c9c7a04a1d84528aa86ce7f410d5795aae0afc7958abfd44ed518e20",
       "chaveiro-bot/prisma/rls/enable_rls.sql": "f2269b8a044cb9199f15c6defcd4487bd1a37b48b104f6d9a866e31658862e35",
       "chaveiro-bot/prisma/rls/lockdown_public_access.sql": "1a195f3625baca2f471a3414d16277716adaf383c3ca473e89d46093bc1ff47f",
-      "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql": "6bbf25877c9e1ea428b491f33795ee3909c4b94b6c75114ee42d51ec7c1432f4",
+      "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql": "bdf5c0f09747296e9d0f85fff28c79b9e14ede6888e9888b6186cd750c75a8eb",
       "chaveiro-bot/prisma/rls/verify_lockdown.sql": "9fb63780ed6f84faafe44cb11f6d5353090c72839ec9ad8c4c4fe003a23e3ff0",
-      "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql": "28c28a1c62646e80f9c797c6b27f472344df7a05aafcf4c7da4d158240e7c3e5",
+      "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql": "74f3e565a030cca50f222e49ea57c9f2c69189f71063573a0fab4417a2070f3f",
       "chaveiro-bot/prisma/schema.prisma": "75d293f06c966fbfdad1c9b4a455a2cebb20c1048a9b9cad4d1cdd48283f97ad",
       "chaveiro-bot/prisma/schema.sqlite.prisma": "11cb15857907155d11d22ab8e3083184cdfd45ec899a99f0f11980b0aef85264",
       "chaveiro-bot/prisma/sqlite-schema.mjs": "5be4735734e52a49688a7bcef306d85f295650774fc3d2b6b6e877dac6c3cdf9",
@@ -95,7 +95,7 @@
       "chaveiro-bot/scripts/__tests__/audit-gate.test.js": "31a2b0d448a230b1a618f81315cddb9e2a49a532691950c6544b8746166d9e3f",
       "chaveiro-bot/scripts/__tests__/backfill-uploads.test.js": "06958c0e453f9fbe9284c6a6de3f1e05d36301183f8753e8d54c721918d9ae72",
       "chaveiro-bot/scripts/__tests__/seed-demo.test.js": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
-      "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs": "9fee54bd4a2e62d96c22766dc2454bd160a46021af76dcde0fdd2c031955ef2a",
+      "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs": "447bac47c3c43451b62eeab9f43870d26f60a61d59956a84361eab36f795c781",
       "chaveiro-bot/scripts/apply-rls-lockdown.mjs": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
       "chaveiro-bot/scripts/audit-allowlist.json": "79f22a37cfa88b8bb611b152971868cd45a989f163a9857acb9d512ca82fef7c",
       "chaveiro-bot/scripts/audit-gate-helpers.mjs": "8dadf1871387a61477360e497e6841aef2f02f0f6c414b9ab01bf1e0cb1aa720",
@@ -109,7 +109,7 @@
       "chaveiro-bot/scripts/seed-demo.mjs": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
       "chaveiro-bot/scripts/smoke-pooler.mjs": "359b8cf59844294359d11c56ed279fc804efadbb3497d6b4d7c1ce5f8c9d3690",
       "chaveiro-bot/scripts/smoke-storage.mjs": "2d50ac7c7ce580f1dafaf0fcb22a383d37c8d186efd4129be2314bb5604bbef7",
-      "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
+      "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "32b71872cc0bf36d1989b3c2fed5ada95ea04d22f2b6bd79bb7829f618d879ed",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "ddc187cf4ee430ee0421262ca8425c81d1b626fb096066925506cece9df10e91",
       "chaveiro-bot/scripts/validate-staging.mjs": "b1e58ca43029c6b00410cfb04a3ed5055ceb33f30551229813d677d5638ab67b",
       "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "22eb4b31f0ae701203670d55619669262ad0b7f7393684f583a5aa7b0e8177a7",
@@ -557,7 +557,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "79c2ffa173e38a45794dd09707972bd366db1db2fb572ffbca6e8a1f3cb56415",
+      "docs/agent-environment/AGENT_DECISIONS.md": "66bd60070404c56ac6974100b387afa75a43271abdbd78cd5caa8f612c5d9ae8",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -596,7 +596,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "b50c5065d3dc8706bd343ba4b14c7d134dcddf561c89f88529057f5442d9f681",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "125f506910b14bc4130a3f27a664552069b34e4014ea82d53f4c2fce549bc67d",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
@@ -610,13 +610,13 @@
       "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "ba8da3144e076079469f0268362ee189ebf616e0f29eb6bce785257203cd4d04",
       "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md": "18b6d28b9aace39ce62c07b33cb26796d142f65afa3b6aa7b04369d57aeb3a14",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
-      "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "20048c7530318a8e5e26d33273cd738dda8d3541b91424cb9776a5e2f04dcd2d",
+      "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "aea61bd5cae2d73395d82e8076cee20d01fede531fba5b4342c56da32756f7a7",
       "docs/eos-v2/STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md": "aec0ad9c6b94ca34b8fcce45ebee4a2ac3fa59129a0c6cb57602488e50fad1b9",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "e24b614a512e442c194afdbc7aad78e9af6758fa1247784d60760346cbfd46d7",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "f069bdd4afd1aba07a3e548bd4ff76ccaa10d0b25e03bc549783b68a949644c6",
+      "docs/eos-v2/WRITE_SET.json": "d9123b1ecd5d914d2333e4b0e3566a831f029968f6bffa2d1813146a6d4af31b",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "ff45460485bc1fa1e1687029972ae694c19a676836d3895adb64d6343aa7f46c",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2508,65 +2508,24 @@
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql",
-      "precisao": "edicao",
-      "proposito": "achados 1, 2, 5",
+      "precisao": "BOUNDED",
+      "proposito": "G) presenca da baseline exige pg_class.relkind IN ('r','p') — view/indice homonimo nao conta como tabela",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "28c28a1c62646e80f9c797c6b27f472344df7a05aafcf4c7da4d158240e7c3e5",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access_v2.sql",
-      "precisao": "edicao",
-      "proposito": "achado 2 (warnings com PUBLIC)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6bbf25877c9e1ea428b491f33795ee3909c4b94b6c75114ee42d51ec7c1432f4",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "74f3e565a030cca50f222e49ea57c9f2c69189f71063573a0fab4417a2070f3f",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
       "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
-      "precisao": "edicao",
-      "proposito": "achado 4 (modo authenticated)",
+      "precisao": "BOUNDED",
+      "proposito": "gate authenticated-unprivileged sem falso PASS: JWT ausente=falha; JWT presente exige controle positivo /auth/v1/user==200",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6db2f8e947e656ae7e99c01ad9affb7c83f199cf70871604ac2667cb0bbc2d2c",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs",
-      "precisao": "edicao",
-      "proposito": "achado 4 (mensagem correta)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9fee54bd4a2e62d96c22766dc2454bd160a46021af76dcde0fdd2c031955ef2a",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md",
-      "precisao": "edicao",
-      "proposito": "achado 3 (fluxo operacional -> v2)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "20048c7530318a8e5e26d33273cd738dda8d3541b91424cb9776a5e2f04dcd2d",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
-      "precisao": "edicao",
-      "proposito": "achado 3 (nextAction -> v2) + evidencias",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "b50c5065d3dc8706bd343ba4b14c7d134dcddf561c89f88529057f5442d9f681",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "edicao",
-      "proposito": "registro da rodada REVISOR v2",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "79c2ffa173e38a45794dd09707972bd366db1db2fb572ffbca6e8a1f3cb56415",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "32b71872cc0bf36d1989b3c2fed5ada95ea04d22f2b6bd79bb7829f618d879ed",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2576,6 +2535,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Correcoes da revisao v2 (5 achados thread 01a035db); local A-G PASS; DELTA a seguir",
+  "nota": "DELTA fechado no baseCommit dcff6a1 (ordem correta: fechar antes do commit). 2 achados residuais do REVISOR corrigidos e re-provados A-G local; sabotagem G (view homonima) morde; gate authenticated sem falso PASS. Finding STG-SEC-RLS-01 permanece ABERTO ate gates reais de staging.",
   "aviso": "Declaracao ENCERRADA."
 }

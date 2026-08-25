@@ -51574,9 +51574,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Correcoes da revisao v2 (5 achados thread 01a035db); local A-G PASS; DELTA a seguir",
       "declaradoEm": "2026-08-24T22:24:29.987Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-V2-REV2",
+      "titulo": "DELTA da revisao v2 (thread 01a035db): G exige relkind r/p (presenca) + gate authenticated sem falso PASS",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "DELTA fechado no baseCommit dcff6a1 (ordem correta: fechar antes do commit). 2 achados residuais do REVISOR corrigidos e re-provados A-G local; sabotagem G (view homonima) morde; gate authenticated sem falso PASS. Finding STG-SEC-RLS-01 permanece ABERTO ate gates reais de staging.",
+      "declaradoEm": "2026-08-25T00:26:52.006Z"
     }
   ],
-  "geradoEm": "2026-08-24T22:28:44.008Z",
+  "geradoEm": "2026-08-25T00:28:55.950Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

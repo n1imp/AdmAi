@@ -121,11 +121,24 @@ async function matriz(principal) {
 
 async function main() {
   await matriz('anon');
-  // [D1 v2/REVISOR achado 4] authenticated-unprivileged tambem nao pode acessar.
+  // [D1 v2/REVISOR achado 4 + DELTA] authenticated-unprivileged tambem nao pode acessar.
+  // JWT AUSENTE no modo fechado = FALHA (nao-PASS): o gate authenticated e obrigatorio
+  // para fechar — um exit 0 sem executa-lo seria falso PASS.
   if (AUTH_JWT) {
-    await matriz('authenticated');
+    // Controle POSITIVO do principal: prova que o JWT e um usuario autenticado VIVO
+    // (GET /auth/v1/user -> 200) ANTES da matriz — senao os 401 da matriz poderiam
+    // ser so "token invalido/expirado" e nao provariam nada sobre o boundary.
+    const rUser = await fetch(`${URL_BASE}/auth/v1/user`, {
+      headers: { apikey: ANON, Authorization: `Bearer ${AUTH_JWT}` },
+    });
+    linhas.push(`[authenticated] GET /auth/v1/user -> ${rUser.status} (controle positivo do principal)`);
+    if (rUser.status !== 200) {
+      falhas.push(`[authenticated] JWT nao autentica em /auth/v1/user (status ${rUser.status}) — token invalido/expirado; a matriz authenticated NAO prova o boundary`);
+    } else {
+      await matriz('authenticated');
+    }
   } else if (!EXPECT_OPEN) {
-    linhas.push('[authenticated] PULADO — defina STAGING_AUTHENTICATED_JWT para rodar o controle authenticated-unprivileged (obrigatorio p/ fechar o gate)');
+    falhas.push('[authenticated] STAGING_AUTHENTICATED_JWT AUSENTE — o gate authenticated-unprivileged e OBRIGATORIO para fechar; defina o token (nunca ecoado) e re-rode');
   }
 
   console.log(`\nSTG-SEC-RLS-01 negative control (${EXPECT_OPEN ? 'EXPECT_OPEN' : 'EXPECT_DENIED'}) @ ${REF_ESPERADO}`);
