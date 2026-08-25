@@ -16,6 +16,13 @@
 > 3. Positive controls: Prisma/Express CRUD + **Storage via `service_role`** (smoke obrigatório).
 > 4. Security Advisor: zero `rls_disabled_in_public` nas 26.
 > 5. Defaults do `supabase_admin` na origem: `BLOCKED_CAPABILITY_NON_BLOCKING` (provider/Support).
+> 6. **MONITORAR** (REVISOR DELTA-2): re-rodar `verify_lockdown_v2.sql` após qualquer `GRANT USAGE ON
+>    SCHEMA public` / mudança de membership de `anon`/`authenticated` — reabriria o caminho; a parte
+>    B2v2 falha fail-closed se readquirirem `USAGE`.
+>
+> **Status do v2: APROVADO** — DECISOR `01a035ce` + REVISOR (5 achados → `dcff6a1`) + REVISOR DELTA-2
+> `01a03654` (2 achados → `c61ca07`) = APROVADO; sem regressão; v1 congelado intacto. Repo
+> `READY_FOR_EXTERNAL_APPLY`; finding **ABERTO** até os gates reais de staging.
 >
 > Os artefatos v1 abaixo permanecem como registro histórico congelado (hashes válidos).
 

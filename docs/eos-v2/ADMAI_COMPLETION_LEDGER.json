@@ -2279,7 +2279,7 @@
       "findingRefs": [
         "STG-SEC-RLS-01"
       ],
-      "writeSetRef": null,
+      "writeSetRef": "STG-SEC-RLS-V2-REV2",
       "evidenceRefs": [
         "ADMAI_DATABASE_ACCESS_MODEL (auditoria deterministica do repo): as 26 tabelas sao PRISMA_ONLY; Storage via service-role (server-side, so .storage.from); frontend sem @supabase/*; env.js sem SUPABASE_ANON_KEY; zero supabase.from/.rpc/rest/v1. anon/authenticated NAO usados => revogar grants tem risco de compat ZERO. Detalhe em docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md.",
         "Artefato existente prisma/rls/enable_rls.sql (isolamento inter-tenant, 12 tabelas, role app_rw NOBYPASSRLS) NAO fecha este finding: nao cobre Usuario/Empresa/RefreshToken/etc. e nao revoga anon/authenticated. Concern separado, mantido como esta.",
@@ -2294,11 +2294,13 @@
         "ARTEFATOS v2 (D1 thread 01a035ce — B + D-detectivo + D-forte ajustado): lockdown_public_access_v2.sql (excecao HARD-ASSERT p/ supabase_admin no ADP com warnings detalhados + choke point REVOKE USAGE ON SCHEMA public FROM PUBLIC com snapshot/regrant atomico exceto anon/authenticated + asserts before/after e de roles criticos) + verify_lockdown_v2.sql (A/A2/B/B2v2/C-excecao-unica/D/E-com-limpeza/F-CANARIO-adversarial/G-detector-baseline) + apply-rls-lockdown-v2.mjs. VALIDACAO LOCAL PG16: cenario adversarial completo (baseline staging + defaults de plataforma mock do supabase_admin) -> A-G TODOS PASS; canario F prova que objeto novo com grants MAXIMOS deliberados fica inacessivel (42501, sem USAGE). Defeito real pego pela validacao: grant efemero da parte E vazava p/ F na mesma tx -> limpeza explicita adicionada. DB local devolvido pristino.",
         "VALIDACAO NAO EXECUTADA localmente (honesto): o branch de excecao insufficient_privilege do supabase_admin so dispara no hosted (executor local e superuser e consegue corrigir os defaults do mock); o disparo real ja foi observado no apply v1 externo; REVISOR avalia o branch por leitura.",
         "[Ciclo REMEDIATION 2026-08-24] READY_FOR_EXTERNAL_APPLY (§51): credenciais de staging RE-CONFIRMADAS ausentes (sem .env.staging, sem env vars, sem CLI). Artefato RE-PROVADO local no HEAD 405d5cf contra Postgres 16 (Docker, nao staging/prod): A1 verify A/A2/B/B2/C/D/E PASS; A2 backend-owner INSERT/SELECT/UPDATE/DELETE operacional pos-lockdown + anon negado (42501). Handoff externo com hashes+comandos+pos-condicoes em docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md. NAO e PASS — so a aplicacao real fecha o finding.",
-        "[Evidencia EXTERNA 2026-08-24] Preflight read-only real no admai-staging: artefatos validados byte-a-byte (SHA-256 confere); 25/26 tabelas existem, DocumentoTecnico AUSENTE; zero policies; lockdown NAO aplicado — o guard fail-closed abortou CORRETAMENTE. Status agora: READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON) — nao mais bloqueio so por credencial. NAO remover DocumentoTecnico da lista nem criar variante 25-tabelas: o problema e o migration state (finding STG-MIG-SCHEMA-LAG-01), nao o lockdown."
+        "[Evidencia EXTERNA 2026-08-24] Preflight read-only real no admai-staging: artefatos validados byte-a-byte (SHA-256 confere); 25/26 tabelas existem, DocumentoTecnico AUSENTE; zero policies; lockdown NAO aplicado — o guard fail-closed abortou CORRETAMENTE. Status agora: READY_FOR_EXTERNAL_APPLY + BLOCKED_DEPENDENCY(STG-MIG-RECON) — nao mais bloqueio so por credencial. NAO remover DocumentoTecnico da lista nem criar variante 25-tabelas: o problema e o migration state (finding STG-MIG-SCHEMA-LAG-01), nao o lockdown.",
+        "[REVISOR DELTA + DELTA-2 2026-08-24] Rodada DELTA (thread 01a035db) sobre dcff6a1 devolveu 2 achados residuais, ambos corrigidos em c61ca07: (1) verify_lockdown_v2.sql parte G — presenca da baseline passou de to_regclass (aceitaria view/indice homonimo) para EXISTS em pg_class com relkind IN ('r','p'); sabotagem provada (AuditLog e _prisma_migrations como view homonima -> baseline INCOMPLETA). (2) staging-rls-negative-control.mjs gate authenticated — JWT ausente no modo fechado deixou de ser exit-0 (falso PASS) e virou falha; com JWT presente exige controle positivo GET /auth/v1/user==200 antes da matriz. Revalidacao local A-G TODOS PASS (mock supabase_admin SUPERUSER + defaults de plataforma incl. PUBLIC EXECUTE; BEGIN...ROLLBACK; sem regressao). Write set STG-SEC-RLS-V2-REV2 fechado OBSERVED_SUBSET. Artefatos v1 congelados intactos. Re-revisao DELTA-2 aberta como conversa REVISOR fresca somente-leitura sobre c61ca07 (IDs completos de 32-hex das threads nao persistidos; so prefixos curtos). Mesmo com APROVADO, STG-SEC-RLS-01 segue ABERTO ate os gates reais de staging.",
+        "[REVISOR DELTA-2 APROVADO 2026-08-24, thread 01a03654-0eb4-7ea1-97f3-f85e5794b02b, conversa nova somente-leitura sobre c61ca07] VEREDITO APROVADO: 2 achados DELTA fechados, sem regressao (c61ca07^==dcff6a1; 3 congelados com blob identico; choke point preservado; service_role USAGE intacto; zero policy permissiva; NO FORCE). Confirmou git diff --check limpo, node --check nos 2 .mjs, e rodou o gate authenticated com fetch simulado (sem JWT->exit1; JWT invalido->exit1; JWT valido+/auth/v1/user=200->matriz roda). NAO reexecutou o harness PG A-G nesta revisao (validou o codigo por leitura; A-G foi rodado por Claude e reportado). RISCO RESIDUAL VINCULANTE: um futuro GRANT USAGE ON SCHEMA public, mudanca de memberships de anon/authenticated ou drift equivalente REABRIRIA o caminho e exige re-rodar verify_lockdown_v2.sql (B2v2 detecta USAGE indevido). STG-SEC-RLS-01 segue ABERTO ate os gates reais; LOCAL_PROOF != STAGING_PROOF."
       ],
-      "attemptCount": 2,
-      "lastAttempt": "2026-08-24T00:52:46.508Z",
-      "nextAction": "[v2 — NAO reaplicar v1] Executor externo: node scripts/apply-rls-lockdown-v2.mjs (lockdown v2 + verify v2 A-G) -> staging-rls-negative-control.mjs (anon SEMPRE; gate authenticated exige STAGING_AUTHENTICATED_JWT) -> positive controls (Prisma/Express + Storage via service_role) -> Security Advisor (zero rls_disabled_in_public nas 26). Pos-review v2: DELTA das correcoes (thread 01a035db). Defaults do supabase_admin na origem = BLOCKED_CAPABILITY_NON_BLOCKING (provider).",
+      "attemptCount": 3,
+      "lastAttempt": "2026-08-24T23:30:00.000Z",
+      "nextAction": "[v2 c61ca07 APROVADO pelo REVISOR DELTA-2 (thread 01a03654)] Repo READY_FOR_EXTERNAL_APPLY. Executor externo: node scripts/apply-rls-lockdown-v2.mjs (lockdown v2 + verify v2 A-G) -> staging-rls-negative-control.mjs (anon SEMPRE; gate authenticated exige STAGING_AUTHENTICATED_JWT + controle positivo /auth/v1/user==200) -> positive controls (Prisma/Express + Storage via service_role) -> Security Advisor (zero rls_disabled_in_public nas 26). MONITORAR: re-rodar verify_lockdown_v2.sql apos qualquer GRANT USAGE ON SCHEMA public / mudanca de membership (reabriria o caminho). Defaults do supabase_admin na origem = BLOCKED_CAPABILITY_NON_BLOCKING (provider). Finding fecha SO com: protecao existe + negative control morde (anon+authenticated) + fluxo backend funciona + Advisor limpo.",
       "revisitCondition": "Parte NO_REPOSITORY concluida e validada localmente contra Postgres real. A aplicacao no admai-staging + negative-control com anon key + re-run do Advisor exigem credenciais/execucao SQL no staging (BLOCKED_CAPABILITY, ver STG-02-USO): DIRECT_URL do admai-staging + a anon key (publishable). Enquanto ausentes, o finding permanece ABERTO (nao fecha sem: protecao existe + negative control morde + fluxo backend funciona).",
       "snapshotRef": null
     },
@@ -2336,162 +2338,345 @@
     },
     {
       "workId": "STG-RUNTIME",
-      "phase": "F5", "domain": "infra", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "STAGING_OPERATIONAL: app contra admai-staging (startup, /health, DB/auth/storage connectivity, schema esperado, sem dependencia de producao nos paths testados).",
-      "dependencies": ["STG-SEC-RLS-01", "STG-MIG-RECON"],
-      "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Provado LOCAL (stack real): 9/9 jornadas + /health ok. Falta contra staging real."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-SEC-RLS-01",
+        "STG-MIG-RECON"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Provado LOCAL (stack real): 9/9 jornadas + /health ok. Falta contra staging real."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Com .env.staging: subir app contra staging e provar os gates de STAGING_OPERATIONAL.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-E2E-OWNER",
-      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "e2e",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Owner E2E no staging real: login->dashboard->tecnico/servico->aprovacao->financeiro->estoque->auditoria; persistencia.",
-      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Driver chaveiro-painel/e2e/jornadas.mjs provado LOCAL. Falta contra staging real."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-RUNTIME"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Driver chaveiro-painel/e2e/jornadas.mjs provado LOCAL. Falta contra staging real."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Rodar jornadas.mjs (papel dono) contra staging.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-E2E-MANAGER",
-      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "e2e",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Gestor E2E no staging real: login->GestorHome->servicos->aprovacao->indicadores permitidos; owner-only negado.",
-      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Provado LOCAL. Falta contra staging real."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-RUNTIME"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Provado LOCAL. Falta contra staging real."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Rodar jornadas.mjs (papel gestor) contra staging.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-E2E-EMPLOYEE",
-      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "e2e",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Funcionario E2E no staging real: login->MeuPainel->ponto->servico->acoes permitidas; paths privilegiados negados.",
-      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Provado LOCAL. Falta contra staging real."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-RUNTIME"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Provado LOCAL. Falta contra staging real."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Rodar jornadas.mjs (papel funcionario) contra staging.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-TENANT-NEGATIVE",
-      "phase": "F5", "domain": "seguranca", "priority": "P0", "risk": "alto",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "seguranca",
+      "priority": "P0",
+      "risk": "alto",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Isolamento inter-tenant + negativa de seguranca no staging real (Company A vs B): A nao le/edita/deleta/aprova/acessa docs/financeiro/estoque de B; rota sem auth/wrong role/cross-tenant/campo sensivel/doc privado/PostgREST direto/2FA bypass/refresh revogado/paywall bypass NEGADOS. Nao confiar so no frontend. RLS_ENABLED != TENANT_ISOLATION_PROVEN.",
-      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Isolamento por req.db/prismaParaEmpresa provado por integracao LOCAL. Falta a negativa E2E contra staging real com fixtures A/B sinteticas."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-RUNTIME"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Isolamento por req.db/prismaParaEmpresa provado por integracao LOCAL. Falta a negativa E2E contra staging real com fixtures A/B sinteticas."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Criar fixtures sinteticas A/B e provar a matriz negativa contra staging.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-MOBILE",
-      "phase": "F5", "domain": "ux", "priority": "P2", "risk": "baixo",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "ux",
+      "priority": "P2",
+      "risk": "baixo",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Mobile 360/390 + desktop sanity 1440/1920 no staging real (navigation/forms/dialogs/overflow/touch targets), com positive control (empty render = invalido).",
-      "dependencies": ["STG-RUNTIME"], "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Provado LOCAL (sonda 4 viewports + jornada mobile). Falta contra staging real."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-RUNTIME"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Provado LOCAL (sonda 4 viewports + jornada mobile). Falta contra staging real."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Rodar viewports contra staging.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "STG-FINAL-SWEEP",
-      "phase": "SWEEP", "domain": "infra", "priority": "P1", "risk": "baixo",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "SWEEP",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "baixo",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "BLOCKED_CAPABILITY",
       "description": "Sweep global pos-staging: Advisor final, reconciliar ledger/findings/blockers, secret persistence, ZERO_FORGOTTEN_BLOCKER; entao REAL_STAGING_ACCEPTANCE_PROVEN + ADMAI_RELEASE_CANDIDATE_READY. Nao declarar ADMAI_RELEASE_READY (LEGAL NOT_ACCEPTED).",
-      "dependencies": ["STG-SEC-RLS-01", "STG-MIG-RECON", "STG-03-DOC-BUCKET", "STG-RUNTIME", "STG-E2E-OWNER", "STG-E2E-MANAGER", "STG-E2E-EMPLOYEE", "STG-TENANT-NEGATIVE", "STG-MOBILE"],
-      "blockerRefs": ["STG-CREDENTIALS"], "findingRefs": [], "writeSetRef": null,
-      "evidenceRefs": ["Depende do fechamento de todos os gates de staging acima."],
-      "attemptCount": 0, "lastAttempt": "2026-08-24T02:00:00.000Z",
+      "dependencies": [
+        "STG-SEC-RLS-01",
+        "STG-MIG-RECON",
+        "STG-03-DOC-BUCKET",
+        "STG-RUNTIME",
+        "STG-E2E-OWNER",
+        "STG-E2E-MANAGER",
+        "STG-E2E-EMPLOYEE",
+        "STG-TENANT-NEGATIVE",
+        "STG-MOBILE"
+      ],
+      "blockerRefs": [
+        "STG-CREDENTIALS"
+      ],
+      "findingRefs": [],
+      "writeSetRef": null,
+      "evidenceRefs": [
+        "Depende do fechamento de todos os gates de staging acima."
+      ],
+      "attemptCount": 0,
+      "lastAttempt": "2026-08-24T02:00:00.000Z",
       "nextAction": "Apos todos os gates de staging: sweep global + terminal.",
-      "revisitCondition": "Credenciais de staging (ver STG-02-USO).", "snapshotRef": null
+      "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
+      "snapshotRef": null
     },
     {
       "workId": "FE-STRUCT-01",
-      "phase": "F5", "domain": "infra", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "infra",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "DONE",
       "description": "LOCAL_RUNTIME_IDENTITY + LOCAL_LOGIN_ROOT_CAUSE (workstream ADMAI-FE-STRUCTURAL-01): provar o runtime local e fechar LOCAL-AUTH-BLOCKER-01.",
-      "dependencies": [], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "dependencies": [],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
       "evidenceRefs": [
         "Runtime provado: vite dev 5173 do worktree atual (cmdline), backend 3000 /health ok; sobras MORTAS (cadeia backend morta 12:05, vite preview 4173 com dist stale de 13:18 bound so [::1]); dist stale removido; assimetria IPv4/IPv6 documentada (5173 so 127.0.0.1).",
         "ROOT CAUSE = LOCAL_RUNTIME_DIVERGENCE, nao contrato: login provado em 4 camadas (curl API 200 token+cookie; browser CDP perfil novo -> dashboard; sessao stale pre-Gate6 -> recuperacao limpa sem loop; preview stale -> funciona com espera). Causas provaveis do sintoma do usuario: porta/aba errada, credencial inexistente no admai_dev (so fixtures demo), estado de browser antigo. Receita: 127.0.0.1:5173 + conta demo.",
         "Descoberta ambiental critica: 704 chrome.exe zumbis acumulados (child.kill() no Windows nao mata a arvore) degradando a maquina — causa real da flakiness das jornadas. Limpos (704->12, so o Chrome real do usuario)."
       ],
-      "attemptCount": 1, "lastAttempt": "2026-08-24T16:00:00.000Z",
-      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T16:00:00.000Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     },
     {
       "workId": "FE-STRUCT-02",
-      "phase": "F5", "domain": "contratos", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "contratos",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "DONE",
       "description": "AUTH_CONTRACT_AUDIT + AUTH_CLIENT/SESSION/ROUTE_GUARD/RBAC/CORE_API reconciliation (cobre FE-STRUCT-02,04,05,06,07,08): registry completo FE<->BE.",
-      "dependencies": ["FE-STRUCT-01"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "dependencies": [
+        "FE-STRUCT-01"
+      ],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
       "evidenceRefs": [
         "ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md: 83/83 MATCH (sweep deterministico api.* x rotas; 12 falsos-MISS resolvidos — routers montados na raiz com path /api completo + templates de querystring). Zero UNKNOWN em auth/core. Zero MISMATCH. Nenhuma mudanca de produto necessaria.",
         "Auth chain auditada com provas vivas: login/2FA desafio/refresh single-flight/hidratacao/erros semanticos 402-403/register/recuperar/alternativos — todos MATCH. RBAC: backend autoridade, frontend Guards=UX. Estados semanticos derivados do codigo real."
       ],
-      "attemptCount": 1, "lastAttempt": "2026-08-24T16:00:00.000Z",
-      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T16:00:00.000Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     },
     {
       "workId": "FE-STRUCT-09",
-      "phase": "F5", "domain": "e2e", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "F5",
+      "domain": "e2e",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "DONE",
       "description": "LOCAL_AUTH_PROOF + INTERNAL_APP_SMOKE (cobre FE-STRUCT-03,09,10): jornadas E2E no stack real + correcao de 3 defeitos do HARNESS achados no processo.",
-      "dependencies": ["FE-STRUCT-01"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "dependencies": [
+        "FE-STRUCT-01"
+      ],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
       "evidenceRefs": [
         "Suite de jornadas 9/9 OK no stack real (onboarding, senha errada, wizard dono, ponto tecnica, 402/assinatura, 2FA errado, deep-link, mobile 360, documentos) apos correcoes do harness. Produto correto provado por sondas isoladas instrumentadas em todos os casos que flakearam (402: renderiza status+acao; 2FA: 400 Codigo invalido renderizado; sem sessao).",
         "3 defeitos de HARNESS corrigidos em e2e/jornadas.mjs (test-only): (1) clicarQuandoHabilitado — click em botao disabled era no-op silencioso (race do React flush); (2) esperarTexto agora inclui url+token+tela no erro de timeout (o diagnostico que resolveu a caca); (3) fechar() a prova de vazamento no Windows — taskkill /T tem corrida e vazava 2-3 filhos por browser (704 zumbis acumulados em 2 dias); varredura final por user-data-dir unico (0 sobreviventes, verificado isolado). Armadilha documentada: -like do PowerShell trata a barra invertida literalmente.",
         "Painel unit 252/252 pos-mudancas (harness nao toca produto)."
       ],
-      "attemptCount": 6, "lastAttempt": "2026-08-24T16:10:00.000Z",
-      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+      "attemptCount": 6,
+      "lastAttempt": "2026-08-24T16:10:00.000Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     },
     {
       "workId": "FE-STRUCT-LIMITER-2FA",
-      "phase": "F5", "domain": "seguranca", "priority": "P1", "risk": "medio",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": "codex",
+      "phase": "F5",
+      "domain": "seguranca",
+      "priority": "P1",
+      "risk": "medio",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": "codex",
       "status": "DONE",
       "description": "Fix de PRODUTO achado pelo ciclo FE-STRUCT: rotas 2FA herdavam authLimiter/authIpLimiter por prefix-match de app.use('/api/auth/login') — authLimiter sem identidade degradava p/ balde IP 5 falhas/15min COMPARTILHADO entre login e 2FA (cross-flow lockout via NAT), contra os dois designs documentados.",
-      "dependencies": ["FE-STRUCT-09"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "dependencies": [
+        "FE-STRUCT-09"
+      ],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
       "evidenceRefs": [
         "Prova viva: 7 POSTs /auth/login/2fa com desafios DISTINTOS -> 401,401,429x5 (balde IP). Era a causa raiz das falhas intermitentes da jornada 2FA (mensagem 'Muitas tentativas' != /invalid/; painel de marketing do Login mascarava a tela).",
         "Decisao D1: Codex DECISOR thread 01a0346e, CONCORDO, opcao A — mount EXATO app.post('/api/auth/login', authIpLimiter, authLimiter); 2FA fica so com twoFactorLimiter (por desafio) + global. Mint de desafio continua atras dos limiters de credencial; nada enfraquecido.",
         "Teste limiter_2fa_dedicado.test.js 5/5 (desafios distintos sem 429; mesmo desafio 429 na 6a com mensagem do twoFactorLimiter; falhas de senha nao contaminam 2FA; /login exato segue 429; /2fa/recuperar coberto). SABOTAGEM MORDE: mount antigo -> 3/5 falham. Colaterais 36/36 (auth, recuperacao_2fa, conta_2fa_fluxo_completo, login_disambiguacao_leak, seguranca_baratos). E2E final 9/9."
       ],
-      "attemptCount": 1, "lastAttempt": "2026-08-24T16:40:00.000Z",
-      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T16:40:00.000Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     },
     {
       "workId": "FE-STRUCT-11",
-      "phase": "SWEEP", "domain": "produto", "priority": "P1", "risk": "baixo",
-      "authority": "CLAUDE", "owner": "claude", "requiredReviewer": null,
+      "phase": "SWEEP",
+      "domain": "produto",
+      "priority": "P1",
+      "risk": "baixo",
+      "authority": "CLAUDE",
+      "owner": "claude",
+      "requiredReviewer": null,
       "status": "DONE",
       "description": "VISUAL_PRESERVATION_PROOF + FINAL_STRUCTURAL_SWEEP (cobre FE-STRUCT-11,12): NO_VISUAL_CHANGE cumprido.",
-      "dependencies": ["FE-STRUCT-02", "FE-STRUCT-09"], "blockerRefs": [], "findingRefs": [], "writeSetRef": null,
+      "dependencies": [
+        "FE-STRUCT-02",
+        "FE-STRUCT-09"
+      ],
+      "blockerRefs": [],
+      "findingRefs": [],
+      "writeSetRef": null,
       "evidenceRefs": [
         "VISUAL_DIFF = ZERO por construcao: NENHUM arquivo de produto (src/ do painel ou do bot) foi alterado no ciclo — apenas e2e/jornadas.mjs (harness) e docs. git diff prova. Zero bypass, zero enfraquecimento de seguranca, backend intocado.",
         "Sweep estrutural final: relatorio docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md (§46 completo); ZERO blocker estrutural aberto; staging inalterado (STG-SEC-RLS-01 READY_FOR_EXTERNAL_APPLY); Legal DEFERRED_BY_D2 e WhatsApp POST_MVP preservados."
       ],
-      "attemptCount": 1, "lastAttempt": "2026-08-24T16:10:00.000Z",
-      "nextAction": null, "revisitCondition": null, "snapshotRef": null
+      "attemptCount": 1,
+      "lastAttempt": "2026-08-24T16:10:00.000Z",
+      "nextAction": null,
+      "revisitCondition": null,
+      "snapshotRef": null
     }
   ],
   "terminal": {

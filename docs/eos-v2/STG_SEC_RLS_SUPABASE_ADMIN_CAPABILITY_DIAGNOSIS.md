@@ -103,9 +103,23 @@ boundary do Supabase — nenhum controle in-tenant resiste ao superuser do provi
 plataforma FUTUROS nascem sem `USAGE` (fail-closed — feature nova pode falhar fechada até regrant
 explícito); detecção não é contínua.
 
-**ARTIFACT_CHANGE_REQUIRED: YES** — `lockdown_public_access_v2.sql`, `verify_lockdown_v2.sql`,
-`apply-rls-lockdown-v2.mjs` (o wrapper v1 referencia nominalmente os arquivos v1). **REVISOR novo
-obrigatório** sobre os v2 + evidência real.
+**MONITORAMENTO (ação vinculante — REVISOR DELTA-2):** o choke point protege contra defaults FUTUROS
+de objetos do `supabase_admin`, **mas** um futuro `GRANT USAGE ON SCHEMA public` (a PUBLIC/anon/
+authenticated), mudança de memberships de `anon`/`authenticated`, ou drift equivalente **reabre o
+caminho**. Mitigação operacional: **re-rodar `verify_lockdown_v2.sql` após qualquer alteração de
+grants/roles no schema `public` do staging** — a parte **B2v2** já falha (fail-closed) se
+PUBLIC/anon/authenticated readquirirem `USAGE`. Como a detecção não é contínua, agendar a re-verify
+como parte da rotina de mudança de schema/roles.
+
+**ARTIFACT_CHANGE_REQUIRED: YES → CONCLUÍDO** — `lockdown_public_access_v2.sql`,
+`verify_lockdown_v2.sql`, `apply-rls-lockdown-v2.mjs`. **REVISOR: APROVADO.**
+- DECISOR `01a035ce` (CONCORDO, ALTA) → REVISOR v2 (5 achados, corrigidos em `dcff6a1`) → REVISOR
+  DELTA (2 achados residuais) → correções em `c61ca07` → **REVISOR DELTA-2 `01a03654-0eb4-7ea1-97f3-f85e5794b02b` = APROVADO** (sem regressão: `c61ca07^ == dcff6a1`, 3 congelados byte-idênticos,
+  choke point preservado, `service_role` USAGE intacto). Write set `STG-SEC-RLS-V2-REV2`
+  OBSERVED_SUBSET.
+- **Ainda ABERTO**: falta a evidência real de staging (apply + verify + negative control
+  anon/authenticated + Advisor + smoke `service_role`/Storage) — `BLOCKED_CAPABILITY` por
+  credenciais ausentes. `LOCAL_PROOF != STAGING_PROOF`.
 
 **EXTERNAL_CAPABILITY_REQUIRED:** para fechar o boundary com v2 — **nenhuma** além do executor
 staging atual; para remover os defaults de `supabase_admin` na origem — **SIM** (ação privilegiada
