@@ -152,6 +152,13 @@ zero pendências/falhas. (Quando houver CLI+credencial local: `npx prisma migrat
 
 ## Depois disto (ordem)
 
+> **⚠️ SUPERSEDED (2026-08-24) para o passo do RLS:** o apply do RLS **não** usa mais o v1
+> (`1a195f36…`) — ele abortou fail-closed em `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin`. O
+> fluxo vigente é o **v2 PURE_SQL** para o executor externo, em
+> `docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md` (ordem A–M; artefatos
+> `lockdown_public_access_v2.pure.sql` / `verify_lockdown_v2.pure.sql`). O texto abaixo fica como
+> registro histórico do encadeamento migration→RLS.
+
 `DocumentoTecnico` existe → **re-preflight** do lockdown → aplicar o **lockdown aprovado inalterado**
 (SHA-256 `1a195f36…`) → `verify_lockdown.sql` (`9fb63780…`) → negative control (anon key) →
 Security Advisor. Lockdown permanece **CONGELADO** — não remover `DocumentoTecnico` da lista.

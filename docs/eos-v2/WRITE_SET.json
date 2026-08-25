@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-SEC-RLS-V2-REV2",
-  "titulo": "DELTA da revisao v2 (thread 01a035db): G exige relkind r/p (presenca) + gate authenticated sem falso PASS",
+  "sliceId": "STG-SEC-RLS-EXTERNAL-PKG-01",
+  "titulo": "Pacote de apply externo do RLS v2: PURE_SQL forms + handoff mestre + frontier gates + governanca",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-25T00:26:52.006Z",
+  "declaradoEm": "2026-08-25T01:04:56.666Z",
   "baseCommitPorLane": {
-    "HARNESS": "dcff6a1def1558751293944a1fd9f1fd8a0a851e"
+    "HARNESS": "2e934c5bcec2dc261f231ff54bbcc2b7221f0693"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "2 achados residuais do REVISOR DELTA sobre dcff6a1: (1) verify_lockdown_v2.sql parte G — a presenca da baseline passa de to_regclass (que aceitaria view/indice homonimo) para EXISTS em pg_class com relkind IN ('r','p'); sabotagem provada: AuditLog e _prisma_migrations como view homonima -> 'baseline INCOMPLETA'. (2) staging-rls-negative-control.mjs — gate authenticated-unprivileged: JWT AUSENTE no modo fechado agora e FALHA (nao exit-0 falso PASS); com JWT presente exige controle positivo GET /auth/v1/user==200 antes da matriz. Baseline pre-mutacao destes 2 paths = git HEAD dcff6a1 (edicoes aplicadas em sessao retomada, recuperaveis via git). Revalidacao local completa A-G PASS com mock supabase_admin + defaults PUBLIC; sem regressao. NAO aplica staging; NAO toca producao; v1 congelado intocado.",
+  "notaDeMetodo": "Prepara o pacote deterministico para o executor externo aplicar o RLS v2 aprovado (c61ca07) no admai-staging via Supabase API (sem meta-comandos psql). Gera 2 .pure.sql (meta-comandos removidos, BEGIN/COMMIT/ROLLBACK/NOTIFY mantidos, target guard externalizado) provados byte+comportamentalmente equivalentes aos v2 psql; handoff mestre com todas as secoes do §28; frontier gates §19/§20; reclassifica STG-SEC-RLS-01 -> READY_FOR_EXTERNAL_APPLY. D1 DECISOR valida transformacao/ordem/cadeia/capability ANTES; REVISOR novo depois. Nao executa staging; nao toca producao; v2 psql e congelados v1 intocados.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -557,7 +557,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "66bd60070404c56ac6974100b387afa75a43271abdbd78cd5caa8f612c5d9ae8",
+      "docs/agent-environment/AGENT_DECISIONS.md": "58355543648617a13a8c0516042bbc4713e1d81d0e3e6684a0f26d155d075a2d",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -596,7 +596,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "125f506910b14bc4130a3f27a664552069b34e4014ea82d53f4c2fce549bc67d",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "faa1c75ae311984664e06874cd2438a6c9eaa95001d241e973d90262c7b74f06",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
@@ -610,13 +610,13 @@
       "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "ba8da3144e076079469f0268362ee189ebf616e0f29eb6bce785257203cd4d04",
       "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md": "18b6d28b9aace39ce62c07b33cb26796d142f65afa3b6aa7b04369d57aeb3a14",
       "docs/eos-v2/STG_SEC_RLS_01_ACCESS_MODEL.md": "89fbafd8a4f2ddc01c2ce5f448e188d68b0eded6759665594c3cbea2bae1317e",
-      "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "aea61bd5cae2d73395d82e8076cee20d01fede531fba5b4342c56da32756f7a7",
-      "docs/eos-v2/STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md": "aec0ad9c6b94ca34b8fcce45ebee4a2ac3fa59129a0c6cb57602488e50fad1b9",
+      "docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md": "8fe9c46ac2fad65e03ad7e354240a51d2e78be111a403c1298d2068f9b0badc0",
+      "docs/eos-v2/STG_SEC_RLS_SUPABASE_ADMIN_CAPABILITY_DIAGNOSIS.md": "200e2f287d2ee066abcd32b5cd9df1ac8e1dffcc21f42a8f28516613283baa27",
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d9123b1ecd5d914d2333e4b0e3566a831f029968f6bffa2d1813146a6d4af31b",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "ff45460485bc1fa1e1687029972ae694c19a676836d3895adb64d6343aa7f46c",
+      "docs/eos-v2/WRITE_SET.json": "0af193ba05c87bd6e20924014db8cd7bf892ca44a76098fb1138ac070dab80d7",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "cb0219d040e77c994a4de5fa44f5b8bf991ddae31c78bb5effb9dfccb3d46fe6",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2507,25 +2507,66 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.sql",
+      "caminho": "chaveiro-bot/prisma/rls/lockdown_public_access_v2.pure.sql",
       "precisao": "BOUNDED",
-      "proposito": "G) presenca da baseline exige pg_class.relkind IN ('r','p') — view/indice homonimo nao conta como tabela",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "74f3e565a030cca50f222e49ea57c9f2c69189f71063573a0fab4417a2070f3f",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "proposito": "PURE_SQL form do lockdown v2 (API-executor); meta-comandos removidos, semantica de seguranca identica",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
+      "caminho": "chaveiro-bot/prisma/rls/verify_lockdown_v2.pure.sql",
       "precisao": "BOUNDED",
-      "proposito": "gate authenticated-unprivileged sem falso PASS: JWT ausente=falha; JWT presente exige controle positivo /auth/v1/user==200",
+      "proposito": "PURE_SQL form do verify v2 A-G (API-executor); BEGIN...ROLLBACK mantido",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md",
+      "precisao": "BOUNDED",
+      "proposito": "handoff mestre §28: inventario+hashes, transform, apply order A-M, postconditions, verify contract, negative controls, smokes, advisor, close criteria",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_STAGING_FRONTIER_GATES.md",
+      "precisao": "BOUNDED",
+      "proposito": "specs read-only do proximo frontier (§19/§20) ate REAL_STAGING_ACCEPTANCE_PROVEN",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "reclassifica STG-SEC-RLS-01 -> READY_FOR_EXTERNAL_APPLY + distincao de capability + secrets por subgate",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "32b71872cc0bf36d1989b3c2fed5ada95ea04d22f2b6bd79bb7829f618d879ed",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "faa1c75ae311984664e06874cd2438a6c9eaa95001d241e973d90262c7b74f06",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "BOUNDED",
+      "proposito": "registro D-STG-SEC-RLS-EXTERNAL-PURE-SQL-01 (transformacao, ordem, cadeia, reclassificacao)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "58355543648617a13a8c0516042bbc4713e1d81d0e3e6684a0f26d155d075a2d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/STG_MIG_RECON_EXTERNAL_APPLY_PACKAGE.md",
+      "precisao": "BOUNDED",
+      "proposito": "nota SUPERSEDED: RLS apply aponta para o handoff v2, nao o v1",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "18b6d28b9aace39ce62c07b33cb26796d142f65afa3b6aa7b04369d57aeb3a14",
+      "sujoNaDeclaracao": false
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2535,6 +2576,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "DELTA fechado no baseCommit dcff6a1 (ordem correta: fechar antes do commit). 2 achados residuais do REVISOR corrigidos e re-provados A-G local; sabotagem G (view homonima) morde; gate authenticated sem falso PASS. Finding STG-SEC-RLS-01 permanece ABERTO ate gates reais de staging.",
+  "nota": "Pacote de apply externo do RLS v2 (PURE_SQL). D1 01a0366d (refinamentos aceitos) + REVISOR 01a03681 CORRECOES_NECESSARIAS -> 5 correcoes -> REVISOR DELTA APROVADO. Provas locais: byte-equivalence exata, A-G end-to-end nos .pure.sql, fault injection, sabotagem G. Finding STG-SEC-RLS-01 = READY (READY_FOR_EXTERNAL_APPLY); apply real e provas A-M sao do executor externo; ABERTO ate elas.",
   "aviso": "Declaracao ENCERRADA."
 }

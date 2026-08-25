@@ -51588,9 +51588,23 @@
       "bloqueiaIntegracao": false,
       "nota": "DELTA fechado no baseCommit dcff6a1 (ordem correta: fechar antes do commit). 2 achados residuais do REVISOR corrigidos e re-provados A-G local; sabotagem G (view homonima) morde; gate authenticated sem falso PASS. Finding STG-SEC-RLS-01 permanece ABERTO ate gates reais de staging.",
       "declaradoEm": "2026-08-25T00:26:52.006Z"
+    },
+    {
+      "sliceId": "STG-SEC-RLS-EXTERNAL-PKG-01",
+      "titulo": "Pacote de apply externo do RLS v2: PURE_SQL forms + handoff mestre + frontier gates + governanca",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Pacote de apply externo do RLS v2 (PURE_SQL). D1 01a0366d (refinamentos aceitos) + REVISOR 01a03681 CORRECOES_NECESSARIAS -> 5 correcoes -> REVISOR DELTA APROVADO. Provas locais: byte-equivalence exata, A-G end-to-end nos .pure.sql, fault injection, sabotagem G. Finding STG-SEC-RLS-01 = READY (READY_FOR_EXTERNAL_APPLY); apply real e provas A-M sao do executor externo; ABERTO ate elas.",
+      "declaradoEm": "2026-08-25T01:04:56.666Z"
     }
   ],
-  "geradoEm": "2026-08-25T00:28:55.950Z",
+  "geradoEm": "2026-08-25T01:37:11.288Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
