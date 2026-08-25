@@ -54,6 +54,18 @@ describe('ambienteElegivelStaging (fail-closed, vínculo positivo ao admai-stagi
     expect(r.motivo).toMatch(/vínculo positivo/);
   });
 
+  it('SABOTAGEM [REVISOR 01a038fc]: user do staging em HOST ARBITRÁRIO não passa (anti-spoof)', () => {
+    expect(
+      ambienteElegivelStaging(`postgresql://postgres.${REF_STAGING}:pw@evil.example:6543/postgres`)
+        .elegivel
+    ).toBe(false);
+    expect(
+      ambienteElegivelStaging(
+        `postgresql://postgres.${REF_STAGING}:pw@pooler.supabase.com.evil.io:6543/postgres`
+      ).elegivel
+    ).toBe(false);
+  });
+
   it('SABOTAGEM: recusa loopback/local (staging é remoto por definição)', () => {
     expect(ambienteElegivelStaging('postgresql://u:p@localhost:5432/admai_dev').elegivel).toBe(
       false

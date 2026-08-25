@@ -11,8 +11,10 @@ name: Deploy Staging
 # integração nativa na branch `staging` (ver ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE).
 #
 # Secrets vêm do GitHub Environment `staging` (store EXCLUSIVO — o deploy.yml de
-# produção não o enxerga): VITE_API_URL_STAGING, CLOUDFLARE_API_TOKEN,
-# CLOUDFLARE_ACCOUNT_ID.
+# produção não o enxerga): VITE_API_URL_STAGING, CLOUDFLARE_API_TOKEN_STAGING,
+# CLOUDFLARE_ACCOUNT_ID_STAGING. [REVISOR 01a038fc achado 4] Sufixo _STAGING de
+# propósito: nomes genéricos cairiam no FALLBACK de secrets de repositório/organização
+# (os de produção) quando ausentes no Environment — o sufixo torna isso impossível.
 
 on:
   workflow_dispatch:
@@ -88,8 +90,8 @@ jobs:
       - name: Publish preview `staging`
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_STAGING }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_STAGING }}
           # --branch=staging é OBRIGATÓRIO e fixo: publica o alias
           # staging.admai-painel.pages.dev, nunca o domínio de produção.
           command: pages deploy chaveiro-painel/dist --project-name=admai-painel --branch=staging

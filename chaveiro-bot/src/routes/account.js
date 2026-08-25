@@ -12,6 +12,7 @@ import {
   dataExpiracaoRefresh,
   setRefreshCookie,
   lockUsuario,
+  COOKIE_OPTS_REFRESH,
 } from '../services/auth.js';
 import { podeProprio } from '../services/permissoes.js';
 import { construirFiltroPeriodo, agruparReceitaPorDia } from '../services/periodo.js';
@@ -725,7 +726,9 @@ router.post('/me/logout-all', async (req, res) => {
       prisma.refreshToken.deleteMany({ where: { usuarioId: req.user.id } }),
       prisma.sessaoUsuario.deleteMany({ where: { usuarioId: req.user.id } }),
     ]);
-    res.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict', path: '/api/auth' });
+    // [REVISOR 01a038fc achado 2] MESMAS opts do set (services/auth.js) — atributos
+    // divergentes fazem o browser ignorar o clear e a sessão "fantasma" sobreviver.
+    res.clearCookie('refresh_token', { ...COOKIE_OPTS_REFRESH });
     logger.info('logout_all', { userId: req.user.id });
     res.json({ mensagem: 'Todas as sessões foram encerradas' });
   } catch (erro) {

@@ -41,8 +41,18 @@ export function dataExpiracaoRefresh() {
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
 
-/* Opções do cookie de refresh — path restrito a /api/auth (só as rotas de sessão o recebem). */
-export const COOKIE_OPTS_REFRESH = { httpOnly: true, sameSite: 'strict', path: '/api/auth' };
+/* Opções do cookie de refresh — path restrito a /api/auth (só as rotas de sessão o recebem).
+   [REVISOR 01a038fc achado 2 · STG-APP-STAGING-REV1] Em STAGING o painel
+   (staging.admai-painel.pages.dev) e a API (railway.app) são SITES diferentes —
+   `SameSite=Strict` NUNCA envia o cookie cross-site e o refresh morre quando o bearer
+   expira. Produção é SAME-SITE (subdomínios de chaveirobot.com.br) e permanece Strict,
+   comportamento intacto. `SameSite=None` exige `Secure`; o CSRF é compensado pela
+   checagem de Origin nas rotas de sessão (routes/auth.js) + CORS de origem única com
+   credenciais (a resposta é ilegível para qualquer outra origem). */
+export const COOKIE_OPTS_REFRESH =
+  env.APP_ENV === 'staging'
+    ? { httpOnly: true, sameSite: 'none', secure: true, path: '/api/auth' }
+    : { httpOnly: true, sameSite: 'strict', path: '/api/auth' };
 
 /* [Gate 6 R3] Criação de refresh centralizada aqui (junto dos primitivos), para que auth.js e
    account.js reusem a MESMA lógica dentro de suas transações — sem duplicar nem cada um montar
@@ -66,7 +76,10 @@ export async function lockUsuario(tx, usuarioId) {
 export function setRefreshCookie(res, raw) {
   res.cookie('refresh_token', raw, {
     ...COOKIE_OPTS_REFRESH,
-    secure: env.NODE_ENV === 'production',
+    // staging fixa secure:true nas opts (SameSite=None exige); fora dele, mantém a regra
+    // por NODE_ENV. O ?? preserva a precedência das opts — um override tardio aqui
+    // reintroduziria cookie None sem Secure (rejeitado pelos browsers).
+    secure: COOKIE_OPTS_REFRESH.secure ?? env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }

@@ -7,6 +7,12 @@ const api = axios.create({
   // Web: '/api' (mesma origem, proxy do nginx). App Capacitor: VITE_API_URL absoluto
   baseURL: BASE_URL,
   timeout: 30000,
+  /* [REVISOR 01a038fc achado 2 · STG-APP-STAGING-REV1] O cookie httpOnly de refresh nasce
+     no Set-Cookie do LOGIN/2FA — sem withCredentials o browser DESCARTA esse Set-Cookie
+     quando a API está em outra origem (staging: pages.dev → railway.app) e o refresh morre
+     ao expirar o bearer. Em produção (same-site) e no dev (proxy same-origin) é inócuo; o
+     backend só emite Allow-Credentials com ALLOWED_ORIGIN explícita, nunca com '*'. */
+  withCredentials: true,
 });
 
 // Injeta o Bearer Token em toda requisição

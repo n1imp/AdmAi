@@ -60,7 +60,12 @@ export function ambienteElegivelStaging(databaseUrl) {
   } catch {
     return { elegivel: false, motivo: 'DATABASE_URL não é uma URL válida' };
   }
-  const refUser = u.username.startsWith('postgres.') ? u.username.slice('postgres.'.length) : null;
+  // [REVISOR 01a038fc achado 1] o ref do username SÓ vale em hostname estrutural do
+  // pooler Supabase — `postgres.<ref>@evil.example` falsificava o vínculo positivo.
+  const refUser =
+    u.username.startsWith('postgres.') && /(^|\.)pooler\.supabase\.com$/.test(u.hostname)
+      ? u.username.slice('postgres.'.length)
+      : null;
   const m = u.hostname.match(/^db\.([a-z0-9]{16,})\.supabase\.co$/);
   const ref = refUser ?? (m ? m[1] : null);
   if (ref !== REF_STAGING) {

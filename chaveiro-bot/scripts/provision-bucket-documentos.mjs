@@ -52,6 +52,41 @@ if (!url || !key) {
   );
 }
 
+/* [REVISOR 01a038fc achado 3 + DELTA · STG-APP-STAGING-REV1] Vínculo POSITIVO ao alvo.
+   Três camadas, fail-closed onde importa:
+   1. `--staging`: o ref exigido é a CONSTANTE VERSIONADA abaixo (admai-staging) —
+      independente do env do operador; um .env errado não redefine a identidade.
+      É a forma usada por TODOS os comandos de staging do deploy package.
+   2. REQUIRE_SUPABASE_REF (env): vínculo explícito para outros alvos (ex.: produção
+      deliberada). Nota: vem do MESMO env da URL — não protege contra env-file trocado;
+      por isso staging usa a flag, não a var.
+   3. MUTAÇÃO exige identidade: --provision E --validate (o validate também faz UPLOAD
+      [DELTA-2]) sem --staging e sem REQUIRE_SUPABASE_REF ABORTAM. Só o --check
+      (somente leitura) dispensa identidade. */
+const REF_STAGING_VERSIONADO = 'qsuufuulxfkkeasgxhcv'; // admai-staging (fonte: repo, não env)
+const modoStaging = process.argv.includes('--staging');
+const refExigido = modoStaging ? REF_STAGING_VERSIONADO : process.env.REQUIRE_SUPABASE_REF;
+const vaiMutar = process.argv.includes('--provision') || process.argv.includes('--validate');
+if (vaiMutar && !refExigido) {
+  abortar(
+    'MUTAÇÃO sem identidade de alvo: --provision/--validate exigem `--staging` (vincula ao ' +
+      'admai-staging versionado) ou REQUIRE_SUPABASE_REF no env. Fail-closed — nenhuma mutação.'
+  );
+}
+if (refExigido) {
+  let u = null;
+  try {
+    u = new URL(url);
+  } catch {
+    /* u=null ⇒ aborta abaixo */
+  }
+  if (!u || u.protocol !== 'https:' || u.hostname !== `${refExigido}.supabase.co`) {
+    abortar(
+      `Alvo exigido (${modoStaging ? '--staging' : 'REQUIRE_SUPABASE_REF'}=${refExigido}) requer SUPABASE_URL=https://${refExigido}.supabase.co — alvo divergente, abortado (nenhuma mutação).`
+    );
+  }
+}
+
 const modo =
   process.argv.find((a) => ['--check', '--provision', '--validate'].includes(a)) || '--check';
 const cliente = createClient(url, key, {
@@ -143,27 +178,48 @@ async function validate() {
   if (up.error) abortar(`Upload de teste falhou: ${up.error.message}`);
   ok(`Upload autorizado (service-role): ${BUCKET}/${nome}`);
 
-  // 1) URL assinada DEVE abrir (leitura autorizada).
-  const sig = await cliente.storage.from(BUCKET).createSignedUrl(nome, 60);
-  if (sig.error) {
-    await cliente.storage.from(BUCKET).remove([nome]);
-    abortar(`createSignedUrl falhou: ${sig.error.message}`);
+  /* [REVISOR 01a038fc achado 3 + DELTA] Cleanup em FINALLY, SEM falso PASS: o Supabase
+     devolve {error} numa Promise RESOLVIDA — `.then(ok)` sozinho registraria "removido"
+     com o objeto ainda lá. Cleanup que falha derruba a validação (exit != 0): objeto
+     órfão num bucket de documentos privados não pode passar em silêncio. */
+  let okAssinada = false;
+  let bloqueado = false;
+  let cleanupFalhou = null;
+  try {
+    // 1) URL assinada DEVE abrir (leitura autorizada).
+    const sig = await cliente.storage.from(BUCKET).createSignedUrl(nome, 60);
+    // throw (não abortar/process.exit): process.exit PULA o finally e órfã o objeto.
+    if (sig.error) throw new Error(`createSignedUrl falhou: ${sig.error.message}`);
+    const rSig = await fetch(sig.data.signedUrl);
+    okAssinada = rSig.ok;
+    info(`URL assinada → GET ${rSig.status} (${okAssinada ? 'abre, ok' : 'FALHOU'})`);
+
+    // 2) URL pública NÃO pode abrir (bucket privado bloqueia acesso indevido).
+    const pub = cliente.storage.from(BUCKET).getPublicUrl(nome);
+    const rPub = await fetch(pub.data.publicUrl);
+    bloqueado = !rPub.ok; // privado → 400/403/404
+    info(
+      `URL pública  → GET ${rPub.status} (${bloqueado ? 'BLOQUEADO, ok' : 'ABRIU — FALHA DE PRIVACIDADE'})`
+    );
+  } finally {
+    try {
+      const rm = await cliente.storage.from(BUCKET).remove([nome]);
+      if (rm.error)
+        cleanupFalhou = rm.error.message; // Promise resolvida com {error} ≠ sucesso
+      else info('Objeto de teste removido.');
+    } catch (e) {
+      cleanupFalhou = e.message;
+    }
+    if (cleanupFalhou) {
+      console.error(
+        `⚠️  cleanup FALHOU (${cleanupFalhou}) — remova ${BUCKET}/${nome} manualmente.`
+      );
+    }
   }
-  const rSig = await fetch(sig.data.signedUrl);
-  const okAssinada = rSig.ok;
-  info(`URL assinada → GET ${rSig.status} (${okAssinada ? 'abre, ok' : 'FALHOU'})`);
 
-  // 2) URL pública NÃO pode abrir (bucket privado bloqueia acesso indevido).
-  const pub = cliente.storage.from(BUCKET).getPublicUrl(nome);
-  const rPub = await fetch(pub.data.publicUrl);
-  const bloqueado = !rPub.ok; // privado → 400/403/404
-  info(
-    `URL pública  → GET ${rPub.status} (${bloqueado ? 'BLOQUEADO, ok' : 'ABRIU — FALHA DE PRIVACIDADE'})`
-  );
-
-  await cliente.storage.from(BUCKET).remove([nome]); // limpa
-  info('Objeto de teste removido.');
-
+  if (cleanupFalhou) {
+    abortar(`VALIDAÇÃO NÃO-PASS: objeto de teste órfão no bucket (${BUCKET}/${nome}).`);
+  }
   if (okAssinada && bloqueado) {
     ok('VALIDAÇÃO OK — upload + leitura assinada + bloqueio público (privacidade garantida).');
     process.exit(0);

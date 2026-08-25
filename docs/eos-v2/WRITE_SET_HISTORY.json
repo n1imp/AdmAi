@@ -51616,9 +51616,31 @@
       "bloqueiaIntegracao": false,
       "nota": "Fatia base do application staging (D1 01a038e5): guards boot+build, contrato env, workflow, fixtures A/B, E2E staging, deploy package. REVISOR 01a038fc devolveu CORRECOES_NECESSARIAS (6 achados: binding spoofavel, cross-site cookies, storage ref, secrets exemplo/nomes, tenant-negative E2E, governanca) -> corrigidos na fatia REV1 subsequente. Deploy real segue BLOCKED_D2_COST.",
       "declaradoEm": "2026-08-25T12:32:10.529Z"
+    },
+    {
+      "sliceId": "STG-APP-STAGING-REV1",
+      "titulo": "Correcoes do REVISOR 01a038fc (6 achados): binding estrutural, cookies cross-site, storage ref, secrets, tenant-negative E2E, governanca",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Correcoes do REVISOR 01a038fc: rodada 1 (6 achados) + DELTA-2 (4 residuais) + DELTA-3 = APROVADO. Anti-spoof binding estrutural; cookies cross-site staging (None+Secure + Origin-guard testado); storage com identidade obrigatoria em toda mutacao + --staging versionado + cleanup finally; secrets *_STAGING e exemplos sem valores; TENANT-NEGATIVE materializado; governanca corrigida. bot 455/456 (1 falha pre-existente provada independente), painel 252/252.",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Codex REVISOR thread 01a038fc (veredito DELTA-2, exigencia literal: 'adicionar --staging aos scripts bucket:*') + diretiva do usuario EOS ADMAI APPLICATION STAGING §9 ('Pode executar automaticamente: mudancas locais/repo D1; ... scripts')",
+        "justificativa": "chaveiro-bot/package.json (3 scripts bucket:*) foi escrito FORA do write set STG-APP-STAGING-REV1 declarado: o achado do REVISOR DELTA-2 (entry points de staging sem o vinculo versionado --staging) so surgiu depois da declaracao, e a correcao exigida toca exatamente esse arquivo. A escrita e legitima e minima (3 linhas, so acrescenta a flag --staging aos comandos que ja usavam .env.staging); o que faltou foi a declaracao previa. Registrada em AGENT_DECISIONS (D-STG-APP-STAGING-ARCH-01, rodada DELTA-2) e no ledger (STG-RUNTIME evidenceRefs).",
+        "caminhos": [
+          "chaveiro-bot/package.json"
+        ]
+      },
+      "declaradoEm": "2026-08-25T13:05:39.082Z"
     }
   ],
-  "geradoEm": "2026-08-25T13:02:53.193Z",
+  "geradoEm": "2026-08-25T13:43:02.796Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

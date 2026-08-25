@@ -16,12 +16,19 @@ export const REF_STAGING = 'qsuufuulxfkkeasgxhcv'; // admai-staging (ÚNICO alvo
 export const REF_PRODUCAO = 'disljhkypaxpyzvbooge'; // AdmAi produção (PROIBIDO em staging)
 export const ORIGEM_FRONTEND_STAGING = 'https://staging.admai-painel.pages.dev';
 
-/** Extrai o project-ref de uma connection string do Supabase (pooler `postgres.<ref>` ou
- *  direta `db.<ref>.supabase.co`) por parsing ESTRUTURAL — nunca logamos a URL (credencial). */
+/** Extrai o project-ref de uma connection string do Supabase por parsing ESTRUTURAL —
+ *  nunca logamos a URL (credencial). [REVISOR 01a038fc achado 1] O ref SÓ é aceito quando
+ *  o HOSTNAME também é estruturalmente do Supabase: `postgres.<ref>@evil.example` extraía
+ *  o ref do username em qualquer host e falsificava o vínculo positivo. Formas aceitas:
+ *    pooler:  user `postgres.<ref>` @ `*.pooler.supabase.com`
+ *    direta:  host `db.<ref>.supabase.co`
+ *  Qualquer outra combinação ⇒ null (fail-closed). */
 export function refDaConexaoSupabase(urlBruta) {
   try {
     const u = new URL(urlBruta);
-    if (u.username.startsWith('postgres.')) return u.username.slice('postgres.'.length);
+    if (u.username.startsWith('postgres.') && /(^|\.)pooler\.supabase\.com$/.test(u.hostname)) {
+      return u.username.slice('postgres.'.length);
+    }
     const m = u.hostname.match(/^db\.([a-z0-9]{16,})\.supabase\.co$/);
     return m ? m[1] : null;
   } catch {
@@ -216,18 +223,36 @@ export const schema = z
           'SUPABASE_URL é obrigatória em staging (Storage/Auth do admai-staging).'
         );
       } else {
-        let host = null;
+        // [REVISOR 01a038fc achado 1] URL COMPLETA exata: https obrigatório (host certo
+        // com http:// passava — downgrade de transporte no caminho do Storage/Auth).
+        let u = null;
         try {
-          host = new URL(cfg.SUPABASE_URL).hostname;
+          u = new URL(cfg.SUPABASE_URL);
         } catch {
-          /* host=null ⇒ reprova abaixo */
+          /* u=null ⇒ reprova abaixo */
         }
-        if (host !== `${REF_STAGING}.supabase.co`) {
+        if (!u || u.protocol !== 'https:' || u.hostname !== `${REF_STAGING}.supabase.co`) {
           falha(
             'SUPABASE_URL',
-            `SUPABASE_URL deve ser https://${REF_STAGING}.supabase.co — abortado.`
+            `SUPABASE_URL deve ser exatamente https://${REF_STAGING}.supabase.co (https obrigatório) — abortado.`
           );
         }
+      }
+
+      // 3b) Storage é OBRIGATÓRIO em staging [REVISOR 01a038fc achado 3]: sem service-role
+      //     ou sem STORAGE_STRICT=true o upload degrada para o disco local do container —
+      //     atrás do CDN isso é 404 intermitente e um staging que MENTE sobre a produção.
+      if (!cfg.SUPABASE_SERVICE_ROLE_KEY) {
+        falha(
+          'SUPABASE_SERVICE_ROLE_KEY',
+          'SUPABASE_SERVICE_ROLE_KEY (do admai-staging) é obrigatória em staging — Storage server-side.'
+        );
+      }
+      if (cfg.STORAGE_STRICT !== 'true') {
+        falha(
+          'STORAGE_STRICT',
+          'APP_ENV=staging exige STORAGE_STRICT=true (upload nunca cai no disco atrás do CDN).'
+        );
       }
 
       // 4) CORS: origem EXATA do frontend staging (credenciais atravessam; '*',

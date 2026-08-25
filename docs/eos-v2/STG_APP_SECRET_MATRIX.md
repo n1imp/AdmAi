@@ -45,8 +45,8 @@ sintéticas de teste, sem valor real).
 
 | Nome | Classe | Observação |
 |---|---|---|
-| `CLOUDFLARE_API_TOKEN` | **PROVIDER_SECRET** | escopo Pages: publica o preview `staging` do projeto `admai-painel` |
-| `CLOUDFLARE_ACCOUNT_ID` | PROVIDER_SECRET | id da conta (não é segredo forte, mas vive no store) |
+| `CLOUDFLARE_API_TOKEN_STAGING` | **PROVIDER_SECRET** | escopo Pages: publica o preview `staging` do projeto `admai-painel`. Sufixo `_STAGING` obrigatório [REVISOR `01a038fc`]: nome genérico cairia no fallback de secrets de repo/org (produção) quando ausente no Environment |
+| `CLOUDFLARE_ACCOUNT_ID_STAGING` | PROVIDER_SECRET | id da conta (não é segredo forte, mas vive no store; mesmo racional do sufixo) |
 
 ## Testes/fixtures (nunca produção; sem valor real)
 
@@ -56,6 +56,15 @@ sintéticas de teste, sem valor real).
 | `STAGING_SUPABASE_ANON_KEY` | PUBLIC_CONFIG | negative control PostgREST (H) |
 | `SEED_STAGING_SENHA` | TEST_ONLY_SECRET | senha sintética dos usuários fixture A/B (via env; sem default; nunca impressa) |
 | `DEMO_SENHA` | TEST_ONLY_SECRET | idem, seeder demo local (já existente) |
+
+## Nota de auth cross-site (staging)
+
+Produção é **same-site** (subdomínios de `chaveirobot.com.br`) e o cookie de refresh usa
+`SameSite=Strict`. Staging (`staging.admai-painel.pages.dev` ↔ Railway) é **cross-site**: com
+`APP_ENV=staging` o backend emite o cookie com `SameSite=None; Secure` (fonte única em
+`services/auth.js`), o painel envia `withCredentials` e as rotas de sessão recusam `Origin`
+divergente (CSRF-compensação). Nenhum secret novo — mas o **teste real de refresh cross-site em
+browser** é prova obrigatória do STG-RUNTIME (Passo 4 do deploy package).
 
 ## Regras de manuseio
 

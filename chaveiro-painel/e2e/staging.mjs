@@ -342,6 +342,70 @@ const JORNADAS = [
   },
 ];
 
+// [REVISOR 01a038fc achado 5] TENANT-NEGATIVE materializado: A não lê nem muta B,
+// provado no BACKEND real (status HTTP), com controles positivos das MESMAS rotas
+// (B lê o próprio recurso; A lê o próprio) — a negação nunca é "rota inexistente".
+JORNADAS.push({
+  nome: `TENANT-NEGATIVE ${VIEWPORT}px: B expõe id → A lê o PRÓPRIO (200) mas NÃO lê/deleta o de B (403/404)`,
+  async executar() {
+    const lerLista = (n) =>
+      n.aval(`(async () => {
+        const t = localStorage.getItem('admai_token');
+        const r = await fetch(${JSON.stringify(API)} + '/servicos', {
+          headers: { Authorization: 'Bearer ' + t },
+        });
+        const j = r.status === 200 ? await r.json() : null;
+        return { status: r.status, ids: j && Array.isArray(j.data) ? j.data.map((s) => s.id) : [] };
+      })()`);
+
+    // Sessão 1 — dono.b.stg: controle positivo do TENANT B + captura do id alvo.
+    let idB;
+    {
+      const nb = await abrirNavegador();
+      try {
+        await nb.loginUi('dono.b.stg');
+        await espera(1500);
+        const lista = await lerLista(nb);
+        if (lista.status !== 200 || !lista.ids.length) {
+          throw new Error(`B não listou os próprios serviços (status ${lista.status}, ${lista.ids.length} ids)`);
+        }
+        idB = lista.ids[0];
+      } finally {
+        await nb.fechar();
+      }
+    }
+
+    // Sessão 2 — dono.a.stg: positivo próprio nas MESMAS rotas + negativos contra idB.
+    const na = await abrirNavegador();
+    try {
+      await na.loginUi('dono.a.stg');
+      await espera(1500);
+      const listaA = await lerLista(na);
+      if (listaA.status !== 200 || !listaA.ids.length) {
+        throw new Error(`A não listou os próprios serviços (status ${listaA.status})`);
+      }
+      if (listaA.ids.includes(idB)) {
+        throw new Error(`VAZAMENTO: o serviço ${idB} do tenant B apareceu na lista do tenant A`);
+      }
+      const idA = listaA.ids[0];
+      const proprio = await na.apiStatus('GET', `/servicos/${idA}`);
+      if (proprio !== 200) throw new Error(`controle positivo falhou: GET próprio ${idA} → ${proprio}`);
+      const leituraB = await na.apiStatus('GET', `/servicos/${idB}`);
+      if (![403, 404].includes(leituraB)) {
+        throw new Error(`A LEU o serviço ${idB} do tenant B (HTTP ${leituraB}; esperado 403/404)`);
+      }
+      const deleteB = await na.apiStatus('DELETE', `/servicos/${idB}`);
+      if (![403, 404].includes(deleteB)) {
+        throw new Error(`A MUTOU (DELETE) o serviço ${idB} do tenant B (HTTP ${deleteB}; esperado 403/404)`);
+      }
+      await na.logoutUi();
+      return `A→A ok (GET ${idA}=200); A→B negado (read=${leituraB}, delete=${deleteB}); sem vazamento na listagem`;
+    } finally {
+      await na.fechar();
+    }
+  },
+});
+
 // ── Runner ───────────────────────────────────────────────────────────────────
 console.log(`STG-E2E @ ${BASE} (API ${API}) — viewport ${VIEWPORT}×${ALTURA}${MOBILE ? ' mobile' : ''}`);
 let falhas = 0;

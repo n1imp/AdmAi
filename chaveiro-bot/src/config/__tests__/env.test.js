@@ -107,6 +107,9 @@ const stagingValida = {
   DATABASE_URL: `postgresql://postgres.${REF_STAGING}:pw@${POOLER}:6543/postgres`,
   DIRECT_URL: `postgresql://postgres.${REF_STAGING}:pw@${POOLER}:5432/postgres`,
   SUPABASE_URL: `https://${REF_STAGING}.supabase.co`,
+  // [REVISOR 01a038fc achado 3] storage é obrigatório em staging:
+  SUPABASE_SERVICE_ROLE_KEY: 'srk_staging_sintetica',
+  STORAGE_STRICT: 'true',
   ALLOWED_ORIGIN: ORIGEM_FRONTEND_STAGING,
   FRONTEND_URL: ORIGEM_FRONTEND_STAGING,
 };
@@ -170,6 +173,31 @@ describe('guard APP_ENV=staging (fail-closed; vínculo positivo ao admai-staging
     esperaFalhaEm({ SUPABASE_URL: `https://${REF_PRODUCAO}.supabase.co` }, 'SUPABASE_URL');
     esperaFalhaEm({ SUPABASE_URL: undefined }, 'SUPABASE_URL');
     esperaFalhaEm({ SUPABASE_URL: 'https://exemplo.com' }, 'SUPABASE_URL');
+  });
+
+  it('5b. [REVISOR 01a038fc] SUPABASE_URL http:// (host certo, transporte errado) reprova', () => {
+    esperaFalhaEm({ SUPABASE_URL: `http://${REF_STAGING}.supabase.co` }, 'SUPABASE_URL');
+  });
+
+  it('5c. [REVISOR 01a038fc] SPOOF: user postgres.<ref-staging> em HOST ARBITRÁRIO reprova', () => {
+    // Antes do fix, o ref era extraído do username em QUALQUER hostname — evil.example
+    // com o user do staging passava o "vínculo positivo".
+    esperaFalhaEm(
+      { DATABASE_URL: `postgresql://postgres.${REF_STAGING}:pw@evil.example:6543/postgres` },
+      'DATABASE_URL'
+    );
+    esperaFalhaEm(
+      {
+        DIRECT_URL: `postgresql://postgres.${REF_STAGING}:pw@banco-falso.attacker.dev:5432/postgres`,
+      },
+      'DIRECT_URL'
+    );
+  });
+
+  it('5d. [REVISOR 01a038fc] storage obrigatório: sem SERVICE_ROLE_KEY reprova; STORAGE_STRICT != true reprova', () => {
+    esperaFalhaEm({ SUPABASE_SERVICE_ROLE_KEY: undefined }, 'SUPABASE_SERVICE_ROLE_KEY');
+    esperaFalhaEm({ STORAGE_STRICT: undefined }, 'STORAGE_STRICT');
+    esperaFalhaEm({ STORAGE_STRICT: 'false' }, 'STORAGE_STRICT');
   });
 
   it('6. ALLOWED_ORIGIN localhost reprova (igualdade exata)', () => {
@@ -239,6 +267,15 @@ describe('guard APP_ENV=staging (fail-closed; vínculo positivo ao admai-staging
     ).toBe(REF_STAGING);
     expect(refDaConexaoSupabase('postgresql://u:p@localhost:5432/db')).toBe(null);
     expect(refDaConexaoSupabase('nao-e-url')).toBe(null);
+    // [REVISOR 01a038fc] user do Supabase em host NÃO-Supabase não extrai ref (anti-spoof):
+    expect(
+      refDaConexaoSupabase(`postgresql://postgres.${REF_STAGING}:pw@evil.example:6543/x`)
+    ).toBe(null);
+    expect(
+      refDaConexaoSupabase(
+        `postgresql://postgres.${REF_STAGING}:pw@pooler.supabase.com.evil.io:6543/x`
+      )
+    ).toBe(null);
   });
 });
 
@@ -285,6 +322,8 @@ describe('boot real (spawn de node importando env.js)', () => {
       DATABASE_URL: `postgresql://postgres.${REF_STAGING}:pw@${POOLER}:6543/postgres`,
       DIRECT_URL: `postgresql://postgres.${REF_STAGING}:pw@${POOLER}:5432/postgres`,
       SUPABASE_URL: `https://${REF_STAGING}.supabase.co`,
+      SUPABASE_SERVICE_ROLE_KEY: 'srk_staging_sintetica',
+      STORAGE_STRICT: 'true',
       ALLOWED_ORIGIN: ORIGEM_FRONTEND_STAGING,
       FRONTEND_URL: ORIGEM_FRONTEND_STAGING,
       API_TOKEN: 't',

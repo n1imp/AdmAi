@@ -14,6 +14,7 @@ import {
   criarRefreshEmTx,
   setRefreshCookie,
   lockUsuario,
+  COOKIE_OPTS_REFRESH,
 } from '../services/auth.js';
 import { permissoesEfetivas } from '../services/permissoes.js';
 import { avaliarForcaSenha } from '../services/senha.js';
@@ -69,11 +70,28 @@ async function gerarUsernameUnico(base) {
   return username;
 }
 
-const COOKIE_OPTS = {
-  httpOnly: true,
-  sameSite: 'strict',
-  path: '/api/auth',
-};
+/* [REVISOR 01a038fc achado 2] Uma ÚNICA fonte de opts (services/auth.js): a duplicata
+   local com sameSite fixo divergiria do set em staging e o clearCookie deixaria de casar
+   (browsers só limpam cookie com os MESMOS atributos). */
+const COOKIE_OPTS = COOKIE_OPTS_REFRESH;
+
+/* [REVISOR 01a038fc achado 2 + DELTA] CSRF-compensação do SameSite=None de staging: quando
+   o browser declara `Origin` e ela não é o painel autorizado, as rotas de sessão recusam.
+   Requisições SEM Origin (curl/supertest/health) passam — browsers SEMPRE enviam Origin
+   em POST cross-site, que é o vetor. Inerte fora de staging (produção segue Strict).
+   A DECISÃO é uma função pura EXPORTADA para o teste de regressão exercitar os três
+   ramos (divergente/permitida/ausente) sem subir o app em modo staging. */
+export function origemDeSessaoRecusada(appEnv, allowedOrigin, origin) {
+  if (appEnv !== 'staging') return false;
+  return Boolean(origin) && origin !== allowedOrigin;
+}
+
+router.use((req, res, next) => {
+  if (origemDeSessaoRecusada(env.APP_ENV, env.ALLOWED_ORIGIN, req.headers.origin)) {
+    return res.status(403).json({ erro: 'Origem não autorizada' });
+  }
+  next();
+});
 
 async function emitirRefreshCookie(res, usuarioId) {
   const raw = await criarRefreshEmTx(prisma, usuarioId);

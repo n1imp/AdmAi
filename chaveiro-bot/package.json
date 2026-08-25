@@ -20,9 +20,9 @@
     "prisma:studio": "npx prisma studio",
     "prisma:sqlite": "node prisma/sqlite-schema.mjs",
     "validate:staging": "node scripts/validate-staging.mjs",
-    "bucket:check": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --check",
-    "bucket:provision": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --provision",
-    "bucket:validate": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --validate"
+    "bucket:check": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --staging --check",
+    "bucket:provision": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --staging --provision",
+    "bucket:validate": "node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --staging --validate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",

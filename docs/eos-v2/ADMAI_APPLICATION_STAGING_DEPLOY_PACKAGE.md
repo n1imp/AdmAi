@@ -20,9 +20,10 @@ frontend = **branch preview fixa `staging`** do projeto Cloudflare Pages `admai-
 1. **Branch `staging`** no GitHub: criar a partir do commit atual de `fix/seguranca-criticos`
    (ou de `master` quando esta frente for integrada). O workflow e o Railway apontam para ela.
 2. **GitHub Environment `staging`** (Settings → Environments → New environment → `staging`):
-   - Secrets (store EXCLUSIVO — nunca reutilizar os de produção):
+   - Secrets (store EXCLUSIVO — nunca reutilizar os de produção; sufixo `_STAGING` obrigatório,
+     pois nomes genéricos caem no fallback de secrets de repo/org [REVISOR `01a038fc`]):
      - `VITE_API_URL_STAGING` = `https://<backend-staging>/api` (preencher no Passo 1.6)
-     - `CLOUDFLARE_API_TOKEN` (escopo Pages: edit) · `CLOUDFLARE_ACCOUNT_ID`
+     - `CLOUDFLARE_API_TOKEN_STAGING` (escopo Pages: edit) · `CLOUDFLARE_ACCOUNT_ID_STAGING`
    - (Opcional) Protection rules: required reviewers para deploy staging.
 
 ## Passo 1 — Backend staging (Railway) — **requer D2 (custo)**
@@ -93,8 +94,9 @@ Usuário Supabase **authenticated-unprivileged** (para STG-SEC-RLS-01 **I**): Su
 | 2 | Guard negativo (opcional, recomendado) | trocar `STAGING_REF` p/ valor errado → redeploy | boot **aborta** (Logs); restaurar |
 | 3 | Frontend carrega | browser real em `FRONTEND_STAGING_URL` | página renderiza; zero chamadas a produção (Network) |
 | 4 | **Login real** | `dono.a.stg` na UI | dashboard com dados do admai-staging |
+| 4b | **Refresh cross-site** [REVISOR `01a038fc`] | após o login, DevTools → Application: cookie `refresh_token` presente (`SameSite=None; Secure`); apagar `admai_token` do localStorage e navegar → sessão se recupera via `/auth/refresh` | refresh 200 + sessão continua; provar também que o browser não bloqueou o cookie (políticas de third-party cookies) |
 | 5 | Backend smoke completo | `cd chaveiro-bot && npm run validate:staging` | migrate deploy no-op + generate + integração verdes |
-| 6 | E2E por papel | `ADMAI_URL=<front> ADMAI_API_URL=<back>/api STAGING_FIXTURE_SENHA=... node e2e/staging.mjs` | 3 jornadas OK (owner/manager/employee; RBAC negativo = 401/403 do backend) |
+| 6 | E2E por papel | `ADMAI_URL=<front> ADMAI_API_URL=<back>/api STAGING_FIXTURE_SENHA=... node e2e/staging.mjs` | 4 jornadas OK (owner/manager/employee + TENANT-NEGATIVE A→B; RBAC e tenant negativos = 401/403/404 do backend) |
 | 7 | Tenant-negative (mecanismo) | `node --env-file=.env.staging scripts/validate-rls-staging.mjs` | GUC não vaza sob pooler |
 | 8 | Mobile | `node e2e/staging.mjs --viewport=360` (e 390/1440/1920) | jornadas OK nos 4 viewports |
 
@@ -102,10 +104,10 @@ Usuário Supabase **authenticated-unprivileged** (para STG-SEC-RLS-01 **I**): Su
 
 | Subgate | Comando | PASS |
 |---|---|---|
-| **STG-03-DOC-BUCKET** | `npm run bucket:provision` (com `ALLOW_STORAGE_PROVISION=true`) → `npm run bucket:validate` | bucket `documentos-tecnico` privado; URL assinada abre; pública bloqueia; objeto de teste removido |
+| **STG-03-DOC-BUCKET** | `ALLOW_STORAGE_PROVISION=true node --env-file=.env.staging scripts/provision-bucket-documentos.mjs --staging --provision` → `... --staging --validate` (a flag `--staging` fixa o ref VERSIONADO do admai-staging — um `.env` errado não redefine o alvo [DELTA `01a038fc`]) | bucket `documentos-tecnico` privado; URL assinada abre; pública bloqueia; objeto de teste removido |
 | **STG-SEC-RLS-01 H (mutations)** | `node --env-file=<env com URL+anon key> scripts/staging-rls-negative-control.mjs` | POST/PATCH/DELETE → 401/403/404 |
 | **STG-SEC-RLS-01 I** | mesmo script com `STAGING_AUTHENTICATED_JWT` | `/auth/v1/user`=200 e matriz 26 negada |
-| **STG-SEC-RLS-01 J** | `node --env-file=.env.staging scripts/smoke-storage.mjs documentos-tecnico private` | upload+signed URL+delete OK |
+| **STG-SEC-RLS-01 J** | `node --env-file=.env.staging scripts/smoke-storage.mjs --staging documentos-tecnico private` | upload+signed URL+delete OK |
 | **STG-SEC-RLS-01 K** | prova 5 do Passo 4 | verde |
 
 ## Rollback / Observabilidade
