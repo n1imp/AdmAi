@@ -8,9 +8,40 @@ dotenv.config({
   path: process.env.VITEST || process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
 });
 
+/* ── STG-APP-STAGING-01: identidade dos projetos Supabase (D1 thread 01a038e5) ──
+   O guard de staging é fail-closed e usa VÍNCULO POSITIVO ao ref de staging além da
+   denylist de produção: denylist sozinha não prova que a conexão é do projeto certo.
+   Constantes exportadas para os testes de sabotagem não duplicarem strings mágicas. */
+export const REF_STAGING = 'qsuufuulxfkkeasgxhcv'; // admai-staging (ÚNICO alvo autorizado)
+export const REF_PRODUCAO = 'disljhkypaxpyzvbooge'; // AdmAi produção (PROIBIDO em staging)
+export const ORIGEM_FRONTEND_STAGING = 'https://staging.admai-painel.pages.dev';
+
+/** Extrai o project-ref de uma connection string do Supabase (pooler `postgres.<ref>` ou
+ *  direta `db.<ref>.supabase.co`) por parsing ESTRUTURAL — nunca logamos a URL (credencial). */
+export function refDaConexaoSupabase(urlBruta) {
+  try {
+    const u = new URL(urlBruta);
+    if (u.username.startsWith('postgres.')) return u.username.slice('postgres.'.length);
+    const m = u.hostname.match(/^db\.([a-z0-9]{16,})\.supabase\.co$/);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 // Exportado para testes unitários (valida o cross-field sem disparar process.exit).
 export const schema = z
   .object({
+    // ── Ambiente de APLICAÇÃO, ortogonal a NODE_ENV (D1 01a038e5) ────────────
+    // NODE_ENV=production controla comportamento seguro/perf do runtime; APP_ENV
+    // distingue o AMBIENTE (staging roda NODE_ENV=production + APP_ENV=staging,
+    // sem relaxar nenhum guard de produção). Ausente = comportamento atual intacto.
+    APP_ENV: z.enum(['production', 'staging', 'development', 'test']).optional(),
+    // Allowlist positiva do staging (obrigatória quando APP_ENV=staging).
+    STAGING_REF: z.string().optional(),
+    // Denylist extra (refs proibidos, separados por vírgula) — defesa em profundidade;
+    // o ref de produção conhecido é SEMPRE negado em staging, com ou sem esta var.
+    PROD_REF_BLOCKLIST: z.string().optional(),
     DATABASE_URL: z.string().min(1),
     // F4-RLS: conexão do RUNTIME de REQUEST via role app_rw (SEM BYPASSRLS) → ativa a RLS
     // nas queries escopadas (prismaParaEmpresa). Ausente = reusa DATABASE_URL (role atual,
@@ -125,6 +156,127 @@ export const schema = z
     STRIPE_PRICE_ID_PRO: z.string().optional(),
   })
   .superRefine((cfg, ctx) => {
+    /* ── ANTI-PRODUCTION GUARD (APP_ENV=staging) — fail-closed no BOOT ──────────
+       [STG-APP-STAGING-01 · D1 thread 01a038e5] Staging DEVE ser incapaz de tocar
+       produção: o parse falha (safeParse + process.exit(1) abaixo) antes de abrir
+       qualquer conexão. Regras: vínculo POSITIVO de toda conexão ao REF_STAGING
+       (denylist sozinha não prova identidade), origens comparadas por IGUALDADE
+       EXATA (nunca substring) e NENHUMA mensagem contém a URL (credenciais).
+       APP_ENV ausente/≠staging ⇒ este bloco é inerte (comportamento atual). */
+    if (cfg.APP_ENV === 'staging') {
+      const falha = (path, message) =>
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+
+      // 1) Allowlist positiva do alvo.
+      if (cfg.STAGING_REF !== REF_STAGING) {
+        falha(
+          'STAGING_REF',
+          `APP_ENV=staging exige STAGING_REF=${REF_STAGING} (admai-staging). Valor ausente ou divergente — abortado.`
+        );
+      }
+
+      // 2) Toda conexão a banco/Supabase: ref de produção NEGADO (defesa em
+      //    profundidade, string bruta) E ref extraído estruturalmente DEVE ser o
+      //    de staging (fail-closed: forma desconhecida/localhost também reprova).
+      const refsNegados = [
+        REF_PRODUCAO,
+        ...(cfg.PROD_REF_BLOCKLIST ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ];
+      const conexoes = [
+        ['DATABASE_URL', cfg.DATABASE_URL, true],
+        ['DATABASE_URL_APP', cfg.DATABASE_URL_APP, false], // opcional; vinculada quando presente
+        ['DIRECT_URL', cfg.DIRECT_URL, true], // migrations no boot dependem dela
+      ];
+      for (const [nome, valor, obrigatoria] of conexoes) {
+        if (!valor) {
+          if (obrigatoria)
+            falha(nome, `${nome} é obrigatória em staging (conexão do admai-staging).`);
+          continue;
+        }
+        if (refsNegados.some((ref) => valor.includes(ref))) {
+          falha(nome, `${nome} contém um ref de PRODUÇÃO/bloqueado — staging abortado.`);
+          continue;
+        }
+        if (refDaConexaoSupabase(valor) !== REF_STAGING) {
+          falha(
+            nome,
+            `${nome} não está vinculada ao projeto admai-staging (${REF_STAGING}) — vínculo positivo obrigatório, abortado.`
+          );
+        }
+      }
+
+      // 3) SUPABASE_URL (Storage/Auth): obrigatória em staging (sem ela o upload cai
+      //    para o disco local — quebra atrás do CDN) e vinculada ao host do staging.
+      if (!cfg.SUPABASE_URL) {
+        falha(
+          'SUPABASE_URL',
+          'SUPABASE_URL é obrigatória em staging (Storage/Auth do admai-staging).'
+        );
+      } else {
+        let host = null;
+        try {
+          host = new URL(cfg.SUPABASE_URL).hostname;
+        } catch {
+          /* host=null ⇒ reprova abaixo */
+        }
+        if (host !== `${REF_STAGING}.supabase.co`) {
+          falha(
+            'SUPABASE_URL',
+            `SUPABASE_URL deve ser https://${REF_STAGING}.supabase.co — abortado.`
+          );
+        }
+      }
+
+      // 4) CORS: origem EXATA do frontend staging (credenciais atravessam; '*',
+      //    localhost, placeholder ou produção reprovam TODOS pela igualdade exata).
+      if (cfg.ALLOWED_ORIGIN !== ORIGEM_FRONTEND_STAGING) {
+        falha(
+          'ALLOWED_ORIGIN',
+          `APP_ENV=staging exige ALLOWED_ORIGIN=${ORIGEM_FRONTEND_STAGING} (igualdade exata; ausente/'*'/localhost/produção reprovam).`
+        );
+      }
+
+      // 5) FRONTEND_URL (links de email): mesma origem do frontend staging.
+      let origemFrontend = null;
+      try {
+        origemFrontend = cfg.FRONTEND_URL ? new URL(cfg.FRONTEND_URL).origin : null;
+      } catch {
+        /* origem=null ⇒ reprova */
+      }
+      if (origemFrontend !== ORIGEM_FRONTEND_STAGING) {
+        falha(
+          'FRONTEND_URL',
+          `APP_ENV=staging exige FRONTEND_URL com origem ${ORIGEM_FRONTEND_STAGING} — abortado.`
+        );
+      }
+
+      // 6) PUBLIC_URL (URL pública do PRÓPRIO backend staging), quando presente:
+      //    https e sem qualquer ref/host de produção.
+      if (cfg.PUBLIC_URL) {
+        const publicaOk = (() => {
+          try {
+            const u = new URL(cfg.PUBLIC_URL);
+            if (u.protocol !== 'https:') return false;
+            if (refsNegados.some((ref) => cfg.PUBLIC_URL.includes(ref))) return false;
+            if (u.hostname === 'admai-production.up.railway.app') return false;
+            if (u.hostname === 'api.chaveirobot.com.br') return false;
+            return true;
+          } catch {
+            return false;
+          }
+        })();
+        if (!publicaOk) {
+          falha(
+            'PUBLIC_URL',
+            'PUBLIC_URL de staging deve ser https e não pode apontar para produção.'
+          );
+        }
+      }
+    }
+
     // Em produção, CORS NUNCA pode cair no wildcard '*': exige uma origem explícita
     // (o painel). Sem isso, qualquer site poderia chamar a API com credenciais do usuário.
     if (cfg.NODE_ENV === 'production' && !cfg.RESEND_API_KEY) {

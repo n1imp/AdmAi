@@ -51602,9 +51602,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Pacote de apply externo do RLS v2 (PURE_SQL). D1 01a0366d (refinamentos aceitos) + REVISOR 01a03681 CORRECOES_NECESSARIAS -> 5 correcoes -> REVISOR DELTA APROVADO. Provas locais: byte-equivalence exata, A-G end-to-end nos .pure.sql, fault injection, sabotagem G. Finding STG-SEC-RLS-01 = READY (READY_FOR_EXTERNAL_APPLY); apply real e provas A-M sao do executor externo; ABERTO ate elas.",
       "declaradoEm": "2026-08-25T01:04:56.666Z"
+    },
+    {
+      "sliceId": "STG-APP-STAGING-01",
+      "titulo": "Application staging: anti-prod guards (boot+build), contrato de env, workflow staging, fixtures A/B, E2E staging, deploy package",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Fatia base do application staging (D1 01a038e5): guards boot+build, contrato env, workflow, fixtures A/B, E2E staging, deploy package. REVISOR 01a038fc devolveu CORRECOES_NECESSARIAS (6 achados: binding spoofavel, cross-site cookies, storage ref, secrets exemplo/nomes, tenant-negative E2E, governanca) -> corrigidos na fatia REV1 subsequente. Deploy real segue BLOCKED_D2_COST.",
+      "declaradoEm": "2026-08-25T12:32:10.529Z"
     }
   ],
-  "geradoEm": "2026-08-25T01:37:11.288Z",
+  "geradoEm": "2026-08-25T13:02:53.193Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

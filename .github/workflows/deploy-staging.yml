@@ -1,0 +1,95 @@
+name: Deploy Staging
+
+# STG-APP-STAGING-01 (D1 thread 01a038e5): este workflow é o ÚNICO WRITER do
+# preview fixo `staging` do painel (o preview nativo Git↔Cloudflare da branch
+# `staging` fica DESLIGADO no dashboard — dois pipelines escrevendo o mesmo alias
+# criam corrida e config divergente; foi exatamente o incidente CSP de 2026-08-05).
+#
+# Publica SOMENTE com `--branch=staging` (branch de produção do projeto Pages é
+# `master`; um deploy de branch preview jamais promove o domínio de produção).
+# O backend staging NÃO é deployado aqui: é serviço Railway separado com
+# integração nativa na branch `staging` (ver ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE).
+#
+# Secrets vêm do GitHub Environment `staging` (store EXCLUSIVO — o deploy.yml de
+# produção não o enxerga): VITE_API_URL_STAGING, CLOUDFLARE_API_TOKEN,
+# CLOUDFLARE_ACCOUNT_ID.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [staging]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy-frontend-staging:
+    name: Painel → Cloudflare Pages (branch preview `staging`)
+    runs-on: ubuntu-latest
+    environment: staging
+    # Guard 1 — NUNCA rodar sobre master/produção (nem via dispatch acidental).
+    if: ${{ github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Guard 2 — allowlist/denylist de ref do Supabase na CONFIG do build:
+      # o VITE_API_URL de staging não pode conter o ref/hosts de produção e o
+      # repositório desta branch não pode redirecionar o alvo para produção.
+      - name: Guard anti-produção (config)
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+        run: |
+          set -eu
+          if [ -z "${VITE_API_URL:-}" ]; then
+            echo "::error::VITE_API_URL_STAGING ausente no Environment staging."; exit 1; fi
+          case "$VITE_API_URL" in
+            *disljhkypaxpyzvbooge*|*api.chaveirobot.com.br*|*admai-production.up.railway.app*)
+              echo "::error::VITE_API_URL_STAGING aponta para PRODUÇÃO — abortado."; exit 1;;
+          esac
+          echo "guard config ok (alvo não é produção)."
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: chaveiro-painel/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: chaveiro-painel
+
+      # Guard 3 (fail-closed, mesmo binário do dev local): build:staging roda
+      # scripts/guard-frontend-build.mjs ANTES do vite build — https obrigatório,
+      # path EXATAMENTE /api (contrato API_BASE_WITH_PREFIX), nega produção/
+      # localhost/placeholder/vazio. Depois, vite build + gerar-headers (CSP).
+      - name: Build staging (guard + build + CSP)
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+        run: npm run build:staging
+        working-directory: chaveiro-painel
+
+      # Guard 4 — o ARTEFATO buildado precisa provar o alvo: o connect-src do
+      # _headers deve conter a origem staging da API e NÃO conter produção.
+      - name: Guard anti-produção (artefato)
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+        run: |
+          set -eu
+          test -f chaveiro-painel/dist/_headers
+          ORIGEM_API=$(node -e "console.log(new URL(process.env.VITE_API_URL).origin)")
+          grep -qF "$ORIGEM_API" chaveiro-painel/dist/_headers \
+            || { echo "::error::_headers sem a origem da API staging ($ORIGEM_API) no connect-src."; exit 1; }
+          if grep -qE "api\.chaveirobot\.com\.br|admai-production\.up\.railway\.app|disljhkypaxpyzvbooge" \
+               chaveiro-painel/dist/_headers; then
+            echo "::error::_headers contém origem de PRODUÇÃO — abortado."; exit 1; fi
+          echo "artefato ok: connect-src aponta para staging."
+
+      - name: Publish preview `staging`
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # --branch=staging é OBRIGATÓRIO e fixo: publica o alias
+          # staging.admai-painel.pages.dev, nunca o domínio de produção.
+          command: pages deploy chaveiro-painel/dist --project-name=admai-painel --branch=staging
