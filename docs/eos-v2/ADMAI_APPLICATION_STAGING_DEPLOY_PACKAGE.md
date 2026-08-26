@@ -32,6 +32,35 @@ pelo workflow `Deploy Staging` (preview nativo da `staging` excluído ANTES do p
 Os passos manuais antigos abaixo ficam como **fallback** (se algum workflow reportar
 `PASSO MANUAL EXATO`, é o texto dele que vale).
 
+## ✅ ESTADO REAL DA EXECUÇÃO (2026-08-26) — passos 1–4 PROVADOS
+
+| Recurso | Valor REAL |
+|---|---|
+| CF preview nativo | `staging` **excluída** (run `32913971101`; excludes=`["staging"]`; production_branch=master intacta) |
+| Branch `staging` | criada; **`ci-ok` VERDE** (run `32918881340`: backend+frontend+docker+audit todos success) |
+| Projeto Railway DEDICADO | `admai-staging` · projectId `e792a2d8-2fdf-45b9-87ff-ca3f7c828e95` |
+| environmentId | `d8e3fbe2-096e-40b7-9394-dc4b8afc2261` (nome default "production" do Railway — cosmético; o isolamento é por PROJETO dedicado) |
+| serviceId | `0ddfe463-2a06-4378-8d8b-54576bd04c6b` (SEM source — bifásico; nenhum deploy disparou) |
+| **BACKEND_STAGING_URL** | `https://admai-staging-production.up.railway.app` (404 até o connect — esperado) |
+| Vars não-secretas | aplicadas (APP_ENV/STAGING_REF/SUPABASE_URL/ALLOWED_ORIGIN/FRONTEND_URL/STORAGE_STRICT/NODE_ENV/PUBLIC_URL/REDIS_URL-referência) |
+| Redis | **MANUAL_PENDENTE** (template API recusou) — ver ação 2 abaixo |
+
+### ⏳ AS 3 AÇÕES DO USUÁRIO (passo 5 — únicas pendências antes do connect)
+
+1. **Vars SECRETAS do service** — Railway → projeto `admai-staging` → service `admai-staging` →
+   Variables: `DATABASE_URL` (pooler 6543 do admai-staging), `DIRECT_URL` (pooler 5432),
+   `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`
+   (3 últimos: `openssl rand -hex 32`, NOVOS), `RESEND_API_KEY` (key/sandbox de staging).
+2. **Redis** — mesmo projeto → **Create → Database → Redis** (o service DEVE chamar-se `Redis`
+   para a referência `${{Redis.REDIS_URL}}` já configurada resolver). Use o environment ÚNICO
+   existente do projeto — ele será renomeado para `staging` pelo próximo `prepare` idempotente
+   (correção do REVISOR `01a03bb9`; o `connect` é sempre precedido por esse re-`prepare`).
+3. **`chaveiro-bot/.env.staging` local** (modelo `.env.staging.example`) — para seed/bucket/
+   negative-controls/validate rodarem da sua máquina.
+
+Depois de (1)+(2), Claude executa: `phase=connect` → `/health` 200 → `VITE_API_URL_STAGING` →
+publish do frontend → provas §32 (com (3): seed A/B, bucket, subgates H-mut/I/J/K, E2E).
+
 ---
 
 ## Passo 0 — Pré-requisitos (uma vez)

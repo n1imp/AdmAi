@@ -64,7 +64,11 @@ vi.mock('rate-limit-redis', () => {
 
 const { criarApp } = await import('../app.js');
 
-describe('POST /api/auth/login/2fa/recuperar herda twoFactorLimiter (5/15min) via prefix match — cancela T-REC-02', () => {
+/* [REVISOR 01a03bb9 achado 6] Cabeçalho atualizado ao mount VIGENTE: o twoFactorLimiter
+   é herdado pelo prefix de app.use('/api/auth/login/2fa', ...) — que casa /recuperar —,
+   enquanto o authLimiter fica em app.post('/api/auth/login') EXATO e NÃO alcança as
+   subrotas 2FA (D-FE-STRUCT-LIMITER-2FA). */
+describe('POST /api/auth/login/2fa/recuperar: twoFactorLimiter (5/15min) via prefixo /2fa; authLimiter NÃO alcança (mount exato)', () => {
   it('as 5 primeiras tentativas com o mesmo desafio respondem normalmente (401, desafio inválido); a 6ª estoura em 429', async () => {
     storeState.hits.clear();
     const { app } = criarApp();

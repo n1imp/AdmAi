@@ -140,7 +140,10 @@ export async function resolverWorkspace(gql, workspaceIdFlag = null) {
 }
 
 /** Busca projeto `admai-staging` existente no workspace (idempotência por NOME —
- *  lição do run real: falha no meio deixava projeto órfão e um rerun cego duplicaria). */
+ *  lição do run real: falha no meio deixava projeto órfão e um rerun cego duplicaria).
+ *  [REVISOR 01a03bb9 achado 3] FAIL-CLOSED: erro na listagem NÃO é "ausente" — criar
+ *  às cegas sob falha de schema/rede duplicaria projeto E custo. Sem prova de
+ *  ausência, aborta pedindo --project-id. */
 export async function acharProjetoExistente(gql) {
   const r = await gql(
     `query { me { workspaces { id name projects { edges { node {
@@ -151,13 +154,78 @@ export async function acharProjetoExistente(gql) {
     {},
     { permitirErros: true }
   );
-  if (r.errors?.length) return null; // schema sem essa forma ⇒ sem adoção automática
+  if (r.errors?.length) {
+    falhar(
+      `Nao consegui PROVAR presenca/ausencia do projeto ${NOME_PROJETO} (listagem recusada: ${r.errors.map((e) => e.message).join(' | ')}).`,
+      `Sem prova de ausencia NAO crio projeto (duplicata = custo novo). Descubra o projectId no dashboard Railway e re-rode com --project-id=<id>; ou corrija o token.`
+    );
+  }
   for (const ws of r.data?.me?.workspaces ?? []) {
     for (const e of ws.projects?.edges ?? []) {
       if (e.node?.name === NOME_PROJETO) return e.node;
     }
   }
   return null;
+}
+
+/** [REVISOR 01a03bb9 achado 2] Preflight READ-ONLY de identidade: prova, ANTES de
+ *  qualquer mutation, que os IDs recebidos são MESMO o projeto dedicado de staging
+ *  (nome exato), que environment/service PERTENCEM a ele, e que nada casa produção.
+ *  Devolve o nó do projeto (com envs/services) para reuso. */
+export async function verificarIdentidade(gql, { projectId, environmentId = null, serviceId = null }) {
+  const r = await gql(
+    `query($id: String!) { project(id: $id) { id name
+        environments { edges { node { id name } } }
+        services { edges { node { id name } } } } }`,
+    { id: projectId }
+  );
+  const p = r.data?.project;
+  if (!p?.id) falhar(`Preflight: projeto ${projectId} nao encontrado/ilegivel — abortado.`);
+  if (p.name !== NOME_PROJETO) {
+    falhar(
+      `Preflight: projeto ${projectId} chama-se "${p.name}", nao "${NOME_PROJETO}" — IDs de OUTRO projeto recusados (nada mutado).`
+    );
+  }
+  guardaProducao('projeto (preflight)', p.name);
+  const envs = (p.environments?.edges ?? []).map((e) => e.node);
+  const svcs = (p.services?.edges ?? []).map((e) => e.node);
+  for (const s of svcs) guardaProducao('service (preflight)', s.name);
+  // Nomes de environment NÃO passam pelo guard: "production" é o DEFAULT do Railway
+  // dentro do projeto dedicado (achado 4 trata disso via rename/create de `staging`).
+  if (environmentId && !envs.some((e) => e.id === environmentId)) {
+    falhar(`Preflight: environment ${environmentId} NAO pertence ao projeto ${NOME_PROJETO} — abortado.`);
+  }
+  if (serviceId) {
+    const svc = svcs.find((s) => s.id === serviceId);
+    if (!svc) falhar(`Preflight: service ${serviceId} NAO pertence ao projeto ${NOME_PROJETO} — abortado.`);
+    if (svc.name !== NOME_SERVICE) {
+      falhar(`Preflight: service ${serviceId} chama-se "${svc.name}", nao "${NOME_SERVICE}" — abortado.`);
+    }
+  }
+  return p;
+}
+
+/** [REVISOR 01a03bb9 achado 4] Garante environment chamado `staging` (contrato D1):
+ *  rename do env alvo quando a mutation existir; senão cria um `staging` novo e o
+ *  devolve (o chamador refaz domínio/vars nele e reporta o antigo para limpeza). */
+export async function garantirEnvironmentStaging(gql, disp, { projectId, environmentId, nomeAtual }) {
+  if (/^staging$/i.test(nomeAtual ?? '')) return { environmentId, renomeado: false, criado: false };
+  if (disp.has('environmentRename')) {
+    const r = await gql(
+      `mutation($id: String!, $input: EnvironmentRenameInput!) { environmentRename(id: $id, input: $input) { id name } }`,
+      { id: environmentId, input: { name: 'staging' } },
+      { permitirErros: true }
+    );
+    if (!r.errors?.length && r.data?.environmentRename?.id) {
+      return { environmentId, renomeado: true, criado: false };
+    }
+  }
+  const r = await gql(
+    `mutation($input: EnvironmentCreateInput!) { environmentCreate(input: $input) { id name } }`,
+    { input: { projectId, name: 'staging' } }
+  );
+  const novo = r.data?.environmentCreate?.id ?? falhar('environmentCreate(staging) nao devolveu id.');
+  return { environmentId: novo, renomeado: false, criado: true, environmentAntigo: environmentId };
 }
 
 // ── PREPARE ──────────────────────────────────────────────────────────────────
@@ -173,19 +241,27 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
       'variableCollectionUpsert',
     ]);
 
-    // 1) Projeto DEDICADO: adota o existente por NOME (rerun idempotente) ou cria.
-    if (!inv.projectId) {
-      const existente = await acharProjetoExistente(gql);
+    // 1) Projeto DEDICADO. Três caminhos, todos com identidade PROVADA antes de mutar
+    //    [REVISOR 01a03bb9 achado 2]: --project-id ⇒ preflight verificarIdentidade
+    //    (nunca confiança cega); sem id ⇒ adoção por NOME fail-closed; ausência
+    //    provada ⇒ criar.
+    let nomeEnvAlvo = null;
+    const adotarDoNo = (no) => {
+      inv.projectId = no.id;
+      const envs = (no.environments?.edges ?? []).map((e) => e.node);
+      const alvo = envs.find((e) => /^staging$/i.test(e.name)) ?? (envs.length === 1 ? envs[0] : null);
+      inv.environmentId = alvo?.id ?? null;
+      nomeEnvAlvo = alvo?.name ?? null;
+      const svc = (no.services?.edges ?? []).map((e) => e.node).find((s) => s.name === NOME_SERVICE);
+      if (svc) inv.serviceId = svc.id;
+    };
+    if (inv.projectId) {
+      adotarDoNo(await verificarIdentidade(gql, { projectId: inv.projectId }));
+    } else {
+      const existente = await acharProjetoExistente(gql); // fail-closed em erro de listagem
       if (existente) {
         guardaProducao('projeto adotado', existente.name);
-        inv.projectId = existente.id;
-        const envs = (existente.environments?.edges ?? []).map((e) => e.node);
-        inv.environmentId =
-          envs.find((e) => /staging/i.test(e.name))?.id ?? (envs.length === 1 ? envs[0].id : null);
-        const svc = (existente.services?.edges ?? [])
-          .map((e) => e.node)
-          .find((s) => s.name === NOME_SERVICE);
-        if (svc) inv.serviceId = svc.id;
+        adotarDoNo(existente);
       } else {
         const wsId = await resolverWorkspace(gql, workspaceId);
         const r = await gql(
@@ -195,15 +271,24 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
         const p = r.data?.projectCreate;
         if (!p?.id) falhar('projectCreate nao devolveu id.');
         guardaProducao('projeto criado', p.name);
-        inv.projectId = p.id;
-        const envs = (p.environments?.edges ?? []).map((e) => e.node);
-        inv.environmentId =
-          envs.find((e) => /staging/i.test(e.name))?.id ?? (envs.length === 1 ? envs[0].id : null);
+        adotarDoNo({ ...p, services: { edges: [] } });
       }
     }
 
-    // 2) Environment explicitamente `staging` (D1) — cria se ainda não há alvo.
-    if (!inv.environmentId) {
+    // 2) Environment `staging` DE VERDADE [REVISOR 01a03bb9 achado 4]: rename do env
+    //    alvo quando a API permitir; senão cria `staging` novo (domínio/vars refeitos
+    //    nele) e reporta o antigo para limpeza manual. Sem alvo nenhum ⇒ cria.
+    if (inv.environmentId) {
+      const g = await garantirEnvironmentStaging(gql, disp, {
+        projectId: inv.projectId,
+        environmentId: inv.environmentId,
+        nomeAtual: nomeEnvAlvo,
+      });
+      inv.environmentId = g.environmentId;
+      if (g.renomeado) inv.environmentNota = `env renomeado para staging (era "${nomeEnvAlvo}")`;
+      if (g.criado)
+        inv.environmentNota = `env staging CRIADO; o antigo ${g.environmentAntigo} ("${nomeEnvAlvo}") ficou sem uso — remova no dashboard`;
+    } else {
       const r = await gql(
         `mutation($input: EnvironmentCreateInput!) { environmentCreate(input: $input) { id name } }`,
         { input: { projectId: inv.projectId, name: 'staging' } }
@@ -294,6 +379,11 @@ export async function connect(gql, { projectId, environmentId, serviceId }) {
   const disp = await mutationsDisponiveis(gql);
   exigirMutations(disp, ['serviceConnect', 'serviceInstanceUpdate']);
 
+  // 0) PREFLIGHT DE IDENTIDADE (read-only) [REVISOR 01a03bb9 achado 2]: prova que os
+  //    3 IDs são o projeto dedicado, e que env/service pertencem a ele, ANTES de
+  //    qualquer mutation — IDs colados de outro projeto são recusados aqui.
+  await verificarIdentidade(gql, { projectId, environmentId, serviceId });
+
   // 1) Vars SECRETAS presentes por NOME (valores NUNCA tocados/impressos).
   {
     const r = await gql(
@@ -344,17 +434,26 @@ export async function autoteste() {
     }
     return { status: 200, json: async () => ({ errors: [{ message: `sem stub p/ ${query.slice(0, 40)}` }] }) };
   };
-  const SCHEMA_OK = {
+  const schemaCom = (...extras) => ({
     data: {
       __schema: {
         mutationType: {
           fields: ['projectCreate', 'environmentCreate', 'serviceCreate', 'serviceDomainCreate',
-            'variableCollectionUpsert', 'templateDeployV2', 'serviceConnect', 'serviceInstanceUpdate']
+            'variableCollectionUpsert', 'templateDeployV2', 'serviceConnect', 'serviceInstanceUpdate',
+            ...extras]
             .map((name) => ({ name })),
         },
       },
     },
-  };
+  });
+  const SCHEMA_OK = schemaCom();
+  const NO_PROJETO_OK = (envs, svcs) => ({
+    data: { project: {
+      id: 'p-ok', name: 'admai-staging',
+      environments: { edges: envs.map((e) => ({ node: e })) },
+      services: { edges: svcs.map((s) => ({ node: s })) },
+    } },
+  });
 
   await caso('token sem autorizacao falha EXPLICITO com passo manual', async () => {
     const gql = criarCliente('t', async () => ({ status: 401, json: async () => ({}) }));
@@ -404,28 +503,79 @@ export async function autoteste() {
       variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
     }));
     const inv = await prepare(gql, {});
+    /* env default "production" do projeto novo NÃO satisfaz o contrato: sem
+       environmentRename no schema, um env `staging` novo (e2) é criado. */
     return inv.projectId === 'p1' && inv.serviceId === 's1' && inv.dominio?.includes('railway.app')
-      && inv.environmentId === 'e1'; /* único env do projeto novo é aceito como alvo */
+      && inv.environmentId === 'e2' && /CRIADO/.test(inv.environmentNota ?? '');
   });
 
-  await caso('rerun com --project-id NAO chama projectCreate (idempotente)', async () => {
+  await caso('rerun com --project-id: preflight de identidade ADOTA (sem projectCreate)', async () => {
     let criouProjeto = false;
     const gql = criarCliente('t', async (_u, { body }) => {
       const { query } = JSON.parse(body);
       if (query.includes('projectCreate')) criouProjeto = true;
       const mapa = {
         __schema: SCHEMA_OK,
-        environmentCreate: { data: { environmentCreate: { id: 'e2', name: 'staging' } } },
-        serviceCreate: { data: { serviceCreate: { id: 's1', name: 'admai-staging' } } },
-        templateDeployV2: { data: { templateDeployV2: { projectId: 'p9' } } },
+        'project(': NO_PROJETO_OK(
+          [{ id: 'e-stg', name: 'staging' }],
+          [{ id: 's1', name: 'admai-staging' }]
+        ),
+        templateDeployV2: { data: { templateDeployV2: { projectId: 'p-ok' } } },
         serviceDomainCreate: { data: { serviceDomainCreate: { domain: 'ok.up.railway.app' } } },
         variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
       };
       for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
       return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
     });
-    const inv = await prepare(gql, { projectId: 'p9' });
-    return criouProjeto === false && inv.projectId === 'p9';
+    const inv = await prepare(gql, { projectId: 'p-ok' });
+    return criouProjeto === false && inv.projectId === 'p-ok' && inv.environmentId === 'e-stg'
+      && inv.serviceId === 's1';
+  });
+
+  await caso('[01a03bb9-2] --project-id de OUTRO projeto (nome divergente) e RECUSADO antes de mutar', async () => {
+    const gql = criarCliente('t', respostas({
+      __schema: SCHEMA_OK,
+      'project(': { data: { project: { id: 'p-x', name: 'outro-projeto', environments: { edges: [] }, services: { edges: [] } } } },
+    }));
+    try {
+      await prepare(gql, { projectId: 'p-x' });
+      return false;
+    } catch (e) {
+      return /OUTRO projeto/.test(e.message);
+    }
+  });
+
+  await caso('[01a03bb9-3] adocao FAIL-CLOSED: erro na listagem NAO vira projectCreate', async () => {
+    let criouProjeto = false;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query } = JSON.parse(body);
+      if (query.includes('projectCreate')) criouProjeto = true;
+      if (query.includes('__schema')) return { status: 200, json: async () => SCHEMA_OK };
+      return { status: 200, json: async () => ({ errors: [{ message: 'listagem indisponivel' }] }) };
+    });
+    try {
+      await prepare(gql, {});
+      return false;
+    } catch (e) {
+      return criouProjeto === false && /PROVAR presenca\/ausencia/.test(e.message)
+        && /--project-id/.test(e.manual ?? '');
+    }
+  });
+
+  await caso('[01a03bb9-4] env "production" com environmentRename no schema e RENOMEADO para staging', async () => {
+    const gql = criarCliente('t', respostas({
+      __schema: schemaCom('environmentRename'),
+      'project(': NO_PROJETO_OK(
+        [{ id: 'e-prod', name: 'production' }],
+        [{ id: 's1', name: 'admai-staging' }]
+      ),
+      environmentRename: { data: { environmentRename: { id: 'e-prod', name: 'staging' } } },
+      templateDeployV2: { data: { templateDeployV2: { projectId: 'p-ok' } } },
+      serviceDomainCreate: { data: { serviceDomainCreate: { domain: 'ok.up.railway.app' } } },
+      variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
+    }));
+    const inv = await prepare(gql, { projectId: 'p-ok' });
+    return inv.environmentId === 'e-prod' && /renomeado/.test(inv.environmentNota ?? '');
   });
 
   await caso('ADOCAO: projeto orfao existente e adotado por NOME (sem projectCreate/serviceCreate); Redis recusado vira MANUAL_PENDENTE sem abortar', async () => {
@@ -468,6 +618,7 @@ export async function autoteste() {
   await caso('connect sem vars secretas falha listando NOMES (nunca valores)', async () => {
     const gql = criarCliente('t', respostas({
       __schema: SCHEMA_OK,
+      'project(': NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]),
       'variables(': { data: { variables: { APP_ENV: 'staging', DATABASE_URL: 'x' } } },
     }));
     try {
@@ -479,10 +630,11 @@ export async function autoteste() {
     }
   });
 
-  await caso('connect feliz conecta repo/branch/root', async () => {
+  await caso('connect feliz conecta repo/branch/root (apos preflight de identidade)', async () => {
     const todas = Object.fromEntries(SECRETAS_OBRIGATORIAS.map((n) => [n, 'v']));
     const gql = criarCliente('t', respostas({
       __schema: SCHEMA_OK,
+      'project(': NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]),
       'variables(': { data: { variables: { ...todas, APP_ENV: 'staging' } } },
       serviceConnect: { data: { serviceConnect: { id: 's' } } },
       serviceInstanceUpdate: { data: { serviceInstanceUpdate: true } },

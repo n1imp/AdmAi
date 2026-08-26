@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-CI-AUDIT-01",
-  "titulo": "Patch de seguranca transitivo dev-only: nanoid 3.3.16 -> >=3.3.18 (GHSA-2v37-7h3g-55p8, high) para o gate de auditoria do CI",
+  "sliceId": "STG-APP-DEPLOY-REV1",
+  "titulo": "Correcoes do REVISOR 01a03bb9 (NO-GO p/ connect): pipefail, preflight mecanico de IDs, adocao fail-closed, environment staging real, CF-scope reconciliado, docs",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T01:11:53.066Z",
+  "declaradoEm": "2026-08-26T01:47:20.856Z",
   "baseCommitPorLane": {
-    "HARNESS": "324ec3386ca830c470140bb5d227445f3407bd14"
+    "HARNESS": "c33510ca568fe7ea83992b1af12ac67909ae8596"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Advisory NOVO do registry pegou no primeiro CI da branch staging (o gate audita com excecoes documentadas; nanoid nao consta da allowlist). Cadeia 100% dev (vitest>vite>postcss>nanoid); fix semver-patch disponivel. Escolha: FIX real em vez de excecao na allowlist (postura mais forte; lockfile-only; runtime intocado). Suites re-rodadas como prova.",
+  "notaDeMetodo": "6 achados: (1) ALTO tee sem pipefail mascarava falha do bootstrap; (2) ALTO connect/prepare --project-id aceitavam IDs sem provar identidade/pertencimento — preflight read-only obrigatorio antes de mutation; (3) ALTO adocao por nome tratava erro de listagem como ausencia (duplicata+custo) — fail-closed; (4) MEDIO environment default 'production' viola contrato D1 — rename para staging se a mutation existir, senao criar env staging e mover dominio/vars (com relatorio); (5) MEDIO CF guard mexeu includes/setting alem do decidido — pos-condicao compara delta com o GET inicial e a extensao de scope e registrada como reconciliacao (excludes sem setting=custom nao tem efeito); (6) BAIXO comentario stale do EV-070. Selftests novos p/ 2/3/4.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -52,7 +52,7 @@
       "chaveiro-bot/jsconfig.json": "a4d9f4b3277ad21dfb39c806aa6fcc04db9d25e4ec5640d6ce60622c55ef7384",
       "chaveiro-bot/monitoring/grafana/provisioning/datasources/datasource.yml": "c1e4aa0b207e75fa449e05f437ec8470da44edacf87d5a2f1c11a482e07bc795",
       "chaveiro-bot/monitoring/prometheus.yml": "090361736ed2f88741e220387545e6af0011aef806da5cf83eef819b953818ef",
-      "chaveiro-bot/package-lock.json": "bdbd0ef0c65e3f7d750876a7cf937f425d72e64ef91fab0852c5d6f68635ff75",
+      "chaveiro-bot/package-lock.json": "3e1c426b5a67dc9614bdf4e5dea99b13a59e3ed8c3b6ac0d0bf43ae6e73915ad",
       "chaveiro-bot/package.json": "f8d7ae07aa137582ea754c24e30615a9542c4cdf9dd905a7d613ef0287a45986",
       "chaveiro-bot/prisma.config.ts": "d2a9464316575f2a6434a70e87e97e0229500306a7e707ef7872f14a49ef8a18",
       "chaveiro-bot/prisma/migrations/20260524204642_/migration.sql": "24fa50c5d99c263a753a9a5809b472d0811e3e5fa6a16d899bd1dfb7bf9c3f21",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "a5a7df7b72e18a6a8fde71e7f3ab257774a656234fe823f813fba267d1a2df77",
+      "docs/agent-environment/AGENT_DECISIONS.md": "702d38669d442da1f5f231f2b7b07f82f27cb8288b4e44bc95aaba9364e91088",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -607,7 +607,7 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "5ebf0c528d550254c96d7d7d3a66e0e171518903abfd911b3fe65be5f6c06a17",
+      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "7f60a59a2f907fa981b192ff7257d9dec509440269a717eedf7f9109987fb954",
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "ae004d8648ca19425bc191302d58d3b66ea77dc53358b1350d9c0b0a38352780",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "0feba878ab78aede4dc7dcffb20ba68f75a5b5b638675cb288ef5a83d4c4f817",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "a1aef63b7c770184534af94d0162419eefb414842f33604f7e4aa83da6700978",
+      "docs/eos-v2/WRITE_SET.json": "b99aca63a01e01cf3f6083c761c5885cebbacd109a4fdf109fe78ad1321dbef8",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "534d45f2f1351674623122e0160a6fa70507eeea266383f85c35991535001370",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,21 +2524,77 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/package-lock.json",
+      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
       "precisao": "BOUNDED",
-      "proposito": "npm audit fix: nanoid >=3.3.18 (transitiva dev-only)",
+      "proposito": "set -euo pipefail no step de execucao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "bdbd0ef0c65e3f7d750876a7cf937f425d72e64ef91fab0852c5d6f68635ff75",
+      "shaNaDeclaracao": "437b0ab51f2e87cbe8dda652a6500457c52d7a1e25dedc038c2008baf6395263",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "tools/railway-staging-bootstrap.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "preflight verificarIdentidade (read-only) em connect e em prepare --project-id; adocao fail-closed; environment staging por rename-ou-create; selftests",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1aa5609dca1153652dc8ef42b9bc998368e0c8f51266b79869a948989c3d6f0a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": ".github/workflows/cf-preview-guard.yml",
+      "precisao": "BOUNDED",
+      "proposito": "pos-condicao compara includes/setting com o estado inicial (delta explicito)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d7fa8e7e56b42df38af2192b04377f46a1a74cab1ab7a1a15ada0eb8c2b4c424",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "describe/cabecalho atualizados ao mount exato vigente",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9699669d5343122d559890b571053fbf80173adddfc63ff61448be87573e142e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "BOUNDED",
+      "proposito": "rodada REVISOR 01a03bb9 + reconciliacao do CF-scope e do environment",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "702d38669d442da1f5f231f2b7b07f82f27cb8288b4e44bc95aaba9364e91088",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
+      "precisao": "BOUNDED",
+      "proposito": "passo Redis com environment correto + estado real ja iniciado nesta pasta",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7f60a59a2f907fa981b192ff7257d9dec509440269a717eedf7f9109987fb954",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "registro da rodada e do NO-GO->GO",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ae004d8648ca19425bc191302d58d3b66ea77dc53358b1350d9c0b0a38352780",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Bump cirurgico nanoid 3.3.16->3.3.18 (npm update nanoid; diff = 1 pacote). Tentativa via npm audit fix REVERTIDA por arrastar Prisma 7.9.1->7.10.0 (minor do ORM = fora do escopo desta fatia). audit-gate do repo APROVADO (0 bloqueantes); sanidade 29/29.",
+  "nota": "4 fixes + doc do REVISOR 01a03bb9 implementados; selftest 12/12; YAMLs validos; teste 2FA 3/3; ledger 4/4. GO p/ connect condicionado ao DELTA.",
   "aviso": "Declaracao ENCERRADA."
 }

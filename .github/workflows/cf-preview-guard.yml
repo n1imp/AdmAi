@@ -66,14 +66,35 @@ jobs:
             echo "PATCH aplicado."
           fi
 
-          # 3) Pós-condição: staging excluída E nada essencial mudou.
+          # 3) Pós-condição com DELTA EXPLÍCITO [REVISOR 01a03bb9 achado 5]: além de
+          #    "staging excluída" e production_branch intacta, comparamos includes e
+          #    deployment_setting com o estado INICIAL — a mutação declarada é SÓ:
+          #    excludes ∪= ["staging"]; includes vazio→["*"]; setting→"custom"
+          #    (extensão de scope RECONCILIADA em AGENT_DECISIONS: excludes sem
+          #    setting=custom não teria efeito). Qualquer outro delta ⇒ FALHA.
+          inc_antes=$(jq -c '.result.source.config.preview_branch_includes // []' <<<"$atual")
+          set_antes=$(jq -r '.result.source.config.preview_deployment_setting // "all"' <<<"$atual")
+          exc_antes=$(jq -c '.result.source.config.preview_branch_excludes // []' <<<"$atual")
           depois=$(curl -sf "${hdr[@]}" "$api")
           jq -e '.result.source.config.preview_branch_excludes | index("staging") != null' <<<"$depois" >/dev/null \
             || { echo "::error::pós-condição falhou: staging NÃO está em preview_branch_excludes."; exit 1; }
           pb2=$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$depois")
           [ "$pb2" = "master" ] || { echo "::error::production_branch mudou (${pb2}) — investigar JÁ."; exit 1; }
           [ "$(jq -r '.result.source.config.owner' <<<"$depois")" = "n1imp" ] || { echo "::error::owner mudou."; exit 1; }
-          echo "PÓS-CONDIÇÃO OK — excludes agora: $(jq -c '.result.source.config.preview_branch_excludes' <<<"$depois")"
+          inc_depois=$(jq -c '.result.source.config.preview_branch_includes // []' <<<"$depois")
+          set_depois=$(jq -r '.result.source.config.preview_deployment_setting // "all"' <<<"$depois")
+          exc_esperado=$(jq -c '. + ["staging"] | unique' <<<"$exc_antes")
+          inc_esperado=$(jq -c 'if length == 0 then ["*"] else . end' <<<"$inc_antes")
+          [ "$(jq -c '.result.source.config.preview_branch_excludes | sort' <<<"$depois")" = "$(jq -c 'sort' <<<"$exc_esperado")" ] \
+            || { echo "::error::delta de excludes além do declarado (antes=${exc_antes})."; exit 1; }
+          [ "$inc_depois" = "$inc_esperado" ] \
+            || { echo "::error::includes mudou além do declarado (antes=${inc_antes}, depois=${inc_depois})."; exit 1; }
+          case "$set_depois" in custom) ;; *)
+            echo "::error::deployment_setting inesperado (${set_depois})."; exit 1;; esac
+          echo "PÓS-CONDIÇÃO OK — delta declarado e provado:"
+          echo "  excludes: ${exc_antes} -> $(jq -c '.result.source.config.preview_branch_excludes' <<<"$depois")"
+          echo "  includes: ${inc_antes} -> ${inc_depois} (esperado ${inc_esperado})"
+          echo "  setting : ${set_antes} -> ${set_depois}"
           {
             echo "## CF Preview Guard — OK"
             echo "- projeto: ${PROJETO} (n1imp/AdmAi) · production_branch: master (inalterada)"

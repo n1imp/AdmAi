@@ -86,7 +86,9 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          set -eu
+          # pipefail OBRIGATÓRIO [REVISOR 01a03bb9 achado 1]: sem ele, o status do
+          # pipe é o do `tee` e um bootstrap que sai 1 viraria step VERDE.
+          set -euo pipefail
           ARGS="--phase=${{ inputs.phase }}"
           [ -n "${{ inputs.project_id }}" ] && ARGS="$ARGS --project-id=${{ inputs.project_id }}"
           [ -n "${{ inputs.environment_id }}" ] && ARGS="$ARGS --environment-id=${{ inputs.environment_id }}"
