@@ -192,8 +192,20 @@ export async function verificarIdentidade(gql, { projectId, environmentId = null
   for (const s of svcs) guardaProducao('service (preflight)', s.name);
   // Nomes de environment NÃO passam pelo guard: "production" é o DEFAULT do Railway
   // dentro do projeto dedicado (achado 4 trata disso via rename/create de `staging`).
-  if (environmentId && !envs.some((e) => e.id === environmentId)) {
-    falhar(`Preflight: environment ${environmentId} NAO pertence ao projeto ${NOME_PROJETO} — abortado.`);
+  if (environmentId) {
+    const envAlvo = envs.find((e) => e.id === environmentId);
+    if (!envAlvo) {
+      falhar(`Preflight: environment ${environmentId} NAO pertence ao projeto ${NOME_PROJETO} — abortado.`);
+    }
+    // [REVISOR 01a03bb9 DELTA achado 1] Pertencimento NAO basta: o env antigo
+    // "production" (default do Railway) pertence ao projeto e reteria as secrets —
+    // o connect PRECISA do env chamado exatamente `staging` (rode o re-prepare
+    // idempotente antes: ele renomeia ou cria).
+    if (!/^staging$/i.test(envAlvo.name)) {
+      falhar(
+        `Preflight: environment ${environmentId} chama-se "${envAlvo.name}", nao "staging" — connect RECUSADO. Rode --phase=prepare --project-id=${projectId} (renomeia/cria o env staging) e use o environmentId do output.`
+      );
+    }
   }
   if (serviceId) {
     const svc = svcs.find((s) => s.id === serviceId);
@@ -287,7 +299,9 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
       inv.environmentId = g.environmentId;
       if (g.renomeado) inv.environmentNota = `env renomeado para staging (era "${nomeEnvAlvo}")`;
       if (g.criado)
-        inv.environmentNota = `env staging CRIADO; o antigo ${g.environmentAntigo} ("${nomeEnvAlvo}") ficou sem uso — remova no dashboard`;
+        inv.environmentNota =
+          `env staging CRIADO; o antigo ${g.environmentAntigo} ("${nomeEnvAlvo}") ficou sem uso — remova no dashboard. ` +
+          `ATENCAO [user-gate NOVAMENTE]: as vars SECRETAS e o Redis do passo 5 valem POR ENVIRONMENT — refaca-os no env staging novo antes do connect (o proprio connect recusa fail-closed enquanto faltarem).`;
     } else {
       const r = await gql(
         `mutation($input: EnvironmentCreateInput!) { environmentCreate(input: $input) { id name } }`,
@@ -612,6 +626,32 @@ export async function autoteste() {
       return false;
     } catch (e) {
       return /PRODUCAO/.test(e.message);
+    }
+  });
+
+  await caso('[01a03bb9-DELTA] connect com env "production" DO PROJETO e recusado ANTES de variables/mutations', async () => {
+    let tocouVariablesOuMutation = false;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query } = JSON.parse(body);
+      if (/variables\(|serviceConnect|serviceInstanceUpdate/.test(query)) tocouVariablesOuMutation = true;
+      if (query.includes('__schema')) return { status: 200, json: async () => SCHEMA_OK };
+      if (query.includes('project(')) {
+        return {
+          status: 200,
+          json: async () => ({
+            data: { project: { id: 'p-ok', name: 'admai-staging',
+              environments: { edges: [{ node: { id: 'e-prod', name: 'production' } }, { node: { id: 'e-stg', name: 'staging' } }] },
+              services: { edges: [{ node: { id: 's1', name: 'admai-staging' } }] } } },
+          }),
+        };
+      }
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    });
+    try {
+      await connect(gql, { projectId: 'p-ok', environmentId: 'e-prod', serviceId: 's1' });
+      return false;
+    } catch (e) {
+      return tocouVariablesOuMutation === false && /nao "staging" — connect RECUSADO/.test(e.message);
     }
   });
 

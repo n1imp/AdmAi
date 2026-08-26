@@ -59491,9 +59491,23 @@
       "bloqueiaIntegracao": false,
       "nota": "4 fixes + doc do REVISOR 01a03bb9 implementados; selftest 12/12; YAMLs validos; teste 2FA 3/3; ledger 4/4. GO p/ connect condicionado ao DELTA.",
       "declaradoEm": "2026-08-26T01:47:20.856Z"
+    },
+    {
+      "sliceId": "STG-APP-DEPLOY-REV2",
+      "titulo": "Residuais do DELTA 01a03bb9: connect exige env chamado staging (sabotagem env production) + comentarios stale do teste 2FA",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Residuais do DELTA fechados; selftest 13/13; teste 2FA 3/3; zero comentario stale.",
+      "declaradoEm": "2026-08-26T01:58:32.671Z"
     }
   ],
-  "geradoEm": "2026-08-26T01:51:53.034Z",
+  "geradoEm": "2026-08-26T01:58:34.757Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

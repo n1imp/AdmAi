@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-DEPLOY-REV1",
-  "titulo": "Correcoes do REVISOR 01a03bb9 (NO-GO p/ connect): pipefail, preflight mecanico de IDs, adocao fail-closed, environment staging real, CF-scope reconciliado, docs",
+  "sliceId": "STG-APP-DEPLOY-REV2",
+  "titulo": "Residuais do DELTA 01a03bb9: connect exige env chamado staging (sabotagem env production) + comentarios stale do teste 2FA",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T01:47:20.856Z",
+  "declaradoEm": "2026-08-26T01:58:32.671Z",
   "baseCommitPorLane": {
-    "HARNESS": "c33510ca568fe7ea83992b1af12ac67909ae8596"
+    "HARNESS": "403a1b87c4c4d509c5a2500e1d0b88a2b717cec5"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "6 achados: (1) ALTO tee sem pipefail mascarava falha do bootstrap; (2) ALTO connect/prepare --project-id aceitavam IDs sem provar identidade/pertencimento — preflight read-only obrigatorio antes de mutation; (3) ALTO adocao por nome tratava erro de listagem como ausencia (duplicata+custo) — fail-closed; (4) MEDIO environment default 'production' viola contrato D1 — rename para staging se a mutation existir, senao criar env staging e mover dominio/vars (com relatorio); (5) MEDIO CF guard mexeu includes/setting alem do decidido — pos-condicao compara delta com o GET inicial e a extensao de scope e registrada como reconciliacao (excludes sem setting=custom nao tem efeito); (6) BAIXO comentario stale do EV-070. Selftests novos p/ 2/3/4.",
+  "notaDeMetodo": "DELTA manteve NO-GO: (ALTO) pertencimento nao bastava — env antigo 'production' do proprio projeto passava no preflight e recebia mutations (reproduzido pelo REVISOR); fix: verificarIdentidade exige nome exato staging quando environmentId e dado + sabotagem provando recusa ANTES de variables/mutations + nota de user-gate repetido quando o fallback cria env novo (secrets/Redis por environment). (BAIXO) JSDoc/comentario do teste 2FA ainda contavam o desenho antigo — atualizados. Selftest 13/13.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -22,13 +22,13 @@
       ".git-blame-ignore-revs": "f408562a05617b77c32b658fb6a6fcf6187ca3780abab72606fdd5894a8af0b0",
       ".gitattributes": "db49541543c0149c45f8695561c1b8d88c448e215759d1427b22ccb7700dcb83",
       ".github/dependabot.yml": "a15089719d525ed0f5b78d296eb5e91b8cd35bbb596e18822b0be68e249f15ad",
-      ".github/workflows/cf-preview-guard.yml": "d7fa8e7e56b42df38af2192b04377f46a1a74cab1ab7a1a15ada0eb8c2b4c424",
+      ".github/workflows/cf-preview-guard.yml": "52c05d5a21bda6d297628cd5da443efa2f633a40b30782304d64d95f8b8d5df2",
       ".github/workflows/ci.yml": "025499c89275beee140b31be3b667f80b88d7d4dea50db7958346c600558c50b",
       ".github/workflows/deploy-staging.yml": "1ea7adfb4c1ed9da43482dc3fc899ee86a84a36ce018397ea7fc86193b59e9c0",
       ".github/workflows/deploy.yml": "2408b0d13ef9db5b72f3324bd33ffb523f122c2a6e9d99f8ecfa7ee00ef81a59",
       ".github/workflows/release.yml": "b3e4489396437d4ba09fd3390d86148d802b9f9aabfa85c4e00a268dff3fb7c2",
       ".github/workflows/security.yml": "a6dd019103bd7a8083fbf8f91b891730c9c8fe76bffa528c30004853794c15b5",
-      ".github/workflows/staging-backend-bootstrap.yml": "437b0ab51f2e87cbe8dda652a6500457c52d7a1e25dedc038c2008baf6395263",
+      ".github/workflows/staging-backend-bootstrap.yml": "e3780e19c4162dee260782c26b77c3cd41e865bb0fb74cf5819320a20582f805",
       ".gitignore": "df256c858cb833acf3c4b08b646d5114465ce4fbe6c466a1a568beaf8f89e331",
       ".gitleaks.toml": "68f349e50ec07b0ac44e836f76d7ca856f6c67e026c5fcd403224dd04084b3c5",
       "AGENTS.md": "b3a4450cf51f4f4f2fcb9cc96a44abefb8aa3455f3ee2fbcdc0bb9c7c10365da",
@@ -119,7 +119,7 @@
       "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "50918365f0bca668beb1f66e96e4f3a486147d67bfaf370c470a91d86b86cc78",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "0a4ddbe394232ea2bd173b99861ce95eefc6f78dde0dd34b8afc5a6b4bc5fe2b",
       "chaveiro-bot/scripts/validate-staging.mjs": "5dfd6681e988e9b3006ce6f0fdd3b506f24483322bada4f50fc604e1672ec7e9",
-      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "9699669d5343122d559890b571053fbf80173adddfc63ff61448be87573e142e",
+      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "73777ece9b76f59f56e80b08c84b709c43910acd8ef982ceaf74a53df2ee9705",
       "chaveiro-bot/src/__tests__/security-headers.test.js": "bd600a8f9d9e8dfca48cfecb345d730032ce7af76d0f049b7135260aa3762b8a",
       "chaveiro-bot/src/app.js": "9b7cd5d7446e64405e17707f9b8aa14a788cd8ca056fafddf53fafa43b9f6495",
       "chaveiro-bot/src/config/__tests__/env.test.js": "acdd7260aaef3845c9549fb416190ed9d68c50780983451a6b421fe5fa5e57a0",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "702d38669d442da1f5f231f2b7b07f82f27cb8288b4e44bc95aaba9364e91088",
+      "docs/agent-environment/AGENT_DECISIONS.md": "c9b64b53a503ec6745e5acbb198d844ffa2bde947ef5c759c4fbb5bdb8458378",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -607,8 +607,8 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "7f60a59a2f907fa981b192ff7257d9dec509440269a717eedf7f9109987fb954",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "ae004d8648ca19425bc191302d58d3b66ea77dc53358b1350d9c0b0a38352780",
+      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "8d3bf83267d784b6dc7dc445ca252bb82479c0f15194956b67543fdc0b6ddecc",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "db7479a4b526558e3cb3bd0528cda9825b88ad62ae7c1c15cebc690ff3230054",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "b99aca63a01e01cf3f6083c761c5885cebbacd109a4fdf109fe78ad1321dbef8",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "534d45f2f1351674623122e0160a6fa70507eeea266383f85c35991535001370",
+      "docs/eos-v2/WRITE_SET.json": "a125cba408e1b856b85574191a12a4376f2be1a2358173cf3c0e945b3ee5951d",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "1b54e78597ad3ef6f98f9973b0d98c4956a6a5ba2b46ff087679e01fe83bcd9b",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -749,7 +749,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "1aa5609dca1153652dc8ef42b9bc998368e0c8f51266b79869a948989c3d6f0a"
+      "tools/railway-staging-bootstrap.mjs": "8327fb3d34a6142811b26b318f54c8375de35bb9aa7aa53a053f118e9f7d59a7"
     }
   },
   "artefatosPorLane": {
@@ -2524,67 +2524,33 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
-      "precisao": "BOUNDED",
-      "proposito": "set -euo pipefail no step de execucao",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "437b0ab51f2e87cbe8dda652a6500457c52d7a1e25dedc038c2008baf6395263",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "tools/railway-staging-bootstrap.mjs",
       "precisao": "BOUNDED",
-      "proposito": "preflight verificarIdentidade (read-only) em connect e em prepare --project-id; adocao fail-closed; environment staging por rename-ou-create; selftests",
+      "proposito": "env.name===staging obrigatorio no preflight de connect + sabotagem + nota de user-gate no create-fallback",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1aa5609dca1153652dc8ef42b9bc998368e0c8f51266b79869a948989c3d6f0a",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": ".github/workflows/cf-preview-guard.yml",
-      "precisao": "BOUNDED",
-      "proposito": "pos-condicao compara includes/setting com o estado inicial (delta explicito)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "d7fa8e7e56b42df38af2192b04377f46a1a74cab1ab7a1a15ada0eb8c2b4c424",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "describe/cabecalho atualizados ao mount exato vigente",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9699669d5343122d559890b571053fbf80173adddfc63ff61448be87573e142e",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "BOUNDED",
-      "proposito": "rodada REVISOR 01a03bb9 + reconciliacao do CF-scope e do environment",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "702d38669d442da1f5f231f2b7b07f82f27cb8288b4e44bc95aaba9364e91088",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
-      "precisao": "BOUNDED",
-      "proposito": "passo Redis com environment correto + estado real ja iniciado nesta pasta",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7f60a59a2f907fa981b192ff7257d9dec509440269a717eedf7f9109987fb954",
+      "shaNaDeclaracao": "8327fb3d34a6142811b26b318f54c8375de35bb9aa7aa53a053f118e9f7d59a7",
       "sujoNaDeclaracao": true,
       "reescritaDeclarada": true,
       "motivoDaReescrita": "caminho ja sujo nesta frente"
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
       "precisao": "BOUNDED",
-      "proposito": "registro da rodada e do NO-GO->GO",
+      "proposito": "JSDoc e comentario do teste 1 atualizados ao mount vigente",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ae004d8648ca19425bc191302d58d3b66ea77dc53358b1350d9c0b0a38352780",
+      "shaNaDeclaracao": "73777ece9b76f59f56e80b08c84b709c43910acd8ef982ceaf74a53df2ee9705",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "BOUNDED",
+      "proposito": "rodada DELTA + correcao do claim de prettier (tools/yml fora do glob oficial do bot)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c9b64b53a503ec6745e5acbb198d844ffa2bde947ef5c759c4fbb5bdb8458378",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2595,6 +2561,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "4 fixes + doc do REVISOR 01a03bb9 implementados; selftest 12/12; YAMLs validos; teste 2FA 3/3; ledger 4/4. GO p/ connect condicionado ao DELTA.",
+  "nota": "Residuais do DELTA fechados; selftest 13/13; teste 2FA 3/3; zero comentario stale.",
   "aviso": "Declaracao ENCERRADA."
 }

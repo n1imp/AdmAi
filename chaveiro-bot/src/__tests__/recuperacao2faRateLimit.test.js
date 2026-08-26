@@ -26,19 +26,16 @@ import request from 'supertest';
  * o Prisma (o handler responde 401 assim que `verificarDesafio2fa` lança),
  * então também não depende de Postgres.
  *
- * EV-070: o MESMO prefix-match que herda `twoFactorLimiter` (`/api/auth/login/2fa`,
- * linha acima) também herda `authIpLimiter`+`authLimiter` (`app.use('/api/auth/login',
- * authIpLimiter, authLimiter)`, mais cedo em `app.js`, ANTES de `twoFactorLimiter` na
- * cadeia) — `/api/auth/login/2fa/recuperar` começa com `/api/auth/login`. Antes da
- * correção do EV-070, `authLimiter` tinha um bug que fazia sua chave de fallback (por
- * IP) nunca colidir de verdade entre requisições (usava o objeto `req` inteiro como
- * chave, então cada requisição virava uma chave "nova" por identidade de objeto) — na
- * prática, `authLimiter` NUNCA bloqueava nada nesta rota, mesmo estando montado. Depois
- * da correção, a chave é o IP de verdade, e `authLimiter` (teto 5/15min, ANTES de
- * `twoFactorLimiter` na cadeia) passa a bloquear primeiro quando as requisições vêm do
- * MESMO IP — os testes abaixo variam o IP simulado (`X-Forwarded-For`) entre tentativas
- * quando o objetivo é isolar o comportamento de `twoFactorLimiter` (por `desafio`, não
- * por IP) do de `authLimiter` (por IP, agora corretamente ativo nesta rota também).
+ * HISTÓRICO DOS MOUNTS [REVISOR 01a03bb9 DELTA achado 2 — doc atualizada]:
+ * EV-070 corrigiu a chave por-IP do `authLimiter` numa época em que
+ * `app.use('/api/auth/login', ...)` alcançava as subrotas 2FA por prefix-match.
+ * A decisão POSTERIOR D-FE-STRUCT-LIMITER-2FA (Codex 01a0346e; app.js:131-141)
+ * trocou o mount para `app.post('/api/auth/login')` EXATO — hoje o `authLimiter`
+ * NÃO alcança `/api/auth/login/2fa/recuperar`; a rota fica só com o
+ * `twoFactorLimiter` (chave = `desafio`, herdado por `app.use('/api/auth/login/2fa')`)
+ * e o limiter global de /api. A variação de `X-Forwarded-For` nos testes 1-2 é
+ * herança do desenho antigo e permanece INÓCUA (nenhum limiter por IP atua aqui);
+ * o teste 3 tranca exatamente essa ausência (anti cross-flow lockout).
  */
 const storeState = vi.hoisted(() => ({ hits: new Map() }));
 vi.mock('rate-limit-redis', () => {
@@ -77,9 +74,9 @@ describe('POST /api/auth/login/2fa/recuperar: twoFactorLimiter (5/15min) via pre
     const respostas = [];
     // Sequencial de propósito: cada requisição precisa observar o contador já
     // incrementado pela anterior (mesma chave: o próprio `desafio`, ver
-    // `keyGenerator` de `twoFactorLimiter` em src/app.js). IP simulado DIFERENTE a
-    // cada tentativa (EV-070) — isola o teto de `twoFactorLimiter` (por `desafio`)
-    // do de `authLimiter` (por IP, herdado pelo mesmo prefix-match, teto também 5).
+    // `keyGenerator` de `twoFactorLimiter` em src/app.js). A variação do IP
+    // simulado é herança do desenho antigo (quando o authLimiter alcançava a
+    // rota) e hoje é INÓCUA — mantida por não custar nada (ver cabeçalho).
     for (let i = 0; i < 6; i += 1) {
       respostas.push(
         await request(app)
