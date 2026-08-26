@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-DEPLOY-REV4",
-  "titulo": "Redis idempotente no re-prepare (DELTA-3): service Redis existente => zero templateDeploy (sem 2o Redis faturavel)",
+  "sliceId": "STG-APP-DEPLOY-FINAL-01",
+  "titulo": "Registro do GO do REVISOR (DELTA-4 APROVADO) + estado final do ciclo no ledger",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T02:02:53.093Z",
+  "declaradoEm": "2026-08-26T02:05:08.894Z",
   "baseCommitPorLane": {
-    "HARNESS": "2428df2b87bd0d080f79cbd2e196ae8b4818a87b"
+    "HARNESS": "418814f384bd2581e9a86c32946328afe1a05e26"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "REVISOR reproduziu: apos o usuario criar o Redis (passo 5), o re-prepare chamava templateDeployV2 de novo — 2o recurso faturavel fora da autorizacao. Fix: adocao/preflight detecta service chamado Redis e o bloco de template so roda na AUSENCIA; selftest prova zero templateDeploy* com Redis existente.",
+  "notaDeMetodo": "4 rodadas do REVISOR 01a03bb9 fechadas (pipefail; preflight de identidade; adocao fail-closed; env staging obrigatorio no connect; CF-delta; docs; Redis idempotente). GO condicionado: connect usa exclusivamente os IDs do re-prepare mais recente; env novo repete user-gate; fail-closed permanece ate /health 200 + provas.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "571fac91ae8cb95bfb1a02bf798038a7ca199e7421cee29bed3ec499193d670a",
+      "docs/agent-environment/AGENT_DECISIONS.md": "71cf842ceaa9bbe366b0251e471cd1f27391b08ed57a8a485f2267fa80c2d2b5",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "c397ea39fc7bf4ee3067fc5cb679b53a9ccd63a9c496b12257085f795ba9fa9f",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b8beaba401d0f83769298146ae3536f7426d0ebed0ab669f050afbb2b2beca97",
+      "docs/eos-v2/WRITE_SET.json": "4300983435f6e5c0355cdd838d9354535e6d5f162079c606c00430bcbd082108",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "10ea11fcefc309ea92cad03572d596170c0b231082bd08a30d380a55c0f086d9",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -749,7 +749,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "8327fb3d34a6142811b26b318f54c8375de35bb9aa7aa53a053f118e9f7d59a7"
+      "tools/railway-staging-bootstrap.mjs": "353306f522515523776b4434891fe4beeea3e3cbf228d578236aa573fbafc16a"
     }
   },
   "artefatosPorLane": {
@@ -2524,30 +2524,30 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/railway-staging-bootstrap.mjs",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "deteccao de service Redis existente + skip do template + selftest",
+      "proposito": "veredito APROVADO/GO com condicoes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8327fb3d34a6142811b26b318f54c8375de35bb9aa7aa53a053f118e9f7d59a7",
+      "shaNaDeclaracao": "71cf842ceaa9bbe366b0251e471cd1f27391b08ed57a8a485f2267fa80c2d2b5",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "rodada DELTA-3",
+      "proposito": "estado final do ciclo (GO + user-gate)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "571fac91ae8cb95bfb1a02bf798038a7ca199e7421cee29bed3ec499193d670a",
+      "shaNaDeclaracao": "db7479a4b526558e3cb3bd0528cda9825b88ad62ae7c1c15cebc690ff3230054",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Redis idempotente: service existente => zero templateDeploy (selftest 14/14).",
+  "nota": "GO registrado; ciclo encerra no user-gate do passo 5.",
   "aviso": "Declaracao ENCERRADA."
 }

@@ -59533,9 +59533,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Redis idempotente: service existente => zero templateDeploy (selftest 14/14).",
       "declaradoEm": "2026-08-26T02:02:53.093Z"
+    },
+    {
+      "sliceId": "STG-APP-DEPLOY-FINAL-01",
+      "titulo": "Registro do GO do REVISOR (DELTA-4 APROVADO) + estado final do ciclo no ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "GO registrado; ciclo encerra no user-gate do passo 5.",
+      "declaradoEm": "2026-08-26T02:05:08.894Z"
     }
   ],
-  "geradoEm": "2026-08-26T02:03:32.507Z",
+  "geradoEm": "2026-08-26T02:05:11.297Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
