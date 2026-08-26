@@ -45,7 +45,13 @@ Os passos manuais antigos abaixo ficam como **fallback** (se algum workflow repo
 | Vars não-secretas | aplicadas (APP_ENV/STAGING_REF/SUPABASE_URL/ALLOWED_ORIGIN/FRONTEND_URL/STORAGE_STRICT/NODE_ENV/PUBLIC_URL/REDIS_URL-referência) |
 | Redis | **MANUAL_PENDENTE** (template API recusou) — ver ação 2 abaixo |
 
-### ⏳ AS 3 AÇÕES DO USUÁRIO (passo 5) — **VERIFICADO 2026-08-26: 0/3 feitas** (connect fail-closed listou as 7 vars; Redis MANUAL_PENDENTE; .env.staging ausente)
+### ⏳ RESTANTE DO PASSO 5 — **agente executou o executável** (Redis ✓, 3 internos ✓ via runner, `.env.staging` scaffold ✓)
+
+**Irredutível ao usuário — 4 valores, por REGRA do agente (não por UI):** `DATABASE_URL`,
+`DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` — preencher em DOIS lugares:
+(a) Railway → service `admai-staging` → Variables; (b) `chaveiro-bot/.env.staging` (campos já
+vazios no scaffold). Verificação: re-dispatch do `connect` lista o que faltar, sem expor nada.
+Opcional p/ subgates H-mut/I: `STAGING_SUPABASE_ANON_KEY`, `STAGING_AUTHENTICATED_JWT` no `.env.staging`.
 
 1. **Vars SECRETAS do service** — Railway → projeto `admai-staging` → service `admai-staging` →
    Variables: `DATABASE_URL` (pooler 6543 do admai-staging), `DIRECT_URL` (pooler 5432),

@@ -59561,9 +59561,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Retomada: re-prepare OK (env staging renomeado; dominio novo); connect fail-closed provou user-gate 0/3; evidencias registradas.",
       "declaradoEm": "2026-08-26T02:14:59.680Z"
+    },
+    {
+      "sliceId": "STG-APP-USERGATE-EXEC-01",
+      "titulo": "Execucao direta do user-gate dentro das capabilities: Redis via UI (feito), secrets internos gerados NO RUNNER via nova fase do bootstrap, .env.staging scaffold",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "UNKNOWN_PROVENANCE",
+      "bloqueiaIntegracao": true,
+      "nota": "User-gate executado ate o limite de regras: Redis PASS (UI+provider-verified), internos 3/7 via runner, .env.staging scaffold git-ignored, dominio query-first; connect re-verificou 4 externos restantes.",
+      "declaradoEm": "2026-08-26T02:31:18.653Z"
     }
   ],
-  "geradoEm": "2026-08-26T02:15:41.562Z",
+  "geradoEm": "2026-08-26T02:37:25.520Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

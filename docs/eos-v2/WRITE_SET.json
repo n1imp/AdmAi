@@ -5,7 +5,7 @@
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
-  "estado": "DECLARED",
+  "estado": "CLOSED",
   "declaradoEm": "2026-08-26T02:31:18.653Z",
   "baseCommitPorLane": {
     "HARNESS": "e89560771afba4024e8e89ace4fbf1a20bef3007"
@@ -2567,5 +2567,14 @@
       "shaNaDeclaracao": "7ebfe0fb9c5eff9fd10b835b8f647c6a62247601b25dd8a907d20a07bc344ab0",
       "sujoNaDeclaracao": false
     }
-  ]
+  ],
+  "comparacao": "UNKNOWN_DIFFERENCE",
+  "escopoDaComparacao": "LANE_UNICA",
+  "lanesObservadas": [
+    "HARNESS"
+  ],
+  "provenance": "UNKNOWN_PROVENANCE",
+  "bloqueiaIntegracao": true,
+  "nota": "User-gate executado ate o limite de regras: Redis PASS (UI+provider-verified), internos 3/7 via runner, .env.staging scaffold git-ignored, dominio query-first; connect re-verificou 4 externos restantes.",
+  "aviso": "Declaracao ENCERRADA."
 }
