@@ -59599,9 +59599,38 @@
         ],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "STG-APP-OPAQUE-SECRETS-01",
+      "titulo": "Transferencia OPACA dos secrets externos: fase external-secrets no bootstrap (GH env-secrets -> Railway) + drenador local de clipboard (valor nunca no modelo)",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "UNKNOWN_PROVENANCE",
+      "bloqueiaIntegracao": false,
+      "nota": "Transferencia opaca executada: external-secrets phase + drenador; service_role CONFIGURED fim-a-fim (run 32924987362); commits da fatia empurrados antes do fechamento na MESMA sequencia declarada",
+      "declaradoEm": "2026-08-26T02:45:49.188Z",
+      "reconciliacao": {
+        "em": "2026-08-26T03:11:12.087Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Diretiva do usuario OPAQUE_SECRET_TRANSFER (executar diretamente se OPAQUE_PATH_AVAILABLE) — a fase external-secrets so roda no runner se o workflow estiver NA BRANCH, logo o push mid-slice e requisito estrutural da propria execucao",
+        "justificativa": "Commit unico da fatia (bootstrap+workflow+drenador) empurrado antes do fechamento para o dispatch do run 32924987362; docs/ledger fechados em seguida. Todas as escritas sao as declaradas nas 6 entradas; nada fora do conjunto. Mesma classe das duas reconciliacoes anteriores.",
+        "caminhos": [
+          "tools/railway-staging-bootstrap.mjs",
+          "tools/drenar-clipboard-secret.mjs",
+          ".github/workflows/staging-backend-bootstrap.yml",
+          "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+          "docs/agent-environment/AGENT_DECISIONS.md",
+          "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-26T02:38:38.826Z",
+  "geradoEm": "2026-08-26T03:11:12.088Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

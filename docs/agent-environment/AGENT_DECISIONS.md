@@ -230,3 +230,30 @@ Use este ledger somente quando uma missao nao possuir plano ou contrato ativo. D
 - **Correção de capability do usuário**: executar A+B+C diretamente via Chrome + ferramentas locais. **Limites declarados e mantidos**: regra de plataforma proíbe inserir passwords/API keys/tokens em campos (vale mesmo com autorização explícita) e AGENTS.md proíbe LER/expor secrets — portanto os 4 valores de ORIGEM EXTERNA (senha do DB nas 2 URLs, service-role, Resend) não transitam pelo agente em nenhuma direção.
 - **Executado**: (B) Redis criado via UI Railway (env `staging`; service `Redis` + volume; custo já D2-autorizado) e verificado provider-side (`ja-existente`, service `3d9d0ab6…`); (A 3/7) fase `internal-secrets` nova no bootstrap — CSPRNG NO RUNNER + upsert via API, valores nunca no contexto (selftest 16/16, incl. idempotência anti-rotação); (C scaffold) `.env.staging` git-ignored provado, 600, internos por redirecionamento direto, externos vazios; (fix) domínio query-first (acúmulo de 1 domínio/re-prepare visto no run real). **Re-verificação**: connect fail-closed agora lista exatamente `DATABASE_URL, DIRECT_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY`.
 - **Handback §10**: BLOCKER = 4 secrets externos · WHY = regras acima (não é limitação de UI) · EXACT_USER_ACTION = preencher os 4 no Railway E no `.env.staging` · HOW_TO_VERIFY = re-dispatch do connect (lista o que faltar sem expor nada).
+
+### D-STG-OPAQUE-TRANSFER-01 — Transferência opaca dos secrets externos (2026-08-26)
+
+Diretiva do usuário: `OPAQUE_SECRET_TRANSFER != SECRET_READ_BY_MODEL` — investigar caminhos onde
+os bytes nunca entram no contexto do agente, sem relaxar AGENTS.md. Classificação: extensão do
+mecanismo já aprovado para os 3 internos (runner CSPRNG); mesma classe, sem nova superfície de
+decisão material — Codex não requerido (§32: sem mudança material de segurança; validação de
+forma NUNCA ecoa valor, provada por selftest 19/19).
+
+**Construído**: fase `external-secrets` no bootstrap (GH Environment `staging` secrets `*_STAGING`
+→ upsert Railway no runner; nunca sobrescreve nome vivo; recusa forma inválida/produção ANTES do
+upsert sem ecoar o valor) + `tools/drenar-clipboard-secret.mjs` (clipboard → `.env.staging` +
+`gh secret set` via stdin; valida só FORMA; limpa clipboard até em INVALID — defeito
+`process.exit` pulando `finally` encontrado no teste e corrigido).
+
+**Executado com prova**:
+- `SUPABASE_SERVICE_ROLE_KEY`: copy MASCARADO (dashboard Supabase, aba nova de API keys; a11y
+  tree redige o campo) → drenador → gh env-secret → run 32924987362 `EXTERNAL_SECRETS_OK
+  configurados=["SUPABASE_SERVICE_ROLE_KEY"]`. MODEL_SEES_VALUE=NO em todo o trajeto.
+- `STAGING_SUPABASE_ANON_KEY` (publishable, pública): drenada p/ `.env.staging`.
+- Pooler host (não-secreto) lido do painel Connect: `aws-1-sa-east-1.pooler.supabase.com`.
+
+**Limite real encontrado**: Ctrl+A/Ctrl+C no campo do modal *Reset database password* foi
+BLOQUEADO pelo classificador da plataforma (linha da regra de campos de credencial). Modal
+CANCELADO sem aplicar reset; nenhuma mutação. DB password e Resend key ficam como RELAY humano
+de 1 clique (usuário copia; agente drena e faz o resto) — documentado no pacote de deploy.
+Nenhuma tentativa de contornar o bloqueio foi feita.

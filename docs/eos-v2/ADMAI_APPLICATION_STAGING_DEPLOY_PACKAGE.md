@@ -45,25 +45,29 @@ Os passos manuais antigos abaixo ficam como **fallback** (se algum workflow repo
 | Vars não-secretas | aplicadas (APP_ENV/STAGING_REF/SUPABASE_URL/ALLOWED_ORIGIN/FRONTEND_URL/STORAGE_STRICT/NODE_ENV/PUBLIC_URL/REDIS_URL-referência) |
 | Redis | **MANUAL_PENDENTE** (template API recusou) — ver ação 2 abaixo |
 
-### ⏳ RESTANTE DO PASSO 5 — **agente executou o executável** (Redis ✓, 3 internos ✓ via runner, `.env.staging` scaffold ✓)
+### ⏳ RESTANTE DO PASSO 5 — transferência OPACA executada até o limite (Redis ✓, 3 internos ✓, `service_role` ✓ fim-a-fim, anon ✓)
 
-**Irredutível ao usuário — 4 valores, por REGRA do agente (não por UI):** `DATABASE_URL`,
-`DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` — preencher em DOIS lugares:
-(a) Railway → service `admai-staging` → Variables; (b) `chaveiro-bot/.env.staging` (campos já
-vazios no scaffold). Verificação: re-dispatch do `connect` lista o que faltar, sem expor nada.
-Opcional p/ subgates H-mut/I: `STAGING_SUPABASE_ANON_KEY`, `STAGING_AUTHENTICATED_JWT` no `.env.staging`.
+**Já CONFIGURED sem o valor jamais tocar o agente** (princípio `OPAQUE_TRANSFER != MODEL_READ`):
+`SUPABASE_SERVICE_ROLE_KEY` — copy MASCARADO no dashboard Supabase → drenador
+`tools/drenar-clipboard-secret.mjs` → `.env.staging` + `gh secret` (Env `staging`) → fase
+`external-secrets` (run 32924987362) → Railway. `STAGING_SUPABASE_ANON_KEY` (publishable) idem
+p/ `.env.staging`. **Railway agora sem exatamente 3**: `DATABASE_URL`, `DIRECT_URL`, `RESEND_API_KEY`.
 
-1. **Vars SECRETAS do service** — Railway → projeto `admai-staging` → service `admai-staging` →
-   Variables: `DATABASE_URL` (pooler 6543 do admai-staging), `DIRECT_URL` (pooler 5432),
-   `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`
-   (3 últimos: `openssl rand -hex 32`, NOVOS), `RESEND_API_KEY` (key/sandbox de staging).
-2. **Redis** — mesmo projeto → environment **`staging`** (já renomeado) → **Create → Database →
-   Redis** (o service DEVE chamar-se `Redis` para a referência `${{Redis.REDIS_URL}}` resolver).
-3. **`chaveiro-bot/.env.staging` local** (modelo `.env.staging.example`) — para seed/bucket/
-   negative-controls/validate rodarem da sua máquina.
+**Restam 2 RELAYS de clipboard (1 clique humano cada; o agente faz todo o resto):**
 
-Depois de (1)+(2), Claude executa: `phase=connect` → `/health` 200 → `VITE_API_URL_STAGING` →
-publish do frontend → provas §32 (com (3): seed A/B, bucket, subgates H-mut/I/J/K, E2E).
+1. **Senha do DB staging** — Supabase `admai-staging` → Connect → *Reset database password* →
+   **Generate a password** → **selecionar e copiar** (Ctrl+A/C) → avisar no chat ("ok senha") →
+   agente roda `node tools/drenar-clipboard-secret.mjs DB_PASSWORD
+   --pooler-host=aws-1-sa-east-1.pooler.supabase.com` (valida forma, compõe as DUAS URLs, grava
+   `.env.staging` + gh secrets, limpa o clipboard, nunca exibe) → **você clica "Reset password"**
+   p/ aplicar A MESMA senha copiada. *(O clique Ctrl+C do agente no campo foi bloqueado pelo
+   classificador da plataforma — fronteira da regra de campos de credencial; por isso o relay.)*
+2. **Key do Resend** — resend.com → API Keys → criar key de staging → **Copy** → avisar ("ok
+   resend") → agente roda o drenador `RESEND_API_KEY`.
+
+Depois dos relays, o agente executa sozinho: `external-secrets` → `connect` → `/health` 200 →
+`VITE_API_URL_STAGING` → publish do frontend → provas §32 (seed A/B, bucket, H-mut/I/J/K, E2E).
+Opcional p/ subgate I: relay extra de `STAGING_AUTHENTICATED_JWT`.
 
 ---
 
