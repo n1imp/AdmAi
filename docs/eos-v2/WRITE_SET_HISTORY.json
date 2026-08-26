@@ -56835,7 +56835,17 @@
       "livroRazaoTocado": [
         "HARNESS::docs/eos-v2/WRITE_SET.json"
       ],
-      "bloqueiaIntegracao": true
+      "bloqueiaIntegracao": false,
+      "reconciliacao": {
+        "em": "2026-08-26T02:38:38.825Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Codex REVISOR thread 01a03bb9 (rodada 1, achado 7, literal: EVID-01 ficou UNKNOWN_DIFFERENCE ... Nao altera a seguranca do codigo ... aceitavel como divida registrada) + registro em AGENT_DECISIONS (apendice de execucao, Nota de disciplina)",
+        "justificativa": "Fatia de evidencias arquivada DECLARED por declaracao superveniente durante o sweep de CI; sua unica escrita pendente (trigger de registro do bootstrap) foi commitada em 9f54cc6 e as evidencias de ledger nas fatias sucessoras. Comparacao perdeu a base no arquivamento (HEAD movido). Conteudo integro e coberto por fatias posteriores fechadas.",
+        "caminhos": [
+          ".github/workflows/staging-backend-bootstrap.yml"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     },
     {
       "sliceId": "STG-APP-CI-FORMAT-01",
@@ -59591,7 +59601,7 @@
       }
     }
   ],
-  "geradoEm": "2026-08-26T02:37:53.862Z",
+  "geradoEm": "2026-08-26T02:38:38.826Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
