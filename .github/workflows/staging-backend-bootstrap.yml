@@ -42,7 +42,10 @@ on:
         description: '(connect) serviceId do output do prepare'
         required: false
 
-permissions: {}
+# contents:read é o mínimo p/ o checkout do repo privado (permissions vazio quebrava
+# o actions/checkout com "repository not found" — visto no run de registro).
+permissions:
+  contents: read
 
 jobs:
   bootstrap:
