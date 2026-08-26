@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-RESUME-01",
-  "titulo": "Retomada pos-GO: re-prepare real (env renomeado p/ staging; dominio novo) + connect fail-closed provou user-gate INCOMPLETO (A/B/C ausentes)",
+  "sliceId": "STG-APP-USERGATE-EXEC-01",
+  "titulo": "Execucao direta do user-gate dentro das capabilities: Redis via UI (feito), secrets internos gerados NO RUNNER via nova fase do bootstrap, .env.staging scaffold",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
-  "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T02:14:59.680Z",
+  "estado": "DECLARED",
+  "declaradoEm": "2026-08-26T02:31:18.653Z",
   "baseCommitPorLane": {
-    "HARNESS": "c25a24c0d1ebbccb1c55dfdac5da8264fe607bfa"
+    "HARNESS": "e89560771afba4024e8e89ace4fbf1a20bef3007"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Verificacao secret-safe pelos proprios artefatos: re-prepare run 32921909680 PREPARE_OK (environmentRename existia: env d8e3fbe2 agora chama-se staging; dominio novo admai-staging-staging.up.railway.app; Redis MANUAL_PENDENTE = item B ABSENT); connect run 32921953759 recusou ANTES de mutation listando as 7 vars por NOME = item A ABSENT; .env.staging local ABSENT = item C. Nenhum valor impresso; zero mutacao no connect; zero producao.",
+  "notaDeMetodo": "Correcao de capability do usuario: agente executa o gate via Chrome+local. LIMITES declarados: regras de plataforma proibem inserir passwords/API keys/tokens em campos e AGENTS.md proibe LER secrets — logo os 4 secrets de origem externa (DATABASE_URL/DIRECT_URL com senha do DB, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY) nao passam pelo agente; TODO o resto e executado. Redis criado via UI Railway (sem secrets; custo ja D2). Nova fase 'internal-secrets' do bootstrap: gera JWT_SECRET/ENCRYPTION_KEY/API_TOKEN com crypto CSPRNG DENTRO do runner e upserta via API — valores nunca tocam contexto/chat/log; idempotente (presentes => skip). Scaffold .env.staging com nao-secretos + internos gerados por redirecionamento direto de shell (nunca exibidos), git-ignored provado.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "1ada73ce6842b2e196b19232db589cc881222c9670af90d5b2ef94f615a68c11",
+      "docs/agent-environment/AGENT_DECISIONS.md": "578af5bb8f27e5f35c27a2e0600c2ee2a1e21527db4ec9c0af967d3a6545ac2b",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -607,8 +607,8 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "8d3bf83267d784b6dc7dc445ca252bb82479c0f15194956b67543fdc0b6ddecc",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "62dc87cf9ed49d36d0650d372d424a6bbf788c3a434d00c97096a5997891ddb3",
+      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "7ebfe0fb9c5eff9fd10b835b8f647c6a62247601b25dd8a907d20a07bc344ab0",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "b763c2c21d906ad13dcf4cdf36bc3e048854946d6c4b2e016f25d9140123c118",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "105ff6868544d78ea32e9b8382052f4831a9536cadacfe93224f92fbf735168d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "617e28d64a2f5d4a382adf5fc0f95f02d2c6bbf378d74a13a57b8d8f80c73db4",
+      "docs/eos-v2/WRITE_SET.json": "a17abea7559cfce36ac56120c77c230b3d853a2f849a6113922a69e5aaad0a93",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "6f8711a441dae0680bdf46e9119371b7b29cab9e7ae1a4880124942fbea6769a",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,39 +2524,48 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "caminho": "tools/railway-staging-bootstrap.mjs",
       "precisao": "BOUNDED",
-      "proposito": "evidencia do re-prepare + user-gate confirmado A/B/C ABSENT",
+      "proposito": "fase internal-secrets (gera no runner + upsert; idempotente; nunca imprime valores) + selftest",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "62dc87cf9ed49d36d0650d372d424a6bbf788c3a434d00c97096a5997891ddb3",
+      "shaNaDeclaracao": "353306f522515523776b4434891fe4beeea3e3cbf228d578236aa573fbafc16a",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
+      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
       "precisao": "BOUNDED",
-      "proposito": "dominio/env atualizados (staging renomeado) + status confirmado das 3 acoes",
+      "proposito": "phase internal-secrets no dispatch",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8d3bf83267d784b6dc7dc445ca252bb82479c0f15194956b67543fdc0b6ddecc",
+      "shaNaDeclaracao": "e3780e19c4162dee260782c26b77c3cd41e865bb0fb74cf5819320a20582f805",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "evidencias do gate executado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b763c2c21d906ad13dcf4cdf36bc3e048854946d6c4b2e016f25d9140123c118",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "apendice da retomada",
+      "proposito": "registro da execucao + limites de capability declarados",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1ada73ce6842b2e196b19232db589cc881222c9670af90d5b2ef94f615a68c11",
+      "shaNaDeclaracao": "578af5bb8f27e5f35c27a2e0600c2ee2a1e21527db4ec9c0af967d3a6545ac2b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
+      "precisao": "BOUNDED",
+      "proposito": "status atualizado do gate (o que restou ao usuario e por que)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7ebfe0fb9c5eff9fd10b835b8f647c6a62247601b25dd8a907d20a07bc344ab0",
       "sujoNaDeclaracao": false
     }
-  ],
-  "comparacao": "OBSERVED_SUBSET",
-  "escopoDaComparacao": "LANE_UNICA",
-  "lanesObservadas": [
-    "HARNESS"
-  ],
-  "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Retomada: re-prepare OK (env staging renomeado; dominio novo); connect fail-closed provou user-gate 0/3; evidencias registradas.",
-  "aviso": "Declaracao ENCERRADA."
+  ]
 }

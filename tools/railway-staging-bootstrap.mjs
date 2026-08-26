@@ -391,6 +391,43 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
   }
 }
 
+// ── INTERNAL-SECRETS ─────────────────────────────────────────────────────────
+/** [STG-APP-USERGATE-EXEC-01] Gera JWT_SECRET/ENCRYPTION_KEY/API_TOKEN com CSPRNG
+ *  DENTRO do processo (o runner do Actions) e upserta via API — os VALORES nunca
+ *  saem daqui: não são retornados, logados nem impressos. Idempotente: nomes já
+ *  presentes NÃO são regenerados (sobrescrever rotacionaria segredos vivos).
+ *  Preflight de identidade obrigatório (mesmo contrato do connect). */
+export const SECRETOS_INTERNOS = ['JWT_SECRET', 'ENCRYPTION_KEY', 'API_TOKEN'];
+
+export async function internalSecrets(gql, { projectId, environmentId, serviceId }, randomHex = null) {
+  if (!projectId || !environmentId || !serviceId) {
+    falhar('internal-secrets exige --project-id, --environment-id e --service-id.');
+  }
+  await verificarIdentidade(gql, { projectId, environmentId, serviceId });
+
+  const r = await gql(
+    `query($projectId: String!, $environmentId: String!, $serviceId: String!) {
+       variables(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId) }`,
+    { projectId, environmentId, serviceId }
+  );
+  const existentes = Object.keys(r.data?.variables ?? {});
+  const faltantes = SECRETOS_INTERNOS.filter((n) => !existentes.includes(n));
+  if (!faltantes.length) {
+    return { gerados: [], jaPresentes: SECRETOS_INTERNOS };
+  }
+
+  const hex = randomHex ?? (async (bytes) => (await import('node:crypto')).randomBytes(bytes).toString('hex'));
+  const variables = {};
+  for (const nome of faltantes) variables[nome] = await hex(32); // 64 hex chars cada, independentes
+
+  await gql(
+    `mutation($input: VariableCollectionUpsertInput!) { variableCollectionUpsert(input: $input) }`,
+    { input: { projectId, environmentId, serviceId, variables } }
+  );
+  // Nunca devolver/limpar tarde demais os valores: o objeto morre aqui.
+  return { gerados: faltantes, jaPresentes: SECRETOS_INTERNOS.filter((n) => existentes.includes(n)) };
+}
+
 // ── CONNECT ──────────────────────────────────────────────────────────────────
 export async function connect(gql, { projectId, environmentId, serviceId }) {
   if (!projectId || !environmentId || !serviceId) {
@@ -682,6 +719,46 @@ export async function autoteste() {
     }
   });
 
+  await caso('[USERGATE] internal-secrets gera 3 hex-64 INDEPENDENTES so para os AUSENTES e upserta sem expor', async () => {
+    let payload = null;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query, variables } = JSON.parse(body);
+      if (query.includes('variableCollectionUpsert')) payload = variables.input.variables;
+      const mapa = {
+        __schema: SCHEMA_OK,
+        'project(': NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]),
+        'variables(': { data: { variables: { APP_ENV: 'staging', JWT_SECRET: 'ja-tem' } } },
+        variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
+      };
+      for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    });
+    const r = await internalSecrets(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' });
+    const chaves = Object.keys(payload ?? {});
+    return r.gerados.length === 2 && r.jaPresentes.includes('JWT_SECRET')
+      && chaves.sort().join(',') === 'API_TOKEN,ENCRYPTION_KEY'
+      && chaves.every((k) => /^[0-9a-f]{64}$/.test(payload[k]))
+      && payload.API_TOKEN !== payload.ENCRYPTION_KEY
+      && !JSON.stringify(r).includes(payload.API_TOKEN); // resultado NUNCA carrega valor
+  });
+
+  await caso('[USERGATE] internal-secrets IDEMPOTENTE: 3 presentes => zero upsert (nao rotaciona segredo vivo)', async () => {
+    let upserts = 0;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query } = JSON.parse(body);
+      if (query.includes('variableCollectionUpsert')) upserts += 1;
+      const mapa = {
+        __schema: SCHEMA_OK,
+        'project(': NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]),
+        'variables(': { data: { variables: { JWT_SECRET: 'x', ENCRYPTION_KEY: 'y', API_TOKEN: 'z' } } },
+      };
+      for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    });
+    const r = await internalSecrets(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' });
+    return upserts === 0 && r.gerados.length === 0 && r.jaPresentes.length === 3;
+  });
+
   await caso('connect sem vars secretas falha listando NOMES (nunca valores)', async () => {
     const gql = criarCliente('t', respostas({
       __schema: SCHEMA_OK,
@@ -728,8 +805,8 @@ if (argv.includes('--selftest')) {
 
 if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || process.argv[1]?.endsWith('railway-staging-bootstrap.mjs')) {
   const fase = flag('phase');
-  if (!['prepare', 'connect'].includes(fase ?? '')) {
-    console.error('uso: --phase=prepare [--project-id=..] | --phase=connect --project-id=.. --environment-id=.. --service-id=.. | --selftest');
+  if (!['prepare', 'connect', 'internal-secrets'].includes(fase ?? '')) {
+    console.error('uso: --phase=prepare [--project-id=..] | --phase=internal-secrets --project-id=.. --environment-id=.. --service-id=.. | --phase=connect (mesmos ids) | --selftest');
     process.exit(2);
   }
   const token = process.env.RAILWAY_TOKEN;
@@ -745,6 +822,14 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
       console.log(`\nPROXIMOS PASSOS:\n 1. Dashboard Railway -> projeto ${NOME_PROJETO} -> service ${NOME_SERVICE} -> Variables:`);
       console.log(`    preencher (valores do admai-staging; novos, nunca de producao): ${SECRETAS_OBRIGATORIAS.join(', ')}`);
       console.log(` 2. Re-rodar com --phase=connect --project-id=${inv.projectId} --environment-id=${inv.environmentId} --service-id=${inv.serviceId}`);
+    } else if (fase === 'internal-secrets') {
+      const r = await internalSecrets(gql, {
+        projectId: flag('project-id'),
+        environmentId: flag('environment-id'),
+        serviceId: flag('service-id'),
+      });
+      // SÓ nomes/status — nunca valores.
+      console.log('INTERNAL_SECRETS_OK ' + JSON.stringify(r));
     } else {
       const r = await connect(gql, {
         projectId: flag('project-id'),

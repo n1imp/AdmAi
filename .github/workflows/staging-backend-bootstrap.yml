@@ -29,7 +29,7 @@ on:
         description: 'Digite "yes" confirmando a autorização D2 de custo (serviço + Redis staging)'
         required: true
       phase:
-        description: 'prepare | connect'
+        description: 'prepare | internal-secrets | connect'
         required: true
         default: 'prepare'
       project_id:
@@ -68,8 +68,8 @@ jobs:
             echo "::error::confirm_cost != 'yes' — sem a confirmação literal do D2 de custo, nada é criado."
             exit 1
           fi
-          case "${{ inputs.phase }}" in prepare|connect) ;; *)
-            echo "::error::phase deve ser prepare ou connect."; exit 1;; esac
+          case "${{ inputs.phase }}" in prepare|connect|internal-secrets) ;; *)
+            echo "::error::phase deve ser prepare, internal-secrets ou connect."; exit 1;; esac
           echo "phase=${{ inputs.phase }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
