@@ -29,7 +29,7 @@ on:
         description: 'Digite "yes" confirmando a autorização D2 de custo (serviço + Redis staging)'
         required: true
       phase:
-        description: 'prepare | internal-secrets | connect'
+        description: 'prepare | internal-secrets | external-secrets | connect'
         required: true
         default: 'prepare'
       project_id:
@@ -53,6 +53,10 @@ permissions:
 jobs:
   bootstrap:
     runs-on: ubuntu-latest
+    # Environment staging: dá acesso aos secrets *_STAGING (transferência OPACA —
+    # gh secret set --env staging alimenta; a fase external-secrets upserta no
+    # Railway DENTRO do runner; valores nunca transitam pelo agente/chat/logs).
+    environment: staging
     steps:
       - name: Guard de autorização (D2 registrado no dispatch; tag = só registro)
         id: fase
@@ -68,8 +72,8 @@ jobs:
             echo "::error::confirm_cost != 'yes' — sem a confirmação literal do D2 de custo, nada é criado."
             exit 1
           fi
-          case "${{ inputs.phase }}" in prepare|connect|internal-secrets) ;; *)
-            echo "::error::phase deve ser prepare, internal-secrets ou connect."; exit 1;; esac
+          case "${{ inputs.phase }}" in prepare|connect|internal-secrets|external-secrets) ;; *)
+            echo "::error::phase deve ser prepare, internal-secrets, external-secrets ou connect."; exit 1;; esac
           echo "phase=${{ inputs.phase }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
@@ -85,6 +89,12 @@ jobs:
         if: ${{ steps.fase.outputs.phase != 'register' }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          # Fase external-secrets (só nela são lidos): secrets do Environment staging.
+          # Ausentes ⇒ a fase reporta ausentesNoRunner por NOME (nunca valores).
+          STG_DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+          STG_DIRECT_URL: ${{ secrets.DIRECT_URL_STAGING }}
+          STG_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
+          STG_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_STAGING }}
         run: |
           # pipefail OBRIGATÓRIO [REVISOR 01a03bb9 achado 1]: sem ele, o status do
           # pipe é o do `tee` e um bootstrap que sai 1 viraria step VERDE.

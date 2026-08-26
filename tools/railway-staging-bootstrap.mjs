@@ -427,6 +427,102 @@ export async function internalSecrets(gql, { projectId, environmentId, serviceId
   return { gerados: faltantes, jaPresentes: SECRETOS_INTERNOS.filter((n) => existentes.includes(n)) };
 }
 
+// ── EXTERNAL-SECRETS ─────────────────────────────────────────────────────────
+/** Transferência OPACA dos secrets de ORIGEM EXTERNA (Supabase/Resend): o runner
+ *  do Actions recebe os valores do GitHub Environment `staging` (env vars STG_*)
+ *  e upserta via API — princípio OPAQUE_TRANSFER != MODEL_READ, o mesmo do
+ *  internal-secrets. Valores JAMAIS impressos/retornados; toda mensagem de erro
+ *  carrega só NOME + MOTIVO da recusa de forma (nunca o valor — guardaProducao
+ *  ecoaria o valor e por isso NÃO é usado aqui). Nunca sobrescreve nome já
+ *  presente (rotacionaria segredo vivo). */
+export const SECRETOS_EXTERNOS = ['DATABASE_URL', 'DIRECT_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'RESEND_API_KEY'];
+
+/** Valida SÓ A FORMA; retorna null (ok) ou o MOTIVO (string sem o valor). */
+export function validarFormaExterna(nome, valor) {
+  const v = String(valor ?? '').trim();
+  if (!v) return 'vazio';
+  if (/\r|\n/.test(v)) return 'contem quebra de linha';
+  if (PADRAO_PRODUCAO.test(v) || v === 'AdmAi') return 'casa padrao de PRODUCAO';
+  switch (nome) {
+    case 'DATABASE_URL':
+    case 'DIRECT_URL': {
+      let u;
+      try {
+        u = new URL(v);
+      } catch {
+        return 'nao e uma URL';
+      }
+      if (!/^postgres(ql)?:$/.test(u.protocol)) return 'protocolo nao-postgres';
+      const viaPooler = /(^|\.)pooler\.supabase\.com$/.test(u.hostname);
+      const viaDireto = u.hostname === `db.${REF_STAGING}.supabase.co`;
+      if (!viaPooler && !viaDireto) return 'host fora do padrao Supabase do ref staging';
+      // Binding POSITIVO ao ref staging (mesma regra do guard de boot em env.js):
+      if (viaPooler && u.username !== `postgres.${REF_STAGING}`) return 'username do pooler nao referencia o ref staging';
+      if (viaDireto && u.username !== 'postgres') return 'username da conexao direta deveria ser postgres';
+      if (!u.password) return 'sem senha embutida';
+      return null;
+    }
+    case 'SUPABASE_SERVICE_ROLE_KEY':
+      return /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(v) || /^sb_secret_[A-Za-z0-9_-]+$/.test(v)
+        ? null
+        : 'nao tem forma de service_role (JWT eyJ... ou sb_secret_...)';
+    case 'RESEND_API_KEY':
+      return /^re_[A-Za-z0-9_]+$/.test(v) ? null : 'nao tem forma de key do Resend (re_...)';
+    default:
+      return 'nome desconhecido';
+  }
+}
+
+export async function externalSecrets(gql, { projectId, environmentId, serviceId }, ambiente = process.env) {
+  if (!projectId || !environmentId || !serviceId) {
+    falhar('external-secrets exige --project-id, --environment-id e --service-id.');
+  }
+  await verificarIdentidade(gql, { projectId, environmentId, serviceId });
+
+  const r = await gql(
+    `query($projectId: String!, $environmentId: String!, $serviceId: String!) {
+       variables(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId) }`,
+    { projectId, environmentId, serviceId }
+  );
+  const existentes = Object.keys(r.data?.variables ?? {});
+
+  const configurar = {};
+  const relat = { configurados: [], jaPresentes: [], ausentesNoRunner: [], invalidos: [] };
+  for (const nome of SECRETOS_EXTERNOS) {
+    if (existentes.includes(nome)) {
+      relat.jaPresentes.push(nome);
+      continue;
+    }
+    const valor = ambiente[`STG_${nome}`];
+    if (!valor) {
+      relat.ausentesNoRunner.push(nome);
+      continue;
+    }
+    const motivo = validarFormaExterna(nome, valor);
+    if (motivo) {
+      relat.invalidos.push(`${nome} (${motivo})`);
+      continue;
+    }
+    configurar[nome] = valor.trim();
+  }
+
+  if (relat.invalidos.length) {
+    falhar(
+      `external-secrets: FORMA invalida (valores nunca exibidos): ${relat.invalidos.join('; ')}.`,
+      'Corrija o secret correspondente no GitHub Environment staging (gh secret set <NOME>_STAGING --env staging) e re-rode a fase.'
+    );
+  }
+  if (Object.keys(configurar).length) {
+    await gql(
+      `mutation($input: VariableCollectionUpsertInput!) { variableCollectionUpsert(input: $input) }`,
+      { input: { projectId, environmentId, serviceId, variables: configurar } }
+    );
+    relat.configurados = Object.keys(configurar);
+  }
+  // Objeto com valores morre aqui; só nomes saem.
+  return relat;
+}
+
 // ── CONNECT ──────────────────────────────────────────────────────────────────
 export async function connect(gql, { projectId, environmentId, serviceId }) {
   if (!projectId || !environmentId || !serviceId) {
@@ -776,6 +872,66 @@ export async function autoteste() {
     }
   });
 
+  await caso('validarFormaExterna: URL de pooler staging valida passa; ref de PRODUCAO recusado SEM ecoar valor', async () => {
+    const ok = validarFormaExterna('DATABASE_URL',
+      'postgresql://postgres.qsuufuulxfkkeasgxhcv:pw@aws-1-sa-east-1.pooler.supabase.com:6543/postgres');
+    const prod = validarFormaExterna('DATABASE_URL',
+      'postgresql://postgres.disljhkypaxpyzvbooge:pw@aws-1-sa-east-1.pooler.supabase.com:6543/postgres');
+    const errado = validarFormaExterna('DATABASE_URL',
+      'postgresql://postgres.outroref:pw@aws-1-sa-east-1.pooler.supabase.com:6543/postgres');
+    return ok === null && prod === 'casa padrao de PRODUCAO' && /nao referencia o ref staging/.test(errado)
+      && validarFormaExterna('RESEND_API_KEY', 're_abc123_XYZ') === null
+      && validarFormaExterna('RESEND_API_KEY', 'sk_live_nope') !== null
+      && validarFormaExterna('SUPABASE_SERVICE_ROLE_KEY', 'eyJa.bb.cc') === null;
+  });
+
+  await caso('externalSecrets: upserta so os validos ausentes; saida so tem NOMES', async () => {
+    let upsertado = null;
+    const fetchFake = async (_url, { body }) => {
+      const { query, variables } = JSON.parse(body);
+      if (query.includes('project(')) return { status: 200, json: async () => NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]) };
+      if (query.includes('variables(')) return { status: 200, json: async () => ({ data: { variables: { RESEND_API_KEY: 'x' } } }) };
+      if (query.includes('variableCollectionUpsert')) {
+        upsertado = variables.input.variables;
+        return { status: 200, json: async () => ({ data: { variableCollectionUpsert: true } }) };
+      }
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    };
+    const gql = criarCliente('t', fetchFake);
+    const amb = {
+      STG_DATABASE_URL: 'postgresql://postgres.qsuufuulxfkkeasgxhcv:pw@aws-1-sa-east-1.pooler.supabase.com:6543/postgres',
+      STG_DIRECT_URL: 'postgresql://postgres.qsuufuulxfkkeasgxhcv:pw@aws-1-sa-east-1.pooler.supabase.com:5432/postgres',
+      // service_role AUSENTE no runner; RESEND ja presente no Railway (nao sobrescreve)
+      STG_RESEND_API_KEY: 're_naodeveusar',
+    };
+    const r = await externalSecrets(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' }, amb);
+    return JSON.stringify(r.configurados) === '["DATABASE_URL","DIRECT_URL"]'
+      && JSON.stringify(r.jaPresentes) === '["RESEND_API_KEY"]'
+      && JSON.stringify(r.ausentesNoRunner) === '["SUPABASE_SERVICE_ROLE_KEY"]'
+      && upsertado && Object.keys(upsertado).length === 2
+      && !JSON.stringify(r).includes('pw@'); // nenhum valor vaza no relato
+  });
+
+  await caso('externalSecrets: valor com ref de PRODUCAO falha ANTES do upsert e a mensagem NAO contem o valor', async () => {
+    let upserts = 0;
+    const fetchFake = async (_url, { body }) => {
+      const { query } = JSON.parse(body);
+      if (query.includes('project(')) return { status: 200, json: async () => NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]) };
+      if (query.includes('variables(')) return { status: 200, json: async () => ({ data: { variables: {} } }) };
+      if (query.includes('variableCollectionUpsert')) { upserts += 1; return { status: 200, json: async () => ({ data: {} }) }; }
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    };
+    const gql = criarCliente('t', fetchFake);
+    const amb = { STG_RESEND_API_KEY: 're_disljhkypaxpyzvbooge_key' };
+    try {
+      await externalSecrets(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' }, amb);
+      return false;
+    } catch (e) {
+      return upserts === 0 && /RESEND_API_KEY \(casa padrao de PRODUCAO\)/.test(e.message)
+        && !e.message.includes('re_disljhkypaxpyzvbooge_key');
+    }
+  });
+
   await caso('connect feliz conecta repo/branch/root (apos preflight de identidade)', async () => {
     const todas = Object.fromEntries(SECRETAS_OBRIGATORIAS.map((n) => [n, 'v']));
     const gql = criarCliente('t', respostas({
@@ -807,8 +963,8 @@ if (argv.includes('--selftest')) {
 
 if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || process.argv[1]?.endsWith('railway-staging-bootstrap.mjs')) {
   const fase = flag('phase');
-  if (!['prepare', 'connect', 'internal-secrets'].includes(fase ?? '')) {
-    console.error('uso: --phase=prepare [--project-id=..] | --phase=internal-secrets --project-id=.. --environment-id=.. --service-id=.. | --phase=connect (mesmos ids) | --selftest');
+  if (!['prepare', 'connect', 'internal-secrets', 'external-secrets'].includes(fase ?? '')) {
+    console.error('uso: --phase=prepare [--project-id=..] | --phase=internal-secrets|external-secrets|connect --project-id=.. --environment-id=.. --service-id=.. | --selftest');
     process.exit(2);
   }
   const token = process.env.RAILWAY_TOKEN;
@@ -832,6 +988,14 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
       });
       // SÓ nomes/status — nunca valores.
       console.log('INTERNAL_SECRETS_OK ' + JSON.stringify(r));
+    } else if (fase === 'external-secrets') {
+      const r = await externalSecrets(gql, {
+        projectId: flag('project-id'),
+        environmentId: flag('environment-id'),
+        serviceId: flag('service-id'),
+      });
+      // SÓ nomes/status — nunca valores.
+      console.log('EXTERNAL_SECRETS_OK ' + JSON.stringify(r));
     } else {
       const r = await connect(gql, {
         projectId: flag('project-id'),
