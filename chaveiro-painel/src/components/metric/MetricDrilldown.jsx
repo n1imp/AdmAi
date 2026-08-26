@@ -32,10 +32,20 @@ export default function MetricDrilldown({ dados, colunas, carregando, erro, auto
     );
   }
   if (carregando) {
-    return <FeedbackState compact announce state="loading" title="Carregando registros" description="Buscando a lista." />;
+    return (
+      <FeedbackState
+        compact
+        announce
+        state="loading"
+        title="Carregando registros"
+        description="Buscando a lista."
+      />
+    );
   }
   if (erro) {
-    return <FeedbackState compact announce state="error" title="Não foi possível listar os registros" />;
+    return (
+      <FeedbackState compact announce state="error" title="Não foi possível listar os registros" />
+    );
   }
   if (!dados) return null;
   if (dados.total === 0) {
@@ -54,7 +64,12 @@ export default function MetricDrilldown({ dados, colunas, carregando, erro, auto
     <div>
       <p className="text-sm text-muted mb-2">
         <strong className="text-slate-200 tnum">{dados.total}</strong> registros formam este número
-        {paginado && <span> · exibindo {offset + 1}–{offset + nestaPagina}</span>}
+        {paginado && (
+          <span>
+            {' '}
+            · exibindo {offset + 1}–{offset + nestaPagina}
+          </span>
+        )}
       </p>
 
       {rotuloOmitido.length > 0 && (
@@ -72,7 +87,11 @@ export default function MetricDrilldown({ dados, colunas, carregando, erro, auto
           <thead>
             <tr className="text-left text-xs text-muted">
               {visiveis.map((c) => (
-                <th key={c.campo} scope="col" className={`py-1.5 ${c.alinharDireita ? 'text-right' : ''}`}>
+                <th
+                  key={c.campo}
+                  scope="col"
+                  className={`py-1.5 ${c.alinharDireita ? 'text-right' : ''}`}
+                >
                   {c.rotulo}
                 </th>
               ))}
@@ -82,7 +101,10 @@ export default function MetricDrilldown({ dados, colunas, carregando, erro, auto
             {dados.registros.map((r) => (
               <tr key={r.id} className="border-t border-dark-600">
                 {visiveis.map((c) => (
-                  <td key={c.campo} className={`py-1.5 ${c.alinharDireita ? 'text-right tnum' : ''}`}>
+                  <td
+                    key={c.campo}
+                    className={`py-1.5 ${c.alinharDireita ? 'text-right tnum' : ''}`}
+                  >
                     {c.formatar ? c.formatar(r[c.campo]) : r[c.campo]}
                   </td>
                 ))}

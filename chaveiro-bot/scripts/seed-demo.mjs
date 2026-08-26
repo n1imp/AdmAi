@@ -98,17 +98,35 @@ export function ambienteElegivel(databaseUrl, nodeEnv) {
 export const COBERTURA = Object.freeze([
   { fixture: 'dono.demo', prova: 'RBAC: acesso total, configuração da empresa, financeiro' },
   { fixture: 'gestor.demo', prova: 'RBAC: aprova e rejeita, vê equipe, não administra empresa' },
-  { fixture: 'ana.tecnica + Técnico', prova: 'fluxo do funcionário: ponto, meus serviços, registro' },
-  { fixture: 'Assinatura em trial (14 dias)', prova: 'que o produto ABRE — sem ela requireAssinaturaAtiva devolve 402 em tudo' },
-  { fixture: 'aprovacaoServico = ON', prova: 'serviço do funcionário nasce pendente; seletor de material aparece' },
+  {
+    fixture: 'ana.tecnica + Técnico',
+    prova: 'fluxo do funcionário: ponto, meus serviços, registro',
+  },
+  {
+    fixture: 'Assinatura em trial (14 dias)',
+    prova: 'que o produto ABRE — sem ela requireAssinaturaAtiva devolve 402 em tudo',
+  },
+  {
+    fixture: 'aprovacaoServico = ON',
+    prova: 'serviço do funcionário nasce pendente; seletor de material aparece',
+  },
   { fixture: 'Material com saldo normal', prova: 'catálogo e movimentação de entrada' },
   { fixture: 'Material abaixo do mínimo', prova: 'alerta de estoque baixo no dashboard' },
   { fixture: 'Material já consumido', prova: 'movimentação de saída rastreável, com saldoApos' },
   { fixture: 'Material nunca usado', prova: 'contraprova: nem todo material aparece em serviço' },
-  { fixture: 'Serviço ATIVO com material', prova: 'financeiro, comissão e custo de material no dashboard' },
-  { fixture: 'Serviço EM_ANDAMENTO', prova: 'o "serviço atual" do técnico; e que ele fica FORA do agregado enquanto corre' },
+  {
+    fixture: 'Serviço ATIVO com material',
+    prova: 'financeiro, comissão e custo de material no dashboard',
+  },
+  {
+    fixture: 'Serviço EM_ANDAMENTO',
+    prova: 'o "serviço atual" do técnico; e que ele fica FORA do agregado enquanto corre',
+  },
   { fixture: 'Serviço rejeitado', prova: 'que rejeitado NÃO entra no agregado financeiro' },
-  { fixture: 'Serviço PENDENTE com material e estoque intacto', prova: 'a aprovação a ser feita NO PRODUTO: status, baixa e comissão' },
+  {
+    fixture: 'Serviço PENDENTE com material e estoque intacto',
+    prova: 'a aprovação a ser feita NO PRODUTO: status, baixa e comissão',
+  },
   { fixture: 'Batidas de ponto do dia anterior', prova: 'relatório de ponto e banco de horas' },
 ]);
 
@@ -150,11 +168,21 @@ async function remover() {
   if (!e) return false;
   const p = db();
   const emp = { empresaId: e.id };
-  const usuarios = (await p.usuario.findMany({ where: emp, select: { id: true } })).map((u) => u.id);
-  const tecnicos = (await p.tecnico.findMany({ where: emp, select: { id: true } })).map((t) => t.id);
-  const servicos = (await p.servico.findMany({ where: emp, select: { id: true } })).map((s) => s.id);
-  const materiais = (await p.material.findMany({ where: emp, select: { id: true } })).map((m) => m.id);
-  const registros = (await p.registroPonto.findMany({ where: emp, select: { id: true } })).map((r) => r.id);
+  const usuarios = (await p.usuario.findMany({ where: emp, select: { id: true } })).map(
+    (u) => u.id
+  );
+  const tecnicos = (await p.tecnico.findMany({ where: emp, select: { id: true } })).map(
+    (t) => t.id
+  );
+  const servicos = (await p.servico.findMany({ where: emp, select: { id: true } })).map(
+    (s) => s.id
+  );
+  const materiais = (await p.material.findMany({ where: emp, select: { id: true } })).map(
+    (m) => m.id
+  );
+  const registros = (await p.registroPonto.findMany({ where: emp, select: { id: true } })).map(
+    (r) => r.id
+  );
 
   await p.batidaPonto.deleteMany({ where: { registroId: { in: registros } } });
   await p.registroPonto.deleteMany({ where: emp });
@@ -250,7 +278,15 @@ async function semear(senha) {
 
   const material = (nome, unidade, precoUnit, precoVenda, estoqueMinimo, quantidadeAtual) =>
     db().material.create({
-      data: { empresaId: empresa.id, nome, unidade, precoUnit, precoVenda, estoqueMinimo, quantidadeAtual },
+      data: {
+        empresaId: empresa.id,
+        nome,
+        unidade,
+        precoUnit,
+        precoVenda,
+        estoqueMinimo,
+        quantidadeAtual,
+      },
     });
 
   const fechadura = await material('Fechadura Tetra', 'un', 45, 120, 3, 12);
@@ -462,7 +498,11 @@ async function principal() {
 /* Só executa quando chamado como script. Importado (pelos testes), exporta e não roda. */
 if (process.argv[1] && process.argv[1].endsWith('seed-demo.mjs')) {
   principal()
-    .then((c) => db().$disconnect().then(() => process.exit(c)))
+    .then((c) =>
+      db()
+        .$disconnect()
+        .then(() => process.exit(c))
+    )
     .catch(async (e) => {
       await db().$disconnect();
       abortar(`falhou: ${e.message}`);

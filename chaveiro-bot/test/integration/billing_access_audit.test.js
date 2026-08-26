@@ -61,9 +61,17 @@ const ROTAS_DE_PRODUTO = [
  * Tela branca nao converte ninguem.
  */
 const ROTAS_QUE_DEVEM_CONTINUAR = [
-  { metodo: 'get', caminho: '/api/me', nome: 'perfil — o painel precisa dele para mostrar o paywall' },
+  {
+    metodo: 'get',
+    caminho: '/api/me',
+    nome: 'perfil — o painel precisa dele para mostrar o paywall',
+  },
   { metodo: 'get', caminho: '/api/me/permissoes', nome: 'permissões — idem' },
-  { metodo: 'get', caminho: '/api/billing/status', nome: 'status comercial — para saber o que oferecer' },
+  {
+    metodo: 'get',
+    caminho: '/api/billing/status',
+    nome: 'status comercial — para saber o que oferecer',
+  },
 ];
 
 /** Estados em que uma assinatura está comercialmente morta. */
@@ -131,43 +139,59 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
     const { token, empresaId } = await criarEmpresaComAdmin(request, app, `P${Date.now() % 1000}`);
     await prisma.assinatura.update({
       where: { empresaId },
-      data: { status: 'trialing', trialFimEm: new Date(Date.now() + 7 * 24 * 3600 * 1000) }
+      data: { status: 'trialing', trialFimEm: new Date(Date.now() + 7 * 24 * 3600 * 1000) },
     });
 
     const bloqueadas = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
+      const res = await request(app)
+        [rota.metodo](rota.caminho)
+        .set('Authorization', `Bearer ${token}`);
       if (pareceBloqueioComercial(res)) bloqueadas.push(`${rota.nome} → ${res.status}`);
     }
-    expect(bloqueadas, `trial VALIDO nao pode barrar:
-  ${bloqueadas.join('\n  ')}`).toEqual([]);
+    expect(
+      bloqueadas,
+      `trial VALIDO nao pode barrar:
+  ${bloqueadas.join('\n  ')}`
+    ).toEqual([]);
   });
 
   it('CONTROLE POSITIVO: com assinatura ativa, o produto responde normalmente', async () => {
     const { token, empresaId } = await criarEmpresaComAdmin(request, app, `A${Date.now() % 1000}`);
     await prisma.assinatura.update({
       where: { empresaId },
-      data: { status: 'active', periodoFimEm: new Date(Date.now() + 30 * 24 * 3600 * 1000) }
+      data: { status: 'active', periodoFimEm: new Date(Date.now() + 30 * 24 * 3600 * 1000) },
     });
 
     const bloqueadas = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
+      const res = await request(app)
+        [rota.metodo](rota.caminho)
+        .set('Authorization', `Bearer ${token}`);
       if (pareceBloqueioComercial(res)) bloqueadas.push(`${rota.nome} → ${res.status}`);
     }
-    expect(bloqueadas, `assinatura ATIVA nao pode barrar:
-  ${bloqueadas.join('\n  ')}`).toEqual([]);
+    expect(
+      bloqueadas,
+      `assinatura ATIVA nao pode barrar:
+  ${bloqueadas.join('\n  ')}`
+    ).toEqual([]);
   });
 
   for (const estado of ESTADOS_MORTOS) {
     it(`assinatura ${estado.rotulo}: o produto E BARRADO`, async () => {
-      const { token, empresaId } = await criarEmpresaComAdmin(request, app, `B${Date.now() % 1000}`);
+      const { token, empresaId } = await criarEmpresaComAdmin(
+        request,
+        app,
+        `B${Date.now() % 1000}`
+      );
 
       await prisma.assinatura.update({ where: { empresaId }, data: estado.dados });
 
       const passaram = [];
       for (const rota of ROTAS_DE_PRODUTO) {
-        const res = await request(app)[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
+        const res = await request(app)
+          [rota.metodo](rota.caminho)
+          .set('Authorization', `Bearer ${token}`);
         if (!pareceBloqueioComercial(res)) {
           passaram.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
         }
@@ -181,13 +205,20 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
     });
 
     it(`assinatura ${estado.rotulo}: pagar, ver-se e sair CONTINUAM funcionando`, async () => {
-      const { token, empresaId } = await criarEmpresaComAdmin(request, app, `L${Date.now() % 1000}`);
+      const { token, empresaId } = await criarEmpresaComAdmin(
+        request,
+        app,
+        `L${Date.now() % 1000}`
+      );
       await prisma.assinatura.update({ where: { empresaId }, data: estado.dados });
 
       const barradas = [];
       for (const rota of ROTAS_QUE_DEVEM_CONTINUAR) {
-        const res = await request(app)[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
-        if (pareceBloqueioComercial(res)) barradas.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
+        const res = await request(app)
+          [rota.metodo](rota.caminho)
+          .set('Authorization', `Bearer ${token}`);
+        if (pareceBloqueioComercial(res))
+          barradas.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
       }
 
       expect(
@@ -207,8 +238,11 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
     const passaram = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
-      if (!pareceBloqueioComercial(res)) passaram.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
+      const res = await request(app)
+        [rota.metodo](rota.caminho)
+        .set('Authorization', `Bearer ${token}`);
+      if (!pareceBloqueioComercial(res))
+        passaram.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
     }
 
     expect(
@@ -222,13 +256,21 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
     const { token, empresaId } = await criarEmpresaComAdmin(request, app, `W${Date.now() % 1000}`);
     await prisma.assinatura.update({
       where: { empresaId },
-      data: { status: 'canceled', canceladoEm: new Date('2020-01-01'), periodoFimEm: new Date('2020-01-31') },
+      data: {
+        status: 'canceled',
+        canceladoEm: new Date('2020-01-01'),
+        periodoFimEm: new Date('2020-01-31'),
+      },
     });
 
     const res = await request(app)
       .post('/api/tecnicos')
       .set('Authorization', `Bearer ${token}`)
-      .send({ nome: 'Tecnico Pos Cancelamento', telefone: '5531' + String(Date.now()).slice(-9), comissao: 10 });
+      .send({
+        nome: 'Tecnico Pos Cancelamento',
+        telefone: '5531' + String(Date.now()).slice(-9),
+        comissao: 10,
+      });
 
     expect(
       pareceBloqueioComercial(res),

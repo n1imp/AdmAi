@@ -66,7 +66,9 @@ describe('snapshot da taxa de comissão', () => {
         tecnico: 'Snapshot Tester',
       });
     expect(segunda.status).toBe(201);
-    const servico2 = await prisma.servico.findFirst({ where: { empresaId, descricao: 'Segunda taxa' } });
+    const servico2 = await prisma.servico.findFirst({
+      where: { empresaId, descricao: 'Segunda taxa' },
+    });
     expect(servico2.comissaoTaxaAplicada).toBe(12);
     expect(servico2.comissaoGerada).toBe(12);
   });

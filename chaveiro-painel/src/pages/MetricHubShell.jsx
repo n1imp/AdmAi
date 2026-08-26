@@ -14,31 +14,58 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ListFilter } from 'lucide-react';
 import {
-  MetricBreakdown, MetricConfidence, MetricHero, MetricLineage, MetricPulse,
-  MetricStateBoundary, MetricTimeline
+  MetricBreakdown,
+  MetricConfidence,
+  MetricHero,
+  MetricLineage,
+  MetricPulse,
+  MetricStateBoundary,
+  MetricTimeline,
 } from '../components/metric/MetricPrimitives.jsx';
 import MetricDrilldown from '../components/metric/MetricDrilldown.jsx';
 
 const PERIODOS = [
   ['hoje', 'Hoje'],
   ['semana', 'Semana'],
-  ['mes', 'Mês']
+  ['mes', 'Mês'],
 ];
 
 export default function MetricHubShell({
-  titulo, tituloHero, hub, formatarValor = (v) => v, ressalva = null,
-  colunasDoDrilldown, acoes = [], rotuloRegistros
+  titulo,
+  tituloHero,
+  hub,
+  formatarValor = (v) => v,
+  ressalva = null,
+  colunasDoDrilldown,
+  acoes = [],
+  rotuloRegistros,
 }) {
   const {
-    periodo, setPeriodo, estado, metrica, serie, janelaTexto, recarregar,
-    dimensao, breakdown, carregandoBreakdown, trocarDimensao,
-    mostrarRegistros, registros, carregandoRegistros, erroRegistros, abrirRegistros
+    periodo,
+    setPeriodo,
+    estado,
+    metrica,
+    serie,
+    janelaTexto,
+    recarregar,
+    dimensao,
+    breakdown,
+    carregandoBreakdown,
+    trocarDimensao,
+    mostrarRegistros,
+    registros,
+    carregandoRegistros,
+    erroRegistros,
+    abrirRegistros,
   } = hub;
 
   return (
     <div className="px-4 lg:px-0 pb-24 space-y-4">
       <header className="pt-4">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-slate-200">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-slate-200"
+        >
           <ArrowLeft size={16} aria-hidden="true" /> Voltar ao painel
         </Link>
         <h1 className="font-display text-2xl font-bold mt-2">{titulo}</h1>
@@ -75,9 +102,7 @@ export default function MetricHubShell({
 
             {/* A ressalva acompanha o Hero, não o rodapé: quem lê o número precisa ler o limite
                 dele no mesmo olhar. */}
-            {ressalva && (
-              <p className="text-xs text-muted -mt-2 px-1">{ressalva}</p>
-            )}
+            {ressalva && <p className="text-xs text-muted -mt-2 px-1">{ressalva}</p>}
 
             <MetricPulse
               atual={formatarValor(metrica.value)}
@@ -126,7 +151,10 @@ export default function MetricHubShell({
               )}
             </section>
 
-            <MetricConfidence estado={metrica.quality?.state} registros={metrica.quality?.recordCount} />
+            <MetricConfidence
+              estado={metrica.quality?.state}
+              registros={metrica.quality?.recordCount}
+            />
 
             <MetricLineage
               metricId={metrica.metricId}
@@ -140,7 +168,9 @@ export default function MetricHubShell({
             {acoes.length > 0 && (
               <nav className="flex flex-wrap gap-2" aria-label="Ações">
                 {acoes.map((a) => (
-                  <Link key={a.para} to={a.para} className="panel-button">{a.rotulo}</Link>
+                  <Link key={a.para} to={a.para} className="panel-button">
+                    {a.rotulo}
+                  </Link>
                 ))}
               </nav>
             )}

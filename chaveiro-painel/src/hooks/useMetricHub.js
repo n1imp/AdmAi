@@ -52,33 +52,47 @@ export function useMetricHub(metricId) {
     try {
       const [agregado, linha] = await Promise.all([
         api.get(`/metricas/${metricId}`, { params: { periodo, comparar: 'true' } }),
-        api.get(`/metricas/${metricId}/serie`, { params: { periodo, granularidade: 'dia' } })
+        api.get(`/metricas/${metricId}/serie`, { params: { periodo, granularidade: 'dia' } }),
       ]);
       setMetrica(agregado.data);
       setSerie(linha.data);
       /* O estado vem do CONTRATO. `VALUE` com zero é zero de verdade; `INSUFFICIENT_DATA` é outra
          coisa, e nunca vira zero pelo caminho. */
-      setEstado(agregado.data.value === 0 && agregado.data.status === 'VALUE' ? 'EMPTY' : agregado.data.status);
+      setEstado(
+        agregado.data.value === 0 && agregado.data.status === 'VALUE'
+          ? 'EMPTY'
+          : agregado.data.status
+      );
     } catch (erro) {
       setEstado(estadoDoErro(erro));
     }
   }, [metricId, periodo]);
 
-  useEffect(() => { carregar(); }, [carregar]);
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
 
-  const trocarDimensao = useCallback(async (nova) => {
-    setDimensao(nova);
-    if (!nova) { setBreakdown(null); return; }
-    setCarregandoBreakdown(true);
-    try {
-      const { data } = await api.get(`/metricas/${metricId}`, { params: { periodo, dimensao: nova } });
-      setBreakdown(data.breakdown);
-    } catch {
-      setBreakdown({ grupos: [] });
-    } finally {
-      setCarregandoBreakdown(false);
-    }
-  }, [metricId, periodo]);
+  const trocarDimensao = useCallback(
+    async (nova) => {
+      setDimensao(nova);
+      if (!nova) {
+        setBreakdown(null);
+        return;
+      }
+      setCarregandoBreakdown(true);
+      try {
+        const { data } = await api.get(`/metricas/${metricId}`, {
+          params: { periodo, dimensao: nova },
+        });
+        setBreakdown(data.breakdown);
+      } catch {
+        setBreakdown({ grupos: [] });
+      } finally {
+        setCarregandoBreakdown(false);
+      }
+    },
+    [metricId, periodo]
+  );
 
   const abrirRegistros = useCallback(async () => {
     setMostrarRegistros(true);
@@ -100,8 +114,21 @@ export function useMetricHub(metricId) {
     : '';
 
   return {
-    periodo, setPeriodo, estado, metrica, serie, janelaTexto, recarregar: carregar,
-    dimensao, breakdown, carregandoBreakdown, trocarDimensao,
-    mostrarRegistros, registros, carregandoRegistros, erroRegistros, abrirRegistros
+    periodo,
+    setPeriodo,
+    estado,
+    metrica,
+    serie,
+    janelaTexto,
+    recarregar: carregar,
+    dimensao,
+    breakdown,
+    carregandoBreakdown,
+    trocarDimensao,
+    mostrarRegistros,
+    registros,
+    carregandoRegistros,
+    erroRegistros,
+    abrirRegistros,
   };
 }

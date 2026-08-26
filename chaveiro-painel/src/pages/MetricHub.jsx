@@ -18,7 +18,7 @@ import MetricHubShell from './MetricHubShell.jsx';
 
 const COLUNAS = [
   { campo: 'criadoEm', rotulo: 'Data', formatar: (v) => new Date(v).toLocaleDateString('pt-BR') },
-  { campo: 'local', rotulo: 'Local' }
+  { campo: 'local', rotulo: 'Local' },
 ];
 
 export default function MetricHub() {
@@ -32,7 +32,7 @@ export default function MetricHub() {
       rotuloRegistros={`Ver os ${hub.metrica?.value ?? ''} registros`.replace('  ', ' ')}
       acoes={[
         { para: '/servicos', rotulo: 'Ver serviços' },
-        { para: '/tecnicos', rotulo: 'Ver técnicos' }
+        { para: '/tecnicos', rotulo: 'Ver técnicos' },
       ]}
     />
   );

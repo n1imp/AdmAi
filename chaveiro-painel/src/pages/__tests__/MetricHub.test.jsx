@@ -32,25 +32,38 @@ const AGREGADO = {
   status: 'VALUE',
   value: 142,
   reason: null,
-  comparison: { valorAnterior: 126, variacaoAbsoluta: 16, variacaoPercentual: 12.7, direcao: 'SUBIU' },
+  comparison: {
+    valorAnterior: 126,
+    variacaoAbsoluta: 16,
+    variacaoPercentual: 12.7,
+    direcao: 'SUBIU',
+  },
   quality: { state: 'HIGH', recordCount: 142, incomplete: null, warnings: [] },
   lineage: {
     formula: 'COUNT(Servico) WHERE status = "ativo"',
     grain: 'empresa × período',
     sourceEntities: ['Servico'],
     appliedFilters: ['status = ativo'],
-    timeSemantics: 'criadoEm'
+    timeSemantics: 'criadoEm',
   },
   permissions: { canDrillDown: true },
-  allowed: { dimensoes: ['tecnico', 'local', 'dia'], comparacoes: [], periodos: [], granularidades: ['dia'] },
-  breakdown: null
+  allowed: {
+    dimensoes: ['tecnico', 'local', 'dia'],
+    comparacoes: [],
+    periodos: [],
+    granularidades: ['dia'],
+  },
+  breakdown: null,
 };
 
 const SERIE = {
   metricId: 'servicos-concluidos',
   granularidade: 'dia',
   timeSemantics: 'criadoEm',
-  pontos: [{ dia: '2026-04-01', valor: 3 }, { dia: '2026-04-02', valor: 0 }]
+  pontos: [
+    { dia: '2026-04-01', valor: 3 },
+    { dia: '2026-04-02', valor: 0 },
+  ],
 };
 
 function responder({ agregado = AGREGADO, serie = SERIE } = {}) {
@@ -63,28 +76,55 @@ function responder({ agregado = AGREGADO, serie = SERIE } = {}) {
           paginacao: { limite: 100, offset: 0, nestaPagina: 2 },
           camposOmitidos: [],
           registros: [
-            { id: 1, tecnicoId: 1, local: 'Centro', criadoEm: '2026-04-02T10:00:00Z', valorLiquido: 100 },
-            { id: 2, tecnicoId: 2, local: 'Norte', criadoEm: '2026-04-03T10:00:00Z', valorLiquido: 200 }
-          ]
-        }
+            {
+              id: 1,
+              tecnicoId: 1,
+              local: 'Centro',
+              criadoEm: '2026-04-02T10:00:00Z',
+              valorLiquido: 100,
+            },
+            {
+              id: 2,
+              tecnicoId: 2,
+              local: 'Norte',
+              criadoEm: '2026-04-03T10:00:00Z',
+              valorLiquido: 200,
+            },
+          ],
+        },
       });
     }
     if (cfg?.params?.dimensao) {
       return Promise.resolve({
-        data: { ...agregado, breakdown: { dimensao: cfg.params.dimensao, grupos: [{ chave: '1', rotulo: 'Ana', valor: 80 }] } }
+        data: {
+          ...agregado,
+          breakdown: {
+            dimensao: cfg.params.dimensao,
+            grupos: [{ chave: '1', rotulo: 'Ana', valor: 80 }],
+          },
+        },
       });
     }
     return Promise.resolve({ data: agregado });
   });
 }
 
-const montar = () => render(<MemoryRouter><MetricHub /></MemoryRouter>);
+const montar = () =>
+  render(
+    <MemoryRouter>
+      <MetricHub />
+    </MemoryRouter>
+  );
 
 /* O valor aparece no Hero E no Pulso — de propósito. A consulta precisa dizer QUAL. */
 const esperarHero = async () =>
-  within(await screen.findByRole('region', { name: /Serviços concluídos no período/ })).getByText('142');
+  within(await screen.findByRole('region', { name: /Serviços concluídos no período/ })).getByText(
+    '142'
+  );
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('Metric Hub — servicos-concluidos', () => {
   it('apresenta o valor, a variação e a confiança que vieram do contrato', async () => {
@@ -105,7 +145,12 @@ describe('Metric Hub — servicos-concluidos', () => {
   /* A regra que atravessa a Foundation inteira, até o pixel. */
   it('INSUFFICIENT_DATA não vira zero, e mostra o motivo', async () => {
     responder({
-      agregado: { ...AGREGADO, status: 'INSUFFICIENT_DATA', value: null, reason: 'nenhum serviço no fluxo' }
+      agregado: {
+        ...AGREGADO,
+        status: 'INSUFFICIENT_DATA',
+        value: null,
+        reason: 'nenhum serviço no fluxo',
+      },
     });
     montar();
     expect(await screen.findByText(/Dados insuficientes para medir/)).toBeInTheDocument();
@@ -117,8 +162,13 @@ describe('Metric Hub — servicos-concluidos', () => {
     responder({
       agregado: {
         ...AGREGADO,
-        comparison: { valorAnterior: 0, variacaoAbsoluta: 142, variacaoPercentual: null, direcao: 'SEM_BASE' }
-      }
+        comparison: {
+          valorAnterior: 0,
+          variacaoAbsoluta: 142,
+          variacaoPercentual: null,
+          direcao: 'SEM_BASE',
+        },
+      },
     });
     montar();
     expect(await screen.findByText(/Sem base de comparação/)).toBeInTheDocument();
@@ -182,7 +232,9 @@ describe('Metric Hub — servicos-concluidos', () => {
 
   /* As dimensões vêm do contrato: uma lista escrita no frontend divergiria do registro. */
   it('as dimensões oferecidas são as que o contrato declarou', async () => {
-    responder({ agregado: { ...AGREGADO, allowed: { ...AGREGADO.allowed, dimensoes: ['local'] } } });
+    responder({
+      agregado: { ...AGREGADO, allowed: { ...AGREGADO.allowed, dimensoes: ['local'] } },
+    });
     montar();
     await esperarHero();
     expect(screen.getByRole('button', { name: 'local' })).toBeInTheDocument();

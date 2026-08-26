@@ -32,10 +32,24 @@ export const PAPEIS = Object.freeze(['dono', 'gestor', 'funcionario']);
 
 /** Campos obrigatórios de uma métrica. Ordem do contrato. */
 export const CAMPOS_DA_METRICA = Object.freeze([
-  'metricId', 'name', 'description', 'businessQuestion', 'decisionSupported',
-  'formula', 'grain', 'sourceEntities', 'filters', 'dimensions', 'timeSemantics',
-  'comparisons', 'freshness', 'qualityRules', 'drilldown', 'relatedMetrics',
-  'securityScope', 'version'
+  'metricId',
+  'name',
+  'description',
+  'businessQuestion',
+  'decisionSupported',
+  'formula',
+  'grain',
+  'sourceEntities',
+  'filters',
+  'dimensions',
+  'timeSemantics',
+  'comparisons',
+  'freshness',
+  'qualityRules',
+  'drilldown',
+  'relatedMetrics',
+  'securityScope',
+  'version',
 ]);
 
 /**
@@ -52,20 +66,40 @@ export const CLASSES_DE_DISPONIBILIDADE = Object.freeze([
   'REQUIRES_CRM',
   'REQUIRES_MORE_HISTORY',
   'INSUFFICIENT_DATA',
-  'DEFINITION_CONFLICT'
+  'DEFINITION_CONFLICT',
 ]);
 
 /** Famílias de métrica. `CRM_FUTURE` existe para ser preparada, não implementada agora. */
 export const FAMILIAS = Object.freeze([
-  'BUSINESS_HEALTH', 'FINANCIAL', 'OPERATIONS', 'TEAM',
-  'QUALITY', 'CUSTOMER', 'SCHEDULING', 'BUDGET', 'CRM_FUTURE'
+  'BUSINESS_HEALTH',
+  'FINANCIAL',
+  'OPERATIONS',
+  'TEAM',
+  'QUALITY',
+  'CUSTOMER',
+  'SCHEDULING',
+  'BUDGET',
+  'CRM_FUTURE',
 ]);
 
 /** Módulos de Hub. Cada métrica escolhe os aplicáveis — nenhuma usa todos. */
 export const MODULOS_DE_HUB = Object.freeze([
-  'Hero', 'Pulse', 'Timeline', 'Comparison', 'Decomposition', 'Distribution',
-  'Segmentation', 'DriverAnalysis', 'AnomalyRadar', 'RelatedMetrics', 'Goals',
-  'ActionCenter', 'DataConfidence', 'Lineage', 'UnderlyingRecords', 'AdmIntelligence'
+  'Hero',
+  'Pulse',
+  'Timeline',
+  'Comparison',
+  'Decomposition',
+  'Distribution',
+  'Segmentation',
+  'DriverAnalysis',
+  'AnomalyRadar',
+  'RelatedMetrics',
+  'Goals',
+  'ActionCenter',
+  'DataConfidence',
+  'Lineage',
+  'UnderlyingRecords',
+  'AdmIntelligence',
 ]);
 
 /**
@@ -75,7 +109,12 @@ export const MODULOS_DE_HUB = Object.freeze([
 export const ESTADOS_DE_CONFIANCA = Object.freeze(['HIGH', 'MEDIUM', 'LOW', 'INSUFFICIENT']);
 
 export const CRITERIOS_DE_CONFIANCA = Object.freeze([
-  'missingData', 'coverage', 'freshness', 'recordCount', 'invalidValues', 'unsupportedDimension'
+  'missingData',
+  'coverage',
+  'freshness',
+  'recordCount',
+  'invalidValues',
+  'unsupportedDimension',
 ]);
 
 /**
@@ -84,8 +123,13 @@ export const CRITERIOS_DE_CONFIANCA = Object.freeze([
  * A ordem é deliberada: `INSUFFICIENT` domina, porque não faz sentido chamar de "confiança baixa"
  * um número calculado sobre zero registros — isso é ausência de resultado, não resultado fraco.
  */
-export function derivarConfianca({ recordCount = null, coverage = null, freshnessHoras = null,
-  invalidValues = 0, unsupportedDimension = false } = {}) {
+export function derivarConfianca({
+  recordCount = null,
+  coverage = null,
+  freshnessHoras = null,
+  invalidValues = 0,
+  unsupportedDimension = false,
+} = {}) {
   if (recordCount === null || coverage === null) return 'INSUFFICIENT';
   if (recordCount === 0) return 'INSUFFICIENT';
   if (unsupportedDimension) return 'INSUFFICIENT';
@@ -109,7 +153,8 @@ export function violacoesDaMetrica(m) {
   const preenchido = (v) => typeof v === 'string' && v.trim() !== '';
 
   /* A cadeia que dá razão de existir à métrica. Vazio não é preenchimento. */
-  if (!preenchido(m.businessQuestion)) fora.push('sem businessQuestion — métrica que não responde pergunta não se justifica');
+  if (!preenchido(m.businessQuestion))
+    fora.push('sem businessQuestion — métrica que não responde pergunta não se justifica');
   if (!preenchido(m.formula)) fora.push('sem fórmula — número sem origem explicável');
   if (!Array.isArray(m.decisionSupported) || m.decisionSupported.length === 0) {
     fora.push('sem decisionSupported — métrica sem decisão associada é gráfico, não instrumento');
@@ -117,7 +162,10 @@ export function violacoesDaMetrica(m) {
   for (const d of m.decisionSupported ?? []) {
     if (!PAPEIS.includes(d.papel)) fora.push(`decisão com papel fora do contrato: ${d.papel}`);
     if (!preenchido(d.decisao)) fora.push(`decisão sem texto em ${m.metricId}`);
-    if (!preenchido(d.acao)) fora.push(`decisão sem AÇÃO possível em ${m.metricId} — se nada muda, a métrica não suporta decisão`);
+    if (!preenchido(d.acao))
+      fora.push(
+        `decisão sem AÇÃO possível em ${m.metricId} — se nada muda, a métrica não suporta decisão`
+      );
   }
 
   if (!FAMILIAS.includes(m.familia)) fora.push(`família fora do contrato: ${m.familia}`);
@@ -131,26 +179,39 @@ export function violacoesDaMetrica(m) {
   if (!s || typeof s !== 'object') {
     fora.push('sem securityScope — quem vê agregado e quem faz drilldown precisa estar declarado');
   } else {
-    const papeisInvalidos = [...(s.agregado ?? []), ...(s.drilldown ?? [])].filter((p) => !PAPEIS.includes(p));
-    if (papeisInvalidos.length) fora.push(`securityScope com papel inexistente: ${papeisInvalidos.join(', ')}`);
-    if (!Array.isArray(s.agregado) || s.agregado.length === 0) fora.push('securityScope.agregado vazio');
+    const papeisInvalidos = [...(s.agregado ?? []), ...(s.drilldown ?? [])].filter(
+      (p) => !PAPEIS.includes(p)
+    );
+    if (papeisInvalidos.length)
+      fora.push(`securityScope com papel inexistente: ${papeisInvalidos.join(', ')}`);
+    if (!Array.isArray(s.agregado) || s.agregado.length === 0)
+      fora.push('securityScope.agregado vazio');
     if (!Array.isArray(s.drilldown)) fora.push('securityScope.drilldown ausente');
     const drilldownAMais = (s.drilldown ?? []).filter((p) => !(s.agregado ?? []).includes(p));
     if (drilldownAMais.length) {
-      fora.push(`drilldown mais permissivo que agregado para ${drilldownAMais.join(', ')} — ver o total não autoriza listar os registros`);
+      fora.push(
+        `drilldown mais permissivo que agregado para ${drilldownAMais.join(', ')} — ver o total não autoriza listar os registros`
+      );
     }
-    if (!preenchido(s.tenantScope)) fora.push('securityScope.tenantScope ausente — toda métrica é escopada por empresa');
+    if (!preenchido(s.tenantScope))
+      fora.push('securityScope.tenantScope ausente — toda métrica é escopada por empresa');
   }
 
   if (!Array.isArray(m.hubModules) || m.hubModules.length === 0) {
     fora.push('sem hubModules — cada métrica escolhe os módulos aplicáveis');
   }
   const modulosInvalidos = (m.hubModules ?? []).filter((x) => !MODULOS_DE_HUB.includes(x));
-  if (modulosInvalidos.length) fora.push(`módulo de Hub inexistente: ${modulosInvalidos.join(', ')}`);
+  if (modulosInvalidos.length)
+    fora.push(`módulo de Hub inexistente: ${modulosInvalidos.join(', ')}`);
 
   /* Lineage antes de estética: quem tem UnderlyingRecords precisa declarar quem pode vê-los. */
-  if ((m.hubModules ?? []).includes('UnderlyingRecords') && (m.securityScope?.drilldown ?? []).length === 0) {
-    fora.push('Hub expõe UnderlyingRecords mas nenhum papel tem drilldown — módulo inalcançável ou permissão implícita');
+  if (
+    (m.hubModules ?? []).includes('UnderlyingRecords') &&
+    (m.securityScope?.drilldown ?? []).length === 0
+  ) {
+    fora.push(
+      'Hub expõe UnderlyingRecords mas nenhum papel tem drilldown — módulo inalcançável ou permissão implícita'
+    );
   }
 
   return fora;

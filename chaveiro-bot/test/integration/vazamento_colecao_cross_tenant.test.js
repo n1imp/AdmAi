@@ -61,7 +61,9 @@ function textoDoPdf(buffer) {
     let conteudo;
     try {
       conteudo = inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1');
-    } catch { continue; }   /* não-Flate: imagem ou fonte, não carrega o nome */
+    } catch {
+      continue;
+    } /* não-Flate: imagem ou fonte, não carrega o nome */
     texto += conteudo;
     const hex = [...conteudo.matchAll(/<([0-9A-Fa-f]+)>/g)]
       .map((h) => Buffer.from(h[1], 'hex').toString('latin1'))
@@ -72,7 +74,8 @@ function textoDoPdf(buffer) {
 }
 
 /** Marcador improvável: se ele aparecer numa resposta de A, veio de B — não há coincidência. */
-const MARCA = () => `ZZMARCA${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1e6)}`;
+const MARCA = () =>
+  `ZZMARCA${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1e6)}`;
 
 async function duasEmpresas() {
   const a = await criarEmpresaComAdmin(request, app, `CA${Date.now() % 10000}`);
@@ -94,7 +97,13 @@ async function criarServico(token, tecnicoNome, local) {
   const res = await request(app)
     .post('/api/servicos')
     .set('Authorization', `Bearer ${token}`)
-    .send({ tecnico: tecnicoNome, local, descricao: 'Servico de teste de vazamento', valorCobrado: 350, valorMaterial: 0 });
+    .send({
+      tecnico: tecnicoNome,
+      local,
+      descricao: 'Servico de teste de vazamento',
+      valorCobrado: 350,
+      valorMaterial: 0,
+    });
   expect(res.status, `pré-condição: criar serviço devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
@@ -112,17 +121,30 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
         .post('/api/materiais')
         .set('Authorization', `Bearer ${b.token}`)
         .send({ nome: `Material ${marca}`, precoUnit: 40 });
-      expect(criado.status, `pré-condição: criar material em B devia dar 201, deu ${criado.status}`).toBe(201);
+      expect(
+        criado.status,
+        `pré-condição: criar material em B devia dar 201, deu ${criado.status}`
+      ).toBe(201);
 
       /* Prova que havia o que vazar: B enxerga o próprio material. Sem isto, o `not.toContain`
          abaixo passaria mesmo com a coleção vazia. */
-      const comoB = await request(app).get('/api/estoque').set('Authorization', `Bearer ${b.token}`);
+      const comoB = await request(app)
+        .get('/api/estoque')
+        .set('Authorization', `Bearer ${b.token}`);
       expect(comoB.status).toBe(200);
-      expect(contemMarca(comoB.body, marca), 'o dono precisa ver o próprio material — senão o teste é vácuo').toBe(true);
+      expect(
+        contemMarca(comoB.body, marca),
+        'o dono precisa ver o próprio material — senão o teste é vácuo'
+      ).toBe(true);
 
-      const comoA = await request(app).get('/api/estoque').set('Authorization', `Bearer ${a.token}`);
+      const comoA = await request(app)
+        .get('/api/estoque')
+        .set('Authorization', `Bearer ${a.token}`);
       expect(comoA.status).toBe(200);
-      expect(contemMarca(comoA.body, marca), 'material de B apareceu no estoque de A — vazamento de coleção').toBe(false);
+      expect(
+        contemMarca(comoA.body, marca),
+        'material de B apareceu no estoque de A — vazamento de coleção'
+      ).toBe(false);
     });
   });
 
@@ -149,25 +171,37 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
       const fim = new Date(hoje.getTime() + 86400000).toISOString().slice(0, 10);
       const url = `/api/relatorio/pdf?inicio=${inicio}&fim=${fim}`;
 
-      const comoB = await request(app).get(url).set('Authorization', `Bearer ${b.token}`).buffer().parse((res, cb) => {
-        const partes = [];
-        res.on('data', (c) => partes.push(c));
-        res.on('end', () => cb(null, Buffer.concat(partes)));
-      });
+      const comoB = await request(app)
+        .get(url)
+        .set('Authorization', `Bearer ${b.token}`)
+        .buffer()
+        .parse((res, cb) => {
+          const partes = [];
+          res.on('data', (c) => partes.push(c));
+          res.on('end', () => cb(null, Buffer.concat(partes)));
+        });
       expect(comoB.status, 'o dono precisa gerar o próprio relatório').toBe(200);
       const textoDeB = textoDoPdf(comoB.body);
-      expect(textoDeB.includes(marca),
+      expect(
+        textoDeB.includes(marca),
         'INSTRUMENTO CEGO: o nome do técnico não é localizável nos bytes do próprio relatório, ' +
-        'então procurar por ele no relatório de A não prova ausência de vazamento').toBe(true);
+          'então procurar por ele no relatório de A não prova ausência de vazamento'
+      ).toBe(true);
 
-      const comoA = await request(app).get(url).set('Authorization', `Bearer ${a.token}`).buffer().parse((res, cb) => {
-        const partes = [];
-        res.on('data', (c) => partes.push(c));
-        res.on('end', () => cb(null, Buffer.concat(partes)));
-      });
+      const comoA = await request(app)
+        .get(url)
+        .set('Authorization', `Bearer ${a.token}`)
+        .buffer()
+        .parse((res, cb) => {
+          const partes = [];
+          res.on('data', (c) => partes.push(c));
+          res.on('end', () => cb(null, Buffer.concat(partes)));
+        });
       expect(comoA.status).toBe(200);
-      expect(textoDoPdf(comoA.body).includes(marca),
-        'técnico da empresa B apareceu no relatório financeiro de A').toBe(false);
+      expect(
+        textoDoPdf(comoA.body).includes(marca),
+        'técnico da empresa B apareceu no relatório financeiro de A'
+      ).toBe(false);
     });
   });
 
@@ -183,7 +217,10 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
         .set('Authorization', `Bearer ${a.token}`);
 
       expect(comoA.status).toBe(200);
-      expect(contemMarca(comoA.body, marca), 'serviço de B apareceu na lista de pendentes de A').toBe(false);
+      expect(
+        contemMarca(comoA.body, marca),
+        'serviço de B apareceu na lista de pendentes de A'
+      ).toBe(false);
     });
 
     it('GET /dashboard de A não agrega valores da empresa B', async () => {
@@ -195,37 +232,56 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
       /* Agregado não carrega texto, então o marcador não serve aqui: o vazamento apareceria como
          NÚMERO inflado. A empresa A não registrou serviço nenhum, logo qualquer faturamento
          diferente de zero veio de outro tenant. */
-      const comoA = await request(app).get('/api/dashboard').set('Authorization', `Bearer ${a.token}`);
+      const comoA = await request(app)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${a.token}`);
       expect(comoA.status).toBe(200);
 
       const corpo = JSON.stringify(comoA.body ?? {});
-      const numeros = [...corpo.matchAll(/"(?:total|faturamento|valorTotal|receita|comissao)[A-Za-z]*":\s*([0-9.]+)/g)]
-        .map((m) => Number(m[1]));
+      const numeros = [
+        ...corpo.matchAll(
+          /"(?:total|faturamento|valorTotal|receita|comissao)[A-Za-z]*":\s*([0-9.]+)/g
+        ),
+      ].map((m) => Number(m[1]));
       const somaNaoZero = numeros.filter((n) => n > 0);
-      expect(somaNaoZero,
+      expect(
+        somaNaoZero,
         `dashboard de A (que não tem serviço nenhum) trouxe agregado não-zero: ${JSON.stringify(comoA.body)}`
       ).toEqual([]);
 
       /* Contraprova: B, que tem dois serviços, PRECISA ver agregado não-zero. Sem isto o teste
          acima passaria com um dashboard quebrado que devolve zero para todo mundo. */
-      const comoB = await request(app).get('/api/dashboard').set('Authorization', `Bearer ${b.token}`);
+      const comoB = await request(app)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${b.token}`);
       expect(comoB.status).toBe(200);
       const corpoB = JSON.stringify(comoB.body ?? {});
-      expect(/[1-9]/.test(corpoB), 'o dono precisa ver agregado não-zero — senão o teste é vácuo').toBe(true);
+      expect(
+        /[1-9]/.test(corpoB),
+        'o dono precisa ver agregado não-zero — senão o teste é vácuo'
+      ).toBe(true);
     });
 
     it('GET /avaliacoes e /avaliacoes/config de A não devolvem dado da empresa B', async () => {
       const { a, b } = await duasEmpresas();
 
-      const avaliacoesA = await request(app).get('/api/avaliacoes').set('Authorization', `Bearer ${a.token}`);
+      const avaliacoesA = await request(app)
+        .get('/api/avaliacoes')
+        .set('Authorization', `Bearer ${a.token}`);
       expect(avaliacoesA.status).toBe(200);
 
       /* A não tem avaliação nenhuma: qualquer item aqui veio de outro tenant. */
-      const itens = Array.isArray(avaliacoesA.body) ? avaliacoesA.body : (avaliacoesA.body?.avaliacoes ?? []);
+      const itens = Array.isArray(avaliacoesA.body)
+        ? avaliacoesA.body
+        : (avaliacoesA.body?.avaliacoes ?? []);
       expect(itens, 'A não registrou avaliação; lista não-vazia indicaria vazamento').toEqual([]);
 
-      const configA = await request(app).get('/api/avaliacoes/config').set('Authorization', `Bearer ${a.token}`);
-      const configB = await request(app).get('/api/avaliacoes/config').set('Authorization', `Bearer ${b.token}`);
+      const configA = await request(app)
+        .get('/api/avaliacoes/config')
+        .set('Authorization', `Bearer ${a.token}`);
+      const configB = await request(app)
+        .get('/api/avaliacoes/config')
+        .set('Authorization', `Bearer ${b.token}`);
       expect(configA.status).toBe(200);
       expect(configB.status).toBe(200);
 
@@ -237,9 +293,13 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
         .send({ ativo: true });
 
       if (patch.status === 200) {
-        const configADepois = await request(app).get('/api/avaliacoes/config').set('Authorization', `Bearer ${a.token}`);
-        expect(JSON.stringify(configADepois.body), 'alterar a config de B mudou a config de A — registro compartilhado')
-          .toBe(JSON.stringify(configA.body));
+        const configADepois = await request(app)
+          .get('/api/avaliacoes/config')
+          .set('Authorization', `Bearer ${a.token}`);
+        expect(
+          JSON.stringify(configADepois.body),
+          'alterar a config de B mudou a config de A — registro compartilhado'
+        ).toBe(JSON.stringify(configA.body));
       }
     });
   });
@@ -265,12 +325,25 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
       const funcDeA = await criarFuncionarioComAcesso(request, app, a.token, { nome: 'Func de A' });
       await criarFuncionarioComAcesso(request, app, b.token, { nome: `Func ${marca}` });
 
-      const semVinculo = await request(app).get('/api/ponto/hoje').set('Authorization', `Bearer ${a.token}`);
-      expect(semVinculo.status, 'dono não tem tecnicoId: a rota precisa recusar, não devolver conjunto').toBe(400);
+      const semVinculo = await request(app)
+        .get('/api/ponto/hoje')
+        .set('Authorization', `Bearer ${a.token}`);
+      expect(
+        semVinculo.status,
+        'dono não tem tecnicoId: a rota precisa recusar, não devolver conjunto'
+      ).toBe(400);
 
-      const comoFuncA = await request(app).get('/api/ponto/hoje').set('Authorization', `Bearer ${funcDeA.token}`);
-      expect(comoFuncA.status, 'funcionário vinculado precisa alcançar o próprio ponto — senão o negativo é vácuo').toBe(200);
-      expect(contemMarca(comoFuncA.body, marca), 'funcionário da empresa B apareceu no ponto de A').toBe(false);
+      const comoFuncA = await request(app)
+        .get('/api/ponto/hoje')
+        .set('Authorization', `Bearer ${funcDeA.token}`);
+      expect(
+        comoFuncA.status,
+        'funcionário vinculado precisa alcançar o próprio ponto — senão o negativo é vácuo'
+      ).toBe(200);
+      expect(
+        contemMarca(comoFuncA.body, marca),
+        'funcionário da empresa B apareceu no ponto de A'
+      ).toBe(false);
     });
 
     it('POST /pagamentos de A não pode pagar técnico da empresa B', async () => {
@@ -287,7 +360,10 @@ describe('Vazamento de coleção cross-tenant (PRODUCT_INTEGRITY)', () => {
       expect([400, 403, 404]).toContain(res.status);
 
       const pagamentos = await prisma.pagamento.count({ where: { tecnicoId: tecnicoDeB.id } });
-      expect(pagamentos, 'A criou pagamento para o técnico de B — efeito colateral cross-tenant').toBe(0);
+      expect(
+        pagamentos,
+        'A criou pagamento para o técnico de B — efeito colateral cross-tenant'
+      ).toBe(0);
     });
   });
 });

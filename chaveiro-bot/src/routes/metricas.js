@@ -22,8 +22,15 @@ import { METRICAS } from '../services/metricas/registro.js';
 import { CALCULADORES, agruparPorDimensao, serieTemporal } from '../services/metricas/calculo.js';
 import { CONSULTAS, carregarTecnicos, carregarEmpresa } from '../services/metricas/consulta.js';
 import {
-  autorizarAgregado, autorizarDrilldown, compararValores, metricaPorId,
-  montarResposta, permitidos, redigirRegistros, servivel, validarPedido
+  autorizarAgregado,
+  autorizarDrilldown,
+  compararValores,
+  metricaPorId,
+  montarResposta,
+  permitidos,
+  redigirRegistros,
+  servivel,
+  validarPedido,
 } from '../services/metricas/exposicao.js';
 import { construirFiltroPeriodo, construirFiltroPeriodoAnterior } from '../services/periodo.js';
 import { prisma } from '../db/prisma.js';
@@ -37,7 +44,7 @@ const consultaSchema = z.object({
   inicio: z.string().optional(),
   fim: z.string().optional(),
   dimensao: z.string().optional(),
-  comparar: z.enum(['true', 'false']).optional()
+  comparar: z.enum(['true', 'false']).optional(),
 });
 
 /** Catálogo do que existe e do que quem pede consegue ver. Não serve número nenhum. */
@@ -51,7 +58,7 @@ router.get('/metricas', (req, res) => {
       servivel: servivel(m.metricId),
       autorizado: auth.autorizado,
       scope: auth.autorizado ? auth.escopo : null,
-      dimensoes: permitidos(m).dimensoes
+      dimensoes: permitidos(m).dimensoes,
     };
   });
   res.json({ metricas: catalogo });
@@ -68,7 +75,7 @@ router.get('/metricas/:metricId', async (req, res) => {
       return res.status(404).json({
         erro: 'Métrica declarada e ainda não servível',
         status: 'NOT_APPLICABLE',
-        metricId: metrica.metricId
+        metricId: metrica.metricId,
       });
     }
 
@@ -92,7 +99,11 @@ router.get('/metricas/:metricId', async (req, res) => {
     if (comparar === 'true') {
       const anterior = construirFiltroPeriodoAnterior(janela);
       const linhasAnteriores = await CONSULTAS[metrica.metricId].carregar(req.db, anterior);
-      const antes = CALCULADORES[metrica.metricId].calcular(recorte(linhasAnteriores, auth), anterior, extra);
+      const antes = CALCULADORES[metrica.metricId].calcular(
+        recorte(linhasAnteriores, auth),
+        anterior,
+        extra
+      );
       comparacao = compararValores(
         typeof resultado.valor === 'number' ? resultado.valor : null,
         typeof antes.valor === 'number' ? antes.valor : null
@@ -104,8 +115,13 @@ router.get('/metricas/:metricId', async (req, res) => {
        não tinha como perceber. */
     const { dimensao } = parsed.data;
     const breakdown = dimensao
-      ? agruparPorDimensao(metrica.metricId, recorte(linhas, auth), janela, dimensao,
-        await contextoDeRotulo(dimensao, req, auth, extra))
+      ? agruparPorDimensao(
+          metrica.metricId,
+          recorte(linhas, auth),
+          janela,
+          dimensao,
+          await contextoDeRotulo(dimensao, req, auth, extra)
+        )
       : null;
 
     res.json({
@@ -115,9 +131,9 @@ router.get('/metricas/:metricId', async (req, res) => {
         janela,
         escopo: auth.escopo,
         comparacao,
-        podeDrilldown: autorizarDrilldown(req.user, metrica).autorizado
+        podeDrilldown: autorizarDrilldown(req.user, metrica).autorizado,
       }),
-      breakdown
+      breakdown,
     });
   } catch (erro) {
     logger.error('Erro GET /metricas/:metricId', { erro: erro.message });
@@ -136,7 +152,8 @@ router.get('/metricas/:metricId', async (req, res) => {
 router.get('/metricas/:metricId/serie', async (req, res) => {
   try {
     const metrica = metricaPorId(req.params.metricId);
-    if (!metrica || !servivel(metrica.metricId)) return res.status(404).json({ erro: 'Métrica desconhecida' });
+    if (!metrica || !servivel(metrica.metricId))
+      return res.status(404).json({ erro: 'Métrica desconhecida' });
 
     const auth = autorizarAgregado(req.user, metrica);
     if (!auth.autorizado) return res.status(403).json({ erro: 'Sem permissão para esta métrica' });
@@ -159,7 +176,7 @@ router.get('/metricas/:metricId/serie', async (req, res) => {
       window: { inicio: janela.gte.toISOString(), fim: janela.lte.toISOString() },
       scope: auth.escopo,
       timeSemantics: metrica.timeSemantics,
-      ...serie
+      ...serie,
     });
   } catch (erro) {
     logger.error('Erro GET /metricas/:metricId/serie', { erro: erro.message });
@@ -181,10 +198,12 @@ router.get('/metricas/:metricId/serie', async (req, res) => {
 router.get('/metricas/:metricId/registros', async (req, res) => {
   try {
     const metrica = metricaPorId(req.params.metricId);
-    if (!metrica || !servivel(metrica.metricId)) return res.status(404).json({ erro: 'Métrica desconhecida' });
+    if (!metrica || !servivel(metrica.metricId))
+      return res.status(404).json({ erro: 'Métrica desconhecida' });
 
     const auth = autorizarDrilldown(req.user, metrica);
-    if (!auth.autorizado) return res.status(403).json({ erro: 'Sem permissão para os registros desta métrica' });
+    if (!auth.autorizado)
+      return res.status(403).json({ erro: 'Sem permissão para os registros desta métrica' });
 
     /* Genérico: o registro decide, não um `if` por métrica. Sem predicado de elegibilidade não há
        como garantir que a lista corresponde ao total, e prefiro dizer isso a servir uma lista que
@@ -193,7 +212,7 @@ router.get('/metricas/:metricId/registros', async (req, res) => {
     if (typeof calc?.elegiveis !== 'function') {
       return res.status(501).json({
         erro: 'Drilldown declarado no contrato e ainda não implementado para esta métrica',
-        contrato: metrica.drilldown
+        contrato: metrica.drilldown,
       });
     }
 
@@ -224,12 +243,21 @@ router.get('/metricas/:metricId/registros', async (req, res) => {
       paginacao: { limite, offset, nestaPagina: pagina.length },
       /* Redação no SERVIDOR, dirigida pela `fieldPolicy` do registro. Mandar o campo e pedir que a
          UI esconda seria segurança por acordo de cavalheiros. */
-      ...redigirRegistros(metrica, pagina.map((s) => ({
-        id: s.id, tecnicoId: s.tecnicoId, local: s.local, criadoEm: s.criadoEm,
-        valorCobrado: s.valorCobrado, valorMaterial: s.valorMaterial,
-        valorLiquido: s.valorLiquido, comissaoGerada: s.comissaoGerada
-      })), req.user),
-      lineage: { formula: metrica.formula, appliedFilters: metrica.filters }
+      ...redigirRegistros(
+        metrica,
+        pagina.map((s) => ({
+          id: s.id,
+          tecnicoId: s.tecnicoId,
+          local: s.local,
+          criadoEm: s.criadoEm,
+          valorCobrado: s.valorCobrado,
+          valorMaterial: s.valorMaterial,
+          valorLiquido: s.valorLiquido,
+          comissaoGerada: s.comissaoGerada,
+        })),
+        req.user
+      ),
+      lineage: { formula: metrica.formula, appliedFilters: metrica.filters },
     });
   } catch (erro) {
     logger.error('Erro GET /metricas/:metricId/registros', { erro: erro.message });
@@ -263,7 +291,7 @@ async function contextoDeRotulo(dimensao, req, auth, extra) {
   const todos = Array.isArray(extra) ? extra : await carregarTecnicos(req.db);
   return {
     tecnicos: auth.escopo === 'PROPRIO' ? todos.filter((t) => t.id === auth.tecnicoId) : todos,
-    extra
+    extra,
   };
 }
 

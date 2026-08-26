@@ -47,7 +47,11 @@ export function assinaturaDaAcesso(assinatura, agora = new Date()) {
 
   if (ESTADOS_SEM_ACESSO.includes(assinatura.status)) {
     /* `canceled` com período pago ainda correndo continua valendo: o cliente pagou por ele. */
-    if (assinatura.status === 'canceled' && assinatura.periodoFimEm && assinatura.periodoFimEm > agora) {
+    if (
+      assinatura.status === 'canceled' &&
+      assinatura.periodoFimEm &&
+      assinatura.periodoFimEm > agora
+    ) {
       return { acesso: true, motivo: 'PERIODO_PAGO_EM_CURSO' };
     }
     return { acesso: false, motivo: assinatura.status.toUpperCase() };
@@ -105,12 +109,14 @@ export function requireAssinaturaAtiva(req, res, next) {
       return res.status(402).json({
         erro: 'Assinatura necessária',
         motivo: veredito.motivo,
-        acao: 'Renove a assinatura para voltar a usar o AdmAi.'
+        acao: 'Renove a assinatura para voltar a usar o AdmAi.',
       });
     })
     .catch((erro) => {
       logger.error('Erro ao verificar assinatura', { erro: erro.message, empresaId });
       /* Falha ao consultar não libera: indisponibilidade do banco não é direito de uso. */
-      return res.status(402).json({ erro: 'Assinatura não verificável', motivo: 'ERRO_NA_CONSULTA' });
+      return res
+        .status(402)
+        .json({ erro: 'Assinatura não verificável', motivo: 'ERRO_NA_CONSULTA' });
     });
 }

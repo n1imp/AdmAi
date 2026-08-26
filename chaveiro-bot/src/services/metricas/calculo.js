@@ -80,14 +80,17 @@ export const CALCULADORES = Object.freeze({
        `servicos-concluidos` e ESTARIA ERRADO aqui, porque a regra de qualidade desta métrica
        também descarta `valorLiquido` ausente ou negativo. A lista mostraria registros que o total
        não somou, e nenhum dos dois números estaria errado sozinho. */
-    elegiveis: (servicos, periodo = {}) => servicos
-      .filter((s) => s.status === 'ativo')
-      .filter((s) => noPeriodo(s.criadoEm, periodo))
-      .filter((s) => numeroValido(s.valorLiquido)),
+    elegiveis: (servicos, periodo = {}) =>
+      servicos
+        .filter((s) => s.status === 'ativo')
+        .filter((s) => noPeriodo(s.criadoEm, periodo))
+        .filter((s) => numeroValido(s.valorLiquido)),
     calcular(servicos, periodo = {}) {
       const elegiveis = this.elegiveis(servicos, periodo);
-      return valor(round2(elegiveis.reduce((t, s) => t + s.valorLiquido, 0)), { registros: elegiveis.length });
-    }
+      return valor(round2(elegiveis.reduce((t, s) => t + s.valorLiquido, 0)), {
+        registros: elegiveis.length,
+      });
+    },
   },
 
   'ticket-medio': {
@@ -100,10 +103,11 @@ export const CALCULADORES = Object.freeze({
         .filter((s) => noPeriodo(s.criadoEm, periodo))
         .filter((s) => numeroValido(s.valorLiquido));
       /* Média de nada não é zero — é ausência de medida. */
-      if (elegiveis.length === 0) return insuficiente('nenhum serviço ativo no período: média sem denominador');
+      if (elegiveis.length === 0)
+        return insuficiente('nenhum serviço ativo no período: média sem denominador');
       const soma = elegiveis.reduce((t, s) => t + s.valorLiquido, 0);
       return valor(round2(soma / elegiveis.length), { registros: elegiveis.length });
-    }
+    },
   },
 
   'comissao-total': {
@@ -121,20 +125,19 @@ export const CALCULADORES = Object.freeze({
         .filter((s) => numeroValido(s.comissaoGerada))
         .reduce((t, s) => t + s.comissaoGerada, 0);
       return valor(round2(total), { registros: elegiveis.length, incompletos: semPercentual });
-    }
+    },
   },
 
   'servicos-concluidos': {
     agregacao: 'COUNT',
     entidades: ['Servico'],
     campos: ['status', 'criadoEm'],
-    elegiveis: (servicos, periodo = {}) => servicos
-      .filter((s) => s.status === 'ativo')
-      .filter((s) => noPeriodo(s.criadoEm, periodo)),
+    elegiveis: (servicos, periodo = {}) =>
+      servicos.filter((s) => s.status === 'ativo').filter((s) => noPeriodo(s.criadoEm, periodo)),
     calcular(servicos, periodo = {}) {
       const elegiveis = this.elegiveis(servicos, periodo);
       return valor(elegiveis.length, { registros: elegiveis.length });
-    }
+    },
   },
 
   'taxa-aprovacao': {
@@ -153,16 +156,22 @@ export const CALCULADORES = Object.freeze({
       }
       const doPeriodo = servicos.filter((s) => noPeriodo(s.criadoEm, periodo));
       const aprovados = doPeriodo.filter((s) => s.status === 'ativo' && s.aprovadoEm != null);
-      const noFluxo = doPeriodo.filter((s) =>
-        s.status === 'pendente' || s.status === 'rejeitado' ||
-        (s.status === 'ativo' && s.aprovadoEm != null));
+      const noFluxo = doPeriodo.filter(
+        (s) =>
+          s.status === 'pendente' ||
+          s.status === 'rejeitado' ||
+          (s.status === 'ativo' && s.aprovadoEm != null)
+      );
       if (noFluxo.length === 0) {
-        return insuficiente('nenhum serviço entrou no fluxo de aprovação no período: denominador zero não é taxa');
+        return insuficiente(
+          'nenhum serviço entrou no fluxo de aprovação no período: denominador zero não é taxa'
+        );
       }
       return valor(round4(aprovados.length / noFluxo.length), {
-        aprovados: aprovados.length, noFluxo: noFluxo.length
+        aprovados: aprovados.length,
+        noFluxo: noFluxo.length,
       });
-    }
+    },
   },
 
   'producao-por-tecnico': {
@@ -176,21 +185,34 @@ export const CALCULADORES = Object.freeze({
       const elegiveis = servicos
         .filter((s) => s.status === 'ativo')
         .filter((s) => noPeriodo(s.criadoEm, periodo));
-      const porTecnico = new Map(tecnicos.map((t) => [t.id, {
-        tecnicoId: t.id, nome: t.nome, servicos: 0, valorLiquido: 0, comissaoGerada: 0
-      }]));
+      const porTecnico = new Map(
+        tecnicos.map((t) => [
+          t.id,
+          {
+            tecnicoId: t.id,
+            nome: t.nome,
+            servicos: 0,
+            valorLiquido: 0,
+            comissaoGerada: 0,
+          },
+        ])
+      );
       for (const s of elegiveis) {
-        if (!porTecnico.has(s.tecnicoId)) continue;   // técnico fora do tenant não entra
+        if (!porTecnico.has(s.tecnicoId)) continue; // técnico fora do tenant não entra
         const linha = porTecnico.get(s.tecnicoId);
         linha.servicos += 1;
         if (numeroValido(s.valorLiquido)) linha.valorLiquido += s.valorLiquido;
         if (numeroValido(s.comissaoGerada)) linha.comissaoGerada += s.comissaoGerada;
       }
       const linhas = [...porTecnico.values()]
-        .map((l) => ({ ...l, valorLiquido: round2(l.valorLiquido), comissaoGerada: round2(l.comissaoGerada) }))
+        .map((l) => ({
+          ...l,
+          valorLiquido: round2(l.valorLiquido),
+          comissaoGerada: round2(l.comissaoGerada),
+        }))
         .sort((a, b) => b.valorLiquido - a.valorLiquido || a.tecnicoId - b.tecnicoId);
       return valor(linhas, { registros: elegiveis.length });
-    }
+    },
   },
 
   'horas-trabalhadas': {
@@ -207,7 +229,10 @@ export const CALCULADORES = Object.freeze({
         const batidas = [...(r.batidas ?? [])].sort((a, b) => new Date(a.em) - new Date(b.em));
         const entrada = batidas.find((b) => b.tipo === 'entrada');
         const saida = batidas.find((b) => b.tipo === 'saida');
-        if (!entrada || !saida) { incompletos += 1; continue; }
+        if (!entrada || !saida) {
+          incompletos += 1;
+          continue;
+        }
         let bruto = (new Date(saida.em) - new Date(entrada.em)) / 60000;
         const almocoSaida = batidas.find((b) => b.tipo === 'almoco_saida');
         const almocoVolta = batidas.find((b) => b.tipo === 'almoco_volta');
@@ -217,7 +242,7 @@ export const CALCULADORES = Object.freeze({
         if (bruto > 0) minutos += bruto;
       }
       return valor(round2(minutos / 60), { registros: noEscopo.length, incompletos });
-    }
+    },
   },
 
   'nota-media-avaliacao': {
@@ -231,12 +256,14 @@ export const CALCULADORES = Object.freeze({
         .filter((a) => noPeriodo(a.criadoEm, periodo))
         .filter((a) => typeof a.nota === 'number' && a.nota >= 1 && a.nota <= 5);
       if (respondidas.length < MINIMO_DE_AVALIACOES) {
-        return insuficiente(`${respondidas.length} avaliações respondidas: abaixo do mínimo de ${MINIMO_DE_AVALIACOES} para média significar reputação`);
+        return insuficiente(
+          `${respondidas.length} avaliações respondidas: abaixo do mínimo de ${MINIMO_DE_AVALIACOES} para média significar reputação`
+        );
       }
       const soma = respondidas.reduce((t, a) => t + a.nota, 0);
       return valor(round2(soma / respondidas.length), { registros: respondidas.length });
-    }
-  }
+    },
+  },
 });
 
 const round2 = (n) => Math.round(n * 100) / 100;
@@ -256,9 +283,12 @@ const round4 = (n) => Math.round(n * 10000) / 10000;
  * o rótulo some junto. Foi o defeito de `producao-por-tecnico`: recortar a linha e não o rótulo.
  */
 export const CHAVES_DE_DIMENSAO = Object.freeze({
-  tecnico: { campo: (l) => l.tecnicoId, rotulo: (k, ctx) => ctx?.tecnicos?.find((t) => t.id === k)?.nome ?? null },
+  tecnico: {
+    campo: (l) => l.tecnicoId,
+    rotulo: (k, ctx) => ctx?.tecnicos?.find((t) => t.id === k)?.nome ?? null,
+  },
   local: { campo: (l) => l.local ?? null, rotulo: (k) => k },
-  dia: { campo: (l) => diaDe(l.criadoEm), rotulo: (k) => k }
+  dia: { campo: (l) => diaDe(l.criadoEm), rotulo: (k) => k },
 });
 
 /** `YYYY-MM-DD` no fuso do servidor — mesma convenção de `services/periodo.js`. */
@@ -301,10 +331,15 @@ export function agruparPorDimensao(metricId, linhas, periodo = {}, dimensao, con
     if (rotulo === null && dimensao === 'tecnico') continue;
     const r = calc.calcular(doGrupo, periodo, contexto.extra ?? contexto);
     if (r.estado !== 'OK') continue;
-    grupos.push({ chave: String(k), rotulo: String(rotulo), valor: r.valor, registros: r.registros ?? null });
+    grupos.push({
+      chave: String(k),
+      rotulo: String(rotulo),
+      valor: r.valor,
+      registros: r.registros ?? null,
+    });
   }
 
-  grupos.sort((a, b) => (b.valor - a.valor) || String(a.rotulo).localeCompare(String(b.rotulo)));
+  grupos.sort((a, b) => b.valor - a.valor || String(a.rotulo).localeCompare(String(b.rotulo)));
   return { dimensao, grupos };
 }
 
@@ -382,7 +417,9 @@ export function verificarAncoragem(metricId, calc, metrica) {
   const esperadas = [...(metrica.sourceEntities ?? [])].sort();
   const declaradas = [...calc.entidades].sort();
   if (JSON.stringify(esperadas) !== JSON.stringify(declaradas)) {
-    problemas.push(`${metricId}: entidades divergem — contrato=[${esperadas}] cálculo=[${declaradas}]`);
+    problemas.push(
+      `${metricId}: entidades divergem — contrato=[${esperadas}] cálculo=[${declaradas}]`
+    );
   }
 
   const textoDoContrato = `${formula} ${(metrica.filters ?? []).join(' ')} ${(metrica.qualityRules ?? []).join(' ')} ${metrica.grain ?? ''}`;
@@ -410,49 +447,131 @@ const FORA = '2026-02-15T12:00:00Z';
 export const FIXTURES = Object.freeze({
   servicos: Object.freeze([
     /* aprovado: entra no numerador E no denominador da taxa */
-    { id: 1, tecnicoId: 10, status: 'ativo', valorLiquido: 100, comissaoGerada: 12, criadoEm: DENTRO, aprovadoEm: DENTRO },
+    {
+      id: 1,
+      tecnicoId: 10,
+      status: 'ativo',
+      valorLiquido: 100,
+      comissaoGerada: 12,
+      criadoEm: DENTRO,
+      aprovadoEm: DENTRO,
+    },
     /* registrado direto pelo dono: nunca passou pelo fluxo, fica FORA do denominador */
-    { id: 2, tecnicoId: 10, status: 'ativo', valorLiquido: 300, comissaoGerada: 36, criadoEm: DENTRO, aprovadoEm: null },
-    { id: 3, tecnicoId: 11, status: 'ativo', valorLiquido: 200, comissaoGerada: 24, criadoEm: DENTRO, aprovadoEm: DENTRO },
+    {
+      id: 2,
+      tecnicoId: 10,
+      status: 'ativo',
+      valorLiquido: 300,
+      comissaoGerada: 36,
+      criadoEm: DENTRO,
+      aprovadoEm: null,
+    },
+    {
+      id: 3,
+      tecnicoId: 11,
+      status: 'ativo',
+      valorLiquido: 200,
+      comissaoGerada: 24,
+      criadoEm: DENTRO,
+      aprovadoEm: DENTRO,
+    },
     /* excluído por status */
-    { id: 4, tecnicoId: 10, status: 'cancelado', valorLiquido: 999, comissaoGerada: 99, criadoEm: DENTRO, aprovadoEm: null },
+    {
+      id: 4,
+      tecnicoId: 10,
+      status: 'cancelado',
+      valorLiquido: 999,
+      comissaoGerada: 99,
+      criadoEm: DENTRO,
+      aprovadoEm: null,
+    },
     /* excluído por período */
-    { id: 5, tecnicoId: 11, status: 'ativo', valorLiquido: 500, comissaoGerada: 60, criadoEm: FORA, aprovadoEm: null },
+    {
+      id: 5,
+      tecnicoId: 11,
+      status: 'ativo',
+      valorLiquido: 500,
+      comissaoGerada: 60,
+      criadoEm: FORA,
+      aprovadoEm: null,
+    },
     /* excluído por valor inválido — negativo é dado ruim, não desconto */
-    { id: 6, tecnicoId: 11, status: 'ativo', valorLiquido: -50, comissaoGerada: 0, criadoEm: DENTRO, aprovadoEm: null },
+    {
+      id: 6,
+      tecnicoId: 11,
+      status: 'ativo',
+      valorLiquido: -50,
+      comissaoGerada: 0,
+      criadoEm: DENTRO,
+      aprovadoEm: null,
+    },
     /* no fluxo e ainda não decidido: denominador, não numerador */
-    { id: 7, tecnicoId: 10, status: 'pendente', valorLiquido: 150, comissaoGerada: 18, criadoEm: DENTRO, aprovadoEm: null },
+    {
+      id: 7,
+      tecnicoId: 10,
+      status: 'pendente',
+      valorLiquido: 150,
+      comissaoGerada: 18,
+      criadoEm: DENTRO,
+      aprovadoEm: null,
+    },
     /* rejeitado: denominador, não numerador — some da taxa se alguém esquecer o status */
-    { id: 8, tecnicoId: 11, status: 'rejeitado', valorLiquido: 80, comissaoGerada: 9, criadoEm: DENTRO, aprovadoEm: DENTRO }
+    {
+      id: 8,
+      tecnicoId: 11,
+      status: 'rejeitado',
+      valorLiquido: 80,
+      comissaoGerada: 9,
+      criadoEm: DENTRO,
+      aprovadoEm: DENTRO,
+    },
   ]),
   tecnicos: Object.freeze([
     { id: 10, nome: 'Ana' },
     { id: 11, nome: 'Bruno' },
     /* não produziu no período: precisa aparecer com zero explícito */
-    { id: 12, nome: 'Carla' }
+    { id: 12, nome: 'Carla' },
   ]),
   avaliacoes: Object.freeze([
-    { id: 1, nota: 5, criadoEm: DENTRO }, { id: 2, nota: 4, criadoEm: DENTRO },
-    { id: 3, nota: 5, criadoEm: DENTRO }, { id: 4, nota: 3, criadoEm: DENTRO },
+    { id: 1, nota: 5, criadoEm: DENTRO },
+    { id: 2, nota: 4, criadoEm: DENTRO },
+    { id: 3, nota: 5, criadoEm: DENTRO },
+    { id: 4, nota: 3, criadoEm: DENTRO },
     { id: 5, nota: 3, criadoEm: DENTRO },
-    { id: 6, nota: null, criadoEm: DENTRO },        // enviada e não respondida
-    { id: 7, nota: 1, criadoEm: FORA }              // fora do período
+    { id: 6, nota: null, criadoEm: DENTRO }, // enviada e não respondida
+    { id: 7, nota: 1, criadoEm: FORA }, // fora do período
   ]),
   registrosDePonto: Object.freeze([
-    { id: 1, tecnicoId: 10, data: DENTRO, batidas: [
-      { tipo: 'entrada', em: '2026-03-15T08:00:00Z' },
-      { tipo: 'almoco_saida', em: '2026-03-15T12:00:00Z' },
-      { tipo: 'almoco_volta', em: '2026-03-15T13:00:00Z' },
-      { tipo: 'saida', em: '2026-03-15T17:00:00Z' }
-    ] },
+    {
+      id: 1,
+      tecnicoId: 10,
+      data: DENTRO,
+      batidas: [
+        { tipo: 'entrada', em: '2026-03-15T08:00:00Z' },
+        { tipo: 'almoco_saida', em: '2026-03-15T12:00:00Z' },
+        { tipo: 'almoco_volta', em: '2026-03-15T13:00:00Z' },
+        { tipo: 'saida', em: '2026-03-15T17:00:00Z' },
+      ],
+    },
     /* incompleto: entrou e não saiu — não entra na soma */
-    { id: 2, tecnicoId: 11, data: DENTRO, batidas: [{ tipo: 'entrada', em: '2026-03-16T08:00:00Z' }] },
+    {
+      id: 2,
+      tecnicoId: 11,
+      data: DENTRO,
+      batidas: [{ tipo: 'entrada', em: '2026-03-16T08:00:00Z' }],
+    },
     /* fora do período */
-    { id: 3, tecnicoId: 10, data: FORA, batidas: [
-      { tipo: 'entrada', em: '2026-02-15T08:00:00Z' }, { tipo: 'saida', em: '2026-02-15T18:00:00Z' }
-    ] }
+    {
+      id: 3,
+      tecnicoId: 10,
+      data: FORA,
+      batidas: [
+        { tipo: 'entrada', em: '2026-02-15T08:00:00Z' },
+        { tipo: 'saida', em: '2026-02-15T18:00:00Z' },
+      ],
+    },
   ]),
   empresaComAprovacao: Object.freeze({ aprovacaoServico: true }),
   empresaSemAprovacao: Object.freeze({ aprovacaoServico: false }),
-  periodo: PERIODO
+  periodo: PERIODO,
 });

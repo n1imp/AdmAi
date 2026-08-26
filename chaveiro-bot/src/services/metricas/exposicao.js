@@ -27,7 +27,10 @@ import { derivarConfianca } from './contrato.js';
 import { pode, podeProprio } from '../permissoes.js';
 
 export const ESTADOS_DA_RESPOSTA = Object.freeze([
-  'VALUE', 'INSUFFICIENT_DATA', 'NOT_APPLICABLE', 'UNAVAILABLE'
+  'VALUE',
+  'INSUFFICIENT_DATA',
+  'NOT_APPLICABLE',
+  'UNAVAILABLE',
 ]);
 
 /** Nunca aceito do cliente, em nenhuma métrica: o tenant não é parâmetro. */
@@ -95,7 +98,7 @@ export function permitidos(metrica) {
        correspondente. `servicos-concluidos` declara `dia`, então `semana` e `mes` REPROVAM até
        alguém acrescentá-las ao contrato. Inventá-las aqui seria a camada HTTP decidindo semântica
        temporal, que é justamente o que `timeSemantics` existe para fixar. */
-    granularidades: Object.freeze(dimensoes.filter((d) => d === 'dia'))
+    granularidades: Object.freeze(dimensoes.filter((d) => d === 'dia')),
   });
 }
 
@@ -118,8 +121,10 @@ export function validarPedido(metrica, pedido = {}) {
     problemas.push(`período inválido: ${pedido.periodo}`);
   }
   if (pedido.granularidade != null && !ok.granularidades.includes(pedido.granularidade)) {
-    problemas.push(`granularidade não declarada por ${metrica.metricId}: ${pedido.granularidade}` +
-      ` (declaradas: ${ok.granularidades.join(', ') || 'nenhuma'})`);
+    problemas.push(
+      `granularidade não declarada por ${metrica.metricId}: ${pedido.granularidade}` +
+        ` (declaradas: ${ok.granularidades.join(', ') || 'nenhuma'})`
+    );
   }
   if (pedido.periodo === 'personalizado' && !(pedido.inicio && pedido.fim)) {
     problemas.push('período personalizado exige inicio e fim');
@@ -157,13 +162,15 @@ export function estadoDoResultado(resultado) {
 export function compararValores(atual, anterior) {
   if (typeof atual !== 'number' || typeof anterior !== 'number') return null;
   const absoluta = Math.round((atual - anterior) * 100) / 100;
-  const percentual = anterior === 0 ? null : Math.round(((atual - anterior) / anterior) * 10000) / 100;
+  const percentual =
+    anterior === 0 ? null : Math.round(((atual - anterior) / anterior) * 10000) / 100;
   return {
     valorAnterior: anterior,
     variacaoAbsoluta: absoluta,
     variacaoPercentual: percentual,
     /* Sem base anterior, a direção é DESCONHECIDA — não "subiu infinito". */
-    direcao: percentual === null ? 'SEM_BASE' : absoluta > 0 ? 'SUBIU' : absoluta < 0 ? 'CAIU' : 'ESTAVEL'
+    direcao:
+      percentual === null ? 'SEM_BASE' : absoluta > 0 ? 'SUBIU' : absoluta < 0 ? 'CAIU' : 'ESTAVEL',
   };
 }
 
@@ -174,7 +181,14 @@ export function compararValores(atual, anterior) {
  *
  * Não vazam daqui: SQL, identificador de outro tenant, segredo, ou interno de implementação.
  */
-export function montarResposta({ metrica, resultado, janela, escopo, comparacao = null, podeDrilldown = false }) {
+export function montarResposta({
+  metrica,
+  resultado,
+  janela,
+  escopo,
+  comparacao = null,
+  podeDrilldown = false,
+}) {
   const estado = estadoDoResultado(resultado);
   const registros = resultado?.registros ?? null;
 
@@ -182,7 +196,10 @@ export function montarResposta({ metrica, resultado, janela, escopo, comparacao 
     metricId: metrica.metricId,
     name: metrica.name,
     version: metrica.version,
-    window: { inicio: janela?.gte?.toISOString?.() ?? null, fim: janela?.lte?.toISOString?.() ?? null },
+    window: {
+      inicio: janela?.gte?.toISOString?.() ?? null,
+      fim: janela?.lte?.toISOString?.() ?? null,
+    },
     scope: escopo,
     status: estado,
     value: estado === 'VALUE' ? resultado.valor : null,
@@ -193,13 +210,14 @@ export function montarResposta({ metrica, resultado, janela, escopo, comparacao 
     quality: {
       state: derivarConfianca({
         recordCount: registros,
-        coverage: resultado?.incompletos != null && registros
-          ? (registros - resultado.incompletos) / registros
-          : null
+        coverage:
+          resultado?.incompletos != null && registros
+            ? (registros - resultado.incompletos) / registros
+            : null,
       }),
       recordCount: registros,
       incomplete: resultado?.incompletos ?? null,
-      warnings: metrica.qualityRules ?? []
+      warnings: metrica.qualityRules ?? [],
     },
     lineage: {
       formula: metrica.formula,
@@ -207,14 +225,14 @@ export function montarResposta({ metrica, resultado, janela, escopo, comparacao 
       sourceEntities: metrica.sourceEntities,
       appliedFilters: metrica.filters,
       timeSemantics: metrica.timeSemantics,
-      freshness: metrica.freshness
+      freshness: metrica.freshness,
     },
     permissions: { canDrillDown: podeDrilldown },
     /* O que o cliente PODE pedir, vindo do contrato. Sem isto o frontend teria de adivinhar as
        dimensões — e adivinhar vira lista escrita à mão que diverge do registro na primeira
        mudança. O backend revalida tudo que chegar de volta; esta lista é conveniência, nunca
        autoridade. */
-    allowed: permitidos(metrica)
+    allowed: permitidos(metrica),
   };
 }
 
@@ -270,7 +288,10 @@ export const POLITICA_PADRAO_DE_CAMPO = Object.freeze({
   valorCobrado: [{ modulo: 'financeiro', acao: 'ver' }],
   valorMaterial: [{ modulo: 'financeiro', acao: 'ver' }],
   valorLiquido: [{ modulo: 'financeiro', acao: 'ver' }],
-  comissaoGerada: [{ modulo: 'financeiro', acao: 'ver' }, { modulo: 'tecnicos', acao: 'ver' }]
+  comissaoGerada: [
+    { modulo: 'financeiro', acao: 'ver' },
+    { modulo: 'tecnicos', acao: 'ver' },
+  ],
 });
 
 /** União das exigências: padrão + as da métrica. Exigir a mais nunca concede acesso indevido. */
@@ -280,13 +301,14 @@ export function politicaDaMetrica(metrica) {
   const fundida = {};
   for (const campo of campos) {
     const vistas = new Set();
-    fundida[campo] = [...(POLITICA_PADRAO_DE_CAMPO[campo] ?? []), ...(propria[campo] ?? [])]
-      .filter(({ modulo, acao }) => {
+    fundida[campo] = [...(POLITICA_PADRAO_DE_CAMPO[campo] ?? []), ...(propria[campo] ?? [])].filter(
+      ({ modulo, acao }) => {
         const chave = `${modulo}.${acao}`;
         if (vistas.has(chave)) return false;
         vistas.add(chave);
         return true;
-      });
+      }
+    );
   }
   return fundida;
 }
@@ -315,6 +337,7 @@ export function redigirRegistros(metrica, registros, usuario) {
   return {
     camposOmitidos: omitidos,
     registros: registros.map((r) =>
-      Object.fromEntries(Object.entries(r).filter(([campo]) => !proibido.has(campo))))
+      Object.fromEntries(Object.entries(r).filter(([campo]) => !proibido.has(campo)))
+    ),
   };
 }

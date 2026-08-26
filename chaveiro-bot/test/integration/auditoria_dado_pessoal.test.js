@@ -47,7 +47,7 @@ afterAll(async () => {
  */
 async function criarTecnico(empresaId) {
   return prisma.tecnico.create({
-    data: { empresaId, nome: 'Tecnico de Teste', comissao: 10 }
+    data: { empresaId, nome: 'Tecnico de Teste', comissao: 10 },
   });
 }
 
@@ -61,10 +61,15 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     /* Um segundo admin, para que a exclusão NÃO caia no caminho de apagar a empresa. */
     await prisma.usuario.create({
       data: {
-        nome: 'Outro Admin', username: `outro${Date.now().toString().slice(-6)}`,
-        email: `outro${Date.now()}@teste.com`, senhaHash: 'x', papel: 'dono', admin: true,
-        ativo: true, empresaId: admin.empresaId
-      }
+        nome: 'Outro Admin',
+        username: `outro${Date.now().toString().slice(-6)}`,
+        email: `outro${Date.now()}@teste.com`,
+        senhaHash: 'x',
+        papel: 'dono',
+        admin: true,
+        ativo: true,
+        empresaId: admin.empresaId,
+      },
     });
 
     const res = await request(app)
@@ -75,7 +80,7 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     expect(res.body.escopo).toBe('usuario');
 
     const registros = await prisma.auditLog.findMany({
-      where: { empresaId: admin.empresaId, acao: 'conta.excluida' }
+      where: { empresaId: admin.empresaId, acao: 'conta.excluida' },
     });
     expect(registros).toHaveLength(1);
     expect(registros[0].usuarioId).toBe(admin.userId);
@@ -88,17 +93,24 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     const usuario = await prisma.usuario.findUnique({ where: { id: admin.userId } });
     await prisma.usuario.create({
       data: {
-        nome: 'Outro Admin', username: `outro2${Date.now().toString().slice(-5)}`,
-        email: `outro2${Date.now()}@teste.com`, senhaHash: 'x', papel: 'dono', admin: true,
-        ativo: true, empresaId: admin.empresaId
-      }
+        nome: 'Outro Admin',
+        username: `outro2${Date.now().toString().slice(-5)}`,
+        email: `outro2${Date.now()}@teste.com`,
+        senhaHash: 'x',
+        papel: 'dono',
+        admin: true,
+        ativo: true,
+        empresaId: admin.empresaId,
+      },
     });
 
-    await request(app).delete('/api/me/conta')
-      .set('Authorization', `Bearer ${admin.token}`).send({ senha: 'SenhaForte1!' });
+    await request(app)
+      .delete('/api/me/conta')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ senha: 'SenhaForte1!' });
 
     const [registro] = await prisma.auditLog.findMany({
-      where: { empresaId: admin.empresaId, acao: 'conta.excluida' }
+      where: { empresaId: admin.empresaId, acao: 'conta.excluida' },
     });
     const texto = textoDoRegistro(registro);
 
@@ -120,7 +132,7 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     expect(res.body.escopo).toBe('empresa');
 
     const [registro] = await prisma.auditLog.findMany({
-      where: { empresaId: admin.empresaId, acao: 'conta.excluida' }
+      where: { empresaId: admin.empresaId, acao: 'conta.excluida' },
     });
     expect(registro).toBeTruthy();
     expect(registro.depois.escopo).toBe('empresa');
@@ -132,8 +144,10 @@ describe('Auditoria de operações sobre dado pessoal', () => {
   it('o registro SOBREVIVE à cascata que apaga a empresa', async () => {
     const admin = await criarEmpresaComAdmin(request, app, 'A4');
 
-    await request(app).delete('/api/me/conta')
-      .set('Authorization', `Bearer ${admin.token}`).send({ senha: 'SenhaForte1!' });
+    await request(app)
+      .delete('/api/me/conta')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ senha: 'SenhaForte1!' });
 
     const empresa = await prisma.empresa.findUnique({ where: { id: admin.empresaId } });
     const registros = await prisma.auditLog.findMany({ where: { empresaId: admin.empresaId } });
@@ -150,14 +164,20 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     const tecnico = await criarTecnico(admin.empresaId);
     await prisma.servico.create({
       data: {
-        empresaId: admin.empresaId, tecnicoId: tecnico.id,
-        clienteNome: 'Cliente Para Apagar', clienteTelefone: telefone,
-        valorCobrado: 100, valorLiquido: 100, status: 'concluido',
+        empresaId: admin.empresaId,
+        tecnicoId: tecnico.id,
+        clienteNome: 'Cliente Para Apagar',
+        clienteTelefone: telefone,
+        valorCobrado: 100,
+        valorLiquido: 100,
+        status: 'concluido',
         /* Campos obrigatorios do modelo. Eu vinha adivinhando um por vez a cada erro do Prisma —
            ler os obrigatorios do schema de uma vez custa menos e nao deixa o proximo escondido. */
-        local: 'Rua de Teste', descricao: 'Servico de teste',
-        msgOriginal: 'mensagem de teste', remetenteWpp: '5511000000000'
-      }
+        local: 'Rua de Teste',
+        descricao: 'Servico de teste',
+        msgOriginal: 'mensagem de teste',
+        remetenteWpp: '5511000000000',
+      },
     });
 
     const res = await request(app)
@@ -168,7 +188,7 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     expect(res.body.servicosAnonimizados).toBeGreaterThanOrEqual(1);
 
     const [registro] = await prisma.auditLog.findMany({
-      where: { empresaId: admin.empresaId, acao: 'lgpd.cliente_anonimizado' }
+      where: { empresaId: admin.empresaId, acao: 'lgpd.cliente_anonimizado' },
     });
     expect(registro).toBeTruthy();
     expect(registro.usuarioId).toBe(admin.userId);
@@ -182,21 +202,29 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     const tecnico = await criarTecnico(admin.empresaId);
     await prisma.servico.create({
       data: {
-        empresaId: admin.empresaId, tecnicoId: tecnico.id,
-        clienteNome: nome, clienteTelefone: telefone,
-        valorCobrado: 100, valorLiquido: 100, status: 'concluido',
+        empresaId: admin.empresaId,
+        tecnicoId: tecnico.id,
+        clienteNome: nome,
+        clienteTelefone: telefone,
+        valorCobrado: 100,
+        valorLiquido: 100,
+        status: 'concluido',
         /* Campos obrigatorios do modelo. Eu vinha adivinhando um por vez a cada erro do Prisma —
            ler os obrigatorios do schema de uma vez custa menos e nao deixa o proximo escondido. */
-        local: 'Rua de Teste', descricao: 'Servico de teste',
-        msgOriginal: 'mensagem de teste', remetenteWpp: '5511000000000'
-      }
+        local: 'Rua de Teste',
+        descricao: 'Servico de teste',
+        msgOriginal: 'mensagem de teste',
+        remetenteWpp: '5511000000000',
+      },
     });
 
-    await request(app).post('/api/lgpd/anonimizar-cliente')
-      .set('Authorization', `Bearer ${admin.token}`).send({ telefone });
+    await request(app)
+      .post('/api/lgpd/anonimizar-cliente')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ telefone });
 
     const [registro] = await prisma.auditLog.findMany({
-      where: { empresaId: admin.empresaId, acao: 'lgpd.cliente_anonimizado' }
+      where: { empresaId: admin.empresaId, acao: 'lgpd.cliente_anonimizado' },
     });
     const texto = textoDoRegistro(registro);
 
@@ -210,8 +238,10 @@ describe('Auditoria de operações sobre dado pessoal', () => {
     const a = await criarEmpresaComAdmin(request, app, 'A7');
     const b = await criarEmpresaComAdmin(request, app, 'A8');
 
-    await request(app).delete('/api/me/conta')
-      .set('Authorization', `Bearer ${a.token}`).send({ senha: 'SenhaForte1!' });
+    await request(app)
+      .delete('/api/me/conta')
+      .set('Authorization', `Bearer ${a.token}`)
+      .send({ senha: 'SenhaForte1!' });
 
     const daB = await prisma.auditLog.findMany({ where: { empresaId: b.empresaId } });
     const daA = await prisma.auditLog.findMany({ where: { empresaId: a.empresaId } });

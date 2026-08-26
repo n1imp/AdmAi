@@ -46,13 +46,15 @@ const TENANT = 'empresa — toda consulta passa por req.db (client Prisma estend
  */
 export function papeisComPermissao(requiredPermission) {
   const exigidas = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
-  return Object.freeze(PAPEIS.filter((papel) => {
-    if (papel === 'dono') return true;
-    const preset = presetDoPapel(papel);
-    /* Conjunção: métrica que cruza módulos exige TODOS. Direção segura — exigir a mais nunca
+  return Object.freeze(
+    PAPEIS.filter((papel) => {
+      if (papel === 'dono') return true;
+      const preset = presetDoPapel(papel);
+      /* Conjunção: métrica que cruza módulos exige TODOS. Direção segura — exigir a mais nunca
        concede acesso indevido, exigir a menos concede. */
-    return exigidas.every(({ modulo, acao }) => Boolean(preset?.[modulo]?.[acao]));
-  }));
+      return exigidas.every(({ modulo, acao }) => Boolean(preset?.[modulo]?.[acao]));
+    })
+  );
 }
 
 /**
@@ -77,7 +79,7 @@ export const PERMISSAO_POR_METRICA = Object.freeze({
   'taxa-recompra': { modulo: 'dashboard', acao: 'ver' },
   'taxa-conversao-orcamento': { modulo: 'financeiro', acao: 'ver' },
   'ocupacao-agenda': { modulo: 'servicos', acao: 'ver' },
-  'conversao-funil': { modulo: 'dashboard', acao: 'ver' }
+  'conversao-funil': { modulo: 'dashboard', acao: 'ver' },
 });
 
 /** Métricas cujo recorte por técnico o próprio funcionário pode ver — capacidade `ver_metricas`. */
@@ -100,9 +102,11 @@ export function escopoDaMetrica(metricId) {
   return Object.freeze({
     requiredPermission,
     autoEscopo: autoEscopo ? 'ver_metricas' : null,
-    agregado: Object.freeze(autoEscopo ? [...new Set([...porModulo, 'funcionario'])] : [...porModulo]),
+    agregado: Object.freeze(
+      autoEscopo ? [...new Set([...porModulo, 'funcionario'])] : [...porModulo]
+    ),
     drilldown: porModulo,
-    tenantScope: TENANT
+    tenantScope: TENANT,
   });
 }
 
@@ -124,18 +128,23 @@ export const METRICAS = Object.freeze([
     description: 'Soma do valor cobrado menos o material dos serviços ativos no período.',
     /* Ressalva que a UI é obrigada a mostrar: o número não é lucro, e o usuário não pode ser
        levado a acreditar que custos não modelados foram considerados. */
-    escopoDeCusto: 'Considera apenas custos de material registrados no AdmAi. Não inclui comissão, impostos nem despesas fixas.',
+    escopoDeCusto:
+      'Considera apenas custos de material registrados no AdmAi. Não inclui comissão, impostos nem despesas fixas.',
     businessQuestion: 'A empresa está faturando mais ou menos que no período anterior?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'manter ou cortar custo, contratar ou segurar',
-        acao: 'comparar com o período anterior e, na queda, abrir a decomposição por técnico e por local antes de decidir' }
+      {
+        papel: 'dono',
+        decisao: 'manter ou cortar custo, contratar ou segurar',
+        acao: 'comparar com o período anterior e, na queda, abrir a decomposição por técnico e por local antes de decidir',
+      },
     ],
     formula: 'SUM(Servico.valorLiquido) WHERE status = "ativo" AND criadoEm ∈ período',
     grain: 'empresa × período',
     sourceEntities: ['Servico'],
     filters: ['status = ativo', 'criadoEm no período'],
     dimensions: ['tecnico', 'local', 'dia'],
-    timeSemantics: 'criadoEm — data de REGISTRO do serviço, não de execução. A distinção importa: serviço registrado com atraso desloca faturamento para o período errado.',
+    timeSemantics:
+      'criadoEm — data de REGISTRO do serviço, não de execução. A distinção importa: serviço registrado com atraso desloca faturamento para o período errado.',
     comparisons: ['período anterior de mesma duração'],
     freshness: 'tempo real — agregação direta, sem materialização',
     qualityRules: ['serviço sem valorLiquido não entra', 'valorLiquido negativo é dado inválido'],
@@ -148,12 +157,24 @@ export const METRICAS = Object.freeze([
       valorCobrado: [{ modulo: 'financeiro', acao: 'ver' }],
       valorMaterial: [{ modulo: 'financeiro', acao: 'ver' }],
       valorLiquido: [{ modulo: 'financeiro', acao: 'ver' }],
-      comissaoGerada: [{ modulo: 'financeiro', acao: 'ver' }, { modulo: 'tecnicos', acao: 'ver' }]
+      comissaoGerada: [
+        { modulo: 'financeiro', acao: 'ver' },
+        { modulo: 'tecnicos', acao: 'ver' },
+      ],
     },
     relatedMetrics: ['ticket-medio', 'comissao-total', 'servicos-concluidos'],
     securityScope: escopoDaMetrica('faturamento-liquido'),
-    hubModules: ['Hero', 'Timeline', 'Comparison', 'Decomposition', 'Segmentation', 'DataConfidence', 'Lineage', 'UnderlyingRecords'],
-    version: '1.0.0'
+    hubModules: [
+      'Hero',
+      'Timeline',
+      'Comparison',
+      'Decomposition',
+      'Segmentation',
+      'DataConfidence',
+      'Lineage',
+      'UnderlyingRecords',
+    ],
+    version: '1.0.0',
   },
   {
     metricId: 'ticket-medio',
@@ -162,8 +183,11 @@ export const METRICAS = Object.freeze([
     description: 'Valor líquido médio por serviço no período.',
     businessQuestion: 'Estamos cobrando pouco, ou fazendo serviço pequeno demais?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'revisar tabela de preço ou mix de serviço',
-        acao: 'se cair com volume estável, revisar preço; se cair com volume subindo, é mix — e a ação é outra' }
+      {
+        papel: 'dono',
+        decisao: 'revisar tabela de preço ou mix de serviço',
+        acao: 'se cair com volume estável, revisar preço; se cair com volume subindo, é mix — e a ação é outra',
+      },
     ],
     formula: 'SUM(Servico.valorLiquido) / COUNT(Servico) WHERE status = "ativo"',
     grain: 'empresa × período',
@@ -178,7 +202,7 @@ export const METRICAS = Object.freeze([
     relatedMetrics: ['faturamento-liquido'],
     securityScope: escopoDaMetrica('ticket-medio'),
     hubModules: ['Hero', 'Timeline', 'Distribution', 'Comparison', 'DataConfidence', 'Lineage'],
-    version: '1.0.0'
+    version: '1.0.0',
   },
   {
     metricId: 'comissao-total',
@@ -187,10 +211,16 @@ export const METRICAS = Object.freeze([
     description: 'Soma da comissão gerada pelos serviços do período.',
     businessQuestion: 'Quanto a operação deve à equipe neste período?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'programar pagamento e conferir margem',
-        acao: 'confrontar com o que já foi pago em Pagamento e liquidar a diferença' },
-      { papel: 'gestor', decisao: 'conferir comissão por técnico antes de fechar o mês',
-        acao: 'abrir a decomposição por técnico e revisar divergência antes do pagamento' }
+      {
+        papel: 'dono',
+        decisao: 'programar pagamento e conferir margem',
+        acao: 'confrontar com o que já foi pago em Pagamento e liquidar a diferença',
+      },
+      {
+        papel: 'gestor',
+        decisao: 'conferir comissão por técnico antes de fechar o mês',
+        acao: 'abrir a decomposição por técnico e revisar divergência antes do pagamento',
+      },
     ],
     formula: 'SUM(Servico.comissaoGerada) WHERE status = "ativo" AND criadoEm ∈ período',
     grain: 'empresa × período',
@@ -204,8 +234,16 @@ export const METRICAS = Object.freeze([
     drilldown: 'serviços por técnico com comissão individual',
     relatedMetrics: ['faturamento-liquido', 'producao-por-tecnico'],
     securityScope: escopoDaMetrica('comissao-total'),
-    hubModules: ['Hero', 'Decomposition', 'Timeline', 'ActionCenter', 'DataConfidence', 'Lineage', 'UnderlyingRecords'],
-    version: '1.0.0'
+    hubModules: [
+      'Hero',
+      'Decomposition',
+      'Timeline',
+      'ActionCenter',
+      'DataConfidence',
+      'Lineage',
+      'UnderlyingRecords',
+    ],
+    version: '1.0.0',
   },
 
   /* ---------------- OPERATIONS ---------------- */
@@ -216,10 +254,16 @@ export const METRICAS = Object.freeze([
     description: 'Contagem de serviços ativos no período.',
     businessQuestion: 'O volume de trabalho está subindo ou caindo?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'dimensionar equipe',
-        acao: 'volume subindo com equipe fixa antecipa gargalo: contratar ou redistribuir' },
-      { papel: 'gestor', decisao: 'redistribuir carga entre técnicos',
-        acao: 'comparar volume por técnico e reequilibrar a fila' }
+      {
+        papel: 'dono',
+        decisao: 'dimensionar equipe',
+        acao: 'volume subindo com equipe fixa antecipa gargalo: contratar ou redistribuir',
+      },
+      {
+        papel: 'gestor',
+        decisao: 'redistribuir carga entre técnicos',
+        acao: 'comparar volume por técnico e reequilibrar a fila',
+      },
     ],
     formula: 'COUNT(Servico) WHERE status = "ativo" AND criadoEm ∈ período',
     grain: 'empresa × período',
@@ -233,8 +277,16 @@ export const METRICAS = Object.freeze([
     drilldown: 'lista de serviços do período',
     relatedMetrics: ['faturamento-liquido', 'taxa-aprovacao'],
     securityScope: escopoDaMetrica('servicos-concluidos'),
-    hubModules: ['Hero', 'Timeline', 'Segmentation', 'AnomalyRadar', 'DataConfidence', 'Lineage', 'UnderlyingRecords'],
-    version: '1.0.0'
+    hubModules: [
+      'Hero',
+      'Timeline',
+      'Segmentation',
+      'AnomalyRadar',
+      'DataConfidence',
+      'Lineage',
+      'UnderlyingRecords',
+    ],
+    version: '1.0.0',
   },
   {
     metricId: 'taxa-aprovacao',
@@ -243,8 +295,11 @@ export const METRICAS = Object.freeze([
     description: 'Proporção de serviços registrados por funcionário que foram aprovados.',
     businessQuestion: 'O fluxo de aprovação está travando a operação?',
     decisionSupported: [
-      { papel: 'gestor', decisao: 'manter ou relaxar a exigência de aprovação',
-        acao: 'aprovação alta e constante sugere revisar a exigência; rejeição alta sugere treinar registro' }
+      {
+        papel: 'gestor',
+        decisao: 'manter ou relaxar a exigência de aprovação',
+        acao: 'aprovação alta e constante sugere revisar a exigência; rejeição alta sugere treinar registro',
+      },
     ],
     /* [P7] A versão 1.0.0 dizia "COUNT(registrados por funcionário)" — prosa, não campo. Ao
        implementar o cálculo, a checagem de ancoragem reprovou: não existe `registradoPorFuncionario`
@@ -252,7 +307,8 @@ export const METRICAS = Object.freeze([
        `aprovacaoServico` cria o serviço como `pendente`, e aprovar leva a `ativo`+`aprovadoEm`
        enquanto rejeitar leva a `rejeitado`+`aprovadoEm`. O denominador é o conjunto que ENTROU no
        fluxo. Contrato vago não ancora cálculo, então o contrato ficou preciso. */
-    formula: 'COUNT(status = "ativo" AND aprovadoEm IS NOT NULL) / COUNT(status IN ("pendente","rejeitado") OR (status = "ativo" AND aprovadoEm IS NOT NULL))',
+    formula:
+      'COUNT(status = "ativo" AND aprovadoEm IS NOT NULL) / COUNT(status IN ("pendente","rejeitado") OR (status = "ativo" AND aprovadoEm IS NOT NULL))',
     grain: 'empresa × período',
     sourceEntities: ['Servico', 'Empresa'],
     filters: ['Empresa.aprovacaoServico = true', 'criadoEm no período'],
@@ -262,13 +318,13 @@ export const METRICAS = Object.freeze([
     freshness: 'tempo real',
     qualityRules: [
       'empresa sem aprovacaoServico ligada devolve INSUFFICIENT, não 100%',
-      'nenhum serviço no fluxo de aprovação devolve INSUFFICIENT — denominador zero não é taxa'
+      'nenhum serviço no fluxo de aprovação devolve INSUFFICIENT — denominador zero não é taxa',
     ],
     drilldown: 'serviços pendentes e rejeitados do período',
     relatedMetrics: ['servicos-concluidos'],
     securityScope: escopoDaMetrica('taxa-aprovacao'),
     hubModules: ['Hero', 'Timeline', 'ActionCenter', 'DataConfidence', 'Lineage'],
-    version: '1.1.0'
+    version: '1.1.0',
   },
 
   /* ---------------- TEAM ---------------- */
@@ -279,10 +335,16 @@ export const METRICAS = Object.freeze([
     description: 'Serviços e valor líquido agregados por técnico no período.',
     businessQuestion: 'Quem está produzindo, e quem precisa de apoio?',
     decisionSupported: [
-      { papel: 'gestor', decisao: 'apoiar, treinar ou redistribuir',
-        acao: 'técnico consistentemente abaixo da mediana entra em acompanhamento, não em corte automático' },
-      { papel: 'funcionario', decisao: 'acompanhar a própria produção',
-        acao: 'ver o próprio número e a própria comissão do período' }
+      {
+        papel: 'gestor',
+        decisao: 'apoiar, treinar ou redistribuir',
+        acao: 'técnico consistentemente abaixo da mediana entra em acompanhamento, não em corte automático',
+      },
+      {
+        papel: 'funcionario',
+        decisao: 'acompanhar a própria produção',
+        acao: 'ver o próprio número e a própria comissão do período',
+      },
     ],
     formula: 'GROUP BY tecnicoId: COUNT(Servico), SUM(valorLiquido), SUM(comissaoGerada)',
     grain: 'técnico × período',
@@ -299,8 +361,17 @@ export const METRICAS = Object.freeze([
        própria produção (self-scope, via /me/metricas), mas o drilldown da equipe inteira é de
        dono e gestor. Ver o próprio total não abre a lista dos outros. */
     securityScope: escopoDaMetrica('producao-por-tecnico'),
-    hubModules: ['Hero', 'Decomposition', 'Comparison', 'Distribution', 'DriverAnalysis', 'DataConfidence', 'Lineage', 'UnderlyingRecords'],
-    version: '1.0.0'
+    hubModules: [
+      'Hero',
+      'Decomposition',
+      'Comparison',
+      'Distribution',
+      'DriverAnalysis',
+      'DataConfidence',
+      'Lineage',
+      'UnderlyingRecords',
+    ],
+    version: '1.0.0',
   },
   {
     metricId: 'horas-trabalhadas',
@@ -309,13 +380,17 @@ export const METRICAS = Object.freeze([
     description: 'Jornada registrada por técnico no período, a partir das batidas de ponto.',
     businessQuestion: 'A jornada registrada corresponde à produção observada?',
     decisionSupported: [
-      { papel: 'gestor', decisao: 'conferir jornada antes de fechar folha',
-        acao: 'divergência entre jornada e produção entra em conferência antes do fechamento' }
+      {
+        papel: 'gestor',
+        decisao: 'conferir jornada antes de fechar folha',
+        acao: 'divergência entre jornada e produção entra em conferência antes do fechamento',
+      },
     ],
     /* [P7] Também vago demais para ancorar cálculo: "intervalos" não diz QUAIS batidas nem como o
        almoço entra. Os tipos são os do schema, e o almoço só é descontado quando o par existe —
        descontar um almoço aberto inventaria pausa que ninguém registrou. */
-    formula: 'SUM(BatidaPonto.em[tipo="saida"] - BatidaPonto.em[tipo="entrada"] - (almoco_volta - almoco_saida quando o par existe)) agrupado por registroId, por técnico',
+    formula:
+      'SUM(BatidaPonto.em[tipo="saida"] - BatidaPonto.em[tipo="entrada"] - (almoco_volta - almoco_saida quando o par existe)) agrupado por registroId, por técnico',
     grain: 'técnico × período',
     sourceEntities: ['RegistroPonto', 'BatidaPonto', 'Tecnico'],
     filters: ['data no período'],
@@ -325,13 +400,13 @@ export const METRICAS = Object.freeze([
     freshness: 'tempo real',
     qualityRules: [
       'registro com batida de entrada sem saída é incompleto e não entra na soma',
-      'jornada não é fechada com o relógio atual — hora não trabalhada cresceria sozinha'
+      'jornada não é fechada com o relógio atual — hora não trabalhada cresceria sozinha',
     ],
     drilldown: 'batidas do técnico no período',
     relatedMetrics: ['producao-por-tecnico'],
     securityScope: escopoDaMetrica('horas-trabalhadas'),
     hubModules: ['Hero', 'Timeline', 'Comparison', 'AnomalyRadar', 'DataConfidence', 'Lineage'],
-    version: '1.0.0'
+    version: '1.0.0',
   },
 
   /* ---------------- QUALITY ---------------- */
@@ -342,8 +417,11 @@ export const METRICAS = Object.freeze([
     description: 'Média das notas de avaliação recebidas no período.',
     businessQuestion: 'A qualidade percebida está caindo?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'intervir em qualidade antes de perder cliente',
-        acao: 'queda sustentada abre investigação por técnico e por tipo de serviço' }
+      {
+        papel: 'dono',
+        decisao: 'intervir em qualidade antes de perder cliente',
+        acao: 'queda sustentada abre investigação por técnico e por tipo de serviço',
+      },
     ],
     formula: 'AVG(Avaliacao.nota) WHERE criadoEm ∈ período',
     grain: 'empresa × período',
@@ -353,12 +431,22 @@ export const METRICAS = Object.freeze([
     timeSemantics: 'Avaliacao.criadoEm',
     comparisons: ['período anterior'],
     freshness: 'tempo real',
-    qualityRules: ['menos de 5 avaliações no período devolve INSUFFICIENT — média de amostra mínima engana'],
+    qualityRules: [
+      'menos de 5 avaliações no período devolve INSUFFICIENT — média de amostra mínima engana',
+    ],
     drilldown: 'avaliações do período com comentário',
     relatedMetrics: ['producao-por-tecnico'],
     securityScope: escopoDaMetrica('nota-media-avaliacao'),
-    hubModules: ['Hero', 'Timeline', 'Distribution', 'Segmentation', 'DataConfidence', 'Lineage', 'UnderlyingRecords'],
-    version: '1.0.0'
+    hubModules: [
+      'Hero',
+      'Timeline',
+      'Distribution',
+      'Segmentation',
+      'DataConfidence',
+      'Lineage',
+      'UnderlyingRecords',
+    ],
+    version: '1.0.0',
   },
 
   /* ---------------- CUSTOMER / SCHEDULING / BUDGET / CRM ----------------
@@ -373,8 +461,11 @@ export const METRICAS = Object.freeze([
     description: 'Proporção de clientes com mais de um serviço no intervalo.',
     businessQuestion: 'Os clientes voltam?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'investir em retenção ou em aquisição',
-        acao: 'recompra baixa desloca investimento para retenção antes de gastar em aquisição' }
+      {
+        papel: 'dono',
+        decisao: 'investir em retenção ou em aquisição',
+        acao: 'recompra baixa desloca investimento para retenção antes de gastar em aquisição',
+      },
     ],
     formula: 'COUNT(DISTINCT Cliente com ≥2 Servico) / COUNT(DISTINCT Cliente)',
     grain: 'empresa × intervalo',
@@ -384,12 +475,14 @@ export const METRICAS = Object.freeze([
     timeSemantics: 'Servico.criadoEm',
     comparisons: ['intervalo anterior'],
     freshness: 'diária',
-    qualityRules: ['sem entidade Cliente, identidade por texto livre não sustenta contagem distinta'],
+    qualityRules: [
+      'sem entidade Cliente, identidade por texto livre não sustenta contagem distinta',
+    ],
     drilldown: 'clientes com mais de um serviço',
     relatedMetrics: ['ticket-medio'],
     securityScope: escopoDaMetrica('taxa-recompra'),
     hubModules: ['Hero', 'Timeline', 'Distribution', 'DataConfidence', 'Lineage'],
-    version: '0.1.0'
+    version: '0.1.0',
   },
   {
     metricId: 'taxa-conversao-orcamento',
@@ -398,8 +491,11 @@ export const METRICAS = Object.freeze([
     description: 'Proporção de orçamentos que viraram serviço.',
     businessQuestion: 'Estamos perdendo trabalho no orçamento?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'revisar preço ou abordagem comercial',
-        acao: 'conversão baixa com preço na média sugere problema de abordagem, não de preço' }
+      {
+        papel: 'dono',
+        decisao: 'revisar preço ou abordagem comercial',
+        acao: 'conversão baixa com preço na média sugere problema de abordagem, não de preço',
+      },
     ],
     formula: 'COUNT(Orcamento aprovado) / COUNT(Orcamento)',
     grain: 'empresa × período',
@@ -409,12 +505,14 @@ export const METRICAS = Object.freeze([
     timeSemantics: 'Orcamento.criadoEm',
     comparisons: ['período anterior'],
     freshness: 'tempo real',
-    qualityRules: ['orçamento sem desfecho registrado fica fora do denominador, e isso precisa aparecer na confiança'],
+    qualityRules: [
+      'orçamento sem desfecho registrado fica fora do denominador, e isso precisa aparecer na confiança',
+    ],
     drilldown: 'orçamentos perdidos com motivo',
     relatedMetrics: ['ticket-medio'],
     securityScope: escopoDaMetrica('taxa-conversao-orcamento'),
     hubModules: ['Hero', 'Timeline', 'DriverAnalysis', 'ActionCenter', 'DataConfidence', 'Lineage'],
-    version: '0.1.0'
+    version: '0.1.0',
   },
   {
     metricId: 'ocupacao-agenda',
@@ -423,8 +521,11 @@ export const METRICAS = Object.freeze([
     description: 'Proporção da capacidade da equipe ocupada por agendamentos.',
     businessQuestion: 'Cabe mais trabalho na semana que vem?',
     decisionSupported: [
-      { papel: 'gestor', decisao: 'aceitar ou recusar novo agendamento',
-        acao: 'ocupação acima do limite recusa ou realoca antes de prometer prazo' }
+      {
+        papel: 'gestor',
+        decisao: 'aceitar ou recusar novo agendamento',
+        acao: 'ocupação acima do limite recusa ou realoca antes de prometer prazo',
+      },
     ],
     formula: 'SUM(duração de Agendamento) / capacidade da equipe no período',
     grain: 'empresa × período',
@@ -439,7 +540,7 @@ export const METRICAS = Object.freeze([
     relatedMetrics: ['producao-por-tecnico'],
     securityScope: escopoDaMetrica('ocupacao-agenda'),
     hubModules: ['Hero', 'Timeline', 'Segmentation', 'ActionCenter', 'DataConfidence', 'Lineage'],
-    version: '0.1.0'
+    version: '0.1.0',
   },
   {
     metricId: 'conversao-funil',
@@ -448,8 +549,11 @@ export const METRICAS = Object.freeze([
     description: 'Proporção de leads que chegam a oportunidade e a serviço.',
     businessQuestion: 'Onde o funil perde mais?',
     decisionSupported: [
-      { papel: 'dono', decisao: 'onde investir esforço comercial',
-        acao: 'o estágio com maior queda recebe a intervenção — e sem instrumentação prévia esse estágio é invisível' }
+      {
+        papel: 'dono',
+        decisao: 'onde investir esforço comercial',
+        acao: 'o estágio com maior queda recebe a intervenção — e sem instrumentação prévia esse estágio é invisível',
+      },
     ],
     formula: 'COUNT por estágio, com transições preservadas em histórico',
     grain: 'empresa × estágio × período',
@@ -459,13 +563,22 @@ export const METRICAS = Object.freeze([
     timeSemantics: 'data da transição de estágio — exige histórico, não só o estado atual',
     comparisons: ['período anterior'],
     freshness: 'tempo real',
-    qualityRules: ['sem histórico de transição não há drop-off por estágio, só foto do estado atual'],
+    qualityRules: [
+      'sem histórico de transição não há drop-off por estágio, só foto do estado atual',
+    ],
     drilldown: 'leads por estágio com data de entrada',
     relatedMetrics: ['taxa-conversao-orcamento', 'taxa-recompra'],
     securityScope: escopoDaMetrica('conversao-funil'),
-    hubModules: ['Hero', 'Decomposition', 'Timeline', 'DriverAnalysis', 'DataConfidence', 'Lineage'],
-    version: '0.1.0'
-  }
+    hubModules: [
+      'Hero',
+      'Decomposition',
+      'Timeline',
+      'DriverAnalysis',
+      'DataConfidence',
+      'Lineage',
+    ],
+    version: '0.1.0',
+  },
 ]);
 
 export const metricaPorId = (id) => METRICAS.find((m) => m.metricId === id);

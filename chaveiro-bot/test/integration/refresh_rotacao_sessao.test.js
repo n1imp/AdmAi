@@ -76,7 +76,9 @@ describe('Refresh token: rotação e morte de sessão', () => {
     const { cookieRefresh } = await criarAdminLogado();
     const renovado = await request(app).post('/api/auth/refresh').set('Cookie', cookieRefresh);
 
-    const res = await request(app).get('/api/me').set('Authorization', `Bearer ${renovado.body.token}`);
+    const res = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${renovado.body.token}`);
 
     expect(res.status).toBe(200);
   });
@@ -99,7 +101,8 @@ describe('Refresh token: rotação e morte de sessão', () => {
 
     const res = await request(app).post('/api/auth/refresh').set('Cookie', cookieRefresh);
     const novo = (res.headers['set-cookie'] ?? [])
-      .find((c) => c.startsWith('refresh_token='))?.split(';')[0];
+      .find((c) => c.startsWith('refresh_token='))
+      ?.split(';')[0];
 
     expect(novo).toBeTruthy();
     expect(novo).not.toBe(cookieRefresh);
@@ -135,7 +138,7 @@ describe('Refresh token: rotação e morte de sessão', () => {
        e o relógio não precisa participar dela. */
     await prisma.refreshToken.updateMany({
       where: { usuarioId: userId },
-      data: { expiraEm: new Date(Date.now() - 60_000) }
+      data: { expiraEm: new Date(Date.now() - 60_000) },
     });
 
     const res = await request(app).post('/api/auth/refresh').set('Cookie', cookieRefresh);
@@ -147,7 +150,7 @@ describe('Refresh token: rotação e morte de sessão', () => {
     const { cookieRefresh, userId } = await criarAdminLogado();
     await prisma.refreshToken.updateMany({
       where: { usuarioId: userId },
-      data: { expiraEm: new Date(Date.now() - 60_000) }
+      data: { expiraEm: new Date(Date.now() - 60_000) },
     });
 
     await request(app).post('/api/auth/refresh').set('Cookie', cookieRefresh);

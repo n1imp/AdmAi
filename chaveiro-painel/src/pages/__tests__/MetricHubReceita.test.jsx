@@ -150,7 +150,11 @@ describe('Metric Hub — receita líquida', () => {
     const semComissao = { ...REGISTRO_COMPLETO };
     delete semComissao.comissaoGerada;
     responder({
-      registros: { ...PAGINA_COMPLETA, camposOmitidos: ['comissaoGerada'], registros: [semComissao] },
+      registros: {
+        ...PAGINA_COMPLETA,
+        camposOmitidos: ['comissaoGerada'],
+        registros: [semComissao],
+      },
     });
     montar();
     await heroi();

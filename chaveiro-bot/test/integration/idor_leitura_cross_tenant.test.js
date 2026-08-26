@@ -64,7 +64,13 @@ async function criarServico(token, tecnicoNome, local) {
   const res = await request(app)
     .post('/api/servicos')
     .set('Authorization', `Bearer ${token}`)
-    .send({ tecnico: tecnicoNome, local, descricao: 'Servico para teste de isolamento', valorCobrado: 200, valorMaterial: 0 });
+    .send({
+      tecnico: tecnicoNome,
+      local,
+      descricao: 'Servico para teste de isolamento',
+      valorCobrado: 200,
+      valorMaterial: 0,
+    });
   expect(res.status, `pré-condição: criar serviço devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
@@ -93,7 +99,9 @@ describe('IDOR cross-tenant — LEITURA por id (PRODUCT_INTEGRITY)', () => {
     /* Não basta o status: o corpo do 404 não pode carregar o dado por descuido — um handler que
        busca primeiro e responde 404 depois pode acabar serializando o que encontrou. */
     const corpo = JSON.stringify(res.body ?? {});
-    expect(corpo, 'o local do serviço de B não pode aparecer na resposta dada a A').not.toContain('Rua Secreta de B');
+    expect(corpo, 'o local do serviço de B não pode aparecer na resposta dada a A').not.toContain(
+      'Rua Secreta de B'
+    );
   });
 
   it('empresa A não apaga o serviço da empresa B → 404, e o serviço continua existindo', async () => {
@@ -136,7 +144,9 @@ describe('IDOR cross-tenant — LEITURA por id (PRODUCT_INTEGRITY)', () => {
       .set('Authorization', `Bearer ${a.token}`);
 
     expect(res.status).toBe(404);
-    expect(JSON.stringify(res.body ?? {}), 'o nome do técnico de B não pode vazar').not.toContain('Fulano Sobrenome de B');
+    expect(JSON.stringify(res.body ?? {}), 'o nome do técnico de B não pode vazar').not.toContain(
+      'Fulano Sobrenome de B'
+    );
   });
 
   it('empresa A não lê o ponto do técnico da empresa B → 404 (dado trabalhista de terceiro)', async () => {
@@ -174,9 +184,14 @@ describe('IDOR cross-tenant — LEITURA por id (PRODUCT_INTEGRITY)', () => {
       const res = await request(app)
         .get(`/api/tecnicos/${tecnicoDeB.id}/ponto/relatorio?mes=2026-08&formato=${formato}`)
         .set('Authorization', `Bearer ${a.token}`);
-      expect(res.status, `formato ${formato}: relatório de jornada de terceiro precisa dar 404`).toBe(404);
-      expect(String(res.headers['content-disposition'] ?? ''), `formato ${formato}: nenhum anexo pode ser oferecido`)
-        .not.toContain('attachment');
+      expect(
+        res.status,
+        `formato ${formato}: relatório de jornada de terceiro precisa dar 404`
+      ).toBe(404);
+      expect(
+        String(res.headers['content-disposition'] ?? ''),
+        `formato ${formato}: nenhum anexo pode ser oferecido`
+      ).not.toContain('attachment');
     }
   });
 
@@ -193,7 +208,10 @@ describe('IDOR cross-tenant — LEITURA por id (PRODUCT_INTEGRITY)', () => {
       const servico = await request(app)
         .get(`/api/servicos/${servicoDeB.id}`)
         .set('Authorization', `Bearer ${b.token}`);
-      expect(servico.status, 'o dono precisa conseguir — senão os 404 acima não provam isolamento').toBe(200);
+      expect(
+        servico.status,
+        'o dono precisa conseguir — senão os 404 acima não provam isolamento'
+      ).toBe(200);
 
       const perfil = await request(app)
         .get(`/api/tecnicos/${tecnicoDeB.id}/perfil`)
@@ -210,7 +228,10 @@ describe('IDOR cross-tenant — LEITURA por id (PRODUCT_INTEGRITY)', () => {
       const relatorio = await request(app)
         .get(`/api/tecnicos/${tecnicoDeB.id}/ponto/relatorio?mes=2026-08&formato=csv`)
         .set('Authorization', `Bearer ${b.token}`);
-      expect(relatorio.status, 'o dono precisa baixar o próprio relatório — senão o 404 acima é vácuo').toBe(200);
+      expect(
+        relatorio.status,
+        'o dono precisa baixar o próprio relatório — senão o 404 acima é vácuo'
+      ).toBe(200);
     });
   });
 });

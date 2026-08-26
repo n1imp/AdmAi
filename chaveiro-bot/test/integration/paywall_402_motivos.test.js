@@ -36,7 +36,11 @@ const futuro = () => new Date(Date.now() + 7 * DIA);
 const passado = () => new Date(Date.now() - 7 * DIA);
 
 async function empresaComAssinatura(estado) {
-  const { token, empresaId } = await criarEmpresaComAdmin(request, app, `Pay${Math.random().toString(36).slice(2, 6)}`);
+  const { token, empresaId } = await criarEmpresaComAdmin(
+    request,
+    app,
+    `Pay${Math.random().toString(36).slice(2, 6)}`
+  );
   if (estado === null) {
     await prisma.assinatura.deleteMany({ where: { empresaId } });
   } else {

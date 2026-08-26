@@ -30,30 +30,43 @@ export const PROIBIDOS_DIRETO = Object.freeze(['batidaPonto']);
  * PURA em relação ao client: os testes passam um duplo e observam a chamada.
  */
 export const CONSULTAS = Object.freeze({
-  'faturamento-liquido': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
+  'faturamento-liquido': {
+    modelo: 'servico',
+    carregar: (db, janela) => servicosDaJanela(db, janela),
+  },
   'ticket-medio': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
   'comissao-total': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
-  'servicos-concluidos': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
+  'servicos-concluidos': {
+    modelo: 'servico',
+    carregar: (db, janela) => servicosDaJanela(db, janela),
+  },
   'taxa-aprovacao': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
-  'producao-por-tecnico': { modelo: 'servico', carregar: (db, janela) => servicosDaJanela(db, janela) },
+  'producao-por-tecnico': {
+    modelo: 'servico',
+    carregar: (db, janela) => servicosDaJanela(db, janela),
+  },
   'nota-media-avaliacao': {
     modelo: 'avaliacao',
-    carregar: (db, janela) => db.avaliacao.findMany({
-      where: { criadoEm: janela },
-      select: { id: true, nota: true, criadoEm: true }
-    })
+    carregar: (db, janela) =>
+      db.avaliacao.findMany({
+        where: { criadoEm: janela },
+        select: { id: true, nota: true, criadoEm: true },
+      }),
   },
   'horas-trabalhadas': {
     modelo: 'registroPonto',
     /* Batidas por RELAÇÃO. Ver o bloco do cabeçalho: a forma direta vazaria entre tenants. */
-    carregar: (db, janela) => db.registroPonto.findMany({
-      where: { data: janela },
-      select: {
-        id: true, tecnicoId: true, data: true,
-        batidas: { select: { tipo: true, em: true } }
-      }
-    })
-  }
+    carregar: (db, janela) =>
+      db.registroPonto.findMany({
+        where: { data: janela },
+        select: {
+          id: true,
+          tecnicoId: true,
+          data: true,
+          batidas: { select: { tipo: true, em: true } },
+        },
+      }),
+  },
 });
 
 /**
@@ -65,14 +78,21 @@ function servicosDaJanela(db, janela) {
   return db.servico.findMany({
     where: { criadoEm: janela },
     select: {
-      id: true, tecnicoId: true, status: true, local: true,
+      id: true,
+      tecnicoId: true,
+      status: true,
+      local: true,
       /* `valorCobrado` e `valorMaterial` entram para o drilldown financeiro EXPLICAR o número:
          líquido é cobrado menos material, e sem as parcelas o usuário vê o resultado sem ver a
          conta. Estar no `select` não os torna visíveis — `fieldPolicy` decide isso na saída. */
-      valorCobrado: true, valorMaterial: true,
-      valorLiquido: true, comissaoGerada: true, criadoEm: true, aprovadoEm: true
+      valorCobrado: true,
+      valorMaterial: true,
+      valorLiquido: true,
+      comissaoGerada: true,
+      criadoEm: true,
+      aprovadoEm: true,
     },
-    orderBy: { criadoEm: 'asc' }
+    orderBy: { criadoEm: 'asc' },
   });
 }
 
@@ -85,7 +105,7 @@ export function carregarTecnicos(db) {
 export function carregarEmpresa(prismaGlobal, empresaId) {
   return prismaGlobal.empresa.findUnique({
     where: { id: empresaId },
-    select: { id: true, aprovacaoServico: true }
+    select: { id: true, aprovacaoServico: true },
   });
 }
 

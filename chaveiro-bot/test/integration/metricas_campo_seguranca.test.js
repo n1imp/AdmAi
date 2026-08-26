@@ -18,9 +18,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { criarApp } from '../../src/app.js';
-import {
-  limparBanco, criarEmpresaComAdmin, criarFuncionarioComAcesso, prisma
-} from './helpers.js';
+import { limparBanco, criarEmpresaComAdmin, criarFuncionarioComAcesso, prisma } from './helpers.js';
 
 let app;
 
@@ -42,15 +40,25 @@ async function duasEmpresas() {
 
 async function criarTecnico(token, nome) {
   const telefone = '5561' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-9);
-  const res = await request(app).post('/api/tecnicos').set('Authorization', `Bearer ${token}`)
+  const res = await request(app)
+    .post('/api/tecnicos')
+    .set('Authorization', `Bearer ${token}`)
     .send({ nome, telefone, comissao: 10, criarAcesso: false });
   expect(res.status, `pré-condição: criar técnico devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
 
 async function criarServico(token, tecnicoNome, local, valor) {
-  const res = await request(app).post('/api/servicos').set('Authorization', `Bearer ${token}`)
-    .send({ tecnico: tecnicoNome, local, descricao: 'Servico de teste de campo', valorCobrado: valor, valorMaterial: 0 });
+  const res = await request(app)
+    .post('/api/servicos')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      tecnico: tecnicoNome,
+      local,
+      descricao: 'Servico de teste de campo',
+      valorCobrado: valor,
+      valorMaterial: 0,
+    });
   expect(res.status, `pré-condição: criar serviço devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
@@ -61,7 +69,9 @@ async function criarServico(token, tecnicoNome, local, valor) {
  */
 async function comOverride(dono, overrides, nome) {
   const func = await criarFuncionarioComAcesso(request, app, dono.token, { nome });
-  const usuarios = await request(app).get('/api/usuarios').set('Authorization', `Bearer ${dono.token}`);
+  const usuarios = await request(app)
+    .get('/api/usuarios')
+    .set('Authorization', `Bearer ${dono.token}`);
   expect(usuarios.status, 'pré-condição: dono precisa listar usuários').toBe(200);
   /* `/usuarios` devolve o vínculo aninhado (`tecnico.id`), não um `tecnicoId` plano. */
   const alvo = usuarios.body.find((u) => u.tecnico?.id === func.tecnicoId);
@@ -74,7 +84,8 @@ async function comOverride(dono, overrides, nome) {
   expect(patch.status, `pré-condição: override devia ser aceito, deu ${patch.status}`).toBe(200);
 
   /* Token reemitido: as permissões viajam no login, e um token velho testaria o estado anterior. */
-  const login = await request(app).post('/api/auth/login')
+  const login = await request(app)
+    .post('/api/auth/login')
     .send({ telefone: func.telefone, password: 'NovaSenhaForte1!' });
   expect(login.status, 'pré-condição: relogin do funcionário').toBe(200);
   return { ...func, token: login.body.token };
@@ -105,7 +116,11 @@ describe('Metric field-level security', () => {
       const { a } = await duasEmpresas();
       const tec = await criarTecnico(a.token, 'Tec B');
       await criarServico(a.token, tec.nome, 'Rua B', 500);
-      const restrito = await comOverride(a, { financeiro: { ver: true }, tecnicos: { ver: false } }, 'Restrito');
+      const restrito = await comOverride(
+        a,
+        { financeiro: { ver: true }, tecnicos: { ver: false } },
+        'Restrito'
+      );
 
       const agregado = await metrica(restrito.token, 'faturamento-liquido');
       expect(agregado.status, 'financeiro.ver precisa dar acesso ao agregado').toBe(200);
@@ -117,7 +132,9 @@ describe('Metric field-level security', () => {
 
       const r = res.body.registros[0];
       expect(r.valorLiquido, 'campo autorizado foi negado junto com o proibido').toBe(500);
-      expect(r, 'comissão veio no payload para quem não pode vê-la').not.toHaveProperty('comissaoGerada');
+      expect(r, 'comissão veio no payload para quem não pode vê-la').not.toHaveProperty(
+        'comissaoGerada'
+      );
       /* Nem em outro canto dos REGISTROS. A varredura é sobre `registros`, não sobre a resposta
          inteira: `camposOmitidos` nomeia o campo de propósito, para a UI dizer que a coluna foi
          omitida em vez de renderizar vazio. Nomear um campo omitido não é vazar seu valor — a
@@ -127,14 +144,18 @@ describe('Metric field-level security', () => {
          A primeira versão usava regex com backspace literal (escape quebrado no shell) e passava por ser
          impossível de violar; a segunda buscava a substring "50", que casa dentro de "500" e reprovava
          um valor legítimo. A propriedade é sobre VALOR, não sobre texto. */
-      const COMISSAO = 500 * 0.10;
-      expect(res.body.registros.some((reg) => Object.values(reg).includes(COMISSAO)),
-        'o valor da comissão apareceu sob outro nome no registro').toBe(false);
+      const COMISSAO = 500 * 0.1;
+      expect(
+        res.body.registros.some((reg) => Object.values(reg).includes(COMISSAO)),
+        'o valor da comissão apareceu sob outro nome no registro'
+      ).toBe(false);
     });
 
     it('C: sem financeiro.ver, a métrica inteira é negada', async () => {
       const { a } = await duasEmpresas();
-      const semNada = await criarFuncionarioComAcesso(request, app, a.token, { nome: 'Sem Financeiro' });
+      const semNada = await criarFuncionarioComAcesso(request, app, a.token, {
+        nome: 'Sem Financeiro',
+      });
       expect((await metrica(semNada.token, 'faturamento-liquido')).status).toBe(403);
       expect((await registros(semNada.token)).status).toBe(403);
     });
@@ -146,8 +167,10 @@ describe('Metric field-level security', () => {
          registros. É a separação entre os dois direitos, numa métrica onde ela é observável. */
       const agregado = await metrica(func.token, 'producao-por-tecnico');
       expect(agregado.status, 'funcionário precisa ver a própria produção').toBe(200);
-      expect((await registros(func.token, 'producao-por-tecnico')).status,
-        'ver o próprio número não é ver os registros de todos').toBe(403);
+      expect(
+        (await registros(func.token, 'producao-por-tecnico')).status,
+        'ver o próprio número não é ver os registros de todos'
+      ).toBe(403);
     });
 
     it('E: outro tenant não alcança registro nenhum', async () => {
@@ -167,13 +190,19 @@ describe('Metric field-level security', () => {
       const tec = await criarTecnico(a.token, 'Tec F');
       await criarServico(a.token, tec.nome, 'Rua F', 300);
 
-      const presetPuro = await criarFuncionarioComAcesso(request, app, a.token, { nome: 'Preset Puro' });
-      expect((await metrica(presetPuro.token, 'faturamento-liquido')).status,
-        'preset de funcionário não dá financeiro.ver').toBe(403);
+      const presetPuro = await criarFuncionarioComAcesso(request, app, a.token, {
+        nome: 'Preset Puro',
+      });
+      expect(
+        (await metrica(presetPuro.token, 'faturamento-liquido')).status,
+        'preset de funcionário não dá financeiro.ver'
+      ).toBe(403);
 
       const comAcesso = await comOverride(a, { financeiro: { ver: true } }, 'Com Override');
-      expect((await metrica(comAcesso.token, 'faturamento-liquido')).status,
-        'override de financeiro.ver foi ignorado — a autorização não está usando pode()').toBe(200);
+      expect(
+        (await metrica(comAcesso.token, 'faturamento-liquido')).status,
+        'override de financeiro.ver foi ignorado — a autorização não está usando pode()'
+      ).toBe(200);
     });
   });
 
@@ -191,13 +220,23 @@ describe('Metric field-level security', () => {
       expect(agregado.body.value).toBe(600);
 
       const comTudo = await registros(a.token);
-      expect(comTudo.body.total, 'SOURCE_SET: a lista não é o conjunto que o agregado usou').toBe(3);
+      expect(comTudo.body.total, 'SOURCE_SET: a lista não é o conjunto que o agregado usou').toBe(
+        3
+      );
       const soma = comTudo.body.registros.reduce((t, r) => t + r.valorLiquido, 0);
-      expect(soma, 'a soma dos registros autorizados não reconstrói o agregado').toBe(agregado.body.value);
+      expect(soma, 'a soma dos registros autorizados não reconstrói o agregado').toBe(
+        agregado.body.value
+      );
 
-      const restrito = await comOverride(a, { financeiro: { ver: true }, tecnicos: { ver: false } }, 'Redigido');
+      const restrito = await comOverride(
+        a,
+        { financeiro: { ver: true }, tecnicos: { ver: false } },
+        'Redigido'
+      );
       const redigido = await registros(restrito.token);
-      expect(redigido.body.total, 'o conjunto mudou junto com a redação de campo').toBe(comTudo.body.total);
+      expect(redigido.body.total, 'o conjunto mudou junto com a redação de campo').toBe(
+        comTudo.body.total
+      );
     });
 
     /**
@@ -216,8 +255,10 @@ describe('Metric field-level security', () => {
       expect(receita.body.value, 'valor inválido entrou na soma').toBe(100);
       expect(contagem.body.value, 'a contagem não deveria olhar valor').toBe(2);
 
-      expect((await registros(a.token)).body.total,
-        'o drilldown da receita listou o registro que ela não somou').toBe(1);
+      expect(
+        (await registros(a.token)).body.total,
+        'o drilldown da receita listou o registro que ela não somou'
+      ).toBe(1);
       expect((await registros(a.token, 'servicos-concluidos')).body.total).toBe(2);
     });
   });
@@ -228,10 +269,14 @@ describe('Metric field-level security', () => {
       const tec = await criarTecnico(a.token, 'Tec Equivalencia');
       for (const v of [150, 250]) await criarServico(a.token, tec.nome, `Rua ${v}`, v);
 
-      const dash = await request(app).get('/api/dashboard?periodo=mes').set('Authorization', `Bearer ${a.token}`);
+      const dash = await request(app)
+        .get('/api/dashboard?periodo=mes')
+        .set('Authorization', `Bearer ${a.token}`);
       const hub = await metrica(a.token, 'faturamento-liquido', '?periodo=mes');
       expect(dash.status).toBe(200);
-      expect(hub.body.value, 'Dashboard e Hub divergiram sobre o mesmo número').toBe(dash.body.receitaLiquida);
+      expect(hub.body.value, 'Dashboard e Hub divergiram sobre o mesmo número').toBe(
+        dash.body.receitaLiquida
+      );
     });
 
     it('o breakdown da receita agrupa de verdade, e os grupos somam o total', async () => {
@@ -249,9 +294,12 @@ describe('Metric field-level security', () => {
       const soma = porTecnico.body.breakdown.grupos.reduce((t, g) => t + g.valor, 0);
       expect(soma, 'os grupos não somam o agregado').toBe(total.body.value);
 
-      const assinatura = (r) => JSON.stringify(r.body.breakdown.grupos.map((g) => [g.rotulo, g.valor]));
-      expect(assinatura(porTecnico), 'dimensões diferentes deram o mesmo recorte — parâmetro ignorado')
-        .not.toBe(assinatura(porLocal));
+      const assinatura = (r) =>
+        JSON.stringify(r.body.breakdown.grupos.map((g) => [g.rotulo, g.valor]));
+      expect(
+        assinatura(porTecnico),
+        'dimensões diferentes deram o mesmo recorte — parâmetro ignorado'
+      ).not.toBe(assinatura(porLocal));
     });
   });
 });

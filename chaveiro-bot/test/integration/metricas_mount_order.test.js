@@ -39,8 +39,12 @@ describe('métricas — proteção por posição de mount', () => {
       where: { empresaId },
       data: { status: 'canceled', periodoFimEm: null },
     });
-    expect((await request(app).get('/api/dashboard').set('Authorization', `Bearer ${token}`)).status).toBe(402);
-    expect((await request(app).get('/api/metricas').set('Authorization', `Bearer ${token}`)).status).toBe(402);
+    expect(
+      (await request(app).get('/api/dashboard').set('Authorization', `Bearer ${token}`)).status
+    ).toBe(402);
+    expect(
+      (await request(app).get('/api/metricas').set('Authorization', `Bearer ${token}`)).status
+    ).toBe(402);
   });
 
   it('com token e trial vivo: 200 — o canário não é falso-positivo', async () => {

@@ -20,7 +20,15 @@
 
 import { useId } from 'react';
 import {
-  Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { ArrowDown, ArrowRight, ArrowUp, Info, Minus } from 'lucide-react';
 import FeedbackState from '../ui/FeedbackState.jsx';
@@ -45,7 +53,14 @@ export function MetricStateBoundary({ estado, motivo, onTentarNovamente, childre
 
   const comum = { announce: true, compact: true };
   if (estado === 'LOADING') {
-    return <FeedbackState {...comum} state="loading" title="Calculando" description="Buscando os dados do período." />;
+    return (
+      <FeedbackState
+        {...comum}
+        state="loading"
+        title="Calculando"
+        description="Buscando os dados do período."
+      />
+    );
   }
   if (estado === 'FORBIDDEN') {
     return (
@@ -64,7 +79,10 @@ export function MetricStateBoundary({ estado, motivo, onTentarNovamente, childre
         state="empty"
         icon={<Info size={26} />}
         title="Dados insuficientes para medir"
-        description={motivo || 'Não há dados suficientes no período para calcular este indicador com segurança.'}
+        description={
+          motivo ||
+          'Não há dados suficientes no período para calcular este indicador com segurança.'
+        }
       />
     );
   }
@@ -79,7 +97,14 @@ export function MetricStateBoundary({ estado, motivo, onTentarNovamente, childre
     );
   }
   if (estado === 'EMPTY') {
-    return <FeedbackState {...comum} state="empty" title="Nenhum serviço no período" description="Ajuste o período para ver outros resultados." />;
+    return (
+      <FeedbackState
+        {...comum}
+        state="empty"
+        title="Nenhum serviço no período"
+        description="Ajuste o período para ver outros resultados."
+      />
+    );
   }
   /* UNAVAILABLE e ERROR são falha de medição — e não podem se disfarçar de "não há dados". */
   return (
@@ -90,7 +115,11 @@ export function MetricStateBoundary({ estado, motivo, onTentarNovamente, childre
       description="Isto é uma falha ao buscar o dado, não ausência de dado."
       action={
         onTentarNovamente ? (
-          <button type="button" className="panel-button panel-button--primary" onClick={onTentarNovamente}>
+          <button
+            type="button"
+            className="panel-button panel-button--primary"
+            onClick={onTentarNovamente}
+          >
             Tentar novamente
           </button>
         ) : null
@@ -107,7 +136,7 @@ const DIRECAO = {
   SUBIU: { Icone: ArrowUp, classe: 'text-emerald-400', texto: 'aumento' },
   CAIU: { Icone: ArrowDown, classe: 'text-rose-400', texto: 'queda' },
   ESTAVEL: { Icone: Minus, classe: 'text-muted', texto: 'estável' },
-  SEM_BASE: { Icone: ArrowRight, classe: 'text-muted', texto: 'sem base de comparação' }
+  SEM_BASE: { Icone: ArrowRight, classe: 'text-muted', texto: 'sem base de comparação' },
 };
 
 /**
@@ -123,7 +152,9 @@ export function MetricHero({ nome, valor, unidade = '', comparacao, confianca, j
 
   return (
     <section className="card-accent p-5" aria-labelledby="metric-hero-titulo">
-      <h2 id="metric-hero-titulo" className="kpi-label">{nome}</h2>
+      <h2 id="metric-hero-titulo" className="kpi-label">
+        {nome}
+      </h2>
       <p className="kpi-value mt-2">
         {valor}
         {unidade && <span className="text-lg text-muted ml-1">{unidade}</span>}
@@ -142,7 +173,9 @@ export function MetricHero({ nome, valor, unidade = '', comparacao, confianca, j
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
         {janela && <span>{janela}</span>}
-        {confianca && <MetricConfidence estado={confianca.state} registros={confianca.recordCount} compacto />}
+        {confianca && (
+          <MetricConfidence estado={confianca.state} registros={confianca.recordCount} compacto />
+        )}
       </div>
     </section>
   );
@@ -160,8 +193,16 @@ export function MetricPulse({ atual, comparacao, formatarValor = (v) => v }) {
     ['Período anterior', comparacao ? formatarValor(comparacao.valorAnterior) : '—'],
     /* O sinal viaja no texto, não só na cor: `+`/`−` é lido por quem não distingue verde de
        vermelho e por quem usa leitor de tela. */
-    ['Variação absoluta', comparacao ? `${sinal}${formatarValor(comparacao.variacaoAbsoluta)}` : '—'],
-    ['Variação percentual', comparacao?.variacaoPercentual == null ? 'sem base' : `${sinal}${comparacao.variacaoPercentual}%`]
+    [
+      'Variação absoluta',
+      comparacao ? `${sinal}${formatarValor(comparacao.variacaoAbsoluta)}` : '—',
+    ],
+    [
+      'Variação percentual',
+      comparacao?.variacaoPercentual == null
+        ? 'sem base'
+        : `${sinal}${comparacao.variacaoPercentual}%`,
+    ],
   ];
   return (
     <section className="card p-4" aria-labelledby="metric-pulse-titulo">
@@ -210,20 +251,32 @@ export function MetricTimeline({ pontos, semantica }) {
               contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
               labelStyle={{ color: '#e2e8f0' }}
             />
-            <Line type="monotone" dataKey="valor" stroke={CORES_METRICA[0]} strokeWidth={2} dot={false} />
+            <Line
+              type="monotone"
+              dataKey="valor"
+              stroke={CORES_METRICA[0]}
+              strokeWidth={2}
+              dot={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Alternativa textual: o gráfico não é a única representação do dado. */}
       <details className="mt-3">
-        <summary className="text-xs text-muted cursor-pointer">Ver os valores da série em tabela</summary>
+        <summary className="text-xs text-muted cursor-pointer">
+          Ver os valores da série em tabela
+        </summary>
         <table className="mt-2 w-full text-sm" id={idTabela}>
           <caption className="sr-only">Valores por dia no período selecionado</caption>
           <thead>
             <tr className="text-left text-xs text-muted">
-              <th scope="col" className="py-1">Dia</th>
-              <th scope="col" className="py-1">Serviços</th>
+              <th scope="col" className="py-1">
+                Dia
+              </th>
+              <th scope="col" className="py-1">
+                Serviços
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -250,14 +303,25 @@ export function MetricTimeline({ pontos, semantica }) {
  * Recorte por dimensão. As dimensões vêm do contrato — o frontend nunca inventa nome de campo, e
  * o backend revalida o que chegar.
  */
-export function MetricBreakdown({ dimensoes, dimensaoAtiva, onTrocar, grupos, carregando, formatarValor = (v) => v }) {
+export function MetricBreakdown({
+  dimensoes,
+  dimensaoAtiva,
+  onTrocar,
+  grupos,
+  carregando,
+  formatarValor = (v) => v,
+}) {
   return (
     <section className="card p-4" aria-labelledby="metric-breakdown-titulo">
       <h3 id="metric-breakdown-titulo" className="section-label mb-3">
         <span className="w-5 h-px bg-accent-400" /> QUEM CONTRIBUIU
       </h3>
 
-      <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Escolher dimensão do recorte">
+      <div
+        className="flex flex-wrap gap-2 mb-3"
+        role="group"
+        aria-label="Escolher dimensão do recorte"
+      >
         {dimensoes.map((d) => (
           <button
             key={d}
@@ -275,16 +339,39 @@ export function MetricBreakdown({ dimensoes, dimensaoAtiva, onTrocar, grupos, ca
         ))}
       </div>
 
-      {carregando && <FeedbackState state="loading" compact announce title="Recortando" description="Agrupando os dados." />}
+      {carregando && (
+        <FeedbackState
+          state="loading"
+          compact
+          announce
+          title="Recortando"
+          description="Agrupando os dados."
+        />
+      )}
 
       {!carregando && dimensaoAtiva && grupos?.length > 0 && (
         <>
           <div aria-hidden="true">
             <ResponsiveContainer width="100%" height={Math.min(grupos.length, 8) * 40 + 20}>
               <BarChart data={grupos.slice(0, 8)} layout="vertical" margin={{ left: 8, right: 8 }}>
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis type="category" dataKey="rotulo" width={90} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="rotulo"
+                  width={90}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: 8,
+                  }}
+                />
                 <Bar dataKey="valor" fill={CORES_METRICA[1]} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -301,7 +388,12 @@ export function MetricBreakdown({ dimensoes, dimensaoAtiva, onTrocar, grupos, ca
       )}
 
       {!carregando && dimensaoAtiva && grupos?.length === 0 && (
-        <FeedbackState state="empty" compact title="Nada a recortar" description="Não há dados para esta dimensão no período." />
+        <FeedbackState
+          state="empty"
+          compact
+          title="Nada a recortar"
+          description="Não há dados para esta dimensão no período."
+        />
       )}
       {!carregando && !dimensaoAtiva && (
         <p className="text-sm text-muted">Escolha uma dimensão para ver o recorte.</p>
@@ -318,7 +410,7 @@ const CONFIANCA = {
   HIGH: { rotulo: 'Alta', classe: 'text-emerald-400 border-emerald-400/40' },
   MEDIUM: { rotulo: 'Média', classe: 'text-amber-300 border-amber-300/40' },
   LOW: { rotulo: 'Baixa', classe: 'text-orange-400 border-orange-400/40' },
-  INSUFFICIENT: { rotulo: 'Insuficiente', classe: 'text-rose-400 border-rose-400/40' }
+  INSUFFICIENT: { rotulo: 'Insuficiente', classe: 'text-rose-400 border-rose-400/40' },
 };
 
 /**
@@ -329,7 +421,9 @@ export function MetricConfidence({ estado, registros, compacto = false }) {
   const c = CONFIANCA[estado] ?? CONFIANCA.INSUFFICIENT;
   const texto = `Confiança ${c.rotulo}${registros != null ? ` · ${registros} registros` : ''}`;
   if (compacto) {
-    return <span className={`px-2 py-0.5 rounded-full border text-[11px] ${c.classe}`}>{texto}</span>;
+    return (
+      <span className={`px-2 py-0.5 rounded-full border text-[11px] ${c.classe}`}>{texto}</span>
+    );
   }
   return (
     <section className="card p-4" aria-labelledby="metric-confianca-titulo">

@@ -46,14 +46,42 @@ if (!URL_BASE.includes(REF_ESPERADO)) {
 }
 
 const TABELAS = [
-  'Empresa', 'EmpresaWhatsapp', 'Tecnico', 'DocumentoTecnico', 'Servico', 'Material',
-  'MovimentacaoEstoque', 'ServicoMaterial', 'Usuario', 'ContaSocial', 'Notificacao', 'Pagamento',
-  'SessaoConversa', 'Avaliacao', 'ConexaoBot', 'RegistroPonto', 'BatidaPonto', 'GoogleConta',
-  'AvaliacaoGoogle', 'AnaliseAvaliacoes', 'CodigoRecuperacaoTotp', 'Assinatura', 'ConviteUsuario',
-  'SessaoUsuario', 'RefreshToken', 'AuditLog',
+  'Empresa',
+  'EmpresaWhatsapp',
+  'Tecnico',
+  'DocumentoTecnico',
+  'Servico',
+  'Material',
+  'MovimentacaoEstoque',
+  'ServicoMaterial',
+  'Usuario',
+  'ContaSocial',
+  'Notificacao',
+  'Pagamento',
+  'SessaoConversa',
+  'Avaliacao',
+  'ConexaoBot',
+  'RegistroPonto',
+  'BatidaPonto',
+  'GoogleConta',
+  'AvaliacaoGoogle',
+  'AnaliseAvaliacoes',
+  'CodigoRecuperacaoTotp',
+  'Assinatura',
+  'ConviteUsuario',
+  'SessaoUsuario',
+  'RefreshToken',
+  'AuditLog',
 ];
 // Tabelas sensiveis destacadas no amendment (usadas no modo --expect-open).
-const SENSIVEIS = ['Usuario', 'RefreshToken', 'SessaoUsuario', 'CodigoRecuperacaoTotp', 'Pagamento', 'AuditLog'];
+const SENSIVEIS = [
+  'Usuario',
+  'RefreshToken',
+  'SessaoUsuario',
+  'CodigoRecuperacaoTotp',
+  'Pagamento',
+  'AuditLog',
+];
 
 // Dois principais: 'anon' (bearer = anon key) e, quando o JWT estiver presente,
 // 'authenticated' (apikey = anon key; bearer = JWT do usuario sem privilegios).
@@ -71,9 +99,18 @@ async function req(method, path, body, principal = 'anon') {
   }
   const r = await fetch(`${URL_BASE}/rest/v1/${path}`, opts);
   let texto = '';
-  try { texto = await r.text(); } catch { /* ignore */ }
+  try {
+    texto = await r.text();
+  } catch {
+    /* ignore */
+  }
   let arrayLen = null;
-  try { const j = JSON.parse(texto); if (Array.isArray(j)) arrayLen = j.length; } catch { /* nao-json */ }
+  try {
+    const j = JSON.parse(texto);
+    if (Array.isArray(j)) arrayLen = j.length;
+  } catch {
+    /* nao-json */
+  }
   return { status: r.status, arrayLen };
 }
 
@@ -94,13 +131,19 @@ async function matriz(principal) {
   for (const t of TABELAS) {
     const res = await req('GET', `${t}?select=*&limit=1`, undefined, principal);
     const aberto = acessivel(res);
-    linhas.push(`[${principal}] GET ${t.padEnd(22)} -> ${res.status}${res.arrayLen !== null ? ` [array:${res.arrayLen}]` : ''}`);
+    linhas.push(
+      `[${principal}] GET ${t.padEnd(22)} -> ${res.status}${res.arrayLen !== null ? ` [array:${res.arrayLen}]` : ''}`
+    );
     if (EXPECT_OPEN) {
       if (principal === 'anon' && SENSIVEIS.includes(t) && !aberto) {
-        falhas.push(`--expect-open: ${t} deveria estar ACESSIVEL (status ${res.status}) — nada a provar/morder`);
+        falhas.push(
+          `--expect-open: ${t} deveria estar ACESSIVEL (status ${res.status}) — nada a provar/morder`
+        );
       }
     } else if (aberto || !negado(res)) {
-      falhas.push(`[${principal}] ${t}: NAO negado (status ${res.status}${res.arrayLen !== null ? `, array:${res.arrayLen}` : ''})`);
+      falhas.push(
+        `[${principal}] ${t}: NAO negado (status ${res.status}${res.arrayLen !== null ? `, array:${res.arrayLen}` : ''})`
+      );
     }
   }
 
@@ -111,11 +154,22 @@ async function matriz(principal) {
     const checaMut = (nome, res) => {
       linhas.push(`[${principal}] ${nome} -> ${res.status}`);
       if (!negadoAcesso(res.status))
-        falhas.push(`[${principal}] ${nome} NAO negado por privilegio (status ${res.status}; esperado 401/403/404)`);
+        falhas.push(
+          `[${principal}] ${nome} NAO negado por privilegio (status ${res.status}; esperado 401/403/404)`
+        );
     };
-    checaMut('POST Usuario', await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` }, principal));
-    checaMut('PATCH Usuario(id=eq.-999999)', await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' }, principal));
-    checaMut('DELETE Usuario(id=eq.-999999)', await req('DELETE', 'Usuario?id=eq.-999999', undefined, principal));
+    checaMut(
+      'POST Usuario',
+      await req('POST', 'Usuario', { username: `_negctl_${Date.now()}` }, principal)
+    );
+    checaMut(
+      'PATCH Usuario(id=eq.-999999)',
+      await req('PATCH', 'Usuario?id=eq.-999999', { nome: '_negctl_' }, principal)
+    );
+    checaMut(
+      'DELETE Usuario(id=eq.-999999)',
+      await req('DELETE', 'Usuario?id=eq.-999999', undefined, principal)
+    );
   }
 }
 
@@ -131,17 +185,25 @@ async function main() {
     const rUser = await fetch(`${URL_BASE}/auth/v1/user`, {
       headers: { apikey: ANON, Authorization: `Bearer ${AUTH_JWT}` },
     });
-    linhas.push(`[authenticated] GET /auth/v1/user -> ${rUser.status} (controle positivo do principal)`);
+    linhas.push(
+      `[authenticated] GET /auth/v1/user -> ${rUser.status} (controle positivo do principal)`
+    );
     if (rUser.status !== 200) {
-      falhas.push(`[authenticated] JWT nao autentica em /auth/v1/user (status ${rUser.status}) — token invalido/expirado; a matriz authenticated NAO prova o boundary`);
+      falhas.push(
+        `[authenticated] JWT nao autentica em /auth/v1/user (status ${rUser.status}) — token invalido/expirado; a matriz authenticated NAO prova o boundary`
+      );
     } else {
       await matriz('authenticated');
     }
   } else if (!EXPECT_OPEN) {
-    falhas.push('[authenticated] STAGING_AUTHENTICATED_JWT AUSENTE — o gate authenticated-unprivileged e OBRIGATORIO para fechar; defina o token (nunca ecoado) e re-rode');
+    falhas.push(
+      '[authenticated] STAGING_AUTHENTICATED_JWT AUSENTE — o gate authenticated-unprivileged e OBRIGATORIO para fechar; defina o token (nunca ecoado) e re-rode'
+    );
   }
 
-  console.log(`\nSTG-SEC-RLS-01 negative control (${EXPECT_OPEN ? 'EXPECT_OPEN' : 'EXPECT_DENIED'}) @ ${REF_ESPERADO}`);
+  console.log(
+    `\nSTG-SEC-RLS-01 negative control (${EXPECT_OPEN ? 'EXPECT_OPEN' : 'EXPECT_DENIED'}) @ ${REF_ESPERADO}`
+  );
   for (const l of linhas) console.log('  ' + l);
 
   if (falhas.length) {
@@ -156,4 +218,7 @@ async function main() {
   );
 }
 
-main().catch((e) => { console.error('erro inesperado:', e.message); process.exit(2); });
+main().catch((e) => {
+  console.error('erro inesperado:', e.message);
+  process.exit(2);
+});

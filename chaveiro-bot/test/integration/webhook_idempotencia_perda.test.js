@@ -174,20 +174,33 @@ describe('contratos do serviço', () => {
     const saida = await new Promise((resolver, rejeitar) => {
       execFile(
         process.execPath,
-        ['-e', `
+        [
+          '-e',
+          `
           process.env.REDIS_URL = 'redis://192.0.2.1:6390';
           const { marcarSeNovo } = await import('./src/services/idempotencia.js');
           const r = await marcarSeNovo('timeout:teste', 60);
           console.log(JSON.stringify({ failOpen: r }));
           process.exit(0);
-        `.replace(/^/, '(async()=>{').concat('})()')],
-        { cwd: process.cwd(), timeout: 8000, env: { ...process.env, REDIS_URL: 'redis://192.0.2.1:6390' } },
+        `
+            .replace(/^/, '(async()=>{')
+            .concat('})()'),
+        ],
+        {
+          cwd: process.cwd(),
+          timeout: 8000,
+          env: { ...process.env, REDIS_URL: 'redis://192.0.2.1:6390' },
+        },
         (erro, stdout) => (erro ? rejeitar(erro) : resolver(stdout))
       );
     });
     const duracao = Date.now() - inicio;
     // dotenv@17 imprime um banner no stdout do filho — o contrato é a ÚLTIMA linha JSON.
-    const ultimaJson = saida.trim().split('\n').reverse().find((l) => l.trim().startsWith('{'));
+    const ultimaJson = saida
+      .trim()
+      .split('\n')
+      .reverse()
+      .find((l) => l.trim().startsWith('{'));
     expect(JSON.parse(ultimaJson)).toEqual({ failOpen: true });
     expect(duracao).toBeLessThan(6000);
   });

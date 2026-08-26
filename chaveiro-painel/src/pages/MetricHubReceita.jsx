@@ -29,7 +29,7 @@ const COLUNAS = [
   { campo: 'valorCobrado', rotulo: 'Cobrado', alinharDireita: true, formatar: formatarMoeda },
   { campo: 'valorMaterial', rotulo: 'Material', alinharDireita: true, formatar: formatarMoeda },
   { campo: 'valorLiquido', rotulo: 'Líquido', alinharDireita: true, formatar: formatarMoeda },
-  { campo: 'comissaoGerada', rotulo: 'Comissão', alinharDireita: true, formatar: formatarMoeda }
+  { campo: 'comissaoGerada', rotulo: 'Comissão', alinharDireita: true, formatar: formatarMoeda },
 ];
 
 const RESSALVA =
@@ -48,7 +48,7 @@ export default function MetricHubReceita() {
       rotuloRegistros="Ver os serviços que compõem"
       acoes={[
         { para: '/servicos', rotulo: 'Ver serviços do período' },
-        { para: '/reparticao', rotulo: 'Ver repartição' }
+        { para: '/reparticao', rotulo: 'Ver repartição' },
       ]}
     />
   );

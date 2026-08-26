@@ -20,9 +20,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { criarApp } from '../../src/app.js';
-import {
-  limparBanco, criarEmpresaComAdmin, criarFuncionarioComAcesso, prisma
-} from './helpers.js';
+import { limparBanco, criarEmpresaComAdmin, criarFuncionarioComAcesso, prisma } from './helpers.js';
 
 let app;
 
@@ -44,15 +42,25 @@ async function duasEmpresas() {
 
 async function criarTecnico(token, nome) {
   const telefone = '5561' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-9);
-  const res = await request(app).post('/api/tecnicos').set('Authorization', `Bearer ${token}`)
+  const res = await request(app)
+    .post('/api/tecnicos')
+    .set('Authorization', `Bearer ${token}`)
     .send({ nome, telefone, comissao: 10, criarAcesso: false });
   expect(res.status, `pré-condição: criar técnico devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
 
 async function criarServico(token, tecnicoNome, local, valor = 100) {
-  const res = await request(app).post('/api/servicos').set('Authorization', `Bearer ${token}`)
-    .send({ tecnico: tecnicoNome, local, descricao: 'Servico de teste de metrica', valorCobrado: valor, valorMaterial: 0 });
+  const res = await request(app)
+    .post('/api/servicos')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      tecnico: tecnicoNome,
+      local,
+      descricao: 'Servico de teste de metrica',
+      valorCobrado: valor,
+      valorMaterial: 0,
+    });
   expect(res.status, `pré-condição: criar serviço devia dar 201, deu ${res.status}`).toBe(201);
   return res.body;
 }
@@ -86,7 +94,10 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const func = await criarFuncionarioComAcesso(request, app, a.token, { nome: 'Func A' });
 
       const propria = await metrica(func.token, 'producao-por-tecnico');
-      expect(propria.status, 'funcionário precisa ver a própria produção — senão os 403 abaixo são vácuos').toBe(200);
+      expect(
+        propria.status,
+        'funcionário precisa ver a própria produção — senão os 403 abaixo são vácuos'
+      ).toBe(200);
       expect(propria.body.scope).toBe('PROPRIO');
 
       const financeiro = await metrica(func.token, 'faturamento-liquido');
@@ -107,8 +118,10 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const res = await metrica(func.token, 'producao-por-tecnico');
       expect(res.status).toBe(200);
       const linhas = res.body.value ?? [];
-      expect(linhas.every((l) => l.tecnicoId === func.tecnicoId),
-        'apareceu linha de outro técnico no escopo PROPRIO').toBe(true);
+      expect(
+        linhas.every((l) => l.tecnicoId === func.tecnicoId),
+        'apareceu linha de outro técnico no escopo PROPRIO'
+      ).toBe(true);
     });
   });
 
@@ -136,12 +149,17 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const tecB = await criarTecnico(b.token, 'Tec de B');
       const servicoDeB = await criarServico(b.token, tecB.nome, 'Rua B, 2');
 
-      const res = await request(app).get('/api/metricas/servicos-concluidos/registros')
+      const res = await request(app)
+        .get('/api/metricas/servicos-concluidos/registros')
         .set('Authorization', `Bearer ${a.token}`);
       expect(res.status).toBe(200);
-      expect(res.body.registros.some((r) => r.id === servicoDeB.id),
-        'registro da empresa B apareceu no drilldown de A').toBe(false);
-      expect(res.body.registros.length, 'A precisa ver o próprio — senão o negativo é vácuo').toBe(1);
+      expect(
+        res.body.registros.some((r) => r.id === servicoDeB.id),
+        'registro da empresa B apareceu no drilldown de A'
+      ).toBe(false);
+      expect(res.body.registros.length, 'A precisa ver o próprio — senão o negativo é vácuo').toBe(
+        1
+      );
     });
   });
 
@@ -150,7 +168,9 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const { a } = await duasEmpresas();
 
       const dimensao = await metrica(a.token, 'faturamento-liquido', '?dimensao=salario');
-      expect(dimensao.status, 'dimensão não declarada precisa ser REJEITADA, não ignorada').toBe(400);
+      expect(dimensao.status, 'dimensão não declarada precisa ser REJEITADA, não ignorada').toBe(
+        400
+      );
 
       const tenant = await metrica(a.token, 'faturamento-liquido', '?empresaId=999');
       expect(tenant.status, 'tenant não é parâmetro do cliente').toBe(400);
@@ -235,11 +255,14 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       expect(agregado.status).toBe(200);
       expect(agregado.body.value, 'pré-condição: precisa haver o que listar').toBe(3);
 
-      const registros = await request(app).get('/api/metricas/servicos-concluidos/registros')
+      const registros = await request(app)
+        .get('/api/metricas/servicos-concluidos/registros')
         .set('Authorization', `Bearer ${a.token}`);
       expect(registros.status).toBe(200);
-      expect(registros.body.total, 'agregado e drilldown discordam sobre quantos registros existem')
-        .toBe(agregado.body.value);
+      expect(
+        registros.body.total,
+        'agregado e drilldown discordam sobre quantos registros existem'
+      ).toBe(agregado.body.value);
       expect(registros.body.registros.length).toBe(agregado.body.value);
     });
 
@@ -280,13 +303,18 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       expect(porLocal.status).toBe(200);
 
       /* O agrupamento existe de verdade. */
-      expect(porTecnico.body.breakdown?.grupos?.length, 'breakdown por técnico não agrupou').toBe(2);
+      expect(porTecnico.body.breakdown?.grupos?.length, 'breakdown por técnico não agrupou').toBe(
+        2
+      );
       expect(porLocal.body.breakdown?.grupos?.length, 'breakdown por local não agrupou').toBe(2);
 
       /* E é DIFERENTE entre dimensões — se o parâmetro fosse ignorado, seriam iguais. */
-      const assinatura = (r) => JSON.stringify(r.body.breakdown.grupos.map((g) => [g.rotulo, g.valor]));
-      expect(assinatura(porTecnico), 'dimensões diferentes deram o mesmo recorte — parâmetro ignorado')
-        .not.toBe(assinatura(porLocal));
+      const assinatura = (r) =>
+        JSON.stringify(r.body.breakdown.grupos.map((g) => [g.rotulo, g.valor]));
+      expect(
+        assinatura(porTecnico),
+        'dimensões diferentes deram o mesmo recorte — parâmetro ignorado'
+      ).not.toBe(assinatura(porLocal));
 
       /* Os grupos somam o agregado: breakdown que não fecha com o Hero é contradição visível. */
       const soma = porTecnico.body.breakdown.grupos.reduce((t, g) => t + g.valor, 0);
@@ -312,7 +340,10 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
         .set('Authorization', `Bearer ${a.token}`);
       expect(res.status).toBe(200);
       expect(res.body.pontos.length).toBeGreaterThan(1);
-      expect(res.body.pontos.some((p) => p.valor === 0), 'nenhum dia zerado: série estaria omitindo dias').toBe(true);
+      expect(
+        res.body.pontos.some((p) => p.valor === 0),
+        'nenhum dia zerado: série estaria omitindo dias'
+      ).toBe(true);
 
       const somaDaSerie = res.body.pontos.reduce((t, p) => t + (p.valor ?? 0), 0);
       const agregado = await metrica(a.token, 'servicos-concluidos');
@@ -335,7 +366,10 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const serieA = await request(app)
         .get('/api/metricas/servicos-concluidos/serie')
         .set('Authorization', `Bearer ${a.token}`);
-      expect(serieA.body.pontos.every((p) => (p.valor ?? 0) === 0), 'serviço de B entrou na série de A').toBe(true);
+      expect(
+        serieA.body.pontos.every((p) => (p.valor ?? 0) === 0),
+        'serviço de B entrou na série de A'
+      ).toBe(true);
 
       /* Positivo: B vê o próprio — senão o zero acima seria a rota quebrada. */
       const serieB = await request(app)
@@ -356,10 +390,14 @@ describe('Exposição de métricas (METRIC_FOUNDATION)', () => {
       const tec = await criarTecnico(a.token, 'Tec Equivalencia');
       for (let i = 0; i < 3; i += 1) await criarServico(a.token, tec.nome, `Rua ${i}`);
 
-      const dash = await request(app).get('/api/dashboard?periodo=mes').set('Authorization', `Bearer ${a.token}`);
+      const dash = await request(app)
+        .get('/api/dashboard?periodo=mes')
+        .set('Authorization', `Bearer ${a.token}`);
       const hub = await metrica(a.token, 'servicos-concluidos', '?periodo=mes');
       expect(dash.status).toBe(200);
-      expect(hub.body.value, 'Dashboard e Hub divergiram sobre o mesmo número').toBe(dash.body.totalServicos);
+      expect(hub.body.value, 'Dashboard e Hub divergiram sobre o mesmo número').toBe(
+        dash.body.totalServicos
+      );
     });
 
     /**

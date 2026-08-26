@@ -91,7 +91,10 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
         .set('Authorization', `Bearer ${a.token}`)
         .send({});
 
-      expect(res.status, 'criar credencial dentro de outra empresa é a pior falha desta família').toBe(404);
+      expect(
+        res.status,
+        'criar credencial dentro de outra empresa é a pior falha desta família'
+      ).toBe(404);
 
       /* Não basta a resposta: o efeito não pode ter acontecido. Uma rota que responde 404 DEPOIS
          de gravar continua sendo vazamento — e é um erro plausível de ordem de operações. */
@@ -99,7 +102,10 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
         where: { id: tecnicoDeB.id },
         select: { usuarioId: true },
       });
-      expect(tecnico?.usuarioId, 'o técnico de B não pode ter ganhado usuário por ação de A').toBeFalsy();
+      expect(
+        tecnico?.usuarioId,
+        'o técnico de B não pode ter ganhado usuário por ação de A'
+      ).toBeFalsy();
     });
 
     it('empresa A não reseta o acesso do técnico da empresa B → 404', async () => {
@@ -138,7 +144,10 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
           valorMaterial: 0,
           clienteNome: 'Cliente de B',
         });
-      expect(criado.status, `pré-condição: criar serviço em B devia dar 201, deu ${criado.status}`).toBe(201);
+      expect(
+        criado.status,
+        `pré-condição: criar serviço em B devia dar 201, deu ${criado.status}`
+      ).toBe(201);
 
       const res = await request(app)
         .post(`/api/servicos/${criado.body.id}/aprovar`)
@@ -189,14 +198,19 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
       expect(res.status).toBe(404);
 
       const depois = await prisma.material.findUnique({ where: { id: materialDeB.id } });
-      expect(depois.nome, 'o material de B não pode ter sido renomeado por A').toBe('Material de B');
+      expect(depois.nome, 'o material de B não pode ter sido renomeado por A').toBe(
+        'Material de B'
+      );
     });
 
     it('empresa A não movimenta estoque da empresa B → 404, e o saldo não muda', async () => {
       const { a, b } = await duasEmpresas();
       const materialDeB = await criarMaterial(b.token, 'Material de B');
 
-      const antes = await prisma.material.findUnique({ where: { id: materialDeB.id }, select: { quantidadeAtual: true } });
+      const antes = await prisma.material.findUnique({
+        where: { id: materialDeB.id },
+        select: { quantidadeAtual: true },
+      });
 
       const res = await request(app)
         .post(`/api/materiais/${materialDeB.id}/movimentacao`)
@@ -205,10 +219,17 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
 
       expect(res.status).toBe(404);
 
-      const depois = await prisma.material.findUnique({ where: { id: materialDeB.id }, select: { quantidadeAtual: true } });
-      expect(depois.quantidadeAtual, 'o saldo de B não pode ter mudado por ação de A').toBe(antes.quantidadeAtual);
+      const depois = await prisma.material.findUnique({
+        where: { id: materialDeB.id },
+        select: { quantidadeAtual: true },
+      });
+      expect(depois.quantidadeAtual, 'o saldo de B não pode ter mudado por ação de A').toBe(
+        antes.quantidadeAtual
+      );
 
-      const movimentacoes = await prisma.movimentacaoEstoque.count({ where: { materialId: materialDeB.id } });
+      const movimentacoes = await prisma.movimentacaoEstoque.count({
+        where: { materialId: materialDeB.id },
+      });
       expect(movimentacoes, 'nenhuma movimentação deve ter sido registrada').toBe(0);
     });
   });
@@ -226,7 +247,10 @@ describe('IDOR cross-tenant — ESCRITA por id (PRODUCT_INTEGRITY)', () => {
         .patch(`/api/materiais/${materialDeB.id}`)
         .set('Authorization', `Bearer ${b.token}`)
         .send({ nome: 'Renomeado pelo dono' });
-      expect(patch.status, 'o dono precisa conseguir — senão os 404 acima não provam isolamento').toBe(200);
+      expect(
+        patch.status,
+        'o dono precisa conseguir — senão os 404 acima não provam isolamento'
+      ).toBe(200);
 
       const acesso = await request(app)
         .post(`/api/tecnicos/${tecnicoDeB.id}/acesso`)

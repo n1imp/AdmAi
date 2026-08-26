@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-DEPLOY-EVID-01",
-  "titulo": "Execucao externa do deploy staging: registro do bootstrap (tag), evidencias reais no ledger, ajustes operacionais minimos",
+  "sliceId": "STG-APP-CI-FORMAT-01",
+  "titulo": "Sweep prettier formatting-only da branch (drift EOL/formatacao herdado) para destravar o gate ci-ok do deploy staging",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
-  "estado": "DECLARED",
-  "declaradoEm": "2026-08-26T00:13:59.983Z",
+  "estado": "CLOSED",
+  "declaradoEm": "2026-08-26T00:24:36.421Z",
   "baseCommitPorLane": {
-    "HARNESS": "f9066186966bc1483d1c0e3e21848e813c3b2202"
+    "HARNESS": "09db4f71e1a3ec05fc510b17bf135085f1987904"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Fase C da ordem vinculante D1 01a03b55 sob D2 completo. Descoberta operacional: workflow_dispatch nao registra workflow em branch nao-default sem um primeiro run — trigger de REGISTRO por tag tecnica ops/railway-bootstrap-register-* (evento de tag forca phase=register: so selftest, zero mutacao). Evidencias de cada passo externo (CF guard PASS, push staging, ci-ok, bootstrap, publish, provas) vao ao ledger conforme acontecem.",
+  "notaDeMetodo": "CI passou a rodar na branch staging (STG-APP-DEPLOY-01) e reprovou format:check em 238 arquivos herdados de ciclos anteriores (CRLF/formatacao; os TESTES do CI passaram — a falha e so Prettier; a falha local recuperacao2faRateLimit segue Windows-only, confirmada pelo CI verde nos testes). Correcao mecanica: prettier --write EXATAMENTE os ofensores; zero mudanca semantica; suites completas re-rodadas nos dois modulos.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -28,7 +28,7 @@
       ".github/workflows/deploy.yml": "2408b0d13ef9db5b72f3324bd33ffb523f122c2a6e9d99f8ecfa7ee00ef81a59",
       ".github/workflows/release.yml": "b3e4489396437d4ba09fd3390d86148d802b9f9aabfa85c4e00a268dff3fb7c2",
       ".github/workflows/security.yml": "a6dd019103bd7a8083fbf8f91b891730c9c8fe76bffa528c30004853794c15b5",
-      ".github/workflows/staging-backend-bootstrap.yml": "2dd067745b07f823bf98ecd81a062d56c8a1c629b53b56736bc2c2fc84a3134e",
+      ".github/workflows/staging-backend-bootstrap.yml": "437b0ab51f2e87cbe8dda652a6500457c52d7a1e25dedc038c2008baf6395263",
       ".gitignore": "df256c858cb833acf3c4b08b646d5114465ce4fbe6c466a1a568beaf8f89e331",
       ".gitleaks.toml": "68f349e50ec07b0ac44e836f76d7ca856f6c67e026c5fcd403224dd04084b3c5",
       "AGENTS.md": "b3a4450cf51f4f4f2fcb9cc96a44abefb8aa3455f3ee2fbcdc0bb9c7c10365da",
@@ -631,7 +631,7 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "379870a62a7c07ac7d1641ff7a09558c3190227aaef5d8b57c294249b6d25693",
+      "docs/eos-v2/WRITE_SET.json": "6d2e75380655112a222b508d930358a272569b2381557d1dd171ef22a970481e",
       "docs/eos-v2/WRITE_SET_HISTORY.json": "4d544cf7ed4f9a908ff9875d5f6617ad69b4dd44e4beef81c216443988bffa00",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
@@ -749,7 +749,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "f834242ac9a5f85ff1fd5cd0951090250e3e65303be08e774ba1e759cf43a67d"
+      "tools/railway-staging-bootstrap.mjs": "1aa5609dca1153652dc8ef42b9bc998368e0c8f51266b79869a948989c3d6f0a"
     }
   },
   "artefatosPorLane": {
@@ -2524,41 +2524,2154 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
+      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
       "precisao": "BOUNDED",
-      "proposito": "trigger de registro por tag (phase=register sem mutacao); dispatch normal depois",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "2dd067745b07f823bf98ecd81a062d56c8a1c629b53b56736bc2c2fc84a3134e",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
-      "precisao": "BOUNDED",
-      "proposito": "evidencias reais dos passos 2-9",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "79be6ab0d1b54320c53c4f9f757c9f72a4303013e3b4cdbd1cff44b0a05ebfcc",
+      "shaNaDeclaracao": "22eb4b31f0ae701203670d55619669262ad0b7f7393684f583a5aa7b0e8177a7",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "caminho": "chaveiro-bot/src/__tests__/security-headers.test.js",
       "precisao": "BOUNDED",
-      "proposito": "apendice de execucao ao D-STG-APP-DEPLOY-EXEC-01",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a5a7df7b72e18a6a8fde71e7f3ab257774a656234fe823f813fba267d1a2df77",
+      "shaNaDeclaracao": "201df3fa21f912e9cc68f45c9008d12c5acaec9c10e3bf22296a238608026de5",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
+      "caminho": "chaveiro-bot/src/config/__tests__/sentryTransport.test.js",
       "precisao": "BOUNDED",
-      "proposito": "ajustes operacionais descobertos na execucao (registro por tag)",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5ebf0c528d550254c96d7d7d3a66e0e171518903abfd911b3fe65be5f6c06a17",
+      "shaNaDeclaracao": "364df4f9eecfa5babe0fb75cc1bfd01c0cc75e9d76c9a23df2d1dd9e11b1840e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/config/metrics.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c6dbea6ea192882136acd7da5912f8043676bc463ab2dee02de6bc1111241d90",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/config/sentry.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4b5741dbd61e805ff831a5573436ee0e8203247b7b1a4e18b08dff7085a92c04",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/db/__tests__/tenant.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1903998afdc3870714a18c8dcaecc54c2d482c0c9b7150d3b6ecdafb5dfda1ab",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/db/prisma.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9605a2ddd4dc25cfc4df543ead52561f472445335cec0580c15e7914db8245a2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/instrument.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "08bee70a57ad0778c68dffba29f89216256f597f0fdbb9125f01da28407058ea",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/middlewares/__tests__/rateLimiters.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "29db25bc2565c3d38d55f6138152bb593ccb5a107a5ae865757ae04e15bf20e0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/middlewares/assinatura.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "38fd5287ad5ff805a4b6651412fa829057f0d2b49f7d83b280e2ea714156fba4",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/middlewares/auth.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "07d62ea45045b36418babdf6025e0d219d3f27ac25b348f174e4d778b5382183",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/queues/email.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "52a84db79eb3151cffc6a7b8dd842051438d6d8cfd9f17c50bc1dbe98f498384",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/queues/mensagens.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8244859773302a81d4d8c4bea3b265c7996196222ed55b513840312242e21fca",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/__tests__/billing.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0e4ce27e8a995066ba530e3e0ab713cb57f38df8f2a87a04530339cb3e8ad9a8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/__tests__/tecnicos-foto-perfil.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fd791eb3e1d266e178e9f2d2274a88bf8ab12ad40c311ea5ce17213d3d079e55",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/api.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "323836f852e2c7df525f25b063de32490ba471737be3dd63cf1febc9d837c514",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/documentos.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4d8ac0606d5722543c4731a38d50f101b7f146dcc2b23d6d87e2a02b456781b3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/metricas.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "063be56c5c62fa2555e719e122e59be3ce494aa3d73e7b1fbc32b0e97fe71547",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/routes/tecnicos.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fc0d2d0a5cca97eb26983a6b60e23e860276f0c38bb7663debd20b6e681c3478",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/server.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "90ec6dc7d1cb2306b849f66a35c11eefc73eebd3f72a3c7535da859f4bc3b871",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/agendador-lock.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "51cdcad5a620f60e7bc104ea3ab1725b47eed3265d9cd8ee9b1254f5c67eeb1c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/agendador.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "caae72bf42bea97e83d6218dc1e3c354c2a8c9645f010815010ad0bbffcecaef",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/auth.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "33686544d24e0bfce1570602401e9bbd325762cdb4bc35b6c572d2c029ba5dd8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/avaliacao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "18c4699151e1e50d3bc91d2ec509edd341da889382ba74ca66f3b8f8e0614555",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/billing.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e6b499598505445f8512d2663be3641eec6f394ee1f6aa1eba8b434e8c98332b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/bootstrap.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "000ac351a09c841d50192e9460171fea1f1238c80c2dcc67e7daeb6e92c840e3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/catalogo.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "21687ad34ee03c8048feb47ada1834da07910139aabbf421b2573d7b762e22f6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/codigosRecuperacao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "dfb5c2affcedda63e290dccf7b7aa75645005d0662e29460f0176a0453905369",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/confirmacaoExclusaoConta.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a8d7729f4ac6559675a5114687ca65096bfd38915b31fea1e413541fd256067d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/idempotencia.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1773694c996dc6b0d2a7170af3c5965854d5ec6f60f63c97abd36caab6d6e831",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/identidade.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1f576c2f0a63c2fa05a13a57d8812ca6a38b2d7e7bcc8be4ebd0eb1de8bcfa95",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/oauth.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3556db0997c7f216b0b55698901274cb86a3ecfe1c80ef78c5c47205716b2b1d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/otp.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3cdaf32725af7a8909d2030aa2a6de73004f770f9cf67f15decbdb89ac0bbe1a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/parser.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d45e61ec6e00cf899869d3aedea0e87f7a8ce4df0c2b3ad6b098076f4f7f64c1",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/periodo.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0c82dedf53c91e85b02c68752eb5990c4cce25ddd3c91df461fa1bee76824f2e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/permissoes.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b9803151c27de21526c2c56efbcef7a2323bb9a625084e9d191581d7fc3a0cfe",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/ponto.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f537b2af4e4c684624f88de9f14c349334e4c001347cf07d4e92f626d67b715b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/senha.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "afed7e3242d6aed351d995f0c4e4c8e87db0f8d457cec8df83697967c18a35d3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/storage.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d32becb3d93ca0cf3912614ab12100d996c70a67db71ebfcecc3268a6ef62e02",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/telefone.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2c228f31c3a911afc84a29dae2c27e5ba22118fa3b3d82fa53f0c8be26460f31",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/__tests__/totp.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3bed92ee174181153298eff9f372df98682d217f0b226bca78257b4c0a53bf59",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/agendador.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cbfc3b35decbc021ce348cb5df8d45e5245a4fb5821b3fffb448471949205275",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/auditoria.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4f1f8e0b31eb4b21dab412a3fadb474b87a24c622fdd5a9d149f30d3a9d0f432",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/avaliacao.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7a50e02e4873e81834b8e78478ebbc60cd6e222febe554dff035b7290008dbf9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/bootstrap.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e92af907aa8b57c6389afb93d24b9ec73fda9340ff2f2a13f25c5acee2ee10fe",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/catalogo.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8cf23c3e5843cb5ecd635d2e5379f9591a4bcd19f1503aea870a7b63840ba440",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/codigosRecuperacao.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "af708a97b72f60eb7bd622d01c7d3825fa8a8927808a551628c1f9bd43b1e690",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/confirmacaoExclusaoConta.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2621c535a06e8b8e90e6c7ee4ce51fceb470393302ff171ab4084cfbb2d22b9b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/conversa.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "35f4d4a4dd74af57eeb16489170036f3155f1b4a723eb7afc5e4a5a642adfa24",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/email.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e250e3fea2189fe659efe1a20ebd40627a971b5eb96e60abde5f209670d68e1e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/google/__tests__/analise.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cac808dc0b7ffeee09eb411db673d71d86984f4793900afe35762c4c6ec1fb5f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/google/__tests__/businessClient.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "545c4f6270ea627b99ab470c96c19a58811db87bb2c8cf2818a87d409b8c0f1a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/google/analise.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8b0bb4e340d7204f03f473686a955dc378203537852ad83937e360aea1e4beb0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/google/businessClient.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8ed554c4e47f29223fb9136e3f938dec535ca6ce686b4477ce5a489467643bcb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/google/oauth.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "56981a1569a83eaca573b877199e15ce2b5e242a2290f7c02f4fb1e3713636bc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/identidade.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ffa5ff28399aaace3fd109c47acf70758db157ba5c3cc80414facf5452398f39",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/calculo.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "96b29fc7d1985d5b3ac53fc0d1961afbcba4bcc5203b0cace1d12765bac02f7b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/consulta.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "448966c70119c75cff3f130e2841c06ac75e50e6d3849cfee1cb17601b41be46",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/contrato.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f23be62b79aa540ae50f277968f6cd9667271164dcd45933c1fb3f1322d7a222",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/exposicao.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "093726d6336c42082256c076fd02950cb2379c13bf0808e40058204d8db73a76",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/metricas/registro.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b0ff48790b507a62cd8f36b330e729aceab065665e23bdedf18f2c0e0cf512b3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/notificacao.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "14b9d8113b40c1e9fe6a30a808da589edf0ccb55dfa38c160995684a21ae219d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/oauth.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "bf4660676c63641db9f5446d03817e9ddd40aa9180c6fb8f48f85d1bfa3549e0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/onboarding.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0772624ab329bf44e0fc52abcc93565a8b8afaeb2c16acb12a42ae012dbad361",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/otp.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a480e0542624dd588e7f3db9b97c6a9df1ad4fa9ff0d6193f69a91e2376f1b79",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/parser.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a6fdfeca8efb431b1f45b03d262d7238e46b6599299c0d91e9cd5ae1863560a8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/periodo.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c6014ffef39999e6a340e7c19f5f87cfb8d0b423b4b9cd911d4989c79bb721e0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/permissoes.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b510d91e65bf4e3b7fb58b16371bf0715b365ce33ab927aef53e950c23f6af26",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/ponto.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "bf4d632383303e2fa51aaf6785ad90ab7731d668a3d11766c0d9437f70ed2b0e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/relatorio.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b673a61caafdebf27159134132749e089a34bc47df421b01b0ccdad355762408",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/senha.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a9b48e5881e97eab82caa89c991b8db471a0c12caa8f13279ae68fc64cd4f31f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/servico.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "00e52bc25595b3ae04dad00a72f0c26836607be0f11ef5d273bd9d9fb43fcf58",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/storage.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f04e7a0aec0fdea1c87822427caeb59127861f92cff7b1de64a74983612d47f9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/totp.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c8f7b085191f660dec23a2601041f1b4890d77db36c50bc0dcaebef22aa7e693",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/__tests__/cloud-gateway.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b18048d0efca9192d6d8b2a990eed7a40013067e6f362164f35a9436f8d3121d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/__tests__/crypto.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5710058047ed234fe4617667b55438a64668e00d6336707015a1d411bce666b1",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/__tests__/gateway.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "71c6cd1bbbf9672b52f2254e5c59efed9ed7d202c94388f14fe973ad46bc137c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/cloud-client.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1a077a31b9d32002ffd59cc5ede7a53c333080c78c8c4751d75061a57e7b45c5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/cloud-gateway.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e3bec1e0ae51bfb107032d1608e8b6d474679e950faa53965f9dc63e42fd2382",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/crypto.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "1b69394e9ce31f84e65dd79ad2dce7589fef08f28ccec41f765f61503b5288c8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/evolution-client.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "447b3f85fc1dd1d4fe47f0f894d31d524305e256e33dcbe54f62cd39ce075396",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/services/whatsapp/gateway.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "335351f7df758cd9cab2cd50e13096953848e4620f7451d4af0672a488bc806f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/__tests__/busca.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "33cdb9d13c453f9f35298221ddc5a9948b136462e3c8a931205d14231d572689",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/__tests__/logger.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7fd6df6f0fd6576a2b6d29373fac8251c3a15841d94039e4557edbf36873ec48",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/__tests__/resiliencia.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6261c2679a98903eca224887fdb3c834602fe0bd1044c1154b722fb462c3c242",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/__tests__/upload.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "220a3dcb2e04bce35173e5782946fc018e4943a862717834469cedef1e4dcdb2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/busca.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "531122726b350600705d05230186f07796439c44ea5a8cccdb3911ab50df7eb3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/formatar.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e6f2791cf863898e13def143319e60d5d372834168503e967c8df298473bda09",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/logger.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "030df49321a77af066a7bcf3b27f4cc598fedb65a4bc24b8d1fbda4c884612e5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/resiliencia.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b7c949ed066dfc11e0c50638e92ba5778ed5399e895a86fac11a7fc7df870398",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/utils/upload.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "35324de16282f8bb9a7cd48fbb4fd59f143eec6283d86234d99b394f7674b5d3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/workers/email-worker.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0797fe95b886b19d07403f8d18307bbdeba85c557727bdbe8f6c1c4cc00aa00b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/src/workers/inbound-worker.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f2ea9d8e47a8212ba206a841858b229feff27a1c2fc705169a5a98f7ff8d055c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/aggregate_perfil_dashboard.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "db23229d3bd2413f0f5b4ed2d4cec0407833538fbc4a8ec76ee8365248f82e77",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/assinatura_cadastro.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8e07ac491984ee2b42b5ce51b342c7e8b0240c6f621686816189a9f4d23e3cf2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/auditoria_dado_pessoal.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e968c0d40de49fb6afdd32abc0fde51e6fd56d465a61ab343c23a30cd917c758",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/auth.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4654c7b07530cd3a469b4d8b7af4759843e331dc38aa57e50f5d2f022da9fc4e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/autoexclusao_conta.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e3334350fcbd07aa2af75d0c6cdeac8bea5bc8c5355cd81330b2d5a3dd9e1929",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/billing_access_audit.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ffafd11e2af3ef6fdf4ec6117d9461f38650e3046642f21367932b7a17cd2c94",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/billing_google_auth.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3fe3f26b6bbad4363e85d3d678a484f1934ecf846213c37bc7210c83d727f196",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/bugs_regressao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "da1489ee64bda1e2056bed25b052717287b123fa55586d5987597b85fea0b0b0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/cadastro_otp.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c7cc91d71a195e51482abaca715e01505213e96fd080522a25ca70972d52c1ce",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/conta_2fa_bruteforce.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a4acd8bf559321ff5a4010b2d3255f2b7f383754a7d9648fc627b672d4e57c93",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/convite_aceite.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a74dda6f069a517c8f94b66806d782c209c9ff19e7b8b9f4a91b3bd53b7a5b36",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/dashboard_groupby.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "33830049de27d2e999f8622c8c930e3ef644125572e7144cea5e4d3349dd5232",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/documentos.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cc2be7b629d47507a7da93571abc69d18a90d8cab8f59b918c3cb87b83c5dafa",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "138eb85441b2724d6cb1b982cba3b42ea6bbaa9c1ea8777b7be9063c5b59692d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/estoque_concorrencia.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "14865cb05029547430db9f1c0274ef6166d17008a44227fbfb5dd01e3695a100",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/gestor_indicadores.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0adebbcb014107e2a02d86e9edf32a093654305ca6d9e106059322d9611c3687",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/helpers.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "609f2e17f32e1ce1a27f7140dddbee2faf718946f0a2b6e8c62c73d23cb33771",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/idor_escrita_cross_tenant.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a218e9df452e4a2a45363968f7874e2774e5d61b7c5753a561e9f29882a58f44",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/idor_leitura_cross_tenant.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "25499090c0c1bf1be5cedd76507bb4c9710436e44c33d9afa897fa65e95bc7cc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/idor.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "17467c8792da6dab47fa45269a6d8b41de7583b5209cc3851a4f118198e9af55",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/inbound_numero_unico.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "99916a494b9b7c9e9ec58524ae68e532ff017fadd530aef10a9f9e980efa0a55",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/lgpd.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f689f8f0813ca5a318d8002ce4cf97955cb533e78519b5f3709b40f4bc27a02f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/limiter_2fa_dedicado.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b3fbbbad76b028878d50651b0e4708d7f80fbb7e73b64f0f20eee6b818f3b6ec",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/login_disambiguacao_leak.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9f28db944c863a685589fc617fc617fa9dc6d028cd0b2af784ac1f4be4501619",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/me_metricas.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2adf79da7d90bb6b743be9f20db937fd4fe14b0cea0eab82088a904edc2ae60c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/metricas_campo_seguranca.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c87c5d62885aa017eadfae702f62d0de7abb8856bf0a8416360b4c8d725bb5b5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/metricas_exposicao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "47650bc432cacd17849853edc0bbe26a6e3893ada223b7782f4a24a7f4bab9be",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/metricas_mount_order.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8a66d138bd6f5bc9fffac9103e8e27f27d88c33d525e5dfc6b0c6f41cccc780d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/metricas.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ca36a9ce5b6cffecd4a12137b5de5e83c877e0c9b60ea697f824d252191967df",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/paywall_402_motivos.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8af6ce5eb3c2ef119be8ca938b831779cea09e10f37b7d972079a5a86f6e4c34",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/preferencias.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2bbb9d62d5e004fbd961b2af90f1ca7741c5bd6c01af7fa30d305b611296fd03",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/rbac_privilege_escalation.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8038d818d7b920ce6bd25ba980723ada391d2e668076f7f8b8aae0fd64dfb84d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/recuperacao_2fa.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "344ca6ee4fe6519c62e6841942e2058e3bc2d94de5f52af48a8a2fa0e5c3f69e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/refresh_rotacao_sessao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "63d7f5d62405f7aa72bbce4c96511c078395541bdf7269aef7e0c18833dd334e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/rls.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e2ca5f68066d9a667a9d4db1a65dd3e0053ddd173cbd0469073e57163f248906",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/seguranca.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "69b43cd7206f9be7f006b752d5050f858f335c0b8809b826e9776a0cf0430f1c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/servico_atual.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "21a481cf594dea41705189cae8fd5735602f5ff3befdf74346725fcae68fe72a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/servico_comissao_snapshot.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2afba0772b2ab75c08c4b9f07496504225456defbf0eeab2960995370612ab3d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/servicos_keyset.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "669e28c47183517bce2c1321a9ef0b92fa6dcc594b444bbbbfa4937c3b00feea",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/takeover_reset_pin.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "872af06df4a59ae2f5ec38173c404581e80ed50521bbf47ce861d557570d515f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/tecnico_criacao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5dc4c9086bb26fd12838d242223cf09d2331eabb7a308dee3d5dc81b48ba1f2b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/troca_email_confirmacao.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "beeaafaf7a18c5fd17ac6fd66f402eaa204a5946ada71b29e4504362f2d55981",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/vazamento_colecao_cross_tenant.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5f2620d7df938c8102cf19509300df83da21d60a95140e9fe02712649174d5f2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/test/integration/webhook_idempotencia_perda.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "05b1b02cf2c79a609b9b9516da1423efdf8200f5685d517ac1db1225b5b57397",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/__tests__/audit-gate.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "31a2b0d448a230b1a618f81315cddb9e2a49a532691950c6544b8746166d9e3f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/__tests__/backfill-uploads.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "06958c0e453f9fbe9284c6a6de3f1e05d36301183f8753e8d54c721918d9ae72",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/__tests__/seed-demo.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "25b12644bf3da0d7ef4e637a41d8b6c6a3875567cd15aff0efc7c0f38161ee6f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown-v2.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "447bac47c3c43451b62eeab9f43870d26f60a61d59956a84361eab36f795c781",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/apply-rls-lockdown.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9ec90c2665ecdfa0447696b98ed998af0ce04d3e47d9fdb638ad68cba124664b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/audit-gate-helpers.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8dadf1871387a61477360e497e6841aef2f02f0f6c414b9ab01bf1e0cb1aa720",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/audit-gate.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "aaffd4b4e04f64abffb5fe16c1015a628ca762e640cf008a48f2a500f49c6064",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/backfill-uploads-helpers.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2c9db1f2bb12f155f24bd8f4da7727488819c7b40d0596e89e0cbe48e5616233",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/backfill-uploads.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e48e7f59ff68a89124992233ddb3d3fc5ea74333c45748a78722e156f4b67b47",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/seed-demo.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8bd201edb669df71ccad9a14185b6b620bf1539ba1cfb6910790668443bdf306",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/smoke-pooler.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "359b8cf59844294359d11c56ed279fc804efadbb3497d6b4d7c1ce5f8c9d3690",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/staging-rls-negative-control.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "32b71872cc0bf36d1989b3c2fed5ada95ea04d22f2b6bd79bb7829f618d879ed",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/validate-rls-staging.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ddc187cf4ee430ee0421262ca8425c81d1b626fb096066925506cece9df10e91",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/scripts/validate-staging.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b1e58ca43029c6b00410cfb04a3ed5055ceb33f30551229813d677d5638ab67b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/EstadoVazio.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d8da48d6366095e6b2550db2d87c96d86f4df7d845ed9385018f227a0d7eaa61",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/Guards.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "b9f18c41ae15e11cd03fb13a428b5d35062ac172310fb21d86b08c249cd5377f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/MaterialPicker.qtd.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6c72f473e7ec252155920ba868afbd96143d64d888c3ca19ed4c820b8ad8d3ce",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/MaterialPicker.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "208b0b0c052ae246712fa3392ce320cf06145c3fcad1aee6bfb05fd2d5be36c8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/avaliacoes/Cliente.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3c00e3bcebf0ed08fb95a0561c83ea19dd1c44c3910db30003ce0f4dad3feb91",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/avaliacoes/Estrelas.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c89129456781dd6fb0776618ac262512dfedf19300ab26bdaf01238b9b9a620e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/avaliacoes/Google.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "043c7710145bfc6a77ca26861068ebe69e56717105766b6c966b9699c797a48e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/avaliacoes/Solicitacao.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "00a3cc6083e80b769d9672c4e35a64899d87551659fba11ed0b47e7dd0d40cf3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/BancoHoras.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "11024dbe37645211f1d543472daf41afa0f9835f755e03b0215116540e96cb23",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/BotoesSociais.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "999e5a3113512ad8580ec7ad3ed86032c9f7fe203afa162386fe250bedabb0ce",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/CapturaSelfie.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6d880415c4fb221c7dcaa8a32b0feb4d52f0281d8d5c494e714ff16245bb55e3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ErroBanner.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e57ac69087a5db14d4367d8144b826d152f30664a57607d4ffcb0591c59f52df",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ErrorBoundary.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "808ebe4cdd5f3df3aef7b991c7a0b60a39e12d6728d80980edfdc00f04f0f796",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/EstadoVazio.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e88a2522f8dfc665801aaadbd7e4e2cb8d74997cce65c47c0bebb0e80bdd3141",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/MatrizPermissoes.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a831ebbaad9ff854117bd0d0566fb32e426142cac74fc12bc84550a6c73297e0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/metric/MetricDrilldown.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "141771f63eb5c8104e3dd340995f50d128c3f83f64730eb7de60a2f8cedd99bf",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/metric/MetricPrimitives.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "911ddafe07fc20e2ba105c963761199e15cb9cd7e8e6d98a57fb4c0c70a50ec9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/Sidebar.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7c910c49352fee8e5cb49f585de201388d510584931655a3373ba39257dd1583",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/Skeleton.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "22daaa01d2e3ba2c7572bae5f8eb1e3693a55db53a51dffe89353d6d99f28cbc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/Toast.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2aa8623475b7bfe09aec8ec88539ef85ffe4f5bf823e864dd21f49c41d38dcc2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Button.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "77b770422149d316b81754d498d9e8a8c9d0b3b4433d1af56837ba7d3f410b6f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Button.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7637da78cac4578f4a679b33ffae26929735f7278201102234918cc48341032e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/FeedbackState.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6e25488f2407b8b97e38f3903fb6896d93ba44ec1bd220e6f164f8453e85f0f8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Field.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3dc8ce4b8d07035a4a03d9cb007255d4e418c185c2e2cb48b0bfefc7edc236e9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Motion.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f87ccc565a6c4f9cdbb881e99ed8ba24778846d38545e671d8e8b9cfded428b0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Overlay.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2cca31dc99ff8ecc31ff6cba07701c68427f87e84e222caaa3a88c1e570ff56f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/Button.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "eee7b2b06b276f6f371cf6a881f220dcdd64fcdffc2695aeb182d691d85afd0c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/FeedbackState.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "92c61448840899da04294d114d427a06f2ad510fbedf59d84eb9e706ad1c9915",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/Field.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "330e2f036e2ad5a4cb254d0159ebc9eb76ed5afc010018959b2e05d0d1d58e70",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/index.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3d873e3b5fd081e629438086728a333bed530c6dcb865199572f971ba39b73fb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/Overlay.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6e06adae5c830f4d5fd96f76431431620ab019309642082c76bbad63d73b2171",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/PageHeader.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ce0e3af3d5b2179e4e59edaf3c97bd25b8d2313e5b6f714bbfb14c522b62300e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/ui/Surface.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fa85d6fe8910e7678aba1592d0462a6137b30dc73941a853fee1c175618fae3e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/Wizard.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5d31afe2419e12d45145405fe2465a0ab17750ae8aaed1e5df6eaa5a583285d0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/config/__tests__/navigation.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7f02c984ccead3157745dd1dc1d095246b4175ec35d2580400f787c926e0a269",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/__tests__/useFormPersist.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "917927a6047c649f393ede5cdc2cb34cfe9a299869a79aecd4a86805264d717b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d5f4a20796db255ad3a67a60e95632203decd23d01b109c368621ee0fc15bc66",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useAnalytics.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "94496e9f006e4fa416531ae46508eb842afa437a9216aecd8688e97ce42062e5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useFormPersist.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4910ee3e6ebc0cd791d4654bae54d918a1ae7e3b3cf60b450887e6befa6bc461",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useMetricHub.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e5ec7ff4ebcca519237a44a249d4511f9f65bfb6205f319476246cde99978446",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useOffline.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3604eaad1f76e46c8069b48579a472528945f261a1b4c71a1f69735b340feed2",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/usePullToRefresh.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0b3e5ca14d804e7b4b673887b7d159d24a60a67b1977f321777d4a03e2323795",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useWidgetPrefs.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "97c80c31ac93704bd990e1717c503d7f2b906a8ce63b4db2b8b5475cd5f4dd6b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/__tests__/senha.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0023e631f440e01ef576b6e30736f0378751aed053aa11ec3089d6926af83f07",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/cookiePolicy.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cb96b21e3917ace6e1bbbbc013b8489b638950cc6ccfce626caacbdb99eca30f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/legal.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8fb4d6df60c9d05814ebd4aadb8f94ea68208fe7e132242062a06e3b82f98418",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/moeda.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "9c8444f4a636d6d982f4b7e15eff1a062e26817c3a2628bb0fb45482775aee3f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/monitoring.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "200879cf0f1ab1d1fe366e4c74c53e5b22e52782da250fca34b9f38bd2c8a542",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/senha.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a96a55525b437fdd9d7e32443462469532d03eb64fe32af012ef2c7c4dd8ef51",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Aprovacoes.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0548ccc4f8208b0bfddd87f004e03e037f2d7af8ff1023ee8973db9474025d7f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/DashboardWidgets.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "36342c765e9009b1d77bcd626b78e780002d6eff9441d94f3327f221e8d8c35d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/DashboardWidgetsOps.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "10849c93127637368f888859a504f9f0cbb3919d9da95a7dbb841e73fa8d16d5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Documentos.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5a9151e7acdd222b45e03ba6ad6b5626ed965e851a50c98972d079009f309479",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Documentos.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "34850ec29dbaba96ef62f9161282776d8bd6f1de37889f4560e4c4fde22937c5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/GestorHome.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8c564357631624327c95451dec5dd446ab3cd945a6256d9478379fa0b0135b5f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/GestorHome.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "37e396650694ec09776d50a02b0a62c0b9b17c0b89d83e29686e6ae81fc7ce3b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MetricHub.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e4049a92b266d0ceb545e333bde65985668fb4afc12f4fc238cf1ff648c0b7a0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MetricHub.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f41cb62dc0c68c9bf21504bba2d0e8f58b0b0b47e72eb81a227390cad613acd7",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MetricHubReceita.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e35def94c7d0191f343277ec9b956322ec423865b44f6354ce51c112a568fdf6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MetricHubReceita.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2724a0b6549662529bd877dafa932d6b5b5dacf3a675e93d930b1a1f486c4c19",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeuPainel.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e81115c97fdca0d6b7352398279ca4c1857727ab05b02f148f578ee49a8fb554",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeuPonto.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "dc70ce522dff99323d640496e64aa44b947482cd3821ab93bcb018c5a686ba85",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeusServicos.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "be7562440dd76688280b085bd55d1895a4c933d66cc902fcd687cd147f3654d5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeusServicos.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "35bf38939531b013035cd47712e8f14a49da9062fe7e413450055eca395bb7f8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/NovoServico.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "adbda741f1566a9d2566f9048f6897f0146715da8809708af3e009ec38bb1f1a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Servicos.a11y.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "bd5bf4958c0e01b765c9cc3bfede880d1843f47eef1b7bc04612d076d0065f97",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Servicos.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e44938311192501b836f614171bfc56509cd930b5f11f767817ca6dab29e0de9",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Ajuda.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "4845446d9cea3041ab96909039879a969ffc3859d8091347950fbeb6825c8b0f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Aprovacoes.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f9dbff3ea6a3c8e8810024033f2c1866f402de402cee8e36f221a1c7b0419197",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Avaliacoes.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "88016655a4959a22df955a1ee4f677a659002941948c1cad711ba35271b7eba5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/CatalogoModais.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6dfacaec3d924fc2e45e3900838836c7df34a2290b35f60509e40623ee7acc57",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/ConfiguracaoBot.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fb6a8e8aacbae15ccb10a8d9991ef3ba3f069321674515d05d47ae051df7446f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Cookies.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8cf25ce45f5a26f364dc7c8348f062edfb5bdf93b81238e7965ea6ef6487a6fc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Mais.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "55f6e66fcbb2067231ef6776dc130efca2c410b71833301ce88212e1ebe3dec1",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/MetricHub.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "805e68a71427be76172e749d775ccda47a8d0f24c89820e62c6c0a1773d2df53",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/MetricHubReceita.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7e2e39d7732fbf6a10dae6f72cf2fa047af4b52baacc77fa007014454a3589c3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/MetricHubShell.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cc7992a4692dcfbd38f468ca6b1c99b0f459c7591ec905217aea7bae106a83d3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Notificacoes.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d135a06b09bad0d2f3a4cb883b85feabf7cb27695082d7454bf9e2e809cd8932",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/NovoServico.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2879d06f009c6c21bc33c6af15c9b7844603e29c45c0e8563ed1eebfc3639f38",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Perfil.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "234793f0cd7f7df91b11831320d53782fae67af32e2a32466f988b4092449df0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Privacidade.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "795d4119fb56476705a463d61c055f6dbea7df5e3b65b83c4b1fbd585ab6a4cb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Termos.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a7ded1477e4576f19aaf9d6e206d45639f7b9c4ed92a6595d68c3da6308b0fff",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/styles/panel-overlay.css",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "760c67920d30cc9afda8f211d533f6c3c0c1d533e43089edb19921bd647dd68d",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/styles/panel-primitives.css",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "cc30373e525a94ef77e506a56e6ca3d6acf62292e241592f7d82cbf6de9d1316",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/styles/panel.css",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ef7d456ea29bc972f85796046e0e7ba7ed41faef8f6e44fe12500a5bcc46ddca",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/test/axe.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "74547d3934177ffa8c8e4d74ecf5d3112c4f639a888e594d56d633934fad1782",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/test/setup.js",
+      "precisao": "BOUNDED",
+      "proposito": "prettier --write (formatting-only; ofensor do format:check do CI)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fd0b71cff6bc469d16c98ee6a84811f50b9e77615920080d90d2ed6ae6f53945",
       "sujoNaDeclaracao": false
     }
-  ]
+  ],
+  "comparacao": "MATCH",
+  "escopoDaComparacao": "LANE_UNICA",
+  "lanesObservadas": [
+    "HARNESS"
+  ],
+  "provenance": "ORIGINAL_PRE_MUTATION",
+  "bloqueiaIntegracao": false,
+  "nota": "Sweep prettier formatting-only (238 ofensores do format:check herdados; CRLF/formatacao). Suites completas pos-sweep: bot 455/456 (unica falha = EV-070 Windows-only pre-existente; o CI Linux roda os testes VERDES), painel 252/252. Zero mudanca semantica.",
+  "aviso": "Declaracao ENCERRADA."
 }

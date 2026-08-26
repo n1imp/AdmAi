@@ -30,7 +30,9 @@ describe('ambienteElegivel — quem pode receber dados fictícios', () => {
   });
 
   it('CONTROLE POSITIVO: _test também é elegível', () => {
-    expect(ambienteElegivel('postgresql://u:p@127.0.0.1:5432/admai_test', 'test').elegivel).toBe(true);
+    expect(ambienteElegivel('postgresql://u:p@127.0.0.1:5432/admai_test', 'test').elegivel).toBe(
+      true
+    );
   });
 
   it('NODE_ENV=production recusa, mesmo com URL local', () => {

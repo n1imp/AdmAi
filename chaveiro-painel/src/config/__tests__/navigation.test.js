@@ -177,7 +177,9 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
     const daEntrada = fonte.slice(fonte.indexOf("to: '/configuracao/notificacoes'"));
     const guard = daEntrada.slice(daEntrada.indexOf('guard:'));
     expect(guard.slice(0, 120)).toMatch(/guard:\s*\{[^}]*feature:\s*'NOTIFICACOES'/);
-    expect(fonte).toMatch(/if \(guard\.feature && !featureAtiva\(guard\.feature\)\) return false;\s*\n\s*if \(guard\.sempre\) return true;/);
+    expect(fonte).toMatch(
+      /if \(guard\.feature && !featureAtiva\(guard\.feature\)\) return false;\s*\n\s*if \(guard\.sempre\) return true;/
+    );
   });
 
   it('POSITIVO: com a flag LIGADA a superfície volta para quem tem papel', async () => {
@@ -187,7 +189,8 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
     vi.resetModules();
     vi.doMock('../../lib/featureFlags.js', () => ({
       FLAGS: { METRIC_HUBS: false, GOOGLE_REVIEWS: false, NOTIFICACOES: true },
-      featureAtiva: (nome) => (nome === 'NOTIFICACOES' ? true : nome !== 'METRIC_HUBS' && nome !== 'GOOGLE_REVIEWS'),
+      featureAtiva: (nome) =>
+        nome === 'NOTIFICACOES' ? true : nome !== 'METRIC_HUBS' && nome !== 'GOOGLE_REVIEWS',
     }));
     const { buildNavigation: comFlag } = await import('../navigation.js');
     const nav = comFlag(funcPleno);
@@ -210,9 +213,7 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
    * um segundo regex aqui criaria duas leituras da mesma verdade, livres para divergir.
    */
   it('DERIVADO: toda rota sob flag exige guard de feature na navegação', async () => {
-    const { rotasDoRouter } = await import(
-      '../../../../tools/admai-delivery/surface-registry.mjs'
-    );
+    const { rotasDoRouter } = await import('../../../../tools/admai-delivery/surface-registry.mjs');
     const fonte = readFileSync(NAVEGACAO, 'utf8');
 
     const sobFlag = rotasDoRouter().filter((r) => r.flag);
@@ -223,8 +224,10 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
       let i = fonte.indexOf(`to: '${rota}'`);
       while (i !== -1) {
         const daEntrada = fonte.slice(i);
-        const guard = daEntrada.slice(daEntrada.indexOf('guard:'), daEntrada.indexOf('guard:') + 200)
-          .match(/guard:\s*\{([^}]*)\}/)?.[1] ?? '';
+        const guard =
+          daEntrada
+            .slice(daEntrada.indexOf('guard:'), daEntrada.indexOf('guard:') + 200)
+            .match(/guard:\s*\{([^}]*)\}/)?.[1] ?? '';
         if (!guard.includes(`feature: '${flag}'`)) faltando.push(`${rota} (esperava ${flag})`);
         i = fonte.indexOf(`to: '${rota}'`, i + 1);
       }
@@ -235,9 +238,7 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
   it('DERIVADO: a rota de Notificações está mesmo sob flag em App.jsx', async () => {
     /* NAV_HIDDEN != FEATURE_HIDDEN. Esconder o item de menu sem remover a rota deixaria a
        superfície a um Ctrl+L de distância. */
-    const { rotasDoRouter } = await import(
-      '../../../../tools/admai-delivery/surface-registry.mjs'
-    );
+    const { rotasDoRouter } = await import('../../../../tools/admai-delivery/surface-registry.mjs');
     const rota = rotasDoRouter().find((r) => r.rota === '/configuracao/notificacoes');
     expect(rota?.flag).toBe('NOTIFICACOES');
   });

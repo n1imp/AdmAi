@@ -39,7 +39,9 @@ describe('limiters de credencial NÃO governam as etapas 2FA (mount exato)', () 
         .post('/api/auth/login/2fa')
         .send({ desafio: `desafio-distinto-${i}`, codigo: '000000' });
       // Desafio inválido → 400/401 do handler; JAMAIS 429 (cada desafio tem balde próprio).
-      expect(r.status, `tentativa ${i} não pode ser 429 (cross-flow lockout regressa)`).not.toBe(429);
+      expect(r.status, `tentativa ${i} não pode ser 429 (cross-flow lockout regressa)`).not.toBe(
+        429
+      );
     }
   });
 

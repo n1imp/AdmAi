@@ -35,7 +35,13 @@ beforeAll(async () => {
 
 async function novoMaterial(empresaId, saldo) {
   return prisma.material.create({
-    data: { empresaId, nome: `Concorrente ${Date.now()}-${Math.random()}`, unidade: 'un', precoUnit: 10, quantidadeAtual: saldo },
+    data: {
+      empresaId,
+      nome: `Concorrente ${Date.now()}-${Math.random()}`,
+      unidade: 'un',
+      precoUnit: 10,
+      quantidadeAtual: saldo,
+    },
   });
 }
 
@@ -99,10 +105,14 @@ describe('movimentarEstoque sob concorrência real', () => {
        VERDADEIRO é exatamente a semântica correta; era o TESTE que sobre-especificava a ordem
        (flakou 2 em 5 execuções). As propriedades certas independem da intercalação:
        conservação exata + clamp só quando o disponível travado era menor que o pedido. */
-    const entradas = cadeia.movs.filter((m) => m.tipo === 'entrada').reduce((t, m) => t + m.quantidade, 0);
-    const saidas = cadeia.movs.filter((m) => m.tipo === 'saida').reduce((t, m) => t + m.quantidade, 0);
-    expect(entradas).toBe(10);                       // entradas nunca clampam
-    expect(saidas).toBeLessThanOrEqual(12);          // saídas aplicam no máximo o pedido
+    const entradas = cadeia.movs
+      .filter((m) => m.tipo === 'entrada')
+      .reduce((t, m) => t + m.quantidade, 0);
+    const saidas = cadeia.movs
+      .filter((m) => m.tipo === 'saida')
+      .reduce((t, m) => t + m.quantidade, 0);
+    expect(entradas).toBe(10); // entradas nunca clampam
+    expect(saidas).toBeLessThanOrEqual(12); // saídas aplicam no máximo o pedido
     expect(6 + entradas - saidas).toBe(depois.quantidadeAtual); // conservação exata
     // Toda saída clampada precisa coincidir com saldoApos === 0 (só se clampa no chão).
     for (const m of cadeia.movs.filter((x) => x.tipo === 'saida' && x.quantidade < 3)) {

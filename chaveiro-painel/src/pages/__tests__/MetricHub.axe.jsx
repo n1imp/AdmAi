@@ -21,8 +21,15 @@ vi.mock('../../lib/api.js', () => ({
 vi.mock('recharts', () => {
   const Stub = () => null;
   return {
-    ResponsiveContainer: Stub, BarChart: Stub, Bar: Stub, LineChart: Stub, Line: Stub,
-    XAxis: Stub, YAxis: Stub, Tooltip: Stub, CartesianGrid: Stub,
+    ResponsiveContainer: Stub,
+    BarChart: Stub,
+    Bar: Stub,
+    LineChart: Stub,
+    Line: Stub,
+    XAxis: Stub,
+    YAxis: Stub,
+    Tooltip: Stub,
+    CartesianGrid: Stub,
   };
 });
 vi.mock('react-router-dom', () => ({
@@ -41,21 +48,37 @@ const AGREGADO = {
   scope: 'EMPRESA',
   status: 'VALUE',
   value: 142,
-  comparison: { valorAnterior: 126, variacaoAbsoluta: 16, variacaoPercentual: 12.7, direcao: 'SUBIU' },
+  comparison: {
+    valorAnterior: 126,
+    variacaoAbsoluta: 16,
+    variacaoPercentual: 12.7,
+    direcao: 'SUBIU',
+  },
   quality: { state: 'HIGH', recordCount: 142, warnings: [] },
   lineage: {
-    formula: 'COUNT(Servico)', grain: 'empresa × período', sourceEntities: ['Servico'],
-    appliedFilters: ['status = ativo'], timeSemantics: 'criadoEm',
+    formula: 'COUNT(Servico)',
+    grain: 'empresa × período',
+    sourceEntities: ['Servico'],
+    appliedFilters: ['status = ativo'],
+    timeSemantics: 'criadoEm',
   },
   permissions: { canDrillDown: true },
-  allowed: { dimensoes: ['tecnico', 'local'], comparacoes: [], periodos: [], granularidades: ['dia'] },
+  allowed: {
+    dimensoes: ['tecnico', 'local'],
+    comparacoes: [],
+    periodos: [],
+    granularidades: ['dia'],
+  },
   breakdown: null,
 };
 
 const SERIE = {
   granularidade: 'dia',
   timeSemantics: 'criadoEm',
-  pontos: [{ dia: '2026-04-01', valor: 3 }, { dia: '2026-04-02', valor: 0 }],
+  pontos: [
+    { dia: '2026-04-01', valor: 3 },
+    { dia: '2026-04-02', valor: 0 },
+  ],
 };
 
 function responder(agregado) {

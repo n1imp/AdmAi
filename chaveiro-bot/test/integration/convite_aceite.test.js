@@ -59,7 +59,11 @@ async function convidar(token, { email, papel }) {
   return tokenBruto;
 }
 
-const DADOS = { nome: 'Convidado Teste', username: `conv${Date.now().toString().slice(-6)}`, senha: 'SenhaForte1!' };
+const DADOS = {
+  nome: 'Convidado Teste',
+  username: `conv${Date.now().toString().slice(-6)}`,
+  senha: 'SenhaForte1!',
+};
 
 describe('Convite: o convidado entra na empresa certa com o papel certo', () => {
   it('PRÉ-CONDIÇÃO: convidar cria o registro e envia o e-mail com o token', async () => {
@@ -104,7 +108,9 @@ describe('Convite: o convidado entra na empresa certa com o papel certo', () => 
     const bruto = await convidar(token, { email: 'novo4@teste.com', papel: 'gestor' });
     const username = `conv4${Date.now().toString().slice(-5)}`;
 
-    await request(app).post(`/api/convite/${bruto}/aceitar`).send({ ...DADOS, username });
+    await request(app)
+      .post(`/api/convite/${bruto}/aceitar`)
+      .send({ ...DADOS, username });
 
     const criado = await prisma.usuario.findUnique({ where: { username } });
     expect(criado).not.toBeNull();
@@ -123,7 +129,9 @@ describe('Convite: o convidado entra na empresa certa com o papel certo', () => 
       .post(`/api/convite/${bruto}/aceitar`)
       .send({ ...DADOS, username: `conv5${Date.now().toString().slice(-5)}` });
 
-    const me = await request(app).get('/api/me').set('Authorization', `Bearer ${aceite.body.token}`);
+    const me = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${aceite.body.token}`);
 
     expect(me.status).toBe(200);
     expect(me.body.email).toBe('novo5@teste.com');
@@ -151,7 +159,7 @@ describe('Convite: o convidado entra na empresa certa com o papel certo', () => 
 
     await prisma.conviteUsuario.updateMany({
       where: { empresaId },
-      data: { expiraEm: new Date(Date.now() - 60_000) }
+      data: { expiraEm: new Date(Date.now() - 60_000) },
     });
 
     const descricao = await request(app).get(`/api/convite/${bruto}`);
@@ -184,7 +192,11 @@ describe('Convite: o convidado entra na empresa certa com o papel certo', () => 
       /* `abcdefgh` marca so dois criterios (tamanho + minuscula) e a politica exige tres. A
          primeira versao usava `senha123`, que marca TRES — tamanho, minuscula e numero — e portanto
          e VALIDA por desenho. O fixture e que estava errado, nao o produto. */
-      .send({ nome: 'Convidado', username: `conv9${Date.now().toString().slice(-5)}`, senha: 'abcdefgh' });
+      .send({
+        nome: 'Convidado',
+        username: `conv9${Date.now().toString().slice(-5)}`,
+        senha: 'abcdefgh',
+      });
     expect(fraca.status).toBe(400);
 
     /* Recusa não pode consumir o convite: o convidado precisa poder tentar de novo com senha boa.
@@ -201,7 +213,9 @@ describe('Convite: o convidado entra na empresa certa com o papel certo', () => 
     const bruto = await convidar(a.token, { email: 'novoA@teste.com', papel: 'gestor' });
     const username = `convA${Date.now().toString().slice(-5)}`;
 
-    await request(app).post(`/api/convite/${bruto}/aceitar`).send({ ...DADOS, username });
+    await request(app)
+      .post(`/api/convite/${bruto}/aceitar`)
+      .send({ ...DADOS, username });
 
     const criado = await prisma.usuario.findUnique({ where: { username } });
     expect(criado.empresaId).toBe(a.empresaId);
