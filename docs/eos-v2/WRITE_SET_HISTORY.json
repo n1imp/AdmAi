@@ -59572,12 +59572,26 @@
         "HARNESS"
       ],
       "provenance": "UNKNOWN_PROVENANCE",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "User-gate executado ate o limite de regras: Redis PASS (UI+provider-verified), internos 3/7 via runner, .env.staging scaffold git-ignored, dominio query-first; connect re-verificou 4 externos restantes.",
-      "declaradoEm": "2026-08-26T02:31:18.653Z"
+      "declaradoEm": "2026-08-26T02:31:18.653Z",
+      "reconciliacao": {
+        "em": "2026-08-26T02:37:53.861Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Diretiva do usuario EOS USER-GATE EXECUTE (executar A+B+C diretamente; commits de progresso durante a execucao) + registros em AGENT_DECISIONS (rodada USER-GATE EXECUTADO)",
+        "justificativa": "A fatia executou acoes externas intercaladas com commits de fix (internal-secrets 23f6ae4; dominio query-first 7bb0073) antes do fechamento — HEAD moveu e a comparacao perdeu a base (UNKNOWN_DIFFERENCE). Todas as escritas sao as declaradas nas entradas, commitadas e empurradas; nada fora do conjunto. Ordem de fechamento violada; conteudo integro.",
+        "caminhos": [
+          "tools/railway-staging-bootstrap.mjs",
+          ".github/workflows/staging-backend-bootstrap.yml",
+          "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+          "docs/agent-environment/AGENT_DECISIONS.md",
+          "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-26T02:37:25.520Z",
+  "geradoEm": "2026-08-26T02:37:53.862Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
