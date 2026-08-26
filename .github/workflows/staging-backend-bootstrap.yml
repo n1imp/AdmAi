@@ -16,6 +16,13 @@ name: Staging Backend Bootstrap
 # por selftest com fetch injetado (7/7).
 
 on:
+  # REGISTRO: workflow_dispatch só funciona depois que o GitHub registra o workflow
+  # (arquivo na default branch OU um run por outro evento). Como master é intocável,
+  # a tag técnica ops/railway-bootstrap-register-* dispara UM run inofensivo
+  # (só selftest; zero mutação — o guard abaixo força phase=register em evento de tag)
+  # que registra o workflow; daí em diante o dispatch normal com --ref staging funciona.
+  push:
+    tags: ['ops/railway-bootstrap-register-*']
   workflow_dispatch:
     inputs:
       confirm_cost:
@@ -41,15 +48,23 @@ jobs:
   bootstrap:
     runs-on: ubuntu-latest
     steps:
-      - name: Guard de autorização (D2 registrado no dispatch)
+      - name: Guard de autorização (D2 registrado no dispatch; tag = só registro)
+        id: fase
         run: |
           set -eu
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Run de REGISTRO (tag técnica): nenhuma mutação; só o selftest abaixo roda.
+            echo "phase=register" >> "$GITHUB_OUTPUT"
+            echo "run de registro — nenhuma chamada à API do Railway."
+            exit 0
+          fi
           if [ "${{ inputs.confirm_cost }}" != "yes" ]; then
             echo "::error::confirm_cost != 'yes' — sem a confirmação literal do D2 de custo, nada é criado."
             exit 1
           fi
           case "${{ inputs.phase }}" in prepare|connect) ;; *)
             echo "::error::phase deve ser prepare ou connect."; exit 1;; esac
+          echo "phase=${{ inputs.phase }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
 
@@ -61,6 +76,7 @@ jobs:
         run: node tools/railway-staging-bootstrap.mjs --selftest
 
       - name: Executar fase
+        if: ${{ steps.fase.outputs.phase != 'register' }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
