@@ -56850,9 +56850,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Sweep prettier formatting-only (238 ofensores do format:check herdados; CRLF/formatacao). Suites completas pos-sweep: bot 455/456 (unica falha = EV-070 Windows-only pre-existente; o CI Linux roda os testes VERDES), painel 252/252. Zero mudanca semantica.",
       "declaradoEm": "2026-08-26T00:24:36.421Z"
+    },
+    {
+      "sliceId": "STG-APP-CI-FORMAT-02",
+      "titulo": "Fix dos 5 no-unexpected-multiline que o sweep prettier introduziu (request(app)[metodo] quebrado em linha nova)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "5 sites reescritos com agente intermediario (prettier estavel + eslint limpo); teste de integracao do arquivo 11/11.",
+      "declaradoEm": "2026-08-26T00:32:35.218Z"
     }
   ],
-  "geradoEm": "2026-08-26T00:28:05.149Z",
+  "geradoEm": "2026-08-26T00:34:55.519Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

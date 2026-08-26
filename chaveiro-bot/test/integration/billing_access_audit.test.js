@@ -144,9 +144,8 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
     const bloqueadas = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)
-        [rota.metodo](rota.caminho)
-        .set('Authorization', `Bearer ${token}`);
+      const agente = request(app);
+      const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
       if (pareceBloqueioComercial(res)) bloqueadas.push(`${rota.nome} → ${res.status}`);
     }
     expect(
@@ -165,9 +164,8 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
     const bloqueadas = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)
-        [rota.metodo](rota.caminho)
-        .set('Authorization', `Bearer ${token}`);
+      const agente = request(app);
+      const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
       if (pareceBloqueioComercial(res)) bloqueadas.push(`${rota.nome} → ${res.status}`);
     }
     expect(
@@ -189,9 +187,8 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
       const passaram = [];
       for (const rota of ROTAS_DE_PRODUTO) {
-        const res = await request(app)
-          [rota.metodo](rota.caminho)
-          .set('Authorization', `Bearer ${token}`);
+        const agente = request(app);
+        const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
         if (!pareceBloqueioComercial(res)) {
           passaram.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
         }
@@ -214,9 +211,8 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
       const barradas = [];
       for (const rota of ROTAS_QUE_DEVEM_CONTINUAR) {
-        const res = await request(app)
-          [rota.metodo](rota.caminho)
-          .set('Authorization', `Bearer ${token}`);
+        const agente = request(app);
+        const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
         if (pareceBloqueioComercial(res))
           barradas.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
       }
@@ -238,9 +234,8 @@ describe('BILLING ACCESS AUDIT — o estado comercial bloqueia o uso do produto?
 
     const passaram = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)
-        [rota.metodo](rota.caminho)
-        .set('Authorization', `Bearer ${token}`);
+      const agente = request(app);
+      const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
       if (!pareceBloqueioComercial(res))
         passaram.push(`${rota.nome} (${rota.caminho}) → ${res.status}`);
     }
