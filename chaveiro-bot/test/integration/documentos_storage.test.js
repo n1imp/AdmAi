@@ -107,9 +107,17 @@ describe('Upload pelo ramo de storage [GAP-DOC-01]', () => {
 
     expect(res.body.documento.storageKey).toBeUndefined();
     /* Bucket privado protege por credencial; chave adivinhável derruba isso assim que alguém
-       consegue uma URL assinada de OUTRO objeto. Nome e id não podem aparecer nela. */
+       consegue uma URL assinada de OUTRO objeto. Nome e id não podem aparecer nela.
+       [STG-APP-CI-TEST-02] O assert antigo `not.toContain(String(id))` era FLAKY: com
+       banco fresco o id vira um dígito único (ex.: 2) que quase sempre existe dentro do
+       uuid — falso positivo dependente do estado da sequence (pegou no primeiro CI da
+       branch staging). A não-derivabilidade fica MAIS forte assertando a FORMA exata do
+       gerador (routes/documentos.js:55): `doc-<uuid v4>.<ext>` — aleatória por
+       construção; não carrega nome nem id como componente. */
     expect(chave).not.toContain('contrato-do-joao');
-    expect(chave).not.toContain(String(res.body.documento.id));
+    expect(chave).toMatch(
+      /^doc-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.[a-z0-9]+$/i
+    );
   });
 
   it('BUCKET AUSENTE — o caso exato de produção: 500, e o erro do storage não vaza ao cliente', async () => {

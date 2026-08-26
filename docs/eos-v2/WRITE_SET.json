@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-CI-TEST-01",
-  "titulo": "Alinha o teste EV-070 obsoleto ao contrato decidido D-FE-STRUCT-LIMITER-2FA (app.post exato; /2fa nao herda authLimiter)",
+  "sliceId": "STG-APP-CI-TEST-02",
+  "titulo": "Robustece assert flaky de documentos_storage (id de 1 digito quase sempre aparece num uuid)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T00:39:34.899Z",
+  "declaradoEm": "2026-08-26T00:56:10.319Z",
   "baseCommitPorLane": {
-    "HARNESS": "a7069855e9ea689a737233413eaa4abe9d59f2cf"
+    "HARNESS": "b85add98d837933598f05fed617b5e9cf75f9148"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O teste 'EV-070: authLimiter herdado pelo prefix-match' asserta a heranca que a decisao D-FE-STRUCT-LIMITER-2FA (Codex thread 01a0346e, registrada em comentario de app.js:131-141) REMOVEU de proposito (cross-flow lockout via NAT: senha errada de um bloqueava o 2FA do escritorio). O codigo esta conforme a decisao; o teste ficou stale e bloqueava o ci-ok da cadeia de staging. Fix: o caso vira o LOCK do comportamento corrigido (mesmo IP + desafios variados => nunca 429 de auth nas subrotas 2FA).",
+  "notaDeMetodo": "CI com banco fresco gerou documento.id=2 e o assert not.toContain('2') reprovou contra a chave doc-<uuid> (falso positivo dependente do estado da sequence; localmente id era outro). A intencao — chave NAO derivavel de nome/id — fica MAIS forte assertando a FORMA estrutural doc-<uuid v4>: aleatoria por construcao, nao contem o nome nem o id como componente. O not.toContain do nome permanece.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -119,7 +119,7 @@
       "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "50918365f0bca668beb1f66e96e4f3a486147d67bfaf370c470a91d86b86cc78",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "0a4ddbe394232ea2bd173b99861ce95eefc6f78dde0dd34b8afc5a6b4bc5fe2b",
       "chaveiro-bot/scripts/validate-staging.mjs": "5dfd6681e988e9b3006ce6f0fdd3b506f24483322bada4f50fc604e1672ec7e9",
-      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "2061addce0d9938655be6d87a660f713efeaf6c17fb9d9eee095eac4d112cebc",
+      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "9699669d5343122d559890b571053fbf80173adddfc63ff61448be87573e142e",
       "chaveiro-bot/src/__tests__/security-headers.test.js": "bd600a8f9d9e8dfca48cfecb345d730032ce7af76d0f049b7135260aa3762b8a",
       "chaveiro-bot/src/app.js": "9b7cd5d7446e64405e17707f9b8aa14a788cd8ca056fafddf53fafa43b9f6495",
       "chaveiro-bot/src/config/__tests__/env.test.js": "acdd7260aaef3845c9549fb416190ed9d68c50780983451a6b421fe5fa5e57a0",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "4145643187c64917a088bf618e586d8af90628755a23c1f4c129d896598e94f5",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "0cd598d100ac1edd4789c1ad1833fe22f65a140ae90eee2e4dd33e2089f63ce0",
+      "docs/eos-v2/WRITE_SET.json": "24c80721875984770b71befe14dcac38352a71678d2340409f0b7182dcf8ee2c",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "0b63c4adc74e63e470db418cc3c3c1540e924fd759512eaa10a1fd411ceba406",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,11 +2524,11 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
+      "caminho": "chaveiro-bot/test/integration/documentos_storage.test.js",
       "precisao": "BOUNDED",
-      "proposito": "teste 3 reescrito para o contrato vigente (anti cross-flow lockout), citando a decisao",
+      "proposito": "assert estrutural doc-<uuidv4> no lugar do not.toContain(id) fragil",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "2061addce0d9938655be6d87a660f713efeaf6c17fb9d9eee095eac4d112cebc",
+      "shaNaDeclaracao": "939f94d5462f392efc57e4840edc1b5cf34a9fe6bad322bf9c7e22b167b8d84b",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2539,6 +2539,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Teste EV-070 stale alinhado a D-FE-STRUCT-LIMITER-2FA (thread 01a0346e). Suite unit 456/456 (verde total).",
+  "nota": "Assert estrutural doc-<uuidv4>.<ext> substitui not.toContain(id) flaky. Integracao do arquivo 10/10.",
   "aviso": "Declaracao ENCERRADA."
 }

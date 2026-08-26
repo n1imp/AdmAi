@@ -56878,9 +56878,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Teste EV-070 stale alinhado a D-FE-STRUCT-LIMITER-2FA (thread 01a0346e). Suite unit 456/456 (verde total).",
       "declaradoEm": "2026-08-26T00:39:34.899Z"
+    },
+    {
+      "sliceId": "STG-APP-CI-TEST-02",
+      "titulo": "Robustece assert flaky de documentos_storage (id de 1 digito quase sempre aparece num uuid)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Assert estrutural doc-<uuidv4>.<ext> substitui not.toContain(id) flaky. Integracao do arquivo 10/10.",
+      "declaradoEm": "2026-08-26T00:56:10.319Z"
     }
   ],
-  "geradoEm": "2026-08-26T00:41:13.384Z",
+  "geradoEm": "2026-08-26T01:00:49.144Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
