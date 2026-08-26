@@ -119,13 +119,18 @@ describe('POST /api/auth/login/2fa/recuperar herda twoFactorLimiter (5/15min) vi
     expect(outroDesafio.status).toBe(401);
   });
 
-  it('EV-070: authLimiter (herdado pelo mesmo prefix-match) agora bloqueia por IP de verdade nesta rota', async () => {
-    // Antes da correção do EV-070, authLimiter estava montado aqui (mesmo prefix-match
-    // de /api/auth/login) mas sua chave de fallback por IP nunca colidia de verdade —
-    // na prática nunca bloqueava nada. Este teste tranca o comportamento CORRIGIDO:
-    // do MESMO IP, variando o desafio a cada tentativa (twoFactorLimiter não deveria
-    // bloquear, chave diferente a cada vez), authLimiter (teto 5/15min por IP) bloqueia
-    // mesmo assim, porque agora conta o IP de verdade.
+  it('D-FE-STRUCT-LIMITER-2FA: /2fa/recuperar NÃO herda mais o authLimiter — sem cross-flow lockout por IP', async () => {
+    /* HISTÓRICO: este caso nasceu como "EV-070" assertando que o authLimiter, herdado
+       pelo prefix-match de app.use('/api/auth/login'), bloqueava por IP nesta rota.
+       A decisão POSTERIOR D-FE-STRUCT-LIMITER-2FA (Codex DECISOR thread 01a0346e,
+       registrada em app.js:131-141) REMOVEU essa herança de propósito: o balde por IP
+       de 5/15min compartilhado entre login e 2FA fazia a senha errada de UMA pessoa
+       bloquear o 2FA do escritório inteiro atrás de um NAT (cross-flow lockout) —
+       contra os dois designs documentados (twoFactorLimiter dedicado por DESAFIO;
+       authIpLimiter "folgado de propósito"). O mount virou app.post EXATO em
+       /api/auth/login, e as etapas 2FA ficam só com o twoFactorLimiter + limiter
+       global de /api. Este teste agora TRANCA o comportamento decidido: mesmo IP,
+       desafios variados ⇒ NENHUM 429 vindo do authLimiter nesta subrota. */
     storeState.hits.clear();
     const { app } = criarApp();
 
@@ -139,12 +144,10 @@ describe('POST /api/auth/login/2fa/recuperar herda twoFactorLimiter (5/15min) vi
       );
     }
 
-    for (let i = 0; i < 5; i += 1) {
+    // Todas chegam ao handler (401 = desafio inválido) — nunca o 429 do authLimiter,
+    // cuja mensagem seria 'Muitas tentativas. Tente novamente em 15 minutos.'
+    for (let i = 0; i < 6; i += 1) {
       expect(respostas[i].status, `tentativa ${i + 1}`).toBe(401);
     }
-    expect(respostas[5].status).toBe(429);
-    expect(respostas[5].body).toEqual({
-      erro: 'Muitas tentativas. Tente novamente em 15 minutos.',
-    });
   });
 });

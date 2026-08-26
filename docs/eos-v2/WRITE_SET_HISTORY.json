@@ -56864,9 +56864,23 @@
       "bloqueiaIntegracao": false,
       "nota": "5 sites reescritos com agente intermediario (prettier estavel + eslint limpo); teste de integracao do arquivo 11/11.",
       "declaradoEm": "2026-08-26T00:32:35.218Z"
+    },
+    {
+      "sliceId": "STG-APP-CI-TEST-01",
+      "titulo": "Alinha o teste EV-070 obsoleto ao contrato decidido D-FE-STRUCT-LIMITER-2FA (app.post exato; /2fa nao herda authLimiter)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Teste EV-070 stale alinhado a D-FE-STRUCT-LIMITER-2FA (thread 01a0346e). Suite unit 456/456 (verde total).",
+      "declaradoEm": "2026-08-26T00:39:34.899Z"
     }
   ],
-  "geradoEm": "2026-08-26T00:34:55.519Z",
+  "geradoEm": "2026-08-26T00:41:13.384Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

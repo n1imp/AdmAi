@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-CI-FORMAT-02",
-  "titulo": "Fix dos 5 no-unexpected-multiline que o sweep prettier introduziu (request(app)[metodo] quebrado em linha nova)",
+  "sliceId": "STG-APP-CI-TEST-01",
+  "titulo": "Alinha o teste EV-070 obsoleto ao contrato decidido D-FE-STRUCT-LIMITER-2FA (app.post exato; /2fa nao herda authLimiter)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T00:32:35.218Z",
+  "declaradoEm": "2026-08-26T00:39:34.899Z",
   "baseCommitPorLane": {
-    "HARNESS": "e66b7c85af07b6805b842554e50d057863710ef5"
+    "HARNESS": "a7069855e9ea689a737233413eaa4abe9d59f2cf"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "O prettier --write do sweep moveu o member-access computado para linha propria em billing_access_audit.test.js (request(app)\n[rota.metodo]) — eslint reprova por hazard de ASI. Fix mecanico: agente = request(app) e acesso na mesma linha. Sem mudanca de comportamento; lint+teste do arquivo re-rodados.",
+  "notaDeMetodo": "O teste 'EV-070: authLimiter herdado pelo prefix-match' asserta a heranca que a decisao D-FE-STRUCT-LIMITER-2FA (Codex thread 01a0346e, registrada em comentario de app.js:131-141) REMOVEU de proposito (cross-flow lockout via NAT: senha errada de um bloqueava o 2FA do escritorio). O codigo esta conforme a decisao; o teste ficou stale e bloqueava o ci-ok da cadeia de staging. Fix: o caso vira o LOCK do comportamento corrigido (mesmo IP + desafios variados => nunca 429 de auth nas subrotas 2FA).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -242,7 +242,7 @@
       "chaveiro-bot/test/integration/auditoria_matriz_acoes.test.js": "edf56724f42f9e202e9fd526f0e1b5332aac2387724bbaf40ba1441c016ee906",
       "chaveiro-bot/test/integration/auth.test.js": "c1f2857cdd824477ee94bb247102699842052931220b2a789f89971eabd9df4d",
       "chaveiro-bot/test/integration/autoexclusao_conta.test.js": "2e7ce404ed3d94fe4478e94b17e9731a098f6efa6b04ccb6f0e8e9b2b2a81151",
-      "chaveiro-bot/test/integration/billing_access_audit.test.js": "938e672dc09ec8738015bbd2da3241691e5eda7367de48e6e45ab5268f79c2e8",
+      "chaveiro-bot/test/integration/billing_access_audit.test.js": "cdacf475fe207901a3e54a403c85d8bf3747f921918ab4d3e3bdd437129ba78c",
       "chaveiro-bot/test/integration/billing_google_auth.test.js": "003b8c5ab47c13720d212b1db37e108735364a638bcd65ee26a67d0564185d51",
       "chaveiro-bot/test/integration/bugs_regressao.test.js": "e6abed84fdf4e0a272be02eae90bc8a12a773722269a6598023945e807534293",
       "chaveiro-bot/test/integration/cadastro_otp.test.js": "b851790d47b835ec48fb18092c1af0e8042b641fd3339e992e0ff7583b6d61b7",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "4b94c9c5556eb3dfa1044f8406f02fc7047e093264873eb2bb8041597760ef53",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "237b13ab2fd159958d2d7abcc799ee1ba4cb15e520df5f4012a6a9a2abcdb346",
+      "docs/eos-v2/WRITE_SET.json": "4145643187c64917a088bf618e586d8af90628755a23c1f4c129d896598e94f5",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "0cd598d100ac1edd4789c1ad1833fe22f65a140ae90eee2e4dd33e2089f63ce0",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,11 +2524,11 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/billing_access_audit.test.js",
+      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
       "precisao": "BOUNDED",
-      "proposito": "desfazer o multiline hazard em 5 pontos (agente[rota.metodo] na mesma linha)",
+      "proposito": "teste 3 reescrito para o contrato vigente (anti cross-flow lockout), citando a decisao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "938e672dc09ec8738015bbd2da3241691e5eda7367de48e6e45ab5268f79c2e8",
+      "shaNaDeclaracao": "2061addce0d9938655be6d87a660f713efeaf6c17fb9d9eee095eac4d112cebc",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2539,6 +2539,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "5 sites reescritos com agente intermediario (prettier estavel + eslint limpo); teste de integracao do arquivo 11/11.",
+  "nota": "Teste EV-070 stale alinhado a D-FE-STRUCT-LIMITER-2FA (thread 01a0346e). Suite unit 456/456 (verde total).",
   "aviso": "Declaracao ENCERRADA."
 }
