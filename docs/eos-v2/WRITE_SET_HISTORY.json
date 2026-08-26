@@ -59547,9 +59547,23 @@
       "bloqueiaIntegracao": false,
       "nota": "GO registrado; ciclo encerra no user-gate do passo 5.",
       "declaradoEm": "2026-08-26T02:05:08.894Z"
+    },
+    {
+      "sliceId": "STG-APP-RESUME-01",
+      "titulo": "Retomada pos-GO: re-prepare real (env renomeado p/ staging; dominio novo) + connect fail-closed provou user-gate INCOMPLETO (A/B/C ausentes)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Retomada: re-prepare OK (env staging renomeado; dominio novo); connect fail-closed provou user-gate 0/3; evidencias registradas.",
+      "declaradoEm": "2026-08-26T02:14:59.680Z"
     }
   ],
-  "geradoEm": "2026-08-26T02:05:11.297Z",
+  "geradoEm": "2026-08-26T02:15:41.562Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
