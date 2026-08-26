@@ -139,104 +139,151 @@ export async function resolverWorkspace(gql, workspaceIdFlag = null) {
   return ws[0].id;
 }
 
+/** Busca projeto `admai-staging` existente no workspace (idempotência por NOME —
+ *  lição do run real: falha no meio deixava projeto órfão e um rerun cego duplicaria). */
+export async function acharProjetoExistente(gql) {
+  const r = await gql(
+    `query { me { workspaces { id name projects { edges { node {
+        id name
+        environments { edges { node { id name } } }
+        services { edges { node { id name } } }
+      } } } } } }`,
+    {},
+    { permitirErros: true }
+  );
+  if (r.errors?.length) return null; // schema sem essa forma ⇒ sem adoção automática
+  for (const ws of r.data?.me?.workspaces ?? []) {
+    for (const e of ws.projects?.edges ?? []) {
+      if (e.node?.name === NOME_PROJETO) return e.node;
+    }
+  }
+  return null;
+}
+
 // ── PREPARE ──────────────────────────────────────────────────────────────────
 export async function prepare(gql, { projectId = null, workspaceId = null } = {}) {
-  const inv = { projectId, environmentId: null, serviceId: null, redisServiceId: null, dominio: null };
-  const disp = await mutationsDisponiveis(gql);
-  exigirMutations(disp, [
-    'projectCreate',
-    'environmentCreate',
-    'serviceCreate',
-    'serviceDomainCreate',
-    'variableCollectionUpsert',
-  ]);
+  const inv = { projectId, environmentId: null, serviceId: null, redis: null, dominio: null };
+  try {
+    const disp = await mutationsDisponiveis(gql);
+    exigirMutations(disp, [
+      'projectCreate',
+      'environmentCreate',
+      'serviceCreate',
+      'serviceDomainCreate',
+      'variableCollectionUpsert',
+    ]);
 
-  // 1) Projeto DEDICADO (nunca listar/associar o de produção). Rerun: --project-id.
-  if (!inv.projectId) {
-    const wsId = await resolverWorkspace(gql, workspaceId);
-    const r = await gql(
-      `mutation($input: ProjectCreateInput!) { projectCreate(input: $input) { id name environments { edges { node { id name } } } } }`,
-      { input: { name: NOME_PROJETO, description: 'AdmAi application STAGING (isolado; nunca producao)', workspaceId: wsId } }
-    );
-    const p = r.data?.projectCreate;
-    if (!p?.id) falhar('projectCreate nao devolveu id.');
-    guardaProducao('projeto criado', p.name);
-    inv.projectId = p.id;
-    const envs = (p.environments?.edges ?? []).map((e) => e.node);
-    inv.environmentId = envs.find((e) => /staging/i.test(e.name))?.id ?? null;
-    if (!inv.environmentId && envs.length === 1) inv.environmentId = envs[0].id; // default env do projeto novo
-  }
-
-  // 2) Environment explicitamente `staging` (D1) — cria se não veio do passo 1.
-  if (!inv.environmentId) {
-    const r = await gql(
-      `mutation($input: EnvironmentCreateInput!) { environmentCreate(input: $input) { id name } }`,
-      { input: { projectId: inv.projectId, name: 'staging' } }
-    );
-    inv.environmentId = r.data?.environmentCreate?.id ?? falhar('environmentCreate nao devolveu id.');
-  }
-
-  // 3) Service SEM source (bifásico — nenhum deploy dispara aqui).
-  {
-    const r = await gql(
-      `mutation($input: ServiceCreateInput!) { serviceCreate(input: $input) { id name } }`,
-      { input: { projectId: inv.projectId, name: NOME_SERVICE } }
-    );
-    const s = r.data?.serviceCreate;
-    if (!s?.id) falhar('serviceCreate nao devolveu id.');
-    guardaProducao('service criado', s.name);
-    inv.serviceId = s.id;
-  }
-
-  // 4) Redis gerenciado (custo AUTORIZADO pelo D2 literal). Tentativa por template;
-  //    schema sem suporte ⇒ passo manual exato (nunca silencioso).
-  {
-    const candidatas = ['templateDeployV2', 'templateDeploy'].filter((m) => disp.has(m));
-    if (!candidatas.length) {
-      falhar(
-        'Schema nao expoe templateDeploy/templateDeployV2 para criar o Redis.',
-        `Dashboard Railway → projeto ${NOME_PROJETO} → environment staging → New → Database → Redis. Depois re-rode --phase=prepare com --project-id=${inv.projectId} (idempotente) ou siga direto ao connect.`
-      );
+    // 1) Projeto DEDICADO: adota o existente por NOME (rerun idempotente) ou cria.
+    if (!inv.projectId) {
+      const existente = await acharProjetoExistente(gql);
+      if (existente) {
+        guardaProducao('projeto adotado', existente.name);
+        inv.projectId = existente.id;
+        const envs = (existente.environments?.edges ?? []).map((e) => e.node);
+        inv.environmentId =
+          envs.find((e) => /staging/i.test(e.name))?.id ?? (envs.length === 1 ? envs[0].id : null);
+        const svc = (existente.services?.edges ?? [])
+          .map((e) => e.node)
+          .find((s) => s.name === NOME_SERVICE);
+        if (svc) inv.serviceId = svc.id;
+      } else {
+        const wsId = await resolverWorkspace(gql, workspaceId);
+        const r = await gql(
+          `mutation($input: ProjectCreateInput!) { projectCreate(input: $input) { id name environments { edges { node { id name } } } } }`,
+          { input: { name: NOME_PROJETO, description: 'AdmAi application STAGING (isolado; nunca producao)', workspaceId: wsId } }
+        );
+        const p = r.data?.projectCreate;
+        if (!p?.id) falhar('projectCreate nao devolveu id.');
+        guardaProducao('projeto criado', p.name);
+        inv.projectId = p.id;
+        const envs = (p.environments?.edges ?? []).map((e) => e.node);
+        inv.environmentId =
+          envs.find((e) => /staging/i.test(e.name))?.id ?? (envs.length === 1 ? envs[0].id : null);
+      }
     }
-    const m = candidatas[0];
-    const r = await gql(
-      `mutation($input: ${m === 'templateDeployV2' ? 'TemplateDeployV2Input' : 'TemplateDeployInput'}!) { ${m}(input: $input) { projectId } }`,
-      { input: { projectId: inv.projectId, environmentId: inv.environmentId, templateCode: 'redis' } },
-      { permitirErros: true }
-    );
-    if (r.errors?.length) {
-      falhar(
-        `Criacao do Redis via ${m} recusada: ${r.errors.map((e) => e.message).join(' | ')}`,
-        `Dashboard Railway → projeto ${NOME_PROJETO} → environment staging → New → Database → Redis (o servico deve chamar-se "Redis" para a referencia \${{Redis.REDIS_URL}}). Depois prossiga ao connect.`
+
+    // 2) Environment explicitamente `staging` (D1) — cria se ainda não há alvo.
+    if (!inv.environmentId) {
+      const r = await gql(
+        `mutation($input: EnvironmentCreateInput!) { environmentCreate(input: $input) { id name } }`,
+        { input: { projectId: inv.projectId, name: 'staging' } }
       );
+      inv.environmentId = r.data?.environmentCreate?.id ?? falhar('environmentCreate nao devolveu id.');
     }
-    inv.redisServiceId = 'via-template';
-  }
 
-  // 5) Domínio público do service (necessário p/ PUBLIC_URL e p/ o VITE_API_URL_STAGING).
-  {
-    const r = await gql(
-      `mutation($input: ServiceDomainCreateInput!) { serviceDomainCreate(input: $input) { domain } }`,
-      { input: { environmentId: inv.environmentId, serviceId: inv.serviceId } }
-    );
-    inv.dominio = r.data?.serviceDomainCreate?.domain ?? falhar('serviceDomainCreate nao devolveu domain.');
-    guardaProducao('dominio gerado', inv.dominio);
-  }
+    // 3) Service SEM source (bifásico) — só cria se não foi adotado.
+    if (!inv.serviceId) {
+      const r = await gql(
+        `mutation($input: ServiceCreateInput!) { serviceCreate(input: $input) { id name } }`,
+        { input: { projectId: inv.projectId, name: NOME_SERVICE } }
+      );
+      const s = r.data?.serviceCreate;
+      if (!s?.id) falhar('serviceCreate nao devolveu id.');
+      guardaProducao('service criado', s.name);
+      inv.serviceId = s.id;
+    }
 
-  // 6) Vars NÃO-secretas (as SECRETAS são do usuário, via dashboard — lista no output).
-  await gql(
-    `mutation($input: VariableCollectionUpsertInput!) { variableCollectionUpsert(input: $input) }`,
+    // 4) Redis gerenciado (custo AUTORIZADO pelo D2 literal). O template API do
+    //    Railway recusou o input simples no run real ("Problem processing request") —
+    //    tentativa única; QUALQUER recusa vira PENDÊNCIA MANUAL BARULHENTA (nunca
+    //    silenciosa) SEM abortar o resto do prepare: domínio+vars seguem, e a var
+    //    REDIS_URL referencia o service "Redis" que o usuário criar no dashboard.
     {
-      input: {
-        projectId: inv.projectId,
-        environmentId: inv.environmentId,
-        serviceId: inv.serviceId,
-        variables: VARS_NAO_SECRETAS(inv.dominio),
-      },
+      const m = ['templateDeployV2', 'templateDeploy'].find((x) => disp.has(x));
+      let criou = false;
+      if (m) {
+        const r = await gql(
+          `mutation($input: ${m === 'templateDeployV2' ? 'TemplateDeployV2Input' : 'TemplateDeployInput'}!) { ${m}(input: $input) { projectId } }`,
+          { input: { projectId: inv.projectId, environmentId: inv.environmentId, templateCode: 'redis' } },
+          { permitirErros: true }
+        );
+        criou = !r.errors?.length;
+      }
+      inv.redis = criou
+        ? 'via-template'
+        : `MANUAL_PENDENTE: Dashboard Railway -> projeto ${NOME_PROJETO} -> environment staging -> Create -> Database -> Redis (nome do service DEVE ser "Redis" para a referencia \${{Redis.REDIS_URL}}).`;
     }
-  );
 
-  return inv;
+    // 5) Domínio público do service (necessário p/ PUBLIC_URL e VITE_API_URL_STAGING).
+    {
+      const r = await gql(
+        `mutation($input: ServiceDomainCreateInput!) { serviceDomainCreate(input: $input) { domain } }`,
+        { input: { environmentId: inv.environmentId, serviceId: inv.serviceId } },
+        { permitirErros: true }
+      );
+      inv.dominio = r.data?.serviceDomainCreate?.domain ?? null;
+      if (!inv.dominio) {
+        // Rerun idempotente: domínio pode já existir — consultar.
+        const q = await gql(
+          `query($environmentId: String!, $serviceId: String!) { domains(environmentId: $environmentId, serviceId: $serviceId) { serviceDomains { domain } } }`,
+          { environmentId: inv.environmentId, serviceId: inv.serviceId },
+          { permitirErros: true }
+        );
+        inv.dominio = q.data?.domains?.serviceDomains?.[0]?.domain ?? null;
+      }
+      if (!inv.dominio) falhar('serviceDomainCreate/domains nao devolveu domain.');
+      guardaProducao('dominio gerado', inv.dominio);
+    }
+
+    // 6) Vars NÃO-secretas (as SECRETAS são do usuário, via dashboard — lista no output).
+    await gql(
+      `mutation($input: VariableCollectionUpsertInput!) { variableCollectionUpsert(input: $input) }`,
+      {
+        input: {
+          projectId: inv.projectId,
+          environmentId: inv.environmentId,
+          serviceId: inv.serviceId,
+          variables: VARS_NAO_SECRETAS(inv.dominio),
+        },
+      }
+    );
+
+    return inv;
+  } catch (e) {
+    // Inventário PARCIAL sempre visível — rerun idempotente depende disso (D1).
+    e.inventarioParcial = inv;
+    throw e;
+  }
 }
 
 // ── CONNECT ──────────────────────────────────────────────────────────────────
@@ -381,6 +428,34 @@ export async function autoteste() {
     return criouProjeto === false && inv.projectId === 'p9';
   });
 
+  await caso('ADOCAO: projeto orfao existente e adotado por NOME (sem projectCreate/serviceCreate); Redis recusado vira MANUAL_PENDENTE sem abortar', async () => {
+    let criouProjeto = false;
+    let criouService = false;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query } = JSON.parse(body);
+      if (query.includes('projectCreate')) criouProjeto = true;
+      if (query.includes('serviceCreate')) criouService = true;
+      const mapa = {
+        __schema: SCHEMA_OK,
+        'projects { edges': {
+          data: { me: { workspaces: [{ id: 'w1', name: 'ws', projects: { edges: [{ node: {
+            id: 'p-orfao', name: 'admai-staging',
+            environments: { edges: [{ node: { id: 'e-orfao', name: 'staging' } }] },
+            services: { edges: [{ node: { id: 's-orfao', name: 'admai-staging' } }] },
+          } }] } }] } },
+        },
+        templateDeployV2: { errors: [{ message: 'Problem processing request' }] },
+        serviceDomainCreate: { data: { serviceDomainCreate: { domain: 'orfao.up.railway.app' } } },
+        variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
+      };
+      for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    });
+    const inv = await prepare(gql, {});
+    return criouProjeto === false && criouService === false && inv.projectId === 'p-orfao'
+      && inv.serviceId === 's-orfao' && /MANUAL_PENDENTE/.test(inv.redis) && inv.dominio === 'orfao.up.railway.app';
+  });
+
   await caso('GUARD anti-producao morde (dominio que casa producao)', async () => {
     try {
       guardaProducao('teste', 'api.chaveirobot.com.br');
@@ -461,6 +536,7 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
     }
   } catch (e) {
     console.error(`\nFALHOU: ${e.message}`);
+    if (e.inventarioParcial) console.error(`INVENTARIO_PARCIAL ${JSON.stringify(e.inventarioParcial)}`);
     if (e.manual) console.error(`\nPASSO MANUAL EXATO:\n${e.manual}`);
     process.exit(1);
   }
