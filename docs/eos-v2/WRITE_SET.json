@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-CI-TEST-02",
-  "titulo": "Robustece assert flaky de documentos_storage (id de 1 digito quase sempre aparece num uuid)",
+  "sliceId": "STG-APP-CI-AUDIT-01",
+  "titulo": "Patch de seguranca transitivo dev-only: nanoid 3.3.16 -> >=3.3.18 (GHSA-2v37-7h3g-55p8, high) para o gate de auditoria do CI",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T00:56:10.319Z",
+  "declaradoEm": "2026-08-26T01:11:53.066Z",
   "baseCommitPorLane": {
-    "HARNESS": "b85add98d837933598f05fed617b5e9cf75f9148"
+    "HARNESS": "324ec3386ca830c470140bb5d227445f3407bd14"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "CI com banco fresco gerou documento.id=2 e o assert not.toContain('2') reprovou contra a chave doc-<uuid> (falso positivo dependente do estado da sequence; localmente id era outro). A intencao — chave NAO derivavel de nome/id — fica MAIS forte assertando a FORMA estrutural doc-<uuid v4>: aleatoria por construcao, nao contem o nome nem o id como componente. O not.toContain do nome permanece.",
+  "notaDeMetodo": "Advisory NOVO do registry pegou no primeiro CI da branch staging (o gate audita com excecoes documentadas; nanoid nao consta da allowlist). Cadeia 100% dev (vitest>vite>postcss>nanoid); fix semver-patch disponivel. Escolha: FIX real em vez de excecao na allowlist (postura mais forte; lockfile-only; runtime intocado). Suites re-rodadas como prova.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -253,7 +253,7 @@
       "chaveiro-bot/test/integration/dashboard_groupby.test.js": "bc2212d0cd28d00b70562b193f4f3da66c5e639ad58077e0f6fd9aad1689df08",
       "chaveiro-bot/test/integration/documentos.test.js": "6b3bca7cedf1bf0ffc9d0ead8d7252aff963e4957b0e4fb74d0a189cdb5e0776",
       "chaveiro-bot/test/integration/documentos_fallback_local.test.js": "91a84b5ffe5488ce6cf03eac5233a1096199ad0f3f90eea64e8f61c726fa9e0b",
-      "chaveiro-bot/test/integration/documentos_storage.test.js": "939f94d5462f392efc57e4840edc1b5cf34a9fe6bad322bf9c7e22b167b8d84b",
+      "chaveiro-bot/test/integration/documentos_storage.test.js": "cc906cef1d8931aadfcd44db32c2622199afc4eef1a24fb4b9c05618289dde17",
       "chaveiro-bot/test/integration/e2e_rbac_ponto.test.js": "ccf3c3afad9be2c26eeac36e474cae7da3bead5423403d7d494fc58dc088fdaa",
       "chaveiro-bot/test/integration/erro_nao_tratado.test.js": "2ca30bad5e8290ecdf5f1f0fa9c76d339d732491233bec53760fb4e6550d2127",
       "chaveiro-bot/test/integration/estoque_concorrencia.test.js": "ceb92fdc3856710a579b6181fedece94d8ad1234257228dac300c661599233cb",
@@ -608,7 +608,7 @@
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
       "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "5ebf0c528d550254c96d7d7d3a66e0e171518903abfd911b3fe65be5f6c06a17",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "79be6ab0d1b54320c53c4f9f757c9f72a4303013e3b4cdbd1cff44b0a05ebfcc",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "ae004d8648ca19425bc191302d58d3b66ea77dc53358b1350d9c0b0a38352780",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "24c80721875984770b71befe14dcac38352a71678d2340409f0b7182dcf8ee2c",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "0b63c4adc74e63e470db418cc3c3c1540e924fd759512eaa10a1fd411ceba406",
+      "docs/eos-v2/WRITE_SET.json": "0feba878ab78aede4dc7dcffb20ba68f75a5b5b638675cb288ef5a83d4c4f817",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "a1aef63b7c770184534af94d0162419eefb414842f33604f7e4aa83da6700978",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,11 +2524,11 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/documentos_storage.test.js",
+      "caminho": "chaveiro-bot/package-lock.json",
       "precisao": "BOUNDED",
-      "proposito": "assert estrutural doc-<uuidv4> no lugar do not.toContain(id) fragil",
+      "proposito": "npm audit fix: nanoid >=3.3.18 (transitiva dev-only)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "939f94d5462f392efc57e4840edc1b5cf34a9fe6bad322bf9c7e22b167b8d84b",
+      "shaNaDeclaracao": "bdbd0ef0c65e3f7d750876a7cf937f425d72e64ef91fab0852c5d6f68635ff75",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2539,6 +2539,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Assert estrutural doc-<uuidv4>.<ext> substitui not.toContain(id) flaky. Integracao do arquivo 10/10.",
+  "nota": "Bump cirurgico nanoid 3.3.16->3.3.18 (npm update nanoid; diff = 1 pacote). Tentativa via npm audit fix REVERTIDA por arrastar Prisma 7.9.1->7.10.0 (minor do ORM = fora do escopo desta fatia). audit-gate do repo APROVADO (0 bloqueantes); sanidade 29/29.",
   "aviso": "Declaracao ENCERRADA."
 }
