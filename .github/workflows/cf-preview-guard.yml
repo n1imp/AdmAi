@@ -1,0 +1,82 @@
+name: CF Preview Guard (one-shot)
+
+# STG-APP-DEPLOY-01 · D1 D-STG-APP-DEPLOY-EXEC-01 (thread 01a03b55, ponto 3):
+# a branch `staging` PRECISA estar excluída do preview nativo Git↔Cloudflare ANTES
+# de a branch existir no GitHub — senão o primeiro push dispara um build nativo em
+# corrida com o workflow (dois writers do mesmo alias; lição do incidente CSP
+# 2026-08-05). Como workflow_dispatch exige o arquivo na branch default (e ele não
+# está em master), este one-shot dispara por PUSH DE TAG TÉCNICA autorizada pelo
+# usuário (D2 literal: "Sim, push da tag").
+#
+#   git tag ops/cf-preview-guard-1 && git push origin ops/cf-preview-guard-1
+#
+# Protocolo (D1): GET (validar conta/projeto/source/production_branch) →
+# merge de `staging` em source.config.preview_branch_excludes (+ setting custom)
+# → PATCH → GET pós-condição. PRESERVA production_branch, includes/excludes
+# preexistentes e todo o resto. NUNCA imprime a resposta bruta (pode conter
+# configuração sensível) — só as asserções e a lista de excludes.
+
+on:
+  push:
+    tags: ['ops/cf-preview-guard-*']
+
+permissions: {}
+
+jobs:
+  exclude-staging-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Excluir `staging` do preview nativo (idempotente, provado)
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PROJETO: admai-painel
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/pages/projects/${PROJETO}"
+          hdr=(-H "Authorization: Bearer ${CF_TOKEN}" -H "Content-Type: application/json")
+
+          # 1) GET + validação de identidade do projeto (nunca ecoar o corpo bruto).
+          atual=$(curl -sf "${hdr[@]}" "$api")
+          ok=$(jq -r '.success' <<<"$atual")
+          [ "$ok" = "true" ] || { echo "::error::GET do projeto Pages falhou (success != true)."; exit 1; }
+          owner=$(jq -r '.result.source.config.owner // empty' <<<"$atual")
+          repo=$(jq -r '.result.source.config.repo_name // empty' <<<"$atual")
+          prod_branch=$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$atual")
+          echo "projeto=${PROJETO} owner=${owner} repo=${repo} production_branch=${prod_branch}"
+          [ "$owner" = "n1imp" ] || { echo "::error::owner do source não é n1imp — projeto errado, abortado."; exit 1; }
+          [ "$repo" = "AdmAi" ] || { echo "::error::repo do source não é AdmAi — projeto errado, abortado."; exit 1; }
+          [ "$prod_branch" = "master" ] || { echo "::error::production_branch != master (${prod_branch}) — não vou tocar, abortado."; exit 1; }
+
+          # 2) Merge NÃO-destrutivo: preserva includes/excludes; setting vira custom;
+          #    includes vazio ganha ['*'] (semântica: tudo, exceto os excludes).
+          novo_source=$(jq -c '
+            .result.source
+            | .config.preview_branch_excludes = (((.config.preview_branch_excludes // []) + ["staging"]) | unique)
+            | .config.preview_branch_includes = (if ((.config.preview_branch_includes // []) | length) == 0 then ["*"] else .config.preview_branch_includes end)
+            | .config.preview_deployment_setting = "custom"
+          ' <<<"$atual")
+
+          ja_excluida=$(jq -r '.result.source.config.preview_branch_excludes // [] | index("staging") != null' <<<"$atual")
+          if [ "$ja_excluida" = "true" ]; then
+            echo "staging JÁ está excluída — idempotente, nada a mudar."
+          else
+            resp=$(curl -sf -X PATCH "${hdr[@]}" "$api" --data "{\"source\": ${novo_source}}")
+            [ "$(jq -r '.success' <<<"$resp")" = "true" ] || { echo "::error::PATCH falhou (success != true)."; exit 1; }
+            echo "PATCH aplicado."
+          fi
+
+          # 3) Pós-condição: staging excluída E nada essencial mudou.
+          depois=$(curl -sf "${hdr[@]}" "$api")
+          jq -e '.result.source.config.preview_branch_excludes | index("staging") != null' <<<"$depois" >/dev/null \
+            || { echo "::error::pós-condição falhou: staging NÃO está em preview_branch_excludes."; exit 1; }
+          pb2=$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$depois")
+          [ "$pb2" = "master" ] || { echo "::error::production_branch mudou (${pb2}) — investigar JÁ."; exit 1; }
+          [ "$(jq -r '.result.source.config.owner' <<<"$depois")" = "n1imp" ] || { echo "::error::owner mudou."; exit 1; }
+          echo "PÓS-CONDIÇÃO OK — excludes agora: $(jq -c '.result.source.config.preview_branch_excludes' <<<"$depois")"
+          {
+            echo "## CF Preview Guard — OK"
+            echo "- projeto: ${PROJETO} (n1imp/AdmAi) · production_branch: master (inalterada)"
+            echo "- preview_branch_excludes: $(jq -c '.result.source.config.preview_branch_excludes' <<<"$depois")"
+            echo "- a branch \`staging\` pode ser criada com segurança (writer único = Deploy Staging)."
+          } >> "$GITHUB_STEP_SUMMARY"

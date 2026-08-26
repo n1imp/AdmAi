@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    # `staging` incluída [STG-APP-DEPLOY-01, D1 01a03b55 ponto 4]: dá `ci-ok` real
+    # para o gate do Deploy Staging e para o Wait-for-CI do Railway staging.
+    # O deploy de PRODUÇÃO não é afetado: deploy.yml só consome workflow_run de master.
+    branches: [main, master, staging]
   pull_request:
     branches: [main, master]
 

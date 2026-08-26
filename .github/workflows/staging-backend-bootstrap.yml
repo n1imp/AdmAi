@@ -1,0 +1,78 @@
+name: Staging Backend Bootstrap
+
+# STG-APP-DEPLOY-01 · D1 D-STG-APP-DEPLOY-EXEC-01 (thread 01a03b55, ponto 2).
+# Bootstrap BIFÁSICO do backend staging em projeto Railway DEDICADO `admai-staging`
+# (nunca localiza/toca o projeto de produção). Custo do serviço E do Redis foram
+# AUTORIZADOS pelo usuário (D2 literal via AskUserQuestion) — o input confirm_cost
+# registra essa autorização em cada dispatch.
+#
+#   phase=prepare : projeto + environment staging + service SEM source + Redis +
+#                   domínio + vars NÃO-secretas. Nenhum deploy dispara.
+#   phase=connect : (depois que o USUÁRIO preencher as vars SECRETAS no dashboard)
+#                   conecta n1imp/AdmAi#staging root=chaveiro-bot + healthcheck.
+#
+# Toda a lógica (introspecção fail-closed, guards anti-produção, inventário de IDs,
+# nunca ecoar token/valores) vive em tools/railway-staging-bootstrap.mjs — testada
+# por selftest com fetch injetado (7/7).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cost:
+        description: 'Digite "yes" confirmando a autorização D2 de custo (serviço + Redis staging)'
+        required: true
+      phase:
+        description: 'prepare | connect'
+        required: true
+        default: 'prepare'
+      project_id:
+        description: '(connect/rerun) projectId do output do prepare'
+        required: false
+      environment_id:
+        description: '(connect) environmentId do output do prepare'
+        required: false
+      service_id:
+        description: '(connect) serviceId do output do prepare'
+        required: false
+
+permissions: {}
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard de autorização (D2 registrado no dispatch)
+        run: |
+          set -eu
+          if [ "${{ inputs.confirm_cost }}" != "yes" ]; then
+            echo "::error::confirm_cost != 'yes' — sem a confirmação literal do D2 de custo, nada é criado."
+            exit 1
+          fi
+          case "${{ inputs.phase }}" in prepare|connect) ;; *)
+            echo "::error::phase deve ser prepare ou connect."; exit 1;; esac
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Selftest do bootstrap (fetch injetado — API real intocada)
+        run: node tools/railway-staging-bootstrap.mjs --selftest
+
+      - name: Executar fase
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -eu
+          ARGS="--phase=${{ inputs.phase }}"
+          [ -n "${{ inputs.project_id }}" ] && ARGS="$ARGS --project-id=${{ inputs.project_id }}"
+          [ -n "${{ inputs.environment_id }}" ] && ARGS="$ARGS --environment-id=${{ inputs.environment_id }}"
+          [ -n "${{ inputs.service_id }}" ] && ARGS="$ARGS --service-id=${{ inputs.service_id }}"
+          node tools/railway-staging-bootstrap.mjs $ARGS | tee saida.txt
+          {
+            echo "## Staging Backend Bootstrap — ${{ inputs.phase }}"
+            echo '```'
+            cat saida.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

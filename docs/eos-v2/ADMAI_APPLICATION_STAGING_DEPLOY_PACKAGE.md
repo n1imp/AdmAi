@@ -1,17 +1,36 @@
 # ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE — EXTERNAL_DEPLOY_PACKAGE
 
-**[STG-APP-STAGING-01 · D1 `01a038e5`]** · **Alvo:** criar `BACKEND_STAGING_URL` + `FRONTEND_STAGING_URL`
-reais, isolados de produção, apontando ao Supabase **admai-staging** (`qsuufuulxfkkeasgxhcv`).
-**PROIBIDO:** produção (`disljhkypaxpyzvbooge`, projetos AdmAi/Railway prod/domínios prod).
-Este pacote contém **click-paths exatos** — o operador não precisa descobrir nada.
+**[STG-APP-STAGING-01 · D1 `01a038e5`] + [STG-APP-DEPLOY-01 · D1 `01a03b55`]** · **Alvo:** criar
+`BACKEND_STAGING_URL` + `FRONTEND_STAGING_URL` reais, isolados de produção, apontando ao Supabase
+**admai-staging** (`qsuufuulxfkkeasgxhcv`). **PROIBIDO:** produção.
 
-Arquitetura (D1, vinculante): **C** — backend = serviço **Railway separado** (branch `staging`);
-frontend = **branch preview fixa `staging`** do projeto Cloudflare Pages `admai-painel`
-(`https://staging.admai-painel.pages.dev`), publicada **exclusivamente** pelo workflow
-`Deploy Staging` (preview nativo da branch `staging` **desligado** — um único writer).
+Arquitetura (D1, vinculante): **C** — backend = **projeto Railway DEDICADO `admai-staging`**
+(environment `staging`, service sem source até os secrets existirem — bifásico); frontend =
+**branch preview fixa `staging`** do projeto Pages `admai-painel`, publicada **exclusivamente**
+pelo workflow `Deploy Staging` (preview nativo da `staging` excluído ANTES do primeiro push).
 
-> Custo: o serviço Railway staging pode gerar cobrança nova ⇒ criação é **decisão D2 do usuário**
-> (`BLOCKED_D2_COST` até o OK). Cloudflare branch preview é grátis. Nada mais custa.
+> **D2 do usuário (AskUserQuestion, literal, 2026-08-25):** custo do serviço Railway **E** do Redis
+> staging AUTORIZADOS; push da branch `staging` AUTORIZADO; push da tag técnica one-shot AUTORIZADO;
+> secrets Cloudflare de REPO reusados; credenciais do staging via `.env.staging` local.
+
+---
+
+## ORDEM VINCULANTE (D1 `01a03b55` — automatizada; substitui os click-paths manuais abaixo)
+
+| # | Passo | Executor | Comando/ação |
+|---|---|---|---|
+| 1 | ~~Autorizar Redis + tag~~ | usuário | **FEITO** (D2 literal acima) |
+| 2 | Excluir `staging` do preview nativo **antes** da branch existir | Claude (`gh`) | `git tag ops/cf-preview-guard-1 && git push origin ops/cf-preview-guard-1` → workflow `CF Preview Guard` (GET→PATCH→GET provado) |
+| 3 | Criar a branch | Claude (`gh`) | `git push origin HEAD:refs/heads/staging` → aguardar `ci-ok` verde (CI agora roda em staging). Nenhum deploy de produção dispara (deploy.yml só consome master) |
+| 4 | Backend fase 1 (sem source) | Claude (`gh`) | `gh workflow run staging-backend-bootstrap.yml --ref staging -f confirm_cost=yes -f phase=prepare` → projeto dedicado + env staging + service + Redis + domínio + vars não-secretas; **inventário de IDs no summary** |
+| 5 | Vars SECRETAS do service | **usuário** | Railway → projeto `admai-staging` → service → Variables: `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `API_TOKEN`, `RESEND_API_KEY` (valores do admai-staging; novos — nunca de produção) |
+| 6 | Backend fase 2 (conectar) | Claude (`gh`) | `gh workflow run ... -f phase=connect -f project_id=.. -f environment_id=.. -f service_id=..` → conecta `n1imp/AdmAi#staging` root `chaveiro-bot`; deploy dispara; boot só passa com o anti-prod guard verde |
+| 7 | Provar backend | Claude | `GET https://<domínio>/health` → 200 `database: ok` |
+| 8 | Apontar o frontend | Claude (`gh`) | `gh variable set VITE_API_URL_STAGING -b "https://<domínio>/api"` → re-run `Deploy Staging` (gate ci-ok + guards + publish `--branch=staging`) |
+| 9 | Provas finais | Claude | `.env.staging` (usuário) → seed A/B → bucket `--staging` → validate:staging → negative-controls (H-mut/I) → browser real §32 (login, refresh cross-site 4b) → `e2e/staging.mjs` + viewports |
+
+Os passos manuais antigos abaixo ficam como **fallback** (se algum workflow reportar
+`PASSO MANUAL EXATO`, é o texto dele que vale).
 
 ---
 

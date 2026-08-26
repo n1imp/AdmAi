@@ -45,8 +45,10 @@ sintéticas de teste, sem valor real).
 
 | Nome | Classe | Observação |
 |---|---|---|
-| `CLOUDFLARE_API_TOKEN_STAGING` | **PROVIDER_SECRET** | escopo Pages: publica o preview `staging` do projeto `admai-painel`. Sufixo `_STAGING` obrigatório [REVISOR `01a038fc`]: nome genérico cairia no fallback de secrets de repo/org (produção) quando ausente no Environment |
-| `CLOUDFLARE_ACCOUNT_ID_STAGING` | PROVIDER_SECRET | id da conta (não é segredo forte, mas vive no store; mesmo racional do sufixo) |
+| `CLOUDFLARE_API_TOKEN` (repo) | **PROVIDER_SECRET** | **[AMEND por D2 literal do usuário, 2026-08-25: "Reusar os do repo"]** O plano anterior exigia `*_STAGING` em Environment próprio [REVISOR `01a038fc`]; o usuário decidiu reusar o secret de REPO existente (mesmo token que já publica previews deste projeto Pages). **Risco residual documentado (D1 `01a03b55`)**: o token compartilhado continua capaz de afetar produção se o workflow for alterado — as proteções reais são o guard nunca-master, `--branch=staging` fixo, guards de config/artefato e o gate `ci-ok` |
+| `CLOUDFLARE_ACCOUNT_ID` (repo) | PROVIDER_SECRET | idem (reuso por D2) |
+| `RAILWAY_TOKEN` (repo) | **PROVIDER_SECRET** | usado SÓ pelo `staging-backend-bootstrap.yml` (projeto DEDICADO `admai-staging`; guards anti-produção; nunca ecoado). Precisa ser token de conta/team — project-token de produção falha explícito |
+| `VITE_API_URL_STAGING` | PUBLIC_CONFIG | repo **VARIABLE** (`vars.`), não secret — é URL pública; `gh variable set VITE_API_URL_STAGING -b https://<backend>/api` |
 
 ## Testes/fixtures (nunca produção; sem valor real)
 

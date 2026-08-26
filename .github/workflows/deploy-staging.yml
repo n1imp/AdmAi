@@ -1,20 +1,22 @@
 name: Deploy Staging
 
-# STG-APP-STAGING-01 (D1 thread 01a038e5): este workflow é o ÚNICO WRITER do
-# preview fixo `staging` do painel (o preview nativo Git↔Cloudflare da branch
-# `staging` fica DESLIGADO no dashboard — dois pipelines escrevendo o mesmo alias
-# criam corrida e config divergente; foi exatamente o incidente CSP de 2026-08-05).
+# STG-APP-STAGING-01 (D1 01a038e5) + STG-APP-DEPLOY-01 (D1 01a03b55): este workflow
+# é o ÚNICO WRITER do preview fixo `staging` do painel. O preview nativo da branch
+# `staging` é excluído ANTES do primeiro push pelo one-shot cf-preview-guard.yml
+# (tag técnica autorizada por D2) — aqui só VERIFICAMOS a exclusão (defesa em
+# profundidade sem segundo writer de config).
 #
-# Publica SOMENTE com `--branch=staging` (branch de produção do projeto Pages é
-# `master`; um deploy de branch preview jamais promove o domínio de produção).
-# O backend staging NÃO é deployado aqui: é serviço Railway separado com
-# integração nativa na branch `staging` (ver ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE).
+# SECRETS [D2 literal do usuário via AskUserQuestion: "Reusar os do repo"]:
+# usa deliberadamente os secrets de REPO CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID
+# (os mesmos que já publicam previews deste projeto). A proteção contra publicar
+# produção NÃO é o nome do secret: é o guard nunca-master + `--branch=staging` fixo
+# + guards de config/artefato + gate ci-ok. Risco residual documentado em
+# STG_APP_SECRET_MATRIX.md. VITE_API_URL_STAGING é PUBLIC_CONFIG → repo VARIABLE
+# (vars.VITE_API_URL_STAGING), com validação fail-closed.
 #
-# Secrets vêm do GitHub Environment `staging` (store EXCLUSIVO — o deploy.yml de
-# produção não o enxerga): VITE_API_URL_STAGING, CLOUDFLARE_API_TOKEN_STAGING,
-# CLOUDFLARE_ACCOUNT_ID_STAGING. [REVISOR 01a038fc achado 4] Sufixo _STAGING de
-# propósito: nomes genéricos cairiam no FALLBACK de secrets de repositório/organização
-# (os de produção) quando ausentes no Environment — o sufixo torna isso impossível.
+# GATE ci-ok [D1 01a03b55 ponto 4]: o publish só ocorre com o check `ci-ok` VERDE
+# para o SHA exato (push dispara CI e este workflow em paralelo — sem o gate, um
+# push vermelho publicaria staging).
 
 on:
   workflow_dispatch:
@@ -24,6 +26,10 @@ on:
 concurrency:
   group: deploy-staging
   cancel-in-progress: true
+
+permissions:
+  checks: read
+  contents: read
 
 jobs:
   deploy-frontend-staging:
@@ -35,21 +41,57 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Guard 2 — allowlist/denylist de ref do Supabase na CONFIG do build:
-      # o VITE_API_URL de staging não pode conter o ref/hosts de produção e o
-      # repositório desta branch não pode redirecionar o alvo para produção.
+      # Guard 2 — config: VITE_API_URL_STAGING (repo VARIABLE) presente e não-produção.
       - name: Guard anti-produção (config)
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_API_URL: ${{ vars.VITE_API_URL_STAGING }}
         run: |
           set -eu
           if [ -z "${VITE_API_URL:-}" ]; then
-            echo "::error::VITE_API_URL_STAGING ausente no Environment staging."; exit 1; fi
+            echo "::error::vars.VITE_API_URL_STAGING ausente — defina com gh variable set VITE_API_URL_STAGING -b https://<backend-staging>/api (após o bootstrap do backend)."; exit 1; fi
           case "$VITE_API_URL" in
             *disljhkypaxpyzvbooge*|*api.chaveirobot.com.br*|*admai-production.up.railway.app*)
               echo "::error::VITE_API_URL_STAGING aponta para PRODUÇÃO — abortado."; exit 1;;
           esac
           echo "guard config ok (alvo não é produção)."
+
+      # Guard 3 — VERIFICAR (read-only) que `staging` está excluída do preview nativo.
+      # A EXCLUSÃO em si é feita pelo one-shot cf-preview-guard.yml ANTES do primeiro
+      # push (D1: writer único de config; aqui só se prova a pós-condição).
+      - name: Verificar exclusão do preview nativo (read-only)
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          atual=$(curl -sf -H "Authorization: Bearer ${CF_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/pages/projects/admai-painel")
+          jq -e '.result.source.config.preview_branch_excludes | index("staging") != null' <<<"$atual" >/dev/null \
+            || { echo "::error::branch staging NÃO está excluída do preview nativo — rode o cf-preview-guard (tag ops/cf-preview-guard-*) antes de publicar."; exit 1; }
+          pb=$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$atual")
+          [ "$pb" = "master" ] || { echo "::error::production_branch != master (${pb}) — investigar."; exit 1; }
+          echo "exclusão confirmada; production_branch=master."
+
+      # Gate ci-ok — espera o check do SHA exato ficar VERDE (até ~15 min).
+      - name: Gate ci-ok (mesmo SHA)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          sha="${{ github.sha }}"
+          echo "aguardando check ci-ok @ ${sha}..."
+          for i in $(seq 1 45); do
+            estado=$(gh api "repos/${{ github.repository }}/commits/${sha}/check-runs" \
+              --jq '[.check_runs[] | select(.name == "ci-ok")] | if length == 0 then "ausente" else .[0].status + ":" + (.[0].conclusion // "pendente") end' 2>/dev/null || echo "erro")
+            echo "  tentativa ${i}: ${estado}"
+            case "$estado" in
+              completed:success) echo "ci-ok VERDE."; exit 0;;
+              completed:*) echo "::error::ci-ok concluiu SEM sucesso (${estado}) — publish bloqueado."; exit 1;;
+            esac
+            sleep 20
+          done
+          echo "::error::ci-ok não concluiu a tempo — publish bloqueado (re-rode quando o CI ficar verde)."
+          exit 1
 
       - uses: actions/setup-node@v6
         with:
@@ -61,21 +103,21 @@ jobs:
         run: npm ci
         working-directory: chaveiro-painel
 
-      # Guard 3 (fail-closed, mesmo binário do dev local): build:staging roda
+      # Guard 4 (fail-closed, mesmo binário do dev local): build:staging roda
       # scripts/guard-frontend-build.mjs ANTES do vite build — https obrigatório,
       # path EXATAMENTE /api (contrato API_BASE_WITH_PREFIX), nega produção/
       # localhost/placeholder/vazio. Depois, vite build + gerar-headers (CSP).
       - name: Build staging (guard + build + CSP)
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_API_URL: ${{ vars.VITE_API_URL_STAGING }}
         run: npm run build:staging
         working-directory: chaveiro-painel
 
-      # Guard 4 — o ARTEFATO buildado precisa provar o alvo: o connect-src do
+      # Guard 5 — o ARTEFATO buildado precisa provar o alvo: o connect-src do
       # _headers deve conter a origem staging da API e NÃO conter produção.
       - name: Guard anti-produção (artefato)
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_API_URL: ${{ vars.VITE_API_URL_STAGING }}
         run: |
           set -eu
           test -f chaveiro-painel/dist/_headers
@@ -90,8 +132,8 @@ jobs:
       - name: Publish preview `staging`
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_STAGING }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_STAGING }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # --branch=staging é OBRIGATÓRIO e fixo: publica o alias
           # staging.admai-painel.pages.dev, nunca o domínio de produção.
           command: pages deploy chaveiro-painel/dist --project-name=admai-painel --branch=staging
