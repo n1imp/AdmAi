@@ -103,8 +103,9 @@ describe('POST /api/auth/login/2fa/recuperar: twoFactorLimiter (5/15min) via pre
     storeState.hits.clear();
     const { app } = criarApp();
 
-    // Sequencial de propósito (ver comentário do teste anterior); IP simulado
-    // DIFERENTE a cada tentativa pelo mesmo motivo (isolar de `authLimiter`, EV-070).
+    // Sequencial de propósito (ver comentário do teste anterior); a variação do IP
+    // é herança inócua do desenho antigo — o authLimiter NÃO alcança esta rota
+    // (mount exato; ver cabeçalho).
     for (let i = 0; i < 5; i += 1) {
       await request(app)
         .post('/api/auth/login/2fa/recuperar')

@@ -59505,9 +59505,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Residuais do DELTA fechados; selftest 13/13; teste 2FA 3/3; zero comentario stale.",
       "declaradoEm": "2026-08-26T01:58:32.671Z"
+    },
+    {
+      "sliceId": "STG-APP-DEPLOY-REV3",
+      "titulo": "Ultimo comentario stale do teste 2FA (linha 107) apontado pelo DELTA-2",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Linha 107 corrigida; todas as mencoes de authLimiter no arquivo verificadas como contrato vigente/historico; 3/3; prettier limpo.",
+      "declaradoEm": "2026-08-26T02:00:29.432Z"
     }
   ],
-  "geradoEm": "2026-08-26T01:58:34.757Z",
+  "geradoEm": "2026-08-26T02:01:10.879Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
