@@ -41,6 +41,9 @@ on:
       service_id:
         description: '(connect) serviceId do output do prepare'
         required: false
+      workspace_id:
+        description: '(prepare) workspaceId — só se o token tiver mais de um workspace'
+        required: false
 
 # contents:read é o mínimo p/ o checkout do repo privado (permissions vazio quebrava
 # o actions/checkout com "repository not found" — visto no run de registro).
@@ -88,6 +91,7 @@ jobs:
           [ -n "${{ inputs.project_id }}" ] && ARGS="$ARGS --project-id=${{ inputs.project_id }}"
           [ -n "${{ inputs.environment_id }}" ] && ARGS="$ARGS --environment-id=${{ inputs.environment_id }}"
           [ -n "${{ inputs.service_id }}" ] && ARGS="$ARGS --service-id=${{ inputs.service_id }}"
+          [ -n "${{ inputs.workspace_id }}" ] && ARGS="$ARGS --workspace-id=${{ inputs.workspace_id }}"
           node tools/railway-staging-bootstrap.mjs $ARGS | tee saida.txt
           {
             echo "## Staging Backend Bootstrap — ${{ inputs.phase }}"

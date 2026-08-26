@@ -117,8 +117,30 @@ export function guardaProducao(rotulo, valor) {
   }
 }
 
+/** Resolve o workspace do token (projectCreate exige workspaceId — visto no run real).
+ *  Único ⇒ usa; múltiplos/nenhum ⇒ falha explícita pedindo --workspace-id. */
+export async function resolverWorkspace(gql, workspaceIdFlag = null) {
+  if (workspaceIdFlag) return workspaceIdFlag;
+  const r = await gql(`query { me { workspaces { id name } } }`, {}, { permitirErros: true });
+  const ws = r.data?.me?.workspaces ?? [];
+  if (r.errors?.length || !ws.length) {
+    falhar(
+      `Nao consegui listar workspaces do token${r.errors?.length ? `: ${r.errors.map((e) => e.message).join(' | ')}` : ' (lista vazia)'}.`,
+      'Descubra o workspaceId no dashboard Railway (URL do workspace) e re-rode com --workspace-id=<id> (no dispatch: input workspace_id).'
+    );
+  }
+  if (ws.length > 1) {
+    falhar(
+      `Token tem ${ws.length} workspaces: ${ws.map((w) => `${w.name}=${w.id}`).join(', ')}. Escolha explicitamente.`,
+      'Re-rode com --workspace-id=<id> do workspace onde o staging deve viver (no dispatch: input workspace_id).'
+    );
+  }
+  guardaProducao('workspace', ws[0].name);
+  return ws[0].id;
+}
+
 // ── PREPARE ──────────────────────────────────────────────────────────────────
-export async function prepare(gql, { projectId = null } = {}) {
+export async function prepare(gql, { projectId = null, workspaceId = null } = {}) {
   const inv = { projectId, environmentId: null, serviceId: null, redisServiceId: null, dominio: null };
   const disp = await mutationsDisponiveis(gql);
   exigirMutations(disp, [
@@ -131,9 +153,10 @@ export async function prepare(gql, { projectId = null } = {}) {
 
   // 1) Projeto DEDICADO (nunca listar/associar o de produção). Rerun: --project-id.
   if (!inv.projectId) {
+    const wsId = await resolverWorkspace(gql, workspaceId);
     const r = await gql(
       `mutation($input: ProjectCreateInput!) { projectCreate(input: $input) { id name environments { edges { node { id name } } } } }`,
-      { input: { name: NOME_PROJETO, description: 'AdmAi application STAGING (isolado; nunca producao)' } }
+      { input: { name: NOME_PROJETO, description: 'AdmAi application STAGING (isolado; nunca producao)', workspaceId: wsId } }
     );
     const p = r.data?.projectCreate;
     if (!p?.id) falhar('projectCreate nao devolveu id.');
@@ -309,9 +332,23 @@ export async function autoteste() {
     }
   });
 
+  await caso('multiplos workspaces sem --workspace-id falha EXPLICITO listando nomes', async () => {
+    const gql = criarCliente('t', respostas({
+      __schema: SCHEMA_OK,
+      workspaces: { data: { me: { workspaces: [{ id: 'w1', name: 'Pessoal' }, { id: 'w2', name: 'Empresa' }] } } },
+    }));
+    try {
+      await prepare(gql, {});
+      return false;
+    } catch (e) {
+      return /2 workspaces/.test(e.message) && /workspace-id/.test(e.manual ?? '');
+    }
+  });
+
   await caso('prepare feliz devolve inventario completo (projeto dedicado, env staging, sem source)', async () => {
     const gql = criarCliente('t', respostas({
       __schema: SCHEMA_OK,
+      workspaces: { data: { me: { workspaces: [{ id: 'w1', name: 'n1imp workspace' }] } } },
       projectCreate: { data: { projectCreate: { id: 'p1', name: 'admai-staging', environments: { edges: [{ node: { id: 'e1', name: 'production' } }] } } } },
       environmentCreate: { data: { environmentCreate: { id: 'e2', name: 'staging' } } },
       serviceCreate: { data: { serviceCreate: { id: 's1', name: 'admai-staging' } } },
@@ -409,7 +446,7 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
   const gql = criarCliente(token);
   try {
     if (fase === 'prepare') {
-      const inv = await prepare(gql, { projectId: flag('project-id') });
+      const inv = await prepare(gql, { projectId: flag('project-id'), workspaceId: flag('workspace-id') });
       console.log('PREPARE_OK ' + JSON.stringify(inv));
       console.log(`\nPROXIMOS PASSOS:\n 1. Dashboard Railway -> projeto ${NOME_PROJETO} -> service ${NOME_SERVICE} -> Variables:`);
       console.log(`    preencher (valores do admai-staging; novos, nunca de producao): ${SECRETAS_OBRIGATORIAS.join(', ')}`);
