@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-DEPLOY-REV3",
-  "titulo": "Ultimo comentario stale do teste 2FA (linha 107) apontado pelo DELTA-2",
+  "sliceId": "STG-APP-DEPLOY-REV4",
+  "titulo": "Redis idempotente no re-prepare (DELTA-3): service Redis existente => zero templateDeploy (sem 2o Redis faturavel)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T02:00:29.432Z",
+  "declaradoEm": "2026-08-26T02:02:53.093Z",
   "baseCommitPorLane": {
-    "HARNESS": "d7fb870d00ad3d75416348a0004c34811ede1be7"
+    "HARNESS": "2428df2b87bd0d080f79cbd2e196ae8b4818a87b"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Meu grep de 'zero stale' buscou frases diferentes da remanescente; o REVISOR achou a linha 107 ('isolar de authLimiter'). Corrigida como heranca inocua, igual ao teste 1.",
+  "notaDeMetodo": "REVISOR reproduziu: apos o usuario criar o Redis (passo 5), o re-prepare chamava templateDeployV2 de novo — 2o recurso faturavel fora da autorizacao. Fix: adocao/preflight detecta service chamado Redis e o bloco de template so roda na AUSENCIA; selftest prova zero templateDeploy* com Redis existente.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -119,7 +119,7 @@
       "chaveiro-bot/scripts/staging-rls-negative-control.mjs": "50918365f0bca668beb1f66e96e4f3a486147d67bfaf370c470a91d86b86cc78",
       "chaveiro-bot/scripts/validate-rls-staging.mjs": "0a4ddbe394232ea2bd173b99861ce95eefc6f78dde0dd34b8afc5a6b4bc5fe2b",
       "chaveiro-bot/scripts/validate-staging.mjs": "5dfd6681e988e9b3006ce6f0fdd3b506f24483322bada4f50fc604e1672ec7e9",
-      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "73777ece9b76f59f56e80b08c84b709c43910acd8ef982ceaf74a53df2ee9705",
+      "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js": "22214c1c2518569be2a765e05f00e5ca43c0e84fc031eee3ed246d67240bf858",
       "chaveiro-bot/src/__tests__/security-headers.test.js": "bd600a8f9d9e8dfca48cfecb345d730032ce7af76d0f049b7135260aa3762b8a",
       "chaveiro-bot/src/app.js": "9b7cd5d7446e64405e17707f9b8aa14a788cd8ca056fafddf53fafa43b9f6495",
       "chaveiro-bot/src/config/__tests__/env.test.js": "acdd7260aaef3845c9549fb416190ed9d68c50780983451a6b421fe5fa5e57a0",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "ca91f985ce2a4668c4ad414229df28d94472a578be716d70e86a27f6f0e0ad7c",
+      "docs/agent-environment/AGENT_DECISIONS.md": "571fac91ae8cb95bfb1a02bf798038a7ca199e7421cee29bed3ec499193d670a",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d42f40d09ef2fc95b8ab956edef385863988c7a8bb74098c163d3d09f1b07e38",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "983b85bbfbc62e104150e0af3b5a70c96182f2dd11ddff2a61723241ef167ac8",
+      "docs/eos-v2/WRITE_SET.json": "c397ea39fc7bf4ee3067fc5cb679b53a9ccd63a9c496b12257085f795ba9fa9f",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b8beaba401d0f83769298146ae3536f7426d0ebed0ab669f050afbb2b2beca97",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2524,20 +2524,20 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/__tests__/recuperacao2faRateLimit.test.js",
+      "caminho": "tools/railway-staging-bootstrap.mjs",
       "precisao": "BOUNDED",
-      "proposito": "linha 106-107 atualizada (heranca inocua; authLimiter nao alcanca a rota)",
+      "proposito": "deteccao de service Redis existente + skip do template + selftest",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "73777ece9b76f59f56e80b08c84b709c43910acd8ef982ceaf74a53df2ee9705",
+      "shaNaDeclaracao": "8327fb3d34a6142811b26b318f54c8375de35bb9aa7aa53a053f118e9f7d59a7",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "registro DELTA-2 + este fecho",
+      "proposito": "rodada DELTA-3",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ca91f985ce2a4668c4ad414229df28d94472a578be716d70e86a27f6f0e0ad7c",
+      "shaNaDeclaracao": "571fac91ae8cb95bfb1a02bf798038a7ca199e7421cee29bed3ec499193d670a",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2548,6 +2548,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Linha 107 corrigida; todas as mencoes de authLimiter no arquivo verificadas como contrato vigente/historico; 3/3; prettier limpo.",
+  "nota": "Redis idempotente: service existente => zero templateDeploy (selftest 14/14).",
   "aviso": "Declaracao ENCERRADA."
 }

@@ -264,8 +264,14 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
       const alvo = envs.find((e) => /^staging$/i.test(e.name)) ?? (envs.length === 1 ? envs[0] : null);
       inv.environmentId = alvo?.id ?? null;
       nomeEnvAlvo = alvo?.name ?? null;
-      const svc = (no.services?.edges ?? []).map((e) => e.node).find((s) => s.name === NOME_SERVICE);
+      const servicos = (no.services?.edges ?? []).map((e) => e.node);
+      const svc = servicos.find((s) => s.name === NOME_SERVICE);
       if (svc) inv.serviceId = svc.id;
+      // [REVISOR 01a03bb9 DELTA-3] Redis JÁ criado (pelo template de um run anterior
+      // ou pelo usuário no passo 5) ⇒ o bloco de template NÃO roda de novo — um
+      // segundo Redis seria recurso FATURÁVEL fora da autorização D2.
+      const redis = servicos.find((s) => /^redis$/i.test(s.name));
+      if (redis) inv.redis = `ja-existente (service ${redis.id})`;
     };
     if (inv.projectId) {
       adotarDoNo(await verificarIdentidade(gql, { projectId: inv.projectId }));
@@ -327,7 +333,7 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
     //    tentativa única; QUALQUER recusa vira PENDÊNCIA MANUAL BARULHENTA (nunca
     //    silenciosa) SEM abortar o resto do prepare: domínio+vars seguem, e a var
     //    REDIS_URL referencia o service "Redis" que o usuário criar no dashboard.
-    {
+    if (!inv.redis) {
       const m = ['templateDeployV2', 'templateDeploy'].find((x) => disp.has(x));
       let criou = false;
       if (m) {
@@ -618,6 +624,27 @@ export async function autoteste() {
     const inv = await prepare(gql, {});
     return criouProjeto === false && criouService === false && inv.projectId === 'p-orfao'
       && inv.serviceId === 's-orfao' && /MANUAL_PENDENTE/.test(inv.redis) && inv.dominio === 'orfao.up.railway.app';
+  });
+
+  await caso('[01a03bb9-DELTA3] re-prepare com service Redis JA EXISTENTE nao chama templateDeploy (sem 2o Redis faturavel)', async () => {
+    let chamouTemplate = 0;
+    const gql = criarCliente('t', async (_u, { body }) => {
+      const { query } = JSON.parse(body);
+      if (/templateDeploy/.test(query)) chamouTemplate += 1;
+      const mapa = {
+        __schema: SCHEMA_OK,
+        'project(': NO_PROJETO_OK(
+          [{ id: 'e-stg', name: 'staging' }],
+          [{ id: 's1', name: 'admai-staging' }, { id: 's-redis', name: 'Redis' }]
+        ),
+        serviceDomainCreate: { data: { serviceDomainCreate: { domain: 'ok.up.railway.app' } } },
+        variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
+      };
+      for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    });
+    const inv = await prepare(gql, { projectId: 'p-ok' });
+    return chamouTemplate === 0 && /ja-existente/.test(inv.redis ?? '');
   });
 
   await caso('GUARD anti-producao morde (dominio que casa producao)', async () => {
