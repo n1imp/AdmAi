@@ -349,24 +349,23 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
         : `MANUAL_PENDENTE: Dashboard Railway -> projeto ${NOME_PROJETO} -> environment staging -> Create -> Database -> Redis (nome do service DEVE ser "Redis" para a referencia \${{Redis.REDIS_URL}}).`;
     }
 
-    // 5) Domínio público do service (necessário p/ PUBLIC_URL e VITE_API_URL_STAGING).
+    // 5) Domínio público do service — QUERY-FIRST [gap de idempotência visto no run
+    //    real 32923201719: create-first acumulava um domínio novo (-8643) a cada
+    //    re-prepare]. Existente ⇒ reusa; só cria quando não há nenhum.
     {
-      const r = await gql(
-        `mutation($input: ServiceDomainCreateInput!) { serviceDomainCreate(input: $input) { domain } }`,
-        { input: { environmentId: inv.environmentId, serviceId: inv.serviceId } },
+      const q = await gql(
+        `query($environmentId: String!, $serviceId: String!) { domains(environmentId: $environmentId, serviceId: $serviceId) { serviceDomains { domain } } }`,
+        { environmentId: inv.environmentId, serviceId: inv.serviceId },
         { permitirErros: true }
       );
-      inv.dominio = r.data?.serviceDomainCreate?.domain ?? null;
+      inv.dominio = q.data?.domains?.serviceDomains?.[0]?.domain ?? null;
       if (!inv.dominio) {
-        // Rerun idempotente: domínio pode já existir — consultar.
-        const q = await gql(
-          `query($environmentId: String!, $serviceId: String!) { domains(environmentId: $environmentId, serviceId: $serviceId) { serviceDomains { domain } } }`,
-          { environmentId: inv.environmentId, serviceId: inv.serviceId },
-          { permitirErros: true }
+        const r = await gql(
+          `mutation($input: ServiceDomainCreateInput!) { serviceDomainCreate(input: $input) { domain } }`,
+          { input: { environmentId: inv.environmentId, serviceId: inv.serviceId } }
         );
-        inv.dominio = q.data?.domains?.serviceDomains?.[0]?.domain ?? null;
+        inv.dominio = r.data?.serviceDomainCreate?.domain ?? falhar('serviceDomainCreate nao devolveu domain.');
       }
-      if (!inv.dominio) falhar('serviceDomainCreate/domains nao devolveu domain.');
       guardaProducao('dominio gerado', inv.dominio);
     }
 
@@ -663,25 +662,28 @@ export async function autoteste() {
       && inv.serviceId === 's-orfao' && /MANUAL_PENDENTE/.test(inv.redis) && inv.dominio === 'orfao.up.railway.app';
   });
 
-  await caso('[01a03bb9-DELTA3] re-prepare com service Redis JA EXISTENTE nao chama templateDeploy (sem 2o Redis faturavel)', async () => {
+  await caso('[01a03bb9-DELTA3 + dominio] re-prepare com Redis E dominio existentes: zero templateDeploy, zero serviceDomainCreate (reusa)', async () => {
     let chamouTemplate = 0;
+    let chamouDomainCreate = 0;
     const gql = criarCliente('t', async (_u, { body }) => {
       const { query } = JSON.parse(body);
       if (/templateDeploy/.test(query)) chamouTemplate += 1;
+      if (/serviceDomainCreate/.test(query)) chamouDomainCreate += 1;
       const mapa = {
         __schema: SCHEMA_OK,
         'project(': NO_PROJETO_OK(
           [{ id: 'e-stg', name: 'staging' }],
           [{ id: 's1', name: 'admai-staging' }, { id: 's-redis', name: 'Redis' }]
         ),
-        serviceDomainCreate: { data: { serviceDomainCreate: { domain: 'ok.up.railway.app' } } },
+        'domains(': { data: { domains: { serviceDomains: [{ domain: 'reusado.up.railway.app' }] } } },
         variableCollectionUpsert: { data: { variableCollectionUpsert: true } },
       };
       for (const [k, v] of Object.entries(mapa)) if (query.includes(k)) return { status: 200, json: async () => v };
       return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
     });
     const inv = await prepare(gql, { projectId: 'p-ok' });
-    return chamouTemplate === 0 && /ja-existente/.test(inv.redis ?? '');
+    return chamouTemplate === 0 && /ja-existente/.test(inv.redis ?? '')
+      && chamouDomainCreate === 0 && inv.dominio === 'reusado.up.railway.app';
   });
 
   await caso('GUARD anti-producao morde (dominio que casa producao)', async () => {
