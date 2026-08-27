@@ -358,11 +358,19 @@ export async function prepare(gql, { projectId = null, workspaceId = null } = {}
     //    real 32923201719: create-first acumulava um domínio novo (-8643) a cada
     //    re-prepare]. Existente ⇒ reusa; só cria quando não há nenhum.
     {
+      /* [AUD2-P1] A query sem projectId passou a ser RECUSADA pela API (schema atual exige os
+         três ids, como a query `variables` abaixo) e o erro era ENGOLIDO por permitirErros —
+         o fallback create-first então estourava o limite de domínios do plano (run 33099626421,
+         com os aliases -c42d/-staging/-8643 já existentes). Query com os três ids + erro
+         VISÍVEL no log; o fallback de criação continua só para o caso "zero domínios". */
       const q = await gql(
-        `query($environmentId: String!, $serviceId: String!) { domains(environmentId: $environmentId, serviceId: $serviceId) { serviceDomains { domain } } }`,
-        { environmentId: inv.environmentId, serviceId: inv.serviceId },
+        `query($projectId: String!, $environmentId: String!, $serviceId: String!) { domains(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId) { serviceDomains { domain } } }`,
+        { projectId: inv.projectId, environmentId: inv.environmentId, serviceId: inv.serviceId },
         { permitirErros: true }
       );
+      if (q.errors?.length) {
+        console.log(`AVISO domains-query recusada: ${q.errors.map((e) => e.message).join('; ')}`);
+      }
       inv.dominio = q.data?.domains?.serviceDomains?.[0]?.domain ?? null;
       if (!inv.dominio) {
         const r = await gql(
