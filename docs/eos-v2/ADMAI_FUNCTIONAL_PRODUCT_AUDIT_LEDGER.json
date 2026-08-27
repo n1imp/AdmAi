@@ -875,6 +875,11 @@
       "quando": "2026-08-27T13:10Z",
       "fase": "GAP_EXECUTION (Fase C — lote AUD-C1 implementado)",
       "resultado": "Consenso DECISOR (thread 01a04345) aplicado: 4 gaps corrigidos no chaveiro-painel (logout desktop na Sidebar; codigos de recuperacao 2FA exibidos pos-ativacao E consumiveis no Login via /auth/login/2fa/recuperar; guards estoque nas rotas /estoque e /materiais; flash-of-empty nos contadores de Tecnicos/Usuarios com regra carregando||erro e empty com !erro). Validacao: vitest 269/269, eslint 0 erros, prettier OK, build OK, git diff --check OK. PENDENTE: REVISOR, push staging e REVERIFY E3."
+    },
+    {
+      "quando": "2026-08-27T14:20Z",
+      "fase": "GAP_EXECUTION (revisao REVISOR aplicada)",
+      "resultado": "REVISOR (thread 01a04392): CORRECOES_NECESSARIAS — sem defeito funcional; bloqueio e de governanca de write-set (disposicao do usuario, preparada em writeSetReconciliacoesPendentes) + 2 testes residuais (aplicados: telefone sem recuperacao; X/backdrop nao descartam) + errata 14->17. Suite pos-correcoes verde. Segue para push staging + REVERIFY E3 e veredito final do REVISOR."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -914,7 +919,41 @@
       "decisaoFinal": "Implementadas as 4 correcoes COM as variacoes do Codex. Somente chaveiro-painel.",
       "impacto": "AUTH_LOGIN (logout desktop), AUTH_2FA (exibicao+consumo de recovery codes), RBAC/ESTOQUE (guard de rota), ADMIN/TECNICOS (flash-of-empty).",
       "testes": "vitest 269/269 (novos: Sidebar 3, Seguranca.2fa 3, Login.recuperacao2fa 4, Usuarios 4; estendidos: Tecnicos +2, Guards +1); eslint 0 erros; prettier check OK; vite build OK; git diff --check OK. Reverify E3 em staging PENDENTE (Fase D).",
-      "achadoExtraDoDecisor": "AuthContext.logout() limpa apenas o token local; /auth/logout existe para invalidar o refresh cookie server-side — registrado como AUD-NOTE-LOGOUT-LOCAL-ONLY (backlog). O item 1 NAO e revogacao server-side de sessao."
+      "achadoExtraDoDecisor": "AuthContext.logout() limpa apenas o token local; /auth/logout existe para invalidar o refresh cookie server-side — registrado como AUD-NOTE-LOGOUT-LOCAL-ONLY (backlog). O item 1 NAO e revogacao server-side de sessao.",
+      "revisao": {
+        "threadRevisor": "01a04392-20a8-7200-8502-b7d78e311e46",
+        "veredito": "CORRECOES_NECESSARIAS",
+        "achados": [
+          "BLOQUEANTE DE GOVERNANCA: write-set AUD-C1-GAP-FIX-BATCH fechado como UNDECLARED_ARTIFACT_WRITE (chaveiro-painel/dist/** escrito pelo vite build de validacao sem raiz de artefatos declarada) — disposicao exige decisao do usuario (nao ha defeito funcional).",
+          "Nenhum defeito funcional nas 4 correcoes; implementacao corresponde ao consenso.",
+          "Cobertura residual: caso negativo do desafio por telefone + X/backdrop nao acionados diretamente no teste.",
+          "Inconsistencia documental: mensagem do commit 62281bd diz 14 testes; o delta real e 17 (14 novos + 3 extensoes)."
+        ],
+        "correcoesAplicadas": [
+          "Teste novo: 'desafio por TELEFONE nao oferece recuperacao por codigo (so TOTP)' em Login.recuperacao2fa.test.jsx",
+          "Teste estendido: X (Fechar) e backdrop nao descartam o passo de codigos em Seguranca.2fa.test.jsx",
+          "ERRATA registrada aqui: o commit 62281bd introduziu 17 testes (14 novos em 4 arquivos + 3 extensoes), nao 14 como diz a mensagem (historico nao reescrito por regra do repositorio).",
+          "Reconciliacoes de write-set preparadas para o gate do usuario (ver writeSetReconciliacoesPendentes)."
+        ],
+        "vereditoFinalPendenteDe": "REVERIFY_IN_STAGING (E3) + resposta do REVISOR na mesma thread"
+      }
+    }
+  ],
+  "writeSetReconciliacoesPendentes": [
+    {
+      "sliceId": "AUD-CAP-INVENTORY-CLASSIFICATION",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "causa": "HEAD moveu entre a declaracao (base 825975f) e o fechamento: os 3 commits da propria fatia (02c5c5b, f842280, 47740de) mudaram a base — as escritas foram exatamente a entrada declarada (o ledger da auditoria).",
+      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-CAP-INVENTORY-CLASSIFICATION', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Escritas da fatia foram exatamente o ledger declarado (commits 02c5c5b, f842280, 47740de); UNKNOWN_DIFFERENCE veio do HEAD movido por commits intermediarios da propria fatia, nao de escrita fora do declarado.' })))\""
+    },
+    {
+      "sliceId": "AUD-C1-GAP-FIX-BATCH",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "causa": "npm run build (validacao exigida pelo DECISOR) escreveu chaveiro-painel/dist/** e a declaracao nao listou a raiz de artefatos.",
+      "artefatos": "chaveiro-painel/dist/** (build de validacao do vite; conteudo legitimo e reproduzivel)",
+      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-C1-GAP-FIX-BATCH', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.' })))\""
     }
   ]
 }

@@ -65062,9 +65062,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Correcoes do REVISOR aplicadas (2 testes + ledger); suite completa verde; fechado ANTES do commit.",
       "declaradoEm": "2026-08-27T14:19:03.022Z"
+    },
+    {
+      "sliceId": "AUD-C1-REV-DOCS",
+      "titulo": "Registro da revisao REVISOR + reconciliacoes pendentes no ledger (reparo do ENOENT da fatia anterior)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Escrita do ledger ocorreu ANTES desta declaracao (reparo do ENOENT da fatia AUD-C1-REV-FIXES, que fechou OBSERVED_SUBSET pela mesma razao); nenhuma escrita apos declarar. Trilha completa e honesta para o gate.",
+      "declaradoEm": "2026-08-27T14:22:14.395Z"
     }
   ],
-  "geradoEm": "2026-08-27T14:20:09.917Z",
+  "geradoEm": "2026-08-27T14:22:36.116Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

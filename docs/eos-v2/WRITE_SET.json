@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD-C1-REV-FIXES",
-  "titulo": "Correcoes do REVISOR (thread 01a04392): 2 testes residuais (telefone sem recuperacao; X/backdrop nao descartam codigos) + errata 14->17 e registro da revisao no ledger",
+  "sliceId": "AUD-C1-REV-DOCS",
+  "titulo": "Registro da revisao REVISOR + reconciliacoes pendentes no ledger (reparo do ENOENT da fatia anterior)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T14:19:03.022Z",
+  "declaradoEm": "2026-08-27T14:22:14.395Z",
   "baseCommitPorLane": {
-    "HARNESS": "62281bd4a782f45d94b5d00dc0cdf8fd800fd1f3"
+    "HARNESS": "63041f3d797f5e82bd1a5e99f8ffa013a78b36cd"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Somente testes e documentacao; nenhuma mudanca de produto. npm test roda sem build (sem artefatos dist).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -528,7 +527,7 @@
       "chaveiro-painel/src/pages/__tests__/Documentos.test.jsx": "5d6bed05b2bc6c8448f9c6a55b6d803736e8977c6510002d490cb7176bb4aa4c",
       "chaveiro-painel/src/pages/__tests__/GestorHome.axe.jsx": "4eb159f5dec6fcfb09c6934273fe8916224e7ff623b24510db90c18c9a8b1fa6",
       "chaveiro-painel/src/pages/__tests__/GestorHome.test.jsx": "ad3ea3c42fddc96236a4859db7f79f0f94d80dc8c9b391415bf44fad00e76cea",
-      "chaveiro-painel/src/pages/__tests__/Login.recuperacao2fa.test.jsx": "ca21804cfa5dcb5f54410ed0cb1cdf7ba6a496a761b634e5b6ef6f47c01f0900",
+      "chaveiro-painel/src/pages/__tests__/Login.recuperacao2fa.test.jsx": "7a5c50839b7ea660be348cda83191ac87a7f880c3469333e5ef1ff3e9d4f9549",
       "chaveiro-painel/src/pages/__tests__/MetricHub.axe.jsx": "94ec9038bc103d1778142cd1555ce18c154ffab6bc2548bfb17c2fe43985273b",
       "chaveiro-painel/src/pages/__tests__/MetricHub.test.jsx": "422e3fefdf889c770bcaf1c813ecb51a6e4445242f220bab82e4a46fa25e1f33",
       "chaveiro-painel/src/pages/__tests__/MetricHubReceita.axe.jsx": "f3ba1746feaa230982a5f03a8f41c3a8f472b03d38ed5c6d585c28312de8663c",
@@ -541,7 +540,7 @@
       "chaveiro-painel/src/pages/__tests__/NovoServico.test.jsx": "ad984ac3209ae04562afc319e9a67f47b90d10938cb8d7040aeea0d72d2c0791",
       "chaveiro-painel/src/pages/__tests__/NovoServicoFuncionario.test.jsx": "f98487db1492158501bcaa1b0334db5a1aed871e057079e83d0165c46e29c476",
       "chaveiro-painel/src/pages/__tests__/RecuperarSenha.test.jsx": "c00e842c6aea81135ae1257551c3aa7356dd1eea26322b5014da08241d0722c6",
-      "chaveiro-painel/src/pages/__tests__/Seguranca.2fa.test.jsx": "f9292c6c1526a4dbf25f723ff6fee120261555a34d7001aacbb3fd53244f4ad9",
+      "chaveiro-painel/src/pages/__tests__/Seguranca.2fa.test.jsx": "81ef4c5434f56c8b84bd5a9090bee77e0e624c867f3f383d95a1292a6cd87292",
       "chaveiro-painel/src/pages/__tests__/Seguranca.sessoes.test.jsx": "2046607793db6d10d14914d69af2e69dac24df1b97c43c35bd6418c67e1d6ac2",
       "chaveiro-painel/src/pages/__tests__/Servicos.a11y.test.jsx": "c02798f45ae9c5fde151a39320ffef0832bb460063f7676849003df2e540f9f5",
       "chaveiro-painel/src/pages/__tests__/Servicos.badge.test.jsx": "99a5bed3e03d4da38a94016357e27db98656276db3a261110938a3db36a41e4a",
@@ -617,7 +616,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "5aa03ef5c83eab1e50119cf700a7bcfb2cae5b5bf0707840c91be694c715e6e5",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "93b6b6811abc7f673ea9571213e63b8bf2c631a494023c0e58a0db7f076f472c",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
@@ -639,8 +638,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "427d2382a6db85162d69dee104ccc62de736aaf25a5a481f7b0f857a0bff3ceb",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "99d4681438b406eac3e4219aabc4f84310634015417206d30b55cd05e44ae014",
+      "docs/eos-v2/WRITE_SET.json": "b58a5025659841946c883fb87cfb9eb9199c07023dea9b4c87fe98d1b0844700",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b89fd20ca9242947104cfefe3dd77a5db0c5c786147e3e3be73e39929c9d4e40",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2588,30 +2587,14 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/Login.recuperacao2fa.test.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "Caso negativo: desafio por telefone nao oferece 'Usar codigo de recuperacao'",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ca21804cfa5dcb5f54410ed0cb1cdf7ba6a496a761b634e5b6ef6f47c01f0900",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/Seguranca.2fa.test.jsx",
-      "precisao": "BOUNDED",
-      "proposito": "X (Fechar) e backdrop nao descartam o passo de codigos",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "f9292c6c1526a4dbf25f723ff6fee120261555a34d7001aacbb3fd53244f4ad9",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "Registro do veredito do REVISOR + errata da mensagem de commit (17 testes) + reconciliacoes pendentes de write-set para o gate do usuario",
+      "proposito": "revisao AUD-C1 + errata + writeSetReconciliacoesPendentes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5aa03ef5c83eab1e50119cf700a7bcfb2cae5b5bf0707840c91be694c715e6e5",
-      "sujoNaDeclaracao": false
+      "shaNaDeclaracao": "93b6b6811abc7f673ea9571213e63b8bf2c631a494023c0e58a0db7f076f472c",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
   "comparacao": "OBSERVED_SUBSET",
@@ -2621,6 +2604,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Correcoes do REVISOR aplicadas (2 testes + ledger); suite completa verde; fechado ANTES do commit.",
+  "nota": "Escrita do ledger ocorreu ANTES desta declaracao (reparo do ENOENT da fatia AUD-C1-REV-FIXES, que fechou OBSERVED_SUBSET pela mesma razao); nenhuma escrita apos declarar. Trilha completa e honesta para o gate.",
   "aviso": "Declaracao ENCERRADA."
 }
