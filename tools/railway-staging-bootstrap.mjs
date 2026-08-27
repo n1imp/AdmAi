@@ -46,6 +46,11 @@ const VARS_NAO_SECRETAS = (dominio) => ({
   ALLOWED_ORIGIN: 'https://staging.admai-painel.pages.dev',
   FRONTEND_URL: 'https://staging.admai-painel.pages.dev',
   STORAGE_STRICT: 'true',
+  /* [AUD2-D2 · USER GATE 2026-08-27] DOCUMENTOS habilitado em STAGING: o bucket privado
+     `documentos-tecnico` foi provado no baseline (STG_SEC_RLS_J) e a auditoria funcional
+     encontrou a feature inerte (404 "Recurso não disponível") por falta desta var.
+     Produção NÃO passa por este arquivo (projeto Railway dedicado admai-staging). */
+  DOCUMENTOS_ENABLED: 'true',
   ...(dominio ? { PUBLIC_URL: `https://${dominio}` } : {}),
   // Referência interna ao Redis gerenciado (Railway resolve; valor nunca passa por aqui):
   REDIS_URL: '${{Redis.REDIS_URL}}',
