@@ -57,6 +57,12 @@ export const schema = z
     // Conexão DIRETA p/ migrations (Supabase pooler). Opcional: só exigida quando o
     // schema Postgres é usado (prod/CI); o dev local em SQLite não precisa.
     DIRECT_URL: z.string().optional(),
+    // [D-STG-K-SUITE-VS-STAGING-01 · Codex 01a040e7] maxWait das transações interativas do
+    // Prisma, afinável SÓ por este knob validado: ausente ⇒ transactionOptions nem é passada
+    // e o default do Prisma (2s) fica intacto. Existe porque contra o pooler REMOTO de
+    // staging o RTT faz "Unable to start a transaction in the given time" sob carga
+    // sequencial da suíte; produção (mesma região) não precisa e não muda.
+    PRISMA_TX_MAX_WAIT_MS: z.coerce.number().int().positive().max(60_000).optional(),
     PORT: z.string().default('3000'),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     API_TOKEN: z.string().min(1),

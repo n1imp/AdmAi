@@ -311,3 +311,58 @@ crítico (sem output novo por ~10min ⇒ diagnosticar/terminar); NUNCA `| tail` 
 background (buffer esconde o progresso — observabilidade foi perdida neste stall por isso).
 **Nuance do finding SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION**: sob validate:staging a suíte
 mira o STAGING (finding válido); localmente mira o container descartável admai-test-pg (55432).
+
+### D-STG-K-SUITE-VS-STAGING-01 — Suíte de integração vs staging real (2026-08-27)
+
+**Consenso**: Codex DECISOR thread 01a040e7 respondeu DISCORDO com refinamento das minhas opções
+A+C+D+E; aceitei a versão refinada na íntegra (consenso formado, sem árbitro).
+**Implementado**: (A) env HERMÉTICO no passo test:integration do validate-staging —
+`montarEnvDeIntegracao` mantém só o DB staging validado + APP_ENV/NODE_ENV=test +
+`PRISMA_TX_MAX_WAIT_MS=10000`; deleta SUPABASE_URL/SERVICE_ROLE/STORAGE_STRICT/RESEND_API_KEY/
+DATABASE_URL_APP/REDIS_URL; guard anti-repovoamento recusa .env.test que defina chave proibida.
+(C) rls.test.js: skip ESTRUTURAL `describe.skipIf(ehHostDePooler(hostname))` decidido ANTES dos
+hooks (hooks movidos p/ dentro); equivalente staging integrado como passo 4/4 =
+validate-rls-staging.mjs. (D) metricas B: fixture 493 (comissão 49.3 não-coincidente), COMISSAO
+capturada da visão AUTORIZADA (sem recomputar float), varredura de valor exclui chaves /^id$|Id$/;
+asserções por NOME preservadas. (E) knob `PRISMA_TX_MAX_WAIT_MS` via Zod (int>0≤60000, opcional;
+ausente ⇒ transactionOptions omitida, default Prisma 2s intacto) aplicado aos 2 clientes
+compartilhados de src/db/prisma.js.
+**Bateria local**: unit 467/467 (47 arquivos, inclui 8 novos do harness + knob Zod); metricas+rls
+locais 11/11 (2 runs consecutivos; 1º run pós-religada do container teve 2 falhas transitórias);
+lint OK; format OK; diff --check limpo. Run final validate:staging em curso.
+
+### INCIDENTE — rls.test.js executou beforeAll no staging antes do ENOIDENTIFIER (2026-08-27)
+
+No run destrutivo anterior, o beforeAll completou ANTES da falha de conexão: (1) `CREATE ROLE
+app_rw LOGIN PASSWORD '<fixa do repo>'` — role EXISTE agora no staging (LOGIN, NOBYPASSRLS;
+confirmado via pg_roles). app_rw é papel PREVISTO no design F4-RLS (DATABASE_URL_APP em
+src/db/prisma.js), então NÃO foi removido nem rotacionado (restrição do Codex); disposição fica
+com o usuário: rotacionar a senha (recomendado) ou remover até a adoção do DATABASE_URL_APP.
+(2) `enable_rls.sql` (v1) reaplicou FORCE ROW LEVEL SECURITY em 12 tabelas — DIVERGE do estado
+v2 aprovado (verify_lockdown_v2.pure: seção A FALHA; único delta). Restauração mínima =
+ENABLE+NO FORCE ×26 (bloco literal do artefato v2); minha execução foi BLOQUEADA 2× pelo
+classificador da plataforma (DDL no DB) ⇒ pendência D2/usuário. O reapply v2 completo é
+fail-closed contra políticas preexistentes por design ("PARE e decida") — correto, não é o
+caminho. Prevenção de recorrência: o skip estrutural (C) impede o rls.test de voltar a tocar
+staging por qualquer invocação futura.
+
+### RECOVERY RUN (2026-08-27) — gate6, app_rw, RLS restore
+
+**gate6 (classe C provada)**: falha era `Test timed out in 20000ms` — nenhuma asserção; repro
+isolado PASS com tests=17,9s (borda do teto); fix = timeout por-teste 180s (finito; invariante
+intacta — cada refresh pré-corte segue exigindo 401); estabilidade **10/10** com durações
+16,5–21,9s (runs 3–5 acima de 20s: o teto antigo estourava até isolado). §9: harness/time
+budget ⇒ sem Codex.
+**app_rw**: evidências — runtime staging usa `postgres.<ref>` (DATABASE_URL_APP ausente por
+NOME no .env.staging/Railway); nenhum workflow o referencia; design F4-RLS o prevê
+(src/db/prisma.js:37) ⇒ regra D2 §11 "necessary/uncertain → ROTATE": **APP_RW_ROTATED=YES**
+(CSPRNG in-process, valor jamais no contexto/destinos) + controle positivo: senha antiga
+(fixture do repo) RECUSADA. Higiene §12: a senha versionada é fixture LOCAL de container
+descartável; pós-rotação não vale mais no staging; sem reescrita de histórico.
+**RLS restore**: re-observação 26 ENABLED / FORCE×12 / POLICY×12 (tenant_isolation, mesmas 12
+tabelas) vs canônico 26/0/0. Execução pelo agente **BLOCKED_CAPABILITY(RLS_RESTORE)** — 3
+negativas do classificador (operação exata: ALTER TABLE ENABLE/NO FORCE ×26 + DROP POLICY IF
+EXISTS tenant_isolation ×12 via pg no DIRECT_URL staging), mesmo com D2 explícita; sem
+contorno (§3). Mitigação: `scripts/restore-rls-v2-noforce.mjs` (bloco literal do artefato +
+guards anti-produção + verify integrado) para execução HUMANA de 1 comando. E2E permanece
+proibido até `RLS_RESTORED=PASS`.

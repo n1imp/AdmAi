@@ -115,7 +115,15 @@ describe('Metric field-level security', () => {
     it('B: com financeiro.ver e sem tecnicos.ver — vê valores, NÃO vê comissão', async () => {
       const { a } = await duasEmpresas();
       const tec = await criarTecnico(a.token, 'Tec B');
-      await criarServico(a.token, tec.nome, 'Rua B', 500);
+      /* 493 (≠ o 500 do teste A) de propósito [D-STG-K-SUITE-VS-STAGING-01]: a comissão
+         (49.3) não coincide com nenhum campo autorizado nem com contadores/ids inteiros. */
+      await criarServico(a.token, tec.nome, 'Rua B', 493);
+      /* Captura o VALOR REAL da comissão pela visão AUTORIZADA (controle positivo local),
+         em vez de recomputar 10% em float no teste — 493*0.1 não é exato em IEEE-754 e um
+         `includes()` contra o valor errado passaria VAZIAMENTE. */
+      const autorizado = await registros(a.token);
+      const COMISSAO = autorizado.body.registros[0].comissaoGerada;
+      expect(COMISSAO, 'controle: comissão real precisa existir e ser > 0').toBeGreaterThan(0);
       const restrito = await comOverride(
         a,
         { financeiro: { ver: true }, tecnicos: { ver: false } },
@@ -124,14 +132,14 @@ describe('Metric field-level security', () => {
 
       const agregado = await metrica(restrito.token, 'faturamento-liquido');
       expect(agregado.status, 'financeiro.ver precisa dar acesso ao agregado').toBe(200);
-      expect(agregado.body.value).toBe(500);
+      expect(agregado.body.value).toBe(493);
 
       const res = await registros(restrito.token);
       expect(res.status, 'drilldown exige a mesma permissão do agregado').toBe(200);
       expect(res.body.camposOmitidos).toEqual(['comissaoGerada']);
 
       const r = res.body.registros[0];
-      expect(r.valorLiquido, 'campo autorizado foi negado junto com o proibido').toBe(500);
+      expect(r.valorLiquido, 'campo autorizado foi negado junto com o proibido').toBe(493);
       expect(r, 'comissão veio no payload para quem não pode vê-la').not.toHaveProperty(
         'comissaoGerada'
       );
@@ -140,13 +148,19 @@ describe('Metric field-level security', () => {
          omitida em vez de renderizar vazio. Nomear um campo omitido não é vazar seu valor — a
          primeira versão desta asserção confundiu as duas coisas. */
       expect(JSON.stringify(res.body.registros)).not.toMatch(/comissaoGerada/);
-      /* O VALOR da comissão (10% de 500) não pode ter sobrevivido em canto nenhum dos registros.
-         A primeira versão usava regex com backspace literal (escape quebrado no shell) e passava por ser
-         impossível de violar; a segunda buscava a substring "50", que casa dentro de "500" e reprovava
-         um valor legítimo. A propriedade é sobre VALOR, não sobre texto. */
-      const COMISSAO = 500 * 0.1;
+      /* O VALOR da comissão não pode ter sobrevivido em canto nenhum dos registros.
+         Histórico das versões: (1) regex com backspace literal — impossível de violar;
+         (2) substring "50" — casava dentro de "500"; (3) `Object.values(reg).includes(50)`
+         — colisão de VALOR com identificadores: contra o staging (sequences não reiniciam
+         no TRUNCATE) um `id`/`servicoId` que valha 50 reprovava sem vazamento algum
+         [D-STG-K-SUITE-VS-STAGING-01, Codex 01a040e7]. A propriedade é sobre VALOR em
+         CAMPOS NÃO-IDENTIFICADORES: chaves id/…Id ficam fora da varredura, e a asserção
+         por NOME de campo (acima) continua cobrindo o resto. */
+      const chaveIdentificadora = (k) => /^id$|Id$/.test(k);
       expect(
-        res.body.registros.some((reg) => Object.values(reg).includes(COMISSAO)),
+        res.body.registros.some((reg) =>
+          Object.entries(reg).some(([k, v]) => !chaveIdentificadora(k) && v === COMISSAO)
+        ),
         'o valor da comissão apareceu sob outro nome no registro'
       ).toBe(false);
     });

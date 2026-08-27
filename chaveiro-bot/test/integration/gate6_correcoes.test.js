@@ -347,5 +347,10 @@ describe('#3c revogação — JWT com corte exato (iatMs) e concorrência com lo
       const { limparBanco } = await import('./helpers.js');
       await limparBanco();
     }
-  });
+    /* 180s [D-STG-K-SUITE-VS-STAGING-01 §7]: 5 iterações × (setup + login + corrida + 2
+       refreshes + TRUNCATE) medem 17,9s CONTRA O POOLER REMOTO de staging — na borda do
+       teto global de 20s, que foi calibrado para o Postgres local. O orçamento maior é
+       FINITO e não muda a invariante: cada iteração continua exigindo 401 para todo
+       refresh anterior ao corte. */
+  }, 180_000);
 });

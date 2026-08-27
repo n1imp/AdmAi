@@ -137,3 +137,13 @@ apontado ao staging de aceitação, destrói fixtures E2E (provado 2026-08-27 no
 Correção: lifecycle isolado (schema/banco dedicado de integração, ou guard que recuse rodar a
 suíte destrutiva quando `APP_ENV=staging` sem flag explícita `ALLOW_DESTRUCTIVE_INTEGRATION`).
 Prioridade: antes do próximo ciclo de aceitação que reutilize staging.
+
+## SEC-HB-STG-INTEGRATION-SECURITY-CLEANUP
+
+Evidência (2026-08-27): abort do rls.test.js pós-`beforeAll` deixou o boundary RLS do staging
+degradado (FORCE×12 + policies v1×12 sobre o estado v2) — a suíte destrutiva não restaurava o
+boundary em falha. Correção mínima DESTE run: skip ESTRUTURAL via pooler decidido ANTES de
+qualquer hook (staging inatingível pelo teste por construção; local é descartável por design).
+Correção estrutural futura: qualquer fase de teste que altere boundary de segurança deve
+restaurá-lo em finally/trap mesmo em abort — junto com o lifecycle isolado do item
+SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION.

@@ -41,6 +41,28 @@ describe('env.js (import com o env de teste)', () => {
   });
 });
 
+describe('PRISMA_TX_MAX_WAIT_MS (knob do maxWait de transação; D-STG-K-SUITE-VS-STAGING-01)', () => {
+  const parse = (extra) => schema.safeParse({ ...baseValida, ...extra });
+
+  it('AUSENTE: parseia sem o campo — prisma.js então NEM passa transactionOptions (default 2s intacto)', () => {
+    const r = parse({});
+    expect(r.success).toBe(true);
+    expect(r.data.PRISMA_TX_MAX_WAIT_MS).toBeUndefined();
+  });
+
+  it('inteiro positivo em string de env vira number', () => {
+    const r = parse({ PRISMA_TX_MAX_WAIT_MS: '10000' });
+    expect(r.success).toBe(true);
+    expect(r.data.PRISMA_TX_MAX_WAIT_MS).toBe(10000);
+  });
+
+  it('zero, negativo, decimal, texto e acima do teto (60s) FALHAM no boundary', () => {
+    for (const ruim of ['0', '-5', '2.5', 'abc', '90000', '']) {
+      expect(parse({ PRISMA_TX_MAX_WAIT_MS: ruim }).success, `valor "${ruim}"`).toBe(false);
+    }
+  });
+});
+
 describe('schema cross-field (EVOLUTION_HOST exige API_KEY + ENCRYPTION_KEY)', () => {
   it('aceita config SEM EVOLUTION_HOST (gateway desligado)', () => {
     const r = schema.safeParse({ ...baseValida });
