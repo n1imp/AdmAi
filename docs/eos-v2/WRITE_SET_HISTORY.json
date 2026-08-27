@@ -65031,9 +65031,17 @@
         "HARNESS"
       ],
       "provenance": "UNKNOWN_PROVENANCE",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "Fases A/B da auditoria concluidas: inventario (02c5c5b) + classificacao rodadas 1-2 (f842280, 47740de) no ledger. 02_CURRENT_STATE.md declarado mas intencionalmente nao tocado nesta fatia (fechamento de ciclo fica para a fatia final).",
-      "declaradoEm": "2026-08-27T12:04:43.615Z"
+      "declaradoEm": "2026-08-27T12:04:43.615Z",
+      "reconciliacao": {
+        "em": "2026-08-27T17:38:58.316Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "n1imp (USER GATE 2026-08-27 — D1: CONTEUDO_ACEITO_ORDEM_VIOLADA aceitas)",
+        "justificativa": "Escritas da fatia foram exatamente o ledger declarado (commits 02c5c5b, f842280, 47740de); UNKNOWN_DIFFERENCE veio do HEAD movido por commits intermediarios da propria fatia, nao de escrita fora do declarado.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     },
     {
       "sliceId": "AUD-C1-GAP-FIX-BATCH",
@@ -65045,9 +65053,17 @@
         "HARNESS"
       ],
       "provenance": "ORIGINAL_PRE_MUTATION",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "Fase C implementada e validada (vitest 269/269, eslint 0 erros, prettier, build, diff --check) ANTES de commitar — fechamento na mesma base da declaracao.",
-      "declaradoEm": "2026-08-27T12:56:38.263Z"
+      "declaradoEm": "2026-08-27T12:56:38.263Z",
+      "reconciliacao": {
+        "em": "2026-08-27T17:38:58.453Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "n1imp (USER GATE 2026-08-27 — D1: CONTEUDO_ACEITO_ORDEM_VIOLADA aceitas)",
+        "justificativa": "dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     },
     {
       "sliceId": "AUD-C1-REV-FIXES",
@@ -65101,12 +65117,34 @@
         "HARNESS"
       ],
       "provenance": "ORIGINAL_PRE_MUTATION",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "Evidencia dos tours preservada + errata-2 + veredito final USUARIO_NECESSARIO registrados; escrita toda apos declarar, fechamento antes do commit.",
-      "declaradoEm": "2026-08-27T14:47:07.987Z"
+      "declaradoEm": "2026-08-27T14:47:07.987Z",
+      "reconciliacao": {
+        "em": "2026-08-27T17:38:58.599Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "n1imp (USER GATE 2026-08-27 — D1: CONTEUDO_ACEITO_ORDEM_VIOLADA aceitas)",
+        "justificativa": "Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
+    },
+    {
+      "sliceId": "AUD2-P0-RECONCILE",
+      "titulo": "Ciclo 2 P0: executar as 3 disposicoes CONTEUDO_ACEITO_ORDEM_VIOLADA autorizadas no USER GATE (D1)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P0: 3 reconciliacoes D1 aplicadas (escreveram o livro-razao do gate); ledger atualizado apos declarar e antes de commitar.",
+      "declaradoEm": "2026-08-27T17:38:33.178Z"
     }
   ],
-  "geradoEm": "2026-08-27T14:47:40.975Z",
+  "geradoEm": "2026-08-27T17:39:31.079Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

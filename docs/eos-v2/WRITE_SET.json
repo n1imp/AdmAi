@@ -1,16 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
-  "titulo": "Preservar evidencia bruta dos tours 0-6 no repo (apontamento do REVISOR) + errata-2 (270/270)",
+  "sliceId": "AUD2-P0-RECONCILE",
+  "titulo": "Ciclo 2 P0: executar as 3 disposicoes CONTEUDO_ACEITO_ORDEM_VIOLADA autorizadas no USER GATE (D1)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T14:47:07.987Z",
+  "declaradoEm": "2026-08-27T17:38:33.178Z",
   "baseCommitPorLane": {
-    "HARNESS": "0cfc5dc6c434cd299caf3bd3bcc36a5ff1b13eb4"
+    "HARNESS": "97069c2fdcad368511f66cf63e66385a0b88f1c5"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "reconciliar() escreve WRITE_SET_HISTORY.json (livro-razao do proprio gate); a entrada declarada aqui e o ledger da auditoria (status das reconciliacoes).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -616,9 +617,16 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "eda60dc2a5ded2f3dfe3ae56a8aa7ec1246cbab385a69e51052247427660bceb",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "84f48ac1fa4b08bdfcbdbbfaae40d44120fb3f5ecb693adcb49e1e72773e920f",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour1-dono.json": "479255145c62bf75fff6c82ddea1148d8df91bcee657eacbf15b85a1f6f97714",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour2-gestor-func.json": "625a0e6d7b6201461ddd433b8348a43981aa0bdfac21e317f98058c4009975c3",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour3-recheck.json": "4b318e9b0a6291475fe01b89cf0b422113a4bd848bb063fd1b4416229790d133",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour4-final.json": "04317f11e843cf8e2e8c91c0288d4edfad70081bd09afaee87d25198fb10bdfa",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour5-perfil.json": "2e80c34f58ab2bc708591e58664014878cc76ff21e8ea72880763337a5611339",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour6-reverify.json": "4379d5251d2da97f4c2d5e73e4184be532b8d507d099dc5152f656d3fe8a763a",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -638,8 +646,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "a275e46c8fcfae648404811129a072ec9225f042fc2c72502ad80dd0707371ea",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "11532e018b84fc0310f8e1a5b0156194007064a7142341e2da5d467ab8d0566e",
+      "docs/eos-v2/WRITE_SET.json": "4642595edc2d5ec5ff8b7d428b56335092099e83ca9c2a3ed89a0bcae6bce490",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "b51a4e8a333d857ed5fc2bfdd56fa2ec0cb4e5e4d304d1d21f834cf6a286f437",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2587,30 +2595,21 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27",
-      "precisao": "BOUNDED",
-      "proposito": "JSONs brutos resultado-tour0..tour6 (sem secrets; backups de 2FA foram destruidos)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "errata-2 (63041f3 diz 271/271; real 270/270) + veredito final USUARIO_NECESSARIO + ponteiro da evidencia preservada",
+      "proposito": "marcar as 3 reconciliacoes como executadas com autoria do gate",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "eda60dc2a5ded2f3dfe3ae56a8aa7ec1246cbab385a69e51052247427660bceb",
+      "shaNaDeclaracao": "84f48ac1fa4b08bdfcbdbbfaae40d44120fb3f5ecb693adcb49e1e72773e920f",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "UNDECLARED_WRITE",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": true,
-  "nota": "Evidencia dos tours preservada + errata-2 + veredito final USUARIO_NECESSARIO registrados; escrita toda apos declarar, fechamento antes do commit.",
+  "bloqueiaIntegracao": false,
+  "nota": "P0: 3 reconciliacoes D1 aplicadas (escreveram o livro-razao do gate); ledger atualizado apos declarar e antes de commitar.",
   "aviso": "Declaracao ENCERRADA."
 }

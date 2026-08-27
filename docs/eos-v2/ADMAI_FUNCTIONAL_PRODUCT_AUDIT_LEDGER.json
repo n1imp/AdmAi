@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "ROUND1_COMPLETE_AWAITING_USER_GATE",
+  "status": "CYCLE2_IN_PROGRESS",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -880,6 +880,11 @@
       "quando": "2026-08-27T15:10Z",
       "fase": "REVERIFY_IN_STAGING (Fase D — ciclo 1 FECHADO)",
       "resultado": "Push ecf4c14 -> origin/staging; Deploy Staging 33081925408 SUCCESS (14m52s). Sonda de frescor confirmou bundle novo. tour6 12/12 reverificou os 4 fixes em browser real; probe-perfil resolveu o A_CONFIRMAR de TECNICOS (API 200, instrumento raced). UPGRADES: AUTH_LOGIN e AUTH_2FA -> FEATURE_COMPLETE (total 6 FEATURE_COMPLETE). Pendências consolidadas para o GATE DO USUÁRIO (ver gateDoUsuario)."
+    },
+    {
+      "quando": "2026-08-27 (Ciclo 2)",
+      "fase": "P0 — RECONCILE (D1)",
+      "resultado": "3/3 disposicoes CONTEUDO_ACEITO_ORDEM_VIOLADA aplicadas; bloqueiaIntegracao=false nos 3; comparacoes preservadas; nenhum rollback/reescrita."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -948,31 +953,6 @@
       }
     }
   ],
-  "writeSetReconciliacoesPendentes": [
-    {
-      "sliceId": "AUD-CAP-INVENTORY-CLASSIFICATION",
-      "comparacao": "UNKNOWN_DIFFERENCE",
-      "causa": "HEAD moveu entre a declaracao (base 825975f) e o fechamento: os 3 commits da propria fatia (02c5c5b, f842280, 47740de) mudaram a base — as escritas foram exatamente a entrada declarada (o ledger da auditoria).",
-      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
-      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-CAP-INVENTORY-CLASSIFICATION', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Escritas da fatia foram exatamente o ledger declarado (commits 02c5c5b, f842280, 47740de); UNKNOWN_DIFFERENCE veio do HEAD movido por commits intermediarios da propria fatia, nao de escrita fora do declarado.' })))\""
-    },
-    {
-      "sliceId": "AUD-C1-GAP-FIX-BATCH",
-      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
-      "causa": "npm run build (validacao exigida pelo DECISOR) escreveu chaveiro-painel/dist/** e a declaracao nao listou a raiz de artefatos.",
-      "artefatos": "chaveiro-painel/dist/** (build de validacao do vite; conteudo legitimo e reproduzivel)",
-      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
-      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-C1-GAP-FIX-BATCH', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.' })))\""
-    },
-    {
-      "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
-      "comparacao": "UNDECLARED_WRITE",
-      "causa": "A declaracao listou o DIRETORIO docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27; o gate compara SHA por CAMINHO DE ARQUIVO — os 7 resultado-tour*.json ficaram formalmente nao declarados. Conteudo intencional, revisado (sem secrets) e pedido pelo REVISOR.",
-      "licao": "Declaracoes de write-set devem listar ARQUIVOS, nunca diretorios.",
-      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
-      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
-    }
-  ],
   "gateDoUsuario": {
     "geradoEm": "2026-08-27T15:10Z",
     "decisoesD2Soberanas": [
@@ -985,7 +965,7 @@
       "AUDITORIA: decidir se o MVP exige trilha CONSULTÁVEL (viraria gap de UI+endpoint) ou se BACKEND_ONLY encerra",
       "Messaging WhatsApp (AUD-GAP-MESSAGING-WHATSAPP): copy da landing/dashboard/ajuda vende WhatsApp no presente com a feature POST_MVP — decisão de mensagem de produto"
     ],
-    "reconciliacoesWriteSet": "TRES disposicoes pendentes em writeSetReconciliacoesPendentes (comandos prontos; mesma disposicao CONTEUDO_ACEITO_ORDEM_VIOLADA sugerida nas tres). NOTA: este registro final foi escrito apos o fechamento da fatia AUD-D2 (parte do proprio registro do fechamento), em transparencia.",
+    "reconciliacoesWriteSet": "EXECUTADAS no Ciclo 2 P0 (D1). Ver writeSetReconciliacoes.",
     "validacoesNaoExecutadasDeclaradas": [
       "Stripe checkout/portal reais (BILLING) — operação financeira externa",
       "Troca de senha e logout-all na fixture compartilhada (SEGURANCA)",
@@ -993,6 +973,41 @@
       "Anonimização LGPD e autoexclusão de conta (irreversíveis por design)",
       "typecheck (tsc) do painel"
     ],
-    "vereditoRevisorFinal": "USUARIO_NECESSARIO — aplicar/rejeitar as 2 disposicoes de write-set encerra a revisao formal do lote AUD-C1."
+    "vereditoRevisorFinal": "USUARIO_NECESSARIO RESOLVIDO: as 3 disposicoes foram aplicadas com autoria do gate — condicao formal do REVISOR atendida (lote AUD-C1 aprovado tecnicamente + disposicoes executadas)."
+  },
+  "writeSetReconciliacoes": {
+    "executadasEm": "2026-08-27 (Ciclo 2 P0)",
+    "autorizadoPor": "n1imp (USER GATE 2026-08-27 — D1)",
+    "resultado": [
+      "AUD-CAP-INVENTORY-CLASSIFICATION: reconciliado=true (UNKNOWN_DIFFERENCE preservada)",
+      "AUD-C1-GAP-FIX-BATCH: reconciliado=true (UNDECLARED_ARTIFACT_WRITE preservada)",
+      "AUD-D2-EVIDENCE-PRESERVE: reconciliado=true (UNDECLARED_WRITE preservada)"
+    ],
+    "observacao": "16 bloqueios historicos de programas ANTERIORES a esta auditoria permanecem no WRITE_SET_HISTORY (SCOPE-F2*, SL-*, F6-*, GATE6-*, D2-AMENDMENT-RECLASS, STG-*) — fora do escopo do D1; nenhum criado por este ciclo.",
+    "pendenciasOriginais": [
+      {
+        "sliceId": "AUD-CAP-INVENTORY-CLASSIFICATION",
+        "comparacao": "UNKNOWN_DIFFERENCE",
+        "causa": "HEAD moveu entre a declaracao (base 825975f) e o fechamento: os 3 commits da propria fatia (02c5c5b, f842280, 47740de) mudaram a base — as escritas foram exatamente a entrada declarada (o ledger da auditoria).",
+        "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-CAP-INVENTORY-CLASSIFICATION', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Escritas da fatia foram exatamente o ledger declarado (commits 02c5c5b, f842280, 47740de); UNKNOWN_DIFFERENCE veio do HEAD movido por commits intermediarios da propria fatia, nao de escrita fora do declarado.' })))\""
+      },
+      {
+        "sliceId": "AUD-C1-GAP-FIX-BATCH",
+        "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+        "causa": "npm run build (validacao exigida pelo DECISOR) escreveu chaveiro-painel/dist/** e a declaracao nao listou a raiz de artefatos.",
+        "artefatos": "chaveiro-painel/dist/** (build de validacao do vite; conteudo legitimo e reproduzivel)",
+        "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-C1-GAP-FIX-BATCH', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.' })))\""
+      },
+      {
+        "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
+        "comparacao": "UNDECLARED_WRITE",
+        "causa": "A declaracao listou o DIRETORIO docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27; o gate compara SHA por CAMINHO DE ARQUIVO — os 7 resultado-tour*.json ficaram formalmente nao declarados. Conteudo intencional, revisado (sem secrets) e pedido pelo REVISOR.",
+        "licao": "Declaracoes de write-set devem listar ARQUIVOS, nunca diretorios.",
+        "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
+      }
+    ]
   }
 }
