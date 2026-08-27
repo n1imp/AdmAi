@@ -486,9 +486,24 @@ export function validarFormaExterna(nome, valor) {
   }
 }
 
-export async function externalSecrets(gql, { projectId, environmentId, serviceId }, ambiente = process.env) {
+export async function externalSecrets(
+  gql,
+  { projectId, environmentId, serviceId },
+  ambiente = process.env,
+  { forceNames = [] } = {}
+) {
   if (!projectId || !environmentId || !serviceId) {
     falhar('external-secrets exige --project-id, --environment-id e --service-id.');
+  }
+  /* [AUD2-P1B · USER GATE D2] `forceNames`: re-upsert OPACO de um secret EXTERNO já presente
+     no Railway a partir da cópia do GitHub Environment staging. Existe para recuperação de
+     valor errado preenchido à mão no dashboard (caso real: SUPABASE_SERVICE_ROLE_KEY fazia o
+     upload de DOCUMENTOS 500ar; o mesmo código+valor do repo passou localmente). Guardas:
+     só nomes de SECRETOS_EXTERNOS, mesma validação de forma, valores jamais impressos. A
+     regra "nunca sobrescreve" continua sendo o DEFAULT — forçar é decisão explícita por nome. */
+  const foraDaLista = forceNames.filter((n) => !SECRETOS_EXTERNOS.includes(n));
+  if (foraDaLista.length) {
+    falhar(`--force-names só aceita ${SECRETOS_EXTERNOS.join(', ')} — recusado: ${foraDaLista.join(', ')}.`);
   }
   await verificarIdentidade(gql, { projectId, environmentId, serviceId });
 
@@ -500,12 +515,13 @@ export async function externalSecrets(gql, { projectId, environmentId, serviceId
   const existentes = Object.keys(r.data?.variables ?? {});
 
   const configurar = {};
-  const relat = { configurados: [], jaPresentes: [], ausentesNoRunner: [], invalidos: [] };
+  const relat = { configurados: [], jaPresentes: [], ausentesNoRunner: [], invalidos: [], forcados: [] };
   for (const nome of SECRETOS_EXTERNOS) {
-    if (existentes.includes(nome)) {
+    if (existentes.includes(nome) && !forceNames.includes(nome)) {
       relat.jaPresentes.push(nome);
       continue;
     }
+    if (existentes.includes(nome)) relat.forcados.push(nome);
     const valor = ambiente[`STG_${nome}`];
     if (!valor) {
       relat.ausentesNoRunner.push(nome);
@@ -925,6 +941,41 @@ export async function autoteste() {
       && !JSON.stringify(r).includes('pw@'); // nenhum valor vaza no relato
   });
 
+  await caso('externalSecrets --force-names: re-upserta nome PRESENTE (recuperacao) sem vazar valor; fora da lista falha', async () => {
+    let upsertado = null;
+    const fetchFake = async (_url, { body }) => {
+      const { query, variables } = JSON.parse(body);
+      if (query.includes('project(')) return { status: 200, json: async () => NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]) };
+      if (query.includes('variables(')) return { status: 200, json: async () => ({ data: { variables: { SUPABASE_SERVICE_ROLE_KEY: 'x', DATABASE_URL: 'x', DIRECT_URL: 'x', RESEND_API_KEY: 'x' } } }) };
+      if (query.includes('variableCollectionUpsert')) {
+        upsertado = variables.input.variables;
+        return { status: 200, json: async () => ({ data: { variableCollectionUpsert: true } }) };
+      }
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    };
+    const gql = criarCliente('t', fetchFake);
+    const amb = { STG_SUPABASE_SERVICE_ROLE_KEY: 'eyJhh.bb.cc' };
+    const r = await externalSecrets(
+      gql,
+      { projectId: 'p', environmentId: 'e', serviceId: 's' },
+      amb,
+      { forceNames: ['SUPABASE_SERVICE_ROLE_KEY'] }
+    );
+    const feliz =
+      JSON.stringify(r.forcados) === '["SUPABASE_SERVICE_ROLE_KEY"]'
+      && JSON.stringify(r.configurados) === '["SUPABASE_SERVICE_ROLE_KEY"]'
+      && JSON.stringify(r.jaPresentes) === '["DATABASE_URL","DIRECT_URL","RESEND_API_KEY"]'
+      && upsertado && Object.keys(upsertado).length === 1
+      && !JSON.stringify(r).includes('eyJhh'); // valor nunca no relato
+    let recusouForaDaLista = false;
+    try {
+      await externalSecrets(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' }, amb, { forceNames: ['JWT_SECRET'] });
+    } catch (e) {
+      recusouForaDaLista = /force-names só aceita/.test(e.message) && /JWT_SECRET/.test(e.message);
+    }
+    return feliz && recusouForaDaLista;
+  });
+
   await caso('externalSecrets: valor com ref de PRODUCAO falha ANTES do upsert e a mensagem NAO contem o valor', async () => {
     let upserts = 0;
     const fetchFake = async (_url, { body }) => {
@@ -1002,11 +1053,17 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
       // SÓ nomes/status — nunca valores.
       console.log('INTERNAL_SECRETS_OK ' + JSON.stringify(r));
     } else if (fase === 'external-secrets') {
-      const r = await externalSecrets(gql, {
-        projectId: flag('project-id'),
-        environmentId: flag('environment-id'),
-        serviceId: flag('service-id'),
-      });
+      const forceNames = (flag('force-names') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+      const r = await externalSecrets(
+        gql,
+        {
+          projectId: flag('project-id'),
+          environmentId: flag('environment-id'),
+          serviceId: flag('service-id'),
+        },
+        process.env,
+        { forceNames }
+      );
       // SÓ nomes/status — nunca valores.
       console.log('EXTERNAL_SECRETS_OK ' + JSON.stringify(r));
     } else {

@@ -44,6 +44,9 @@ on:
       workspace_id:
         description: '(prepare) workspaceId — só se o token tiver mais de um workspace'
         required: false
+      force_names:
+        description: '(external-secrets) nomes de SECRETOS_EXTERNOS a re-upsertar mesmo se presentes (recuperação de valor errado no dashboard; ex.: SUPABASE_SERVICE_ROLE_KEY)'
+        required: false
 
 # contents:read é o mínimo p/ o checkout do repo privado (permissions vazio quebrava
 # o actions/checkout com "repository not found" — visto no run de registro).
@@ -104,6 +107,7 @@ jobs:
           [ -n "${{ inputs.environment_id }}" ] && ARGS="$ARGS --environment-id=${{ inputs.environment_id }}"
           [ -n "${{ inputs.service_id }}" ] && ARGS="$ARGS --service-id=${{ inputs.service_id }}"
           [ -n "${{ inputs.workspace_id }}" ] && ARGS="$ARGS --workspace-id=${{ inputs.workspace_id }}"
+          [ -n "${{ inputs.force_names }}" ] && ARGS="$ARGS --force-names=${{ inputs.force_names }}"
           node tools/railway-staging-bootstrap.mjs $ARGS | tee saida.txt
           {
             echo "## Staging Backend Bootstrap — ${{ inputs.phase }}"

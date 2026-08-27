@@ -65142,9 +65142,37 @@
       "bloqueiaIntegracao": false,
       "nota": "P0: 3 reconciliacoes D1 aplicadas (escreveram o livro-razao do gate); ledger atualizado apos declarar e antes de commitar.",
       "declaradoEm": "2026-08-27T17:38:33.178Z"
+    },
+    {
+      "sliceId": "AUD2-P1-RAILWAY-DOCS-FLAG",
+      "titulo": "Ciclo 2 P1 (D2): DOCUMENTOS_ENABLED=true nas VARS_NAO_SECRETAS do bootstrap de staging",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "UNKNOWN_PROVENANCE",
+      "bloqueiaIntegracao": true,
+      "nota": "P1a: DOCUMENTOS_ENABLED + fix domains-query no tool declarado; escritas foram exatamente o arquivo declarado, em 2 commits mid-slice (d4014ff, 60b5ed6) porque o workflow_dispatch le a branch staging — mesma classe CONTEUDO_ACEITO_ORDEM_VIOLADA se acusar UNKNOWN_DIFFERENCE; licao: fatias de ops fecham antes do commit unico final.",
+      "declaradoEm": "2026-08-27T17:40:02.808Z"
+    },
+    {
+      "sliceId": "AUD2-P1B-FORCE-SECRET",
+      "titulo": "P1b (D2): --force-names na fase external-secrets p/ re-upsert opaco de SUPABASE_SERVICE_ROLE_KEY no Railway staging (diagnostico: upload 500 no backend; codigo+creds do repo provados OK localmente)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1b fechado ANTES do commit unico (licao aplicada): forceNames+selftest+workflow+ledger prontos; commit e push na sequencia.",
+      "declaradoEm": "2026-08-27T17:49:11.615Z"
     }
   ],
-  "geradoEm": "2026-08-27T17:39:31.079Z",
+  "geradoEm": "2026-08-27T17:50:18.584Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

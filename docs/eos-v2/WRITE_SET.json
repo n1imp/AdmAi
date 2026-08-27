@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P0-RECONCILE",
-  "titulo": "Ciclo 2 P0: executar as 3 disposicoes CONTEUDO_ACEITO_ORDEM_VIOLADA autorizadas no USER GATE (D1)",
+  "sliceId": "AUD2-P1B-FORCE-SECRET",
+  "titulo": "P1b (D2): --force-names na fase external-secrets p/ re-upsert opaco de SUPABASE_SERVICE_ROLE_KEY no Railway staging (diagnostico: upload 500 no backend; codigo+creds do repo provados OK localmente)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T17:38:33.178Z",
+  "declaradoEm": "2026-08-27T17:49:11.615Z",
   "baseCommitPorLane": {
-    "HARNESS": "97069c2fdcad368511f66cf63e66385a0b88f1c5"
+    "HARNESS": "60b5ed699a0258fbd09369fb1930b7496fabe2a6"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "reconciliar() escreve WRITE_SET_HISTORY.json (livro-razao do proprio gate); a entrada declarada aqui e o ledger da auditoria (status das reconciliacoes).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -617,7 +616,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "84f48ac1fa4b08bdfcbdbbfaae40d44120fb3f5ecb693adcb49e1e72773e920f",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "d90c1472969d25599d3f2147676399c5a511dba976737685734ba37c0a2e47db",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
@@ -646,8 +645,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "4642595edc2d5ec5ff8b7d428b56335092099e83ca9c2a3ed89a0bcae6bce490",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b51a4e8a333d857ed5fc2bfdd56fa2ec0cb4e5e4d304d1d21f834cf6a286f437",
+      "docs/eos-v2/WRITE_SET.json": "57aa9d425e8b3f29118561253e53fd40803b18e310ccc1f922bbb43c462d8876",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "c1a992b881f42d140c19d3d98fe7ef3a42ba8f1084e8293049671667969ff4c3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -772,7 +771,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "47081715a8553283bf16a24d3772e34205c6b46529897391cf5c5605c7b0f39d"
+      "tools/railway-staging-bootstrap.mjs": "2d2abf0d90b8c1d1eb671b734f51194627342a507d5ebba366f22a281ce5085a"
     }
   },
   "artefatosPorLane": {
@@ -2595,11 +2594,29 @@
   "entradas": [
     {
       "lane": "HARNESS",
+      "caminho": "tools/railway-staging-bootstrap.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "forceNames restrito a SECRETOS_EXTERNOS + validacao de forma + selftests novos",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2d2abf0d90b8c1d1eb671b734f51194627342a507d5ebba366f22a281ce5085a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
+      "precisao": "BOUNDED",
+      "proposito": "input force_names encaminhado como --force-names",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fbde40caedfd97663188ac8362573d2d307726a6a95fc716fb72090ed9d7d24f",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "marcar as 3 reconciliacoes como executadas com autoria do gate",
+      "proposito": "registro do diagnostico e da operacao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "84f48ac1fa4b08bdfcbdbbfaae40d44120fb3f5ecb693adcb49e1e72773e920f",
+      "shaNaDeclaracao": "d90c1472969d25599d3f2147676399c5a511dba976737685734ba37c0a2e47db",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2610,6 +2627,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P0: 3 reconciliacoes D1 aplicadas (escreveram o livro-razao do gate); ledger atualizado apos declarar e antes de commitar.",
+  "nota": "P1b fechado ANTES do commit unico (licao aplicada): forceNames+selftest+workflow+ledger prontos; commit e push na sequencia.",
   "aviso": "Declaracao ENCERRADA."
 }

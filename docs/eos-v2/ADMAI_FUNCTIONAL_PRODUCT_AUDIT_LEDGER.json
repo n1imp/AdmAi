@@ -143,6 +143,22 @@
       "descricao": "CardTecnico ja implementa a \"Direcao B do DECISOR (D-SL15)\": em lg+ o nome quebra em linha integral (lg:whitespace-normal) em vez de truncar \"An...\". O REDESIGN do freeze pode estar parcialmente enderecado pos-freeze; reavaliar com mais de 1 tecnico em fixture antes de manter a classificacao REDESIGN.",
       "evidencia": "E1 Tecnicos.jsx CardTecnico (comentario D-SL15) durante a Fase C",
       "classe": "AUDIT_NOTE"
+    },
+    {
+      "id": "AUD2-GAP-DOCS-UPLOAD-500",
+      "capability": "DOCUMENTOS",
+      "severidade": "ALTA",
+      "descricao": "Com DOCUMENTOS_ENABLED=true, POST /me/documentos 500a no Railway staging. Diagnostico discriminante: (1) upload service-role DIRETO no bucket com creds do repo => 200; (2) o MESMO codigo do backend (services/storage.js uploadPrivado + urlAssinada) rodado localmente com o env de staging => OK. Codigo e credenciais do repositorio saudaveis; a var SUPABASE_SERVICE_ROLE_KEY preenchida a mao no dashboard Railway e a suspeita (o caminho de upload do backend nunca fora exercitado ate hoje). Correcao: fase external-secrets ganhou --force-names (re-upsert OPACO da copia provada do GitHub Environment; guardas: so SECRETOS_EXTERNOS, validacao de forma, valores nunca impressos; default continua nunca-sobrescrever).",
+      "evidencia": "tour7 (500 + 8/13) · diag-storage (REST 200) · diag local uploadPrivado OK · selftest 20/20",
+      "classe": "GAP_EXECUTION_IN_PROGRESS (REVISOR-material: mudanca de tooling de credencial staging)"
+    },
+    {
+      "id": "AUD2-FIX-BOOTSTRAP-DOMAINS-QUERY",
+      "capability": "STAGING/TOOLING",
+      "severidade": "MEDIA",
+      "descricao": "Re-prepare falhou no limite de dominios do plano: a query domains sem projectId passou a ser recusada pela API do Railway, o erro era engolido (permitirErros) e o fallback create-first tentava criar um 4o dominio. Fix: query com os 3 ids + recusa logada. Run 33099626421 (falha) -> 33099790330 (PREPARE_OK reusando o dominio canonico).",
+      "evidencia": "logs dos runs + selftest 19/19->20/20",
+      "classe": "RESOLVED"
     }
   ],
   "itens": [
@@ -885,6 +901,11 @@
       "quando": "2026-08-27 (Ciclo 2)",
       "fase": "P0 — RECONCILE (D1)",
       "resultado": "3/3 disposicoes CONTEUDO_ACEITO_ORDEM_VIOLADA aplicadas; bloqueiaIntegracao=false nos 3; comparacoes preservadas; nenhum rollback/reescrita."
+    },
+    {
+      "quando": "2026-08-27 (Ciclo 2)",
+      "fase": "P1 em andamento (D2)",
+      "resultado": "DOCUMENTOS_ENABLED=true aplicado via prepare (PREPARE_OK, dominio canonico reusado apos fix da domains-query); redeploy detectado (uptime reset); tour7 revelou upload 500 => diagnostico fechou em var de secret do Railway; force-names implementado (selftest 20/20) aguardando dispatch."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
