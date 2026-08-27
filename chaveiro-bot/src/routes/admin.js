@@ -523,7 +523,10 @@ export function detalhesAuditoria(acao, antes, depois) {
   const bool = (v) => (typeof v === 'boolean' ? v : null);
   switch (acao) {
     case 'usuario.criado':
-      return { antes: null, depois: depois ? { nome: str(depois.nome), papel: str(depois.papel) } : null };
+      return {
+        antes: null,
+        depois: depois ? { nome: str(depois.nome), papel: str(depois.papel) } : null,
+      };
     case 'usuario.permissoes_alteradas': {
       const lado = (v) =>
         v ? { papel: str(v.papel), permissoes: matrizConhecida(v.permissoes) } : null;
@@ -531,11 +534,16 @@ export function detalhesAuditoria(acao, antes, depois) {
     }
     case 'usuario.excluido':
       return {
-        antes: antes ? { nome: str(antes.nome), papel: str(antes.papel), admin: bool(antes.admin) } : null,
+        antes: antes
+          ? { nome: str(antes.nome), papel: str(antes.papel), admin: bool(antes.admin) }
+          : null,
         depois: null,
       };
     case 'convite.enviado':
-      return { antes: null, depois: depois ? { email: str(depois.email), papel: str(depois.papel) } : null };
+      return {
+        antes: null,
+        depois: depois ? { email: str(depois.email), papel: str(depois.papel) } : null,
+      };
     case 'lgpd.cliente_anonimizado':
       return {
         antes: null,
@@ -549,7 +557,9 @@ export function detalhesAuditoria(acao, antes, depois) {
     case 'conta.excluida':
       return {
         antes: null,
-        depois: depois ? { escopo: str(depois.escopo), usuariosAfetados: num(depois.usuariosAfetados) } : null,
+        depois: depois
+          ? { escopo: str(depois.escopo), usuariosAfetados: num(depois.usuariosAfetados) }
+          : null,
       };
     default:
       return { antes: null, depois: null };

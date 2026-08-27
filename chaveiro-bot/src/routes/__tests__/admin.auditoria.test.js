@@ -15,11 +15,12 @@ describe('detalhesAuditoria — allowlist por ação (default fechado)', () => {
   });
 
   it('usuario.criado expõe só nome e papel do depois', () => {
-    const r = detalhesAuditoria(
-      'usuario.criado',
-      null,
-      { nome: 'Fulano', papel: 'gestor', senhaHash: 'NUNCA', extra: 1 }
-    );
+    const r = detalhesAuditoria('usuario.criado', null, {
+      nome: 'Fulano',
+      papel: 'gestor',
+      senhaHash: 'NUNCA',
+      extra: 1,
+    });
     expect(r.depois).toEqual({ nome: 'Fulano', papel: 'gestor' });
     expect(JSON.stringify(r)).not.toContain('NUNCA');
   });
@@ -27,8 +28,14 @@ describe('detalhesAuditoria — allowlist por ação (default fechado)', () => {
   it('permissoes_alteradas reduz a matriz às chaves CONHECIDAS do catálogo', () => {
     const r = detalhesAuditoria(
       'usuario.permissoes_alteradas',
-      { papel: 'funcionario', permissoes: { estoque: { ver: true, hack: 'x' }, moduloFalso: { ver: true } } },
-      { papel: 'funcionario', permissoes: { estoque: { ver: false }, proprio: { documentos: true, capFalsa: true } } }
+      {
+        papel: 'funcionario',
+        permissoes: { estoque: { ver: true, hack: 'x' }, moduloFalso: { ver: true } },
+      },
+      {
+        papel: 'funcionario',
+        permissoes: { estoque: { ver: false }, proprio: { documentos: true, capFalsa: true } },
+      }
     );
     expect(r.antes.permissoes).toEqual({ estoque: { ver: true } });
     expect(r.depois.permissoes.estoque).toEqual({ ver: false });
@@ -49,11 +56,11 @@ describe('detalhesAuditoria — allowlist por ação (default fechado)', () => {
   });
 
   it('lgpd.cliente_anonimizado expõe SOMENTE contagens numéricas', () => {
-    const r = detalhesAuditoria(
-      'lgpd.cliente_anonimizado',
-      null,
-      { servicosAnonimizados: 3, avaliacoesAnonimizadas: 1, telefone: 'NUNCA' }
-    );
+    const r = detalhesAuditoria('lgpd.cliente_anonimizado', null, {
+      servicosAnonimizados: 3,
+      avaliacoesAnonimizadas: 1,
+      telefone: 'NUNCA',
+    });
     expect(r.depois).toEqual({ servicosAnonimizados: 3, avaliacoesAnonimizadas: 1 });
     expect(JSON.stringify(r)).not.toContain('NUNCA');
   });
@@ -86,7 +93,17 @@ describe('dtoAuditoria — allowlist top-level, sem spread', () => {
   it('expõe exatamente as chaves do contrato', () => {
     const dto = dtoAuditoria(reg, new Map([[5, 'Dono A']]));
     expect(Object.keys(dto).sort()).toEqual(
-      ['acao', 'antes', 'autorNome', 'criadoEm', 'depois', 'entidade', 'entidadeId', 'id', 'ip'].sort()
+      [
+        'acao',
+        'antes',
+        'autorNome',
+        'criadoEm',
+        'depois',
+        'entidade',
+        'entidadeId',
+        'id',
+        'ip',
+      ].sort()
     );
     expect(dto.autorNome).toBe('Dono A');
     expect(JSON.stringify(dto)).not.toContain('empresaId');
@@ -99,7 +116,12 @@ describe('dtoAuditoria — allowlist top-level, sem spread', () => {
 
   it('injeção de credencial em ação conhecida não sobrevive (allowlist + redator)', () => {
     const dto = dtoAuditoria(
-      { ...reg, acao: 'usuario.permissoes_alteradas', antes: { papel: 'x', permissoes: { token: 'SEGREDO' } }, depois: null },
+      {
+        ...reg,
+        acao: 'usuario.permissoes_alteradas',
+        antes: { papel: 'x', permissoes: { token: 'SEGREDO' } },
+        depois: null,
+      },
       new Map()
     );
     expect(JSON.stringify(dto)).not.toContain('SEGREDO');
@@ -114,10 +136,7 @@ describe('whereKeyset — tupla (criadoEm, id) DESC', () => {
   it('com cursor: OR de criadoEm menor OU empate com id menor', () => {
     const c = { id: 10, criadoEm: new Date('2026-08-27T10:00:00Z') };
     expect(whereKeyset(c)).toEqual({
-      OR: [
-        { criadoEm: { lt: c.criadoEm } },
-        { criadoEm: c.criadoEm, id: { lt: c.id } },
-      ],
+      OR: [{ criadoEm: { lt: c.criadoEm } }, { criadoEm: c.criadoEm, id: { lt: c.id } }],
     });
   });
 });
