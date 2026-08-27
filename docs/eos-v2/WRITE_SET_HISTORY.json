@@ -59653,9 +59653,23 @@
         ],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "STG-FINDING-FIXTURE-DESTRUCTION-01",
+      "titulo": "Finding permanente STG-INTEGRATION-FIXTURE-DESTRUCTION: integracao TRUNCATE CASCADE destroi fixtures A/B do staging de aceitacao",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Finding registrado em decisions+backlog+ledger antes de qualquer commit",
+      "declaradoEm": "2026-08-27T00:51:34.861Z"
     }
   ],
-  "geradoEm": "2026-08-27T00:19:34.102Z",
+  "geradoEm": "2026-08-27T00:52:05.583Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

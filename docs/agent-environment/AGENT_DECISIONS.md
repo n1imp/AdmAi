@@ -269,3 +269,21 @@ VITE_API_URL_STAGING → Deploy Staging 33025736808 success → CSP connect-src 
 CORS +/- PASS → network browser 13/13 staging-only → seed A(44)/B(45) → bucket provision+
 validate+smoke PASS (STG-03 DONE) → H-mut 22×401 / I 26×403 (JWT sintético derivado
 opacamente) / GUC pooler PASS. K (validate:staging = migrate+integração no pooler) em execução.
+
+### FINDING PERMANENTE — STG-INTEGRATION-FIXTURE-DESTRUCTION (2026-08-27, autoritativo do usuário)
+
+**Prova**: `test/integration/helpers.js:35` executa `TRUNCATE TABLE ... CASCADE` entre testes;
+`validate:staging` roda `test:integration` contra o MESMO banco staging usado pelas fixtures de
+aceitação (A/B do seed-staging). Logo a suíte destrói as fixtures E2E.
+**Classificação**: NON_BLOCKING_FOR_CURRENT_RUN após re-seed; `STALE_FIXTURE_PROOF !=
+CURRENT_FIXTURE_PROOF` — o seed pré-integração NÃO vale como evidência.
+**Tratamento neste run**: integração termina intocada → RE-SEED A/B → positive control de
+fixtures (tenants+papéis+recursos presentes) → E2E/tenant-negative/viewports SEM nova execução
+da suíte destrutiva no meio.
+**Correção estrutural (backlog AdmAi)**: integração deve usar banco/schema/lifecycle de fixture
+isolado do staging de aceitação (ex.: schema dedicado ou DB de teste), nunca TRUNCATE sobre o
+estado compartilhado com E2E.
+**EOS_VNEXT_INPUT (implicação genérica de orquestração)**: fases de validação DESTRUTIVAS e
+fases de aceitação que COMPARTILHAM estado devem ser explicitamente ordenadas pelo orquestrador
+com re-provisão de fixtures entre elas; um gate "seed" não é evidência durável se qualquer fase
+posterior for destrutiva — evidência de fixture deve ser re-observada imediatamente antes do uso.

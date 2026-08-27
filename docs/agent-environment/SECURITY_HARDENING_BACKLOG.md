@@ -129,3 +129,11 @@ Itens Categoria C da missão "Security Closure Final" — não bloqueiam o encer
 - **Prioridade:** P3.
 - **Correção sugerida:** considerar uma extração de identidade própria para `/api/auth/login/2fa/recuperar` (ex.: hash do `desafio`) em vez de cair sempre no fallback por IP, ou avaliar se o teto de 5/15min é apropriado para essa rota especificamente.
 - **Retorna ao escopo:** se houver relato real de usuários legítimos bloqueados nesse cenário.
+
+## STG-INTEGRATION-FIXTURE-DESTRUCTION (backlog técnico — robustez, não vulnerabilidade)
+
+`test/integration/helpers.js` TRUNCATE CASCADE sobre o banco apontado por DATABASE_URL; quando
+apontado ao staging de aceitação, destrói fixtures E2E (provado 2026-08-27 no run real).
+Correção: lifecycle isolado (schema/banco dedicado de integração, ou guard que recuse rodar a
+suíte destrutiva quando `APP_ENV=staging` sem flag explícita `ALLOW_DESTRUCTIVE_INTEGRATION`).
+Prioridade: antes do próximo ciclo de aceitação que reutilize staging.

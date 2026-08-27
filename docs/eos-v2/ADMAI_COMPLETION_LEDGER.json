@@ -2364,7 +2364,9 @@
         "STG-MIG-RECON"
       ],
       "blockerRefs": [],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": "STG-APP-DEPLOY-EVID-02",
       "evidenceRefs": [
         "Provado LOCAL (stack real): 9/9 jornadas + /health ok. Falta contra staging real.",
@@ -2383,7 +2385,7 @@
       ],
       "attemptCount": 2,
       "lastAttempt": "2026-08-27T00:35:00Z",
-      "nextAction": "validate:staging (K) em curso -> E2E 4 jornadas + viewports -> Advisor -> sweep",
+      "nextAction": "Apos validate:staging: RE-SEED A/B (seed pre-integracao e STALE) -> fixture positive control -> E2E -> tenant-negative -> viewports -> sweep. NAO rodar suite destrutiva de novo antes disso.",
       "revisitCondition": "Acoes do usuario (a)-(c) acima. Infra+automacao completas; ci-ok da branch em fechamento.",
       "snapshotRef": null,
       "alias": "STAGING_OPERATIONAL"
@@ -2405,7 +2407,9 @@
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": null,
       "evidenceRefs": [
         "Driver chaveiro-painel/e2e/jornadas.mjs provado LOCAL. Falta contra staging real.",
@@ -2434,7 +2438,9 @@
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL. Falta contra staging real.",
@@ -2463,7 +2469,9 @@
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL. Falta contra staging real.",
@@ -2492,7 +2500,9 @@
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": null,
       "evidenceRefs": [
         "Isolamento por req.db/prismaParaEmpresa provado por integracao LOCAL. Falta a negativa E2E contra staging real com fixtures A/B sinteticas.",
@@ -2522,7 +2532,9 @@
       "blockerRefs": [
         "STG-CREDENTIALS"
       ],
-      "findingRefs": [],
+      "findingRefs": [
+        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+      ],
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL (sonda 4 viewports + jornada mobile). Falta contra staging real.",

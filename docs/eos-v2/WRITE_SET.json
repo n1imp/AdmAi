@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-CHAIN-EXEC-01",
-  "titulo": "Evidencias da cadeia real de staging: USER_GATE PASS -> connect -> health -> publish -> provas CSP/CORS/network -> seed -> bucket -> H/I/GUC",
+  "sliceId": "STG-FINDING-FIXTURE-DESTRUCTION-01",
+  "titulo": "Finding permanente STG-INTEGRATION-FIXTURE-DESTRUCTION: integracao TRUNCATE CASCADE destroi fixtures A/B do staging de aceitacao",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T00:18:43.551Z",
+  "declaradoEm": "2026-08-27T00:51:34.861Z",
   "baseCommitPorLane": {
-    "HARNESS": "7a3f8b96383578e8d1b1aff9b4ba5dd8b0da747f"
+    "HARNESS": "145c383559e0de56777a85fdf384c2231e62f943"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "So documentos de governanca (ledger + decisions). Execucao real com provas verificaveis por runs/HTTP; nenhuma mudanca de codigo nesta fatia.",
+  "notaDeMetodo": "Registro autoritativo do usuario. NON_BLOCKING_FOR_CURRENT_RUN apos re-seed; correcao estrutural = backlog tecnico do AdmAi; licao generica de orquestracao = EOS_VNEXT_INPUT em AGENT_DECISIONS.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "4d446a5aa883fb764a2633f89febbd5dbf22656ab6d2746eaecc353b81f46a98",
+      "docs/agent-environment/AGENT_DECISIONS.md": "8cad907e666b60fe0d088f02a6a919dbbfe1c1ba709abe58487a24cc234a6adb",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -608,7 +608,7 @@
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
       "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "0dde4782e4a70b1841c286889fdbaacba368e545992cc7788358fd52308513dd",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "b928abbad65fa481cdb129e3a9c87a3dc8730d726cef00189fea55cc62462b43",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "adb961845b3057cd3161e95611601f183a1d6c4d5a0f6e29bdaaee6c8579ef8a",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "adecfc1d926d79b65f31ce6789b1e1f978aacd199c2838ae6fcc174ea1d6ceb4",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "e3d55f644f233970f41291aea49762ef57cb0f431f1e9eca469900a083ecb626",
+      "docs/eos-v2/WRITE_SET.json": "a810d32a1ae8287fa0f1f7d15c8e5cc9463a3a8ac067538936b0cc9c9d1ef210",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "42b9953cde66a36a93d0338d730c4352ffd034d57db4d3e877fc2422c3e9ea3e",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2528,28 +2528,37 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "estados/evidencias dos gates provados",
+      "proposito": "findingRefs nos itens E2E/RUNTIME + ordem re-seed antes de E2E",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "b928abbad65fa481cdb129e3a9c87a3dc8730d726cef00189fea55cc62462b43",
+      "shaNaDeclaracao": "adb961845b3057cd3161e95611601f183a1d6c4d5a0f6e29bdaaee6c8579ef8a",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "apendice de execucao da cadeia",
+      "proposito": "finding + EOS_VNEXT_INPUT + backlog",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "4d446a5aa883fb764a2633f89febbd5dbf22656ab6d2746eaecc353b81f46a98",
+      "shaNaDeclaracao": "8cad907e666b60fe0d088f02a6a919dbbfe1c1ba709abe58487a24cc234a6adb",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/SECURITY_HARDENING_BACKLOG.md",
+      "precisao": "BOUNDED",
+      "proposito": "item estrutural: lifecycle de fixtures isolado p/ integracao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e3d92c4b74bdc6fb96cb01327be9a0bbc3ed1275c2f43266b8837bf97bb8a66f",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "UNKNOWN_DIFFERENCE",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
-  "provenance": "UNKNOWN_PROVENANCE",
-  "bloqueiaIntegracao": true,
-  "nota": "Evidencias da cadeia (ledger+decisions) escritas e commitadas; K ainda em execucao segue em fatia futura",
+  "provenance": "ORIGINAL_PRE_MUTATION",
+  "bloqueiaIntegracao": false,
+  "nota": "Finding registrado em decisions+backlog+ledger antes de qualquer commit",
   "aviso": "Declaracao ENCERRADA."
 }
