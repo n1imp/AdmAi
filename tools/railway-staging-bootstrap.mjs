@@ -440,6 +440,44 @@ export async function internalSecrets(gql, { projectId, environmentId, serviceId
   return { gerados: faltantes, jaPresentes: SECRETOS_INTERNOS.filter((n) => existentes.includes(n)) };
 }
 
+// ── LOGS (read-only) ─────────────────────────────────────────────────────────
+/** [AUD2-P1C] Diagnóstico READ-ONLY: imprime linhas de ERRO do deployment mais recente do
+ *  service staging. Existe porque o runtime do Railway é a única testemunha de um 500 cujo
+ *  código passa localmente (caso real: uploads de storage 500 com creds provadas). Higiene:
+ *  só linhas que casam o filtro de erro, truncadas, com JWTs/segredos aparentes SCRUBBED —
+ *  nunca despeja log bruto no chat/CI. Nenhuma mutação: exige apenas queries. */
+const FILTRO_ERRO = /erro|error|falha|fail|exception|unhandled|storage|upload|documento|supabase/i;
+export function scrubLinha(msg) {
+  return String(msg)
+    .replace(/eyJ[\w-]{8,}\.[\w-]{4,}\.[\w-]{4,}/g, '[JWT]')
+    .replace(/sb_secret_[A-Za-z0-9_-]+/g, '[SB_SECRET]')
+    .replace(/re_[A-Za-z0-9_]{8,}/g, '[RESEND_KEY]')
+    .replace(/postgres(ql)?:\/\/[^\s"']+/g, '[DB_URL]')
+    .slice(0, 300);
+}
+export async function logsDeErro(gql, { projectId, environmentId, serviceId }, { limite = 400 } = {}) {
+  if (!projectId || !environmentId || !serviceId) {
+    falhar('logs exige --project-id, --environment-id e --service-id.');
+  }
+  await verificarIdentidade(gql, { projectId, environmentId, serviceId });
+  const d = await gql(
+    `query($input: DeploymentListInput!, $first: Int!) { deployments(input: $input, first: $first) { edges { node { id status createdAt } } } }`,
+    { input: { projectId, environmentId, serviceId }, first: 3 }
+  );
+  const nos = (d.data?.deployments?.edges ?? []).map((e) => e.node);
+  if (!nos.length) falhar('nenhum deployment encontrado para o service staging.');
+  const alvo = nos.find((n) => n.status === 'SUCCESS') ?? nos[0];
+  const l = await gql(
+    `query($deploymentId: String!, $limit: Int!) { deploymentLogs(deploymentId: $deploymentId, limit: $limit) { message severity timestamp } }`,
+    { deploymentId: alvo.id, limit: limite }
+  );
+  const linhas = (l.data?.deploymentLogs ?? [])
+    .filter((x) => FILTRO_ERRO.test(x.message ?? ''))
+    .slice(-40)
+    .map((x) => `${x.timestamp ?? ''} [${x.severity ?? '?'}] ${scrubLinha(x.message)}`);
+  return { deploymentId: alvo.id, status: alvo.status, criadoEm: alvo.createdAt, linhasDeErro: linhas };
+}
+
 // ── EXTERNAL-SECRETS ─────────────────────────────────────────────────────────
 /** Transferência OPACA dos secrets de ORIGEM EXTERNA (Supabase/Resend): o runner
  *  do Actions recebe os valores do GitHub Environment `staging` (env vars STG_*)
@@ -914,6 +952,29 @@ export async function autoteste() {
       && validarFormaExterna('SUPABASE_SERVICE_ROLE_KEY', 'eyJa.bb.cc') === null;
   });
 
+  await caso('logsDeErro: filtra so linhas de erro, SCRUBBA JWT/segredos e nao muta nada', async () => {
+    let mutacoes = 0;
+    const fetchFake = async (_url, { body }) => {
+      const { query } = JSON.parse(body);
+      if (query.includes('mutation')) { mutacoes += 1; return { status: 200, json: async () => ({ data: {} }) }; }
+      if (query.includes('project(')) return { status: 200, json: async () => NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]) };
+      if (query.includes('deployments(')) return { status: 200, json: async () => ({ data: { deployments: { edges: [{ node: { id: 'dep1', status: 'SUCCESS', createdAt: 't' } }] } } }) };
+      if (query.includes('deploymentLogs(')) return { status: 200, json: async () => ({ data: { deploymentLogs: [
+        { message: 'boot ok tudo bem', severity: 'info', timestamp: '1' },
+        { message: 'Erro POST /me/documentos { erro: "Falha no upload privado: token eyJabcdefgh.ijklmnop.qrstuvwx" }', severity: 'error', timestamp: '2' },
+      ] } }) };
+      return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
+    };
+    const gql = criarCliente('t', fetchFake);
+    const r = await logsDeErro(gql, { projectId: 'p', environmentId: 'e', serviceId: 's' });
+    return mutacoes === 0
+      && r.deploymentId === 'dep1'
+      && r.linhasDeErro.length === 1
+      && r.linhasDeErro[0].includes('[JWT]')
+      && !r.linhasDeErro[0].includes('eyJabcdefgh')
+      && !JSON.stringify(r).includes('boot ok tudo bem');
+  });
+
   await caso('externalSecrets: upserta so os validos ausentes; saida so tem NOMES', async () => {
     let upsertado = null;
     const fetchFake = async (_url, { body }) => {
@@ -1027,7 +1088,7 @@ if (argv.includes('--selftest')) {
 
 if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || process.argv[1]?.endsWith('railway-staging-bootstrap.mjs')) {
   const fase = flag('phase');
-  if (!['prepare', 'connect', 'internal-secrets', 'external-secrets'].includes(fase ?? '')) {
+  if (!['prepare', 'connect', 'internal-secrets', 'external-secrets', 'logs'].includes(fase ?? '')) {
     console.error('uso: --phase=prepare [--project-id=..] | --phase=internal-secrets|external-secrets|connect --project-id=.. --environment-id=.. --service-id=.. | --selftest');
     process.exit(2);
   }
@@ -1066,6 +1127,15 @@ if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || pr
       );
       // SÓ nomes/status — nunca valores.
       console.log('EXTERNAL_SECRETS_OK ' + JSON.stringify(r));
+    } else if (fase === 'logs') {
+      const r = await logsDeErro(gql, {
+        projectId: flag('project-id'),
+        environmentId: flag('environment-id'),
+        serviceId: flag('service-id'),
+      });
+      console.log(`LOGS_OK deployment=${r.deploymentId} status=${r.status} criadoEm=${r.criadoEm}`);
+      for (const linha of r.linhasDeErro) console.log(`LOG| ${linha}`);
+      if (!r.linhasDeErro.length) console.log('LOG| (nenhuma linha casou o filtro de erro)');
     } else {
       const r = await connect(gql, {
         projectId: flag('project-id'),
