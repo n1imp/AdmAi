@@ -45,5 +45,31 @@
     }
   ],
   "itens": [],
-  "aviso": "AUDITORIA NAO INICIADA. Nao inventariar/corrigir/implementar antes da diretiva propria."
+  "aviso": "AUDITORIA NAO INICIADA. Nao inventariar/corrigir/implementar antes da diretiva propria.",
+  "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
+  "schemaDeItemFuturo": {
+    "aviso": "Cada entrada da auditoria devera suportar estes campos (nao popular antes da diretiva da auditoria):",
+    "campos": [
+      "ID",
+      "NAME",
+      "SCOPE_CLASS",
+      "PRIORITY",
+      "FRONTEND_STATE",
+      "BACKEND_STATE",
+      "INTEGRATION_STATE",
+      "RBAC_STATE",
+      "PERSISTENCE_STATE",
+      "ERROR_STATE",
+      "EMPTY_STATE",
+      "LOADING_STATE",
+      "MOBILE_STATE",
+      "STAGING_EVIDENCE",
+      "USER_REAL_CAN_USE",
+      "FINAL_CLASSIFICATION",
+      "GAPS",
+      "NEXT_ACTION",
+      "EVIDENCE_POINTERS",
+      "LAST_VERIFIED_HEAD"
+    ]
+  }
 }

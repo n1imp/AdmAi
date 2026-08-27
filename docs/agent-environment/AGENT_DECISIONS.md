@@ -390,3 +390,10 @@ terminal `STAGING_COMPLETION_LEDGER=CLOSED`, `REMAINING_STAGING_BLOCKERS=0`. Car
 `ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json` NOT_STARTED com regra canônica
 FEATURE_DONE = USER_REAL_CAN_USE. READY_FRONTIER = ADMAI_FUNCTIONAL_PRODUCT_AUDIT.
 ADMAI_RELEASE_READY = NO (LEGAL DEFERRED_BY_D2; promotion NOT_AUTHORIZED).
+
+### COLD START PACKAGE (2026-08-27)
+
+Criado `docs/eos-v2/current/` (bootstrap, current-state, index, invariantes, carryover,
+economia de contexto, next-session-prompt pointer-based) + schema futuro no audit ledger
+(STATUS segue NOT_STARTED). Aceitação §37 (14 perguntas com 01+02+ledger) PASS; 79/79
+pointers do índice resolvem; secret-scan 0; auditoria NÃO iniciada.

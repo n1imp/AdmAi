@@ -65006,9 +65006,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Fechamento documental: baseline+tag+ledgers; zero mudanças de runtime",
       "declaradoEm": "2026-08-27T11:20:27.150Z"
+    },
+    {
+      "sliceId": "ADMAI-COLD-START-PACKAGE",
+      "titulo": "Cold Start Package p/ proxima sessao: docs/eos-v2/current/* (7 arquivos) + schema futuro no audit ledger + nota em decisions",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Pacote documental completo; validacoes §41 PASS; auditoria NOT_STARTED",
+      "declaradoEm": "2026-08-27T11:40:54.238Z"
     }
   ],
-  "geradoEm": "2026-08-27T11:21:43.631Z",
+  "geradoEm": "2026-08-27T11:44:07.289Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

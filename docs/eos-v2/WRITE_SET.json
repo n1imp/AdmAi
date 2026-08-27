@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STAGING-OPERATIONAL-CLOSURE",
-  "titulo": "Fechamento operacional do staging aceito: baseline imutavel (tag) + artifact de aceitacao + ledger CLOSED + bootstrap do ledger da auditoria funcional + carryover findings",
+  "sliceId": "ADMAI-COLD-START-PACKAGE",
+  "titulo": "Cold Start Package p/ proxima sessao: docs/eos-v2/current/* (7 arquivos) + schema futuro no audit ledger + nota em decisions",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T11:20:27.150Z",
+  "declaradoEm": "2026-08-27T11:40:54.238Z",
   "baseCommitPorLane": {
-    "HARNESS": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+    "HARNESS": "ac036824a43f4541bc60e7cddc217b392b763048"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Ciclo curto e documental (sem runtime/app). Tag anotada no HEAD comprovado 8a53cc5 ANTES do commit de fechamento (a tag aponta o estado aceito, nao os docs). Sem secrets em nenhum artifact.",
+  "notaDeMetodo": "Ciclo documental curto. HISTORY->CURRENT_TRUTH; pointers em vez de blobs; zero secrets; auditoria permanece NOT_STARTED.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -570,7 +570,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "001fa20333c29c950762d2f17cf2e38409ed3b9bc367a7e9984f220fa1598760",
+      "docs/agent-environment/AGENT_DECISIONS.md": "9daefbccbde555d180bb0595a8731987d6f25a0133317df03210b1265c90d585",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -610,9 +610,10 @@
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
       "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "0dde4782e4a70b1841c286889fdbaacba368e545992cc7788358fd52308513dd",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "35426a71ad98bad7dea25ea807fa455a2b58b5809855b418bdf7bfcc3917cb62",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "3bb1aa5d95447255bd930a11a921527f76acf9e94a118ce082dbef178b5d1748",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
@@ -622,6 +623,7 @@
       "docs/eos-v2/MAR_ARCHITECTURE_AUDIT.md": "37cfc33ee5161e20a732ddca0e151181adb0969f2987bfcaf4feb0c57e834c6c",
       "docs/eos-v2/RELEASE_BLOCKERS_SWEEP.md": "bbe9687e8acad463e7a5853ff408e43ef772bc115ba01927fc330261844a1cb9",
       "docs/eos-v2/RUN_STATE.json": "db522185679db3f767d2d4d149fb390619fde6542178f9a29de6981ec384372b",
+      "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md": "9919345e979cd7e6991312b7d1089080cfa160b20856f7f4d69bb1ab6a4efd83",
       "docs/eos-v2/STG_APP_ROLLBACK_OBSERVABILITY.md": "8533ed4320f4b26698ebac848dcad7f2d24142c5c9682aa8e45d8c78a4091705",
       "docs/eos-v2/STG_APP_SECRET_MATRIX.md": "54e6527e1b66ef83c36f1fb96f27a4f1b5026eb717bd86a705cb67b91ebce5f1",
       "docs/eos-v2/STG_MIGRATION_RECONCILIATION.md": "ba8da3144e076079469f0268362ee189ebf616e0f29eb6bce785257203cd4d04",
@@ -633,8 +635,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "51405a9d288c58ce25bad4b4ecd973a2f38a5d5adf60898030f93b9765c1b8b5",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "9019c347b3d103ea137538c02fae29a21c0bba036e3dbb75985616879a62c92a",
+      "docs/eos-v2/WRITE_SET.json": "17b42332dfa33c588e33cddafb7026ca7b5ccd469dc51bafcaffc71e898054b9",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "a54748a754084b82a83eb73176423922fe978ccf8bededb78942345a5993ed40",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -784,7 +786,7 @@
       ".serena/project.local.yml": "407:1786143159645",
       ".serena/project.yml": "9789:1786143160556",
       "chaveiro-bot/.env": "1383:1787404776680",
-      "chaveiro-bot/.env.staging": "2578:1787803729768",
+      "chaveiro-bot/.env.staging": "2568:1787830319703",
       "chaveiro-bot/.env.test": "1502:1786676272079",
       "chaveiro-bot/coverage/base.css": "5394:1785730588610",
       "chaveiro-bot/coverage/block-navigation.js": "2655:1785730588611",
@@ -2540,48 +2542,93 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md",
+      "caminho": "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: artifact de aceitacao (baseline/tag/urls/matriz de gates; zero secrets)",
+      "proposito": "NOVO: bootstrap principal",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
       "precisao": "BOUNDED",
-      "proposito": "terminal: STAGING_COMPLETION_LEDGER=CLOSED",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "35426a71ad98bad7dea25ea807fa455a2b58b5809855b418bdf7bfcc3917cb62",
+      "proposito": "NOVO: snapshot key/value",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/03_PROJECT_INDEX.md",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: mapa de navegacao",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/04_DECISION_INVARIANTS.md",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: decisoes nao-redescobriveis",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: findings vivos",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/06_CONTEXT_ECONOMY_POLICY.md",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: politica de economia de contexto",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/NEXT_SESSION_PROMPT.md",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: prompt pointer-based",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: bootstrap NOT_STARTED com categorias e regra canonica",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "schemaDeItemFuturo + pointer ao pacote",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "3bb1aa5d95447255bd930a11a921527f76acf9e94a118ce082dbef178b5d1748",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "registro do fechamento + carryover + READY_FRONTIER",
+      "proposito": "nota do ciclo",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "001fa20333c29c950762d2f17cf2e38409ed3b9bc367a7e9984f220fa1598760",
+      "shaNaDeclaracao": "9daefbccbde555d180bb0595a8731987d6f25a0133317df03210b1265c90d585",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Fechamento documental: baseline+tag+ledgers; zero mudanças de runtime",
+  "nota": "Pacote documental completo; validacoes §41 PASS; auditoria NOT_STARTED",
   "aviso": "Declaracao ENCERRADA."
 }
