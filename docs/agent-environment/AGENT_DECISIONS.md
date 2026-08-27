@@ -287,3 +287,6 @@ estado compartilhado com E2E.
 fases de aceitação que COMPARTILHAM estado devem ser explicitamente ordenadas pelo orquestrador
 com re-provisão de fixtures entre elas; um gate "seed" não é evidência durável se qualquer fase
 posterior for destrutiva — evidência de fixture deve ser re-observada imediatamente antes do uso.
+
+Nota: ID canônico do finding no ledger = `SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION`
+(prefixo SEC-HB- exigido pela convenção de refs do completion-ledger; item no backlog).

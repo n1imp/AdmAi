@@ -2365,7 +2365,7 @@
       ],
       "blockerRefs": [],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": "STG-APP-DEPLOY-EVID-02",
       "evidenceRefs": [
@@ -2408,7 +2408,7 @@
         "STG-CREDENTIALS"
       ],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": null,
       "evidenceRefs": [
@@ -2439,7 +2439,7 @@
         "STG-CREDENTIALS"
       ],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": null,
       "evidenceRefs": [
@@ -2470,7 +2470,7 @@
         "STG-CREDENTIALS"
       ],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": null,
       "evidenceRefs": [
@@ -2501,7 +2501,7 @@
         "STG-CREDENTIALS"
       ],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": null,
       "evidenceRefs": [
@@ -2533,7 +2533,7 @@
         "STG-CREDENTIALS"
       ],
       "findingRefs": [
-        "STG-INTEGRATION-FIXTURE-DESTRUCTION"
+        "SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION"
       ],
       "writeSetRef": null,
       "evidenceRefs": [

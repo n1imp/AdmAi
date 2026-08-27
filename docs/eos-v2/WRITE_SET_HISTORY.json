@@ -59667,9 +59667,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Finding registrado em decisions+backlog+ledger antes de qualquer commit",
       "declaradoEm": "2026-08-27T00:51:34.861Z"
+    },
+    {
+      "sliceId": "STG-FINDING-REF-FIX-01",
+      "titulo": "Corrige prefixo do findingRef p/ convencao do ledger: SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Prefixo corrigido; validador 4/4",
+      "declaradoEm": "2026-08-27T00:52:49.823Z"
     }
   ],
-  "geradoEm": "2026-08-27T00:52:05.583Z",
+  "geradoEm": "2026-08-27T00:52:52.939Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
