@@ -65296,9 +65296,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Correcoes REVISOR fechadas: 2 ALTA seguranca + engines + evidencia; selftest 23/23, bot format/lint OK.",
       "declaradoEm": "2026-08-27T19:47:58.355Z"
+    },
+    {
+      "sliceId": "AUD2-REV-FIXES-2",
+      "titulo": "REVISOR rodada 2: shell-injection tambem no step guard (confirm_cost/phase) + lockfile do bot engines>=22 + setup-node 22 no bootstrap",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Rodada 2 do REVISOR: guard sem inline + lockfile 22 + setup-node 22; verificado estruturalmente.",
+      "declaradoEm": "2026-08-27T19:55:01.202Z"
     }
   ],
-  "geradoEm": "2026-08-27T19:51:12.095Z",
+  "geradoEm": "2026-08-27T19:55:03.431Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

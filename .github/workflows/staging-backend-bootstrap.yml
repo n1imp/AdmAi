@@ -63,27 +63,34 @@ jobs:
     steps:
       - name: Guard de autorização (D2 registrado no dispatch; tag = só registro)
         id: fase
+        # [REVISOR 01a044bb-final] Inputs também aqui via env — nunca inline no run. Um input com
+        # $()/backtick interpolado poderia persistir payload em $GITHUB_ENV/runner e ser alcançado
+        # pelo step posterior que recebe RAILWAY_TOKEN e STG_*. Como env vars, os valores são literais.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_CONFIRM_COST: ${{ inputs.confirm_cost }}
+          INPUT_PHASE: ${{ inputs.phase }}
         run: |
           set -eu
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ "$EVENT_NAME" = "push" ]; then
             # Run de REGISTRO (tag técnica): nenhuma mutação; só o selftest abaixo roda.
             echo "phase=register" >> "$GITHUB_OUTPUT"
             echo "run de registro — nenhuma chamada à API do Railway."
             exit 0
           fi
-          if [ "${{ inputs.confirm_cost }}" != "yes" ]; then
+          if [ "$INPUT_CONFIRM_COST" != "yes" ]; then
             echo "::error::confirm_cost != 'yes' — sem a confirmação literal do D2 de custo, nada é criado."
             exit 1
           fi
-          case "${{ inputs.phase }}" in prepare|connect|internal-secrets|external-secrets|logs) ;; *)
+          case "$INPUT_PHASE" in prepare|connect|internal-secrets|external-secrets|logs) ;; *)
             echo "::error::phase deve ser prepare, internal-secrets, external-secrets, connect ou logs."; exit 1;; esac
-          echo "phase=${{ inputs.phase }}" >> "$GITHUB_OUTPUT"
+          echo "phase=$INPUT_PHASE" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Selftest do bootstrap (fetch injetado — API real intocada)
         run: node tools/railway-staging-bootstrap.mjs --selftest

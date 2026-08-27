@@ -1028,7 +1028,14 @@
         "MEDIA-3 engines>=20 incoerente: diagnostico provou falha funcional no Node 20 (supabase-js WebSocket). CORRIGIDO: chaveiro-bot/package.json engines node>=22 (Docker+CI ja em 22).",
         "EVIDENCIA-4 tour8 tokenVelhoStatus:200: a afirmacao de invalidacao de sessao nao era sustentada pelo artefato. RESOLVIDO: probe controlado (probe-token-pos-exclusao) prova invalidacao CORRETA (GET /me pos-DELETE = 401 imediato e 4s; DB empresa=0). O 200 do tour8 foi a janela da cascata de exclusao AINDA em andamento (pathname ainda /configuracao/seguranca, token residual) — timing do instrumento, NAO defeito de seguranca. requireAuth revalida o usuario no banco (auth.js:23-28)."
       ],
-      "notaRevisor": "REVISOR tambem observou que a auditoria expoe PII allowlisted (nome/email de convite/IP) ao admin do tenant por design — a garantia e SEM PII NAO-ALLOWLISTED, nao zero-PII. Registrado: a exposicao e intencional (o admin da empresa audita a propria empresa) e escopada por tenant."
+      "notaRevisor": "REVISOR tambem observou que a auditoria expoe PII allowlisted (nome/email de convite/IP) ao admin do tenant por design — a garantia e SEM PII NAO-ALLOWLISTED, nao zero-PII. Registrado: a exposicao e intencional (o admin da empresa audita a propria empresa) e escopada por tenant.",
+      "rodada2": {
+        "achados": [
+          "ALTA (perdido na rodada 1): shell-injection tambem no step GUARD (confirm_cost/phase inline). CORRIGIDO: guard via env INPUT_CONFIRM_COST/INPUT_PHASE; nenhum bloco run: usa mais interpolacao inline de inputs (verificado estruturalmente).",
+          "MEDIA: chaveiro-bot/package-lock.json raiz ainda >=20. CORRIGIDO: npm install --package-lock-only -> raiz >=22 (deps transitivas seguem >=20, correto). setup-node do bootstrap 20->22 por consistencia."
+        ],
+        "status": "AGUARDANDO VEREDITO FINAL DO REVISOR"
+      }
     }
   ],
   "gateDoUsuario": {
