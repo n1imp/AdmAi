@@ -65170,9 +65170,37 @@
       "bloqueiaIntegracao": false,
       "nota": "P1b fechado ANTES do commit unico (licao aplicada): forceNames+selftest+workflow+ledger prontos; commit e push na sequencia.",
       "declaradoEm": "2026-08-27T17:49:11.615Z"
+    },
+    {
+      "sliceId": "AUD2-P1C-LOGS-PHASE",
+      "titulo": "P1c: fase read-only logs no bootstrap (deploymentLogs filtrado+scrubbed) p/ diagnosticar o 500 de storage no Railway",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1c fechado antes do commit unico: phase logs read-only (filtro+scrub, selftest 21/21) + workflow aceita logs.",
+      "declaradoEm": "2026-08-27T17:55:01.100Z"
+    },
+    {
+      "sliceId": "AUD2-P1D-NODE22",
+      "titulo": "P1d: NIXPACKS_NODE_VERSION=22 no service staging (supabase-js deprecou Node<=20; uploads 500 no runtime 20, OK no 24 local)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1d fechado antes do commit: NIXPACKS_NODE_VERSION=22 + registro da causa raiz (Node 20 vs supabase-js).",
+      "declaradoEm": "2026-08-27T17:57:20.363Z"
     }
   ],
-  "geradoEm": "2026-08-27T17:50:18.584Z",
+  "geradoEm": "2026-08-27T17:57:51.221Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

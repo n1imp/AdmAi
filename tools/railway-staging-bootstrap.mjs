@@ -51,6 +51,10 @@ const VARS_NAO_SECRETAS = (dominio) => ({
      encontrou a feature inerte (404 "Recurso não disponível") por falta desta var.
      Produção NÃO passa por este arquivo (projeto Railway dedicado admai-staging). */
   DOCUMENTOS_ENABLED: 'true',
+  /* [AUD2-P1D] O nixpacks resolvia Node 20 (engines >=20) e o @supabase/supabase-js atual
+     deprecou Node <=20 — uploads de storage 500avam SÓ no runtime do Railway (Node 24 local
+     passava com o mesmo código+creds; provado por diagnóstico discriminante + phase logs). */
+  NIXPACKS_NODE_VERSION: '22',
   ...(dominio ? { PUBLIC_URL: `https://${dominio}` } : {}),
   // Referência interna ao Redis gerenciado (Railway resolve; valor nunca passa por aqui):
   REDIS_URL: '${{Redis.REDIS_URL}}',
