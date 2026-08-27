@@ -100,6 +100,14 @@ describe('Seguranca — códigos de recuperação do 2FA', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.getByText('Guarde seus códigos de recuperação')).toBeInTheDocument();
 
+    // O X ("Fechar") do Overlay usa o MESMO onClose no-op — também não descarta.
+    fireEvent.click(screen.getByRole('button', { name: /fechar/i }));
+    expect(screen.getByText('Guarde seus códigos de recuperação')).toBeInTheDocument();
+
+    // Backdrop: mouseDown com target === currentTarget é o gatilho de closeOnBackdrop.
+    fireEvent.mouseDown(document.querySelector('[data-panel-overlay-root]'));
+    expect(screen.getByText('Guarde seus códigos de recuperação')).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: /concluir/i }));
     await waitFor(() =>
       expect(screen.queryByText('Guarde seus códigos de recuperação')).not.toBeInTheDocument()

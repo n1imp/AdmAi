@@ -65048,9 +65048,23 @@
       "bloqueiaIntegracao": true,
       "nota": "Fase C implementada e validada (vitest 269/269, eslint 0 erros, prettier, build, diff --check) ANTES de commitar — fechamento na mesma base da declaracao.",
       "declaradoEm": "2026-08-27T12:56:38.263Z"
+    },
+    {
+      "sliceId": "AUD-C1-REV-FIXES",
+      "titulo": "Correcoes do REVISOR (thread 01a04392): 2 testes residuais (telefone sem recuperacao; X/backdrop nao descartam codigos) + errata 14->17 e registro da revisao no ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Correcoes do REVISOR aplicadas (2 testes + ledger); suite completa verde; fechado ANTES do commit.",
+      "declaradoEm": "2026-08-27T14:19:03.022Z"
     }
   ],
-  "geradoEm": "2026-08-27T13:10:48.322Z",
+  "geradoEm": "2026-08-27T14:20:09.917Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

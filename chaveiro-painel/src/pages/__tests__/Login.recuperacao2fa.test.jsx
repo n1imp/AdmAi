@@ -93,6 +93,25 @@ describe('Login — recuperação 2FA por código de uso único', () => {
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
+  it('desafio por TELEFONE não oferece recuperação por código (só TOTP)', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: { twoFactorRequerido: true, desafio: 'DESAFIO-TEL', metodo: 'telefone' },
+    });
+    render(<Login />);
+    fireEvent.change(screen.getByPlaceholderText('seu_usuario'), {
+      target: { value: 'dono.teste' },
+    });
+    const senha = screen.getByPlaceholderText('••••••••');
+    fireEvent.change(senha, { target: { value: 'senha-forte-1!' } });
+    fireEvent.submit(senha.closest('form'));
+    await screen.findByText('Verificação em duas etapas');
+
+    expect(screen.getByText(/enviamos pelo WhatsApp/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /usar código de recuperação/i })
+    ).not.toBeInTheDocument();
+  });
+
   it('alternar de volta para "Usar código do app" restaura o campo de 6 dígitos', async () => {
     await chegarAoDesafioTotp();
     fireEvent.click(screen.getByRole('button', { name: /usar código de recuperação/i }));
