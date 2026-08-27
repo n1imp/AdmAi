@@ -2,12 +2,13 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE2_IN_PROGRESS",
+  "status": "CYCLE2_COMPLETE_AWAITING_USER_GATE",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
     "GAP_EXECUTION (round 1)",
-    "REVERIFY_IN_STAGING (round 1)"
+    "REVERIFY_IN_STAGING (round 1)",
+    "CYCLE2: RECONCILE+DOCUMENTOS+ONBOARDING+AUDITORIA+WHATSAPP_CLAIMS+REEVALUATION+REVISOR_APPROVED"
   ],
   "diretiva": "Cold start EOS 2026-08-27: usuário iniciou ADMAI_FUNCTIONAL_PRODUCT_AUDIT (inventário canônico → classificação por evidência real de staging → GAP_EXECUTION seguro → REVERIFY_IN_STAGING).",
   "baseline": {
@@ -1034,31 +1035,33 @@
           "ALTA (perdido na rodada 1): shell-injection tambem no step GUARD (confirm_cost/phase inline). CORRIGIDO: guard via env INPUT_CONFIRM_COST/INPUT_PHASE; nenhum bloco run: usa mais interpolacao inline de inputs (verificado estruturalmente).",
           "MEDIA: chaveiro-bot/package-lock.json raiz ainda >=20. CORRIGIDO: npm install --package-lock-only -> raiz >=22 (deps transitivas seguem >=20, correto). setup-node do bootstrap 20->22 por consistencia."
         ],
-        "status": "AGUARDANDO VEREDITO FINAL DO REVISOR"
-      }
+        "status": "APROVADO"
+      },
+      "vereditoFinal": "APROVADO (thread 01a044bb, apos 2 rodadas de correcoes de seguranca)"
     }
   ],
   "gateDoUsuario": {
-    "geradoEm": "2026-08-27T15:10Z",
+    "geradoEm": "2026-08-27 (Ciclo 2)",
+    "reconciliacoesWriteSet": "1 disposicao pendente: AUD2-P1-RAILWAY-DOCS-FLAG (classe D1, HEAD movido durante fatia) — comando pronto em writeSetReconciliacoesPendentes; autoria do usuario.",
     "decisoesD2Soberanas": [
-      "GAP-LEGAL-MODELO-01: conteúdo jurídico de /termos e /privacidade (modelo + barbers-flow) — RELEASE BLOCKER, evidência fresca de staging (tour0)",
-      "D2-DOC-BUCKET · D2-BACKFILL-PROD · D2-Q010-BACKUP · D2-PROMOTION (produção; inalterados)"
+      "GAP-LEGAL-MODELO-01 (conteudo juridico /termos /privacidade) — RELEASE BLOCKER, D6 mantido",
+      "D2-DOC-BUCKET producao · D2-BACKFILL-PROD · D2-Q010-BACKUP · D2-PROMOTION (producao intocada)"
     ],
-    "autorizacoesOperacionais": [
-      "DOCUMENTOS em staging: autorizar DOCUMENTOS_ENABLED=true no Railway staging para re-sondar o fluxo do usuário (bucket já provado; script de sonda pronto no tour2)",
-      "ONBOARDING: autorizar sonda de signup com tenant descartável + estratégia para verificação de e-mail em staging",
-      "AUDITORIA: decidir se o MVP exige trilha CONSULTÁVEL (viraria gap de UI+endpoint) ou se BACKEND_ONLY encerra",
-      "Messaging WhatsApp (AUD-GAP-MESSAGING-WHATSAPP): copy da landing/dashboard/ajuda vende WhatsApp no presente com a feature POST_MVP — decisão de mensagem de produto"
+    "reconciliacoesDeEscopo": [
+      "/tecnicos: REDESIGN do freeze REFUTADO por evidencia (nomes de 52 chars nao truncam em 1440px; CardTecnico ja aplica Direcao B D-SL15) — recomendar reclassificar REDESIGN->REFINE/KEEP no ADMAI_SCOPE_FREEZE",
+      "WHATSAPP: feature POST_MVP (claims ja honestos); reconciliacao MVP-vs-POST_MVP entre freeze e bootstrap ja resolvida por D2 amendment (featureFlags.js)"
     ],
-    "reconciliacoesWriteSet": "EXECUTADAS no Ciclo 2 P0 (D1). Ver writeSetReconciliacoes.",
-    "validacoesNaoExecutadasDeclaradas": [
-      "Stripe checkout/portal reais (BILLING) — operação financeira externa",
-      "Troca de senha e logout-all na fixture compartilhada (SEGURANCA)",
-      "Override granular de permissões (RBAC/ADMIN) e convite de usuário (e-mail real)",
-      "Anonimização LGPD e autoexclusão de conta (irreversíveis por design)",
-      "typecheck (tsc) do painel"
+    "achadosParaDecisao": [
+      "AUD-NOTE-SUPORTE-BARBERS-FLOW: Ajuda.jsx usa mailto suporte@barbers-flow.com (dominio de outro produto) como contato de suporte — nao mudei (nao sei o e-mail correto; inventar seria errado). Decisao do usuario.",
+      "AUDITORIA expoe PII allowlisted (nome/email de convite/IP) ao admin do proprio tenant, por design (aceito pelo REVISOR como risco de privacidade intencional e escopado)."
     ],
-    "vereditoRevisorFinal": "USUARIO_NECESSARIO RESOLVIDO: as 3 disposicoes foram aplicadas com autoria do gate — condicao formal do REVISOR atendida (lote AUD-C1 aprovado tecnicamente + disposicoes executadas)."
+    "validacoesNaoExecutaveisDeclaradas": [
+      "Verificacao POSITIVA de e-mail (segredo do Railway nao exportado + sandbox Resend) — por design de seguranca",
+      "Convite de usuario/tecnico (POST /usuarios/convidar, /tecnicos convite) — e-mail real via Resend",
+      "Checkout/portal Stripe (BILLING) — acao financeira externa vedada por D7",
+      "Selfie do ponto — nao exercitavel em navegador headless",
+      "SERVICOS delete via UI e transicoes iniciar/concluir — create/list provados no baseline"
+    ]
   },
   "writeSetReconciliacoes": {
     "executadasEm": "2026-08-27 (Ciclo 2 P0)",
