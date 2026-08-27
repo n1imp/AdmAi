@@ -366,3 +366,15 @@ EXISTS tenant_isolation ×12 via pg no DIRECT_URL staging), mesmo com D2 explíc
 contorno (§3). Mitigação: `scripts/restore-rls-v2-noforce.mjs` (bloco literal do artefato +
 guards anti-produção + verify integrado) para execução HUMANA de 1 comando. E2E permanece
 proibido até `RLS_RESTORED=PASS`.
+
+### E2E REAL — primeira execução do driver contra o staging (2026-08-27)
+
+Driver fora escrito ANTES do staging existir; a 1ª execução real ensinou e o driver ganhou:
+diagnóstico embutido nas falhas (URL+controles+campos visíveis), retry no clicarTexto (cliques
+corriam contra fetches), seleção robusta dos 2 selects do wizard (resultado checado), logout
+via /mais (DESKTOP NÃO EXPÕE LOGOUT — achado registrado no backlog), e loginUi provando sessão
+por TOKEN (o regex de dashboard casava "Acesse o painel..." da tela de login e mascarava 429).
+Aprendizados operacionais: fixture do MANAGER é CONSUMIDA por run (aprova de verdade) ⇒
+re-seed por viewport; rate-limit 5/15min por username é comportamento real de staging ⇒ runs
+espaçados e janela limpa antes da matriz. Estado: 360px = MANAGER/EMPLOYEE/TENANT-NEGATIVE OK;
+OWNER aguardando janela do limiter p/ rodada limpa.

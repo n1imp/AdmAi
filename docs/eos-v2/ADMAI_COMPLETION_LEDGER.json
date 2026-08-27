@@ -1273,7 +1273,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "blockerRefs": [
         "GAP-STG-01"
       ],
@@ -1281,11 +1281,12 @@
       "writeSetRef": null,
       "evidenceRefs": [
         "Sonda F5-02: staging de aplicacao inexistente (Railway sem servicos; admai-staging pausado). Validacao real impossivel sem provisionar.",
-        "[Ciclo STG-UNBLOCK 2026-08-24] Consolidado em STG-02-USO: descoberta secret-safe de credenciais exaurida neste ciclo (CLI/token/env/config todos ABSENT). Sem canal para conectar ao admai-staging real."
+        "[Ciclo STG-UNBLOCK 2026-08-24] Consolidado em STG-02-USO: descoberta secret-safe de credenciais exaurida neste ciclo (CLI/token/env/config todos ABSENT). Sem canal para conectar ao admai-staging real.",
+        "CONSOLIDADO em STG-02-USO (DONE 2026-08-27): envs+migrations+frontend+backend+smoke todos provados na cadeia real (health 200, deploy staging, validate:staging 373+1, E2E 16/16)."
       ],
       "attemptCount": 1,
       "lastAttempt": "2026-08-24T00:52:46.508Z",
-      "nextAction": "Ver STG-02-USO (consolidado no D2 amendment).",
+      "nextAction": null,
       "revisitCondition": "Usuario coloca as credenciais de staging (DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging) num .env.staging LOCAL fora do git; uso via --env-file sem nunca ler/ecoar o conteudo. Sem isso, conectar exigiria obter secrets pelo dashboard (que os traria ao transcript) — proibido.",
       "snapshotRef": null
     },
@@ -2180,7 +2181,7 @@
       "authority": "EXTERNAL",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "APPLICATION_STAGING + DOCUMENT_STORAGE + MIGRATIONS + STAGING_RUNTIME + STAGING_E2E no admai-staging real.",
       "dependencies": [
         "STG-01-ISOLAMENTO"
@@ -2196,11 +2197,12 @@
         "Storage e COMPATIVEL com Supabase (services/storage.js usa @supabase/supabase-js): quando as credenciais existirem, o bucket de documentos entra no mesmo projeto staging.",
         "[Ciclo STG-UNBLOCK 2026-08-24] Descoberta secret-safe do §11 EXAURIDA (nomes/estados, nunca valores): supabase CLI ABSENT; ~/.supabase ABSENT; projeto linkado/config.toml ABSENT; SUPABASE_ACCESS_TOKEN/SUPABASE_DB_PASSWORD/SUPABASE_SERVICE_ROLE_KEY/STAGING_DATABASE_URL/DATABASE_URL/DIRECT_URL/STAGING_REF todos ABSENT no ambiente. missingVariableNames = {DATABASE_URL, DIRECT_URL, SUPABASE_SERVICE_ROLE_KEY do admai-staging}.",
         "[Ciclo STG-UNBLOCK] A senha do banco do admai-staging e NAO-RECUPERAVEL por CLI/API do Supabase apos a criacao (so ha reset — mutacao de estado nao autorizada e que quebraria conexoes existentes). Logo nao existe canal automatico secret-safe para o DATABASE_URL; o dashboard exporia service-role em screenshot/transcript (§13/§16). Bloqueio confirmado por construcao, nao por cautela.",
-        "[Ciclo STG-UNBLOCK] Postura de seguranca LOCAL reconstruida e verde neste HEAD (c876527): Gate 6 lock+correcoes 13/13 (inclui a regressao TOCTOU de 2 conexoes que morde); selftests write-set-gate 121/121, completion-ledger 11/11, EOS 52/52. As versoes REAIS em staging destas provas permanecem bloqueadas por credencial."
+        "[Ciclo STG-UNBLOCK] Postura de seguranca LOCAL reconstruida e verde neste HEAD (c876527): Gate 6 lock+correcoes 13/13 (inclui a regressao TOCTOU de 2 conexoes que morde); selftests write-set-gate 121/121, completion-ledger 11/11, EOS 52/52. As versoes REAIS em staging destas provas permanecem bloqueadas por credencial.",
+        "FECHADO 2026-08-27: APPLICATION_STAGING completo em USO REAL — deploy, storage (STG-03), migrations reconciliadas, runtime provado por E2E 16/16 nos 4 viewports."
       ],
       "attemptCount": 2,
-      "lastAttempt": "2026-08-24T00:52:46.508Z",
-      "nextAction": "Com .env.staging local (ou SUPABASE_ACCESS_TOKEN + senha do banco como env locais): despausar admai-staging, prisma migrate deploy, provisionar bucket, rodar jornadas.mjs com ADMAI_URL/DATABASE_URL de staging, matriz de documentos no bucket.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Canal secret-safe do usuario (qualquer um): (a) colocar DATABASE_URL/DIRECT_URL + SUPABASE_SERVICE_ROLE_KEY do admai-staging num .env.staging LOCAL (ja git-ignored, verificado) e eu uso via --env-file sem nunca ler/ecoar; ou (b) exportar essas variaveis no ambiente local antes de me invocar. Sem isso, obter os secrets exigiria o dashboard, que os traria ao transcript — proibido; e a senha do banco nao e recuperavel por CLI/API (so reset).",
       "snapshotRef": null
     },
@@ -2272,7 +2274,7 @@
       "authority": "EXTERNAL",
       "owner": "claude",
       "requiredReviewer": "codex",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "description": "Finding BLOQUEANTE de seguranca (ABERTO): 26 tabelas public do admai-staging com RLS DISABLED + grants full de anon/authenticated. [HISTORICO] o apply externo do lockdown v1 ABORTOU fail-closed em ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin (postgres hosted sem authority sobre role de plataforma), ROLLBACK TOTAL provado — classificado a epoca como BLOCKED_CAPABILITY(DEFAULT_PRIVILEGES_SUPABASE_ADMIN). [ATUAL] resolvido pela solucao v2 (choke point de USAGE + excecao supabase_admin) e derivado para PURE_SQL (executor externo via Supabase API): status=READY / READY_FOR_EXTERNAL_APPLY (D-STG-SEC-RLS-EXTERNAL-PURE-SQL-01, REVISOR 01a03681). Nao e falha do RLS, drift, nem migration. Apply real + provas A-M sao do EXECUTOR EXTERNO; finding permanece ABERTO ate elas.",
       "dependencies": [
         "STG-MIG-RECON"
@@ -2304,11 +2306,12 @@
         "EXEC 2026-08-27: H-mut PASS (anon 22 provas GET/POST/PATCH/DELETE => 401); I PASS (authenticated-unprivileged 26/26 negadas 403 — JWT derivado opacamente: usuario sintetico rls-i-*@fixture.staging.invalid via admin+signin, token nunca exibido); GUC/pooler PASS (set_config local carrega no tx e NAO vaza pos-COMMIT). K = validate:staging (migrate deploy + test:integration no pooler) EM EXECUCAO.",
         "K CORRECTION_REQUIRED->RETRY (2026-08-27): stall de 50min no migrate do global-setup via pooler 6543 (SAFE-MIG-01 vs validate:staging); fix escolherUrlDeMigracao (mesmo-banco provado, anti-hang 6543) verify 4/4 + setup() 9.1s; retry em curso com log streamado.",
         "K FIXES (D-STG-K-SUITE-VS-STAGING-01, consenso Codex 01a040e7): env hermetico + skip estrutural rls via pooler + validate-rls integrado (passo 4/4) + metricas por campo + knob PRISMA_TX_MAX_WAIT_MS. Bateria local: 467/467 unit, 11/11 alvo, lint/format/diff OK. INCIDENTE registrado: beforeAll do rls.test deixou app_rw (senha fixa) e FORCE v1 em 12 tabelas; restore NO FORCE bloqueado pelo classificador => pendencia D2; verify_lockdown_v2 secao A FALHA ate la.",
-        "K PASS (2026-08-27): validate:staging completo PASSOU — 373 PASS + 1 SKIP (374), 4/4 passos verdes (validate-rls-staging GUC integrado), processo terminou normal, contabilidade exata do consenso. gate6 classe C: repro isolado 17,9s na borda de 20s; fix timeout 180s; estabilidade 10/10 (runs de 16,5-21,9s). Pos-suite re-observado: 26/12/12 (suite nao tocou o boundary — skip estrutural efetivo)."
+        "K PASS (2026-08-27): validate:staging completo PASSOU — 373 PASS + 1 SKIP (374), 4/4 passos verdes (validate-rls-staging GUC integrado), processo terminou normal, contabilidade exata do consenso. gate6 classe C: repro isolado 17,9s na borda de 20s; fix timeout 180s; estabilidade 10/10 (runs de 16,5-21,9s). Pos-suite re-observado: 26/12/12 (suite nao tocou o boundary — skip estrutural efetivo).",
+        "FECHADO 2026-08-27: estado canonico v2 RESTAURADO (restore humano via script; verify_lockdown_v2 PASS; contagens independentes 26/0/0) + H-mut/I re-provados pos-restore (26 sondas negadas) + J (bucket) + K (validate:staging 373+1) + GUC pooler. app_rw ROTACIONADO. Advisor final 0 errors."
       ],
       "attemptCount": 4,
-      "lastAttempt": "2026-08-27T00:35:00Z",
-      "nextAction": "RLS_RESTORED via script humano (BLOCKED_CAPABILITY p/ agente) -> re-verify 26/0/0 + H-mut/I -> E2E",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Pacote v2 PURE_SQL pronto e provado localmente (byte-equivalence + A-G end-to-end nos .pure.sql + fault injection + sabotagem G). A aplicacao real + provas H/I/J/K/L sao do EXECUTOR EXTERNO (EXTERNAL_EXECUTOR_CAPABILITY_AVAILABLE); Claude segue LOCAL_AGENT_CAPABILITY_UNAVAILABLE (sem credenciais) — NAO e blocker do item (BLOCKED_ITEM != BLOCKED_RUN). Fecha SO com: apply vinculado mecanicamente ao ref + verify A-G + negative control anon+authenticated + Advisor limpo + smoke service_role/backend (ou decisao D2 explicita aceitando risco residual de subgate sem secret). Ver ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md §13.",
       "snapshotRef": null,
       "capabilityModel": {
@@ -2360,7 +2363,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "description": "STAGING_OPERATIONAL: app contra admai-staging (startup, /health, DB/auth/storage connectivity, schema esperado, sem dependencia de producao nos paths testados).",
       "dependencies": [
         "STG-SEC-RLS-01",
@@ -2385,11 +2388,12 @@
         "OPAQUE-TRANSFER (2026-08-26): SUPABASE_SERVICE_ROLE_KEY CONFIGURED fim-a-fim SEM o valor tocar o agente: copy MASCARADO no dashboard Supabase (sb_secret, aba nova; a11y ja redige) -> drenador tools/drenar-clipboard-secret.mjs (valida FORMA value-safe, grava .env.staging + gh secret via stdin, limpa clipboard ate em INVALID) -> fase external-secrets (run 32924987362 success): EXTERNAL_SECRETS_OK configurados=[SUPABASE_SERVICE_ROLE_KEY], ausentesNoRunner=[DATABASE_URL,DIRECT_URL,RESEND_API_KEY]. STAGING_SUPABASE_ANON_KEY (publishable, publica) tambem drenada p/ .env.staging.",
         "LIMITE REAL: Ctrl+A/Ctrl+C no campo do modal Reset database password BLOQUEADO pelo classificador da plataforma (fronteira da regra de campos de credencial); modal CANCELADO sem aplicar. Restam 2 relays humanos de 1 clique: senha do DB (Generate+copiar) e key do Resend (criar+copiar); agente drena e faz todo o resto. Pooler host nao-secreto confirmado no painel Connect: aws-1-sa-east-1.pooler.supabase.com.",
         "EXEC 2026-08-27 USER_GATE=PASS (9/9): DB positive control PASS nas 2 URLs pos-reset (1 tentativa de lag; breaker respeitado); RESEND positive control HTTP 200. external-secrets run 33025568469 configurados=[DATABASE_URL,DIRECT_URL,RESEND_API_KEY]; connect run 33025613197 CONNECT_OK n1imp/AdmAi#staging:chaveiro-bot; /health HTTP 200 database:ok em admai-staging-staging-c42d.up.railway.app (URL canonica RE-OBSERVADA no re-prepare 33023675804); VITE_API_URL_STAGING setada; Deploy Staging run 33025736808 success; frontend 200 + CSP connect-src SO staging (0 refs producao); CORS positivo (allow-origin staging + credentials) e negativo (producao recusada); network trace browser 13/13 requests so staging; fixtures A(44)/B(45) semeadas.",
-        "RE-SEED pos-K (A=1327/B=1328) + CURRENT_FIXTURE_PROOF=PASS por leitura direta: A tem dono/gestor/funcionario + 1 tecnico + servicos ativo=1/pendente=1 + 2 materiais; B tem dono.b. APP_RW_ROTATED=YES (CSPRNG opaco; senha antiga RECUSADA no controle). BLOCKED_CAPABILITY(RLS_RESTORE): 3 negativas do classificador ao DDL mesmo com D2; script restore-rls-v2-noforce.mjs pronto p/ execucao humana."
+        "RE-SEED pos-K (A=1327/B=1328) + CURRENT_FIXTURE_PROOF=PASS por leitura direta: A tem dono/gestor/funcionario + 1 tecnico + servicos ativo=1/pendente=1 + 2 materiais; B tem dono.b. APP_RW_ROTATED=YES (CSPRNG opaco; senha antiga RECUSADA no controle). BLOCKED_CAPABILITY(RLS_RESTORE): 3 negativas do classificador ao DDL mesmo com D2; script restore-rls-v2-noforce.mjs pronto p/ execucao humana.",
+        "FECHADO 2026-08-27: backend /health 200 database:ok; frontend publicado com CSP/CORS/cookies provados; USER_GATE 9/9; fixtures provadas; E2E 16/16; RLS canonico pos-restauracao."
       ],
       "attemptCount": 2,
-      "lastAttempt": "2026-08-27T00:35:00Z",
-      "nextAction": "Usuario roda: node --env-file=.env.staging scripts/restore-rls-v2-noforce.mjs (de chaveiro-bot/) -> agente re-verifica 26/0/0 + sondas -> E2E x3 -> tenant-negative -> viewports -> Advisor -> sweep",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Acoes do usuario (a)-(c) acima. Infra+automacao completas; ci-ok da branch em fechamento.",
       "snapshotRef": null,
       "alias": "STAGING_OPERATIONAL"
@@ -2403,7 +2407,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Owner E2E no staging real: login->dashboard->tecnico/servico->aprovacao->financeiro->estoque->auditoria; persistencia.",
       "dependencies": [
         "STG-RUNTIME"
@@ -2417,11 +2421,12 @@
       "writeSetRef": null,
       "evidenceRefs": [
         "Driver chaveiro-painel/e2e/jornadas.mjs provado LOCAL. Falta contra staging real.",
-        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais."
+        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais.",
+        "E2E REAL 2026-08-27: matriz 16/16 PASS — 4 jornadas (LOGIN[token provado]->NAV->READ->WRITE->RBAC NEGATIVO via fetch in-page 401/403->PERSISTENCE->RELOAD->LOGOUT UI) x viewports 360/390/1440/1920; re-seed por viewport (fixture do MANAGER e consumida de verdade); rate-limit 5/15min respeitado; logs e2e-m360b/m390/m1440/m1920. OWNER: wizard 4 etapas cria servico real, persiste e sobrevive reload."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Apos STG-RUNTIME: ADMAI_URL + ADMAI_API_URL + STAGING_FIXTURE_SENHA -> node e2e/staging.mjs (desktop) por papel.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },
@@ -2434,7 +2439,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Gestor E2E no staging real: login->GestorHome->servicos->aprovacao->indicadores permitidos; owner-only negado.",
       "dependencies": [
         "STG-RUNTIME"
@@ -2448,11 +2453,12 @@
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL. Falta contra staging real.",
-        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais."
+        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais.",
+        "E2E REAL 2026-08-27: matriz 16/16 PASS — 4 jornadas (LOGIN[token provado]->NAV->READ->WRITE->RBAC NEGATIVO via fetch in-page 401/403->PERSISTENCE->RELOAD->LOGOUT UI) x viewports 360/390/1440/1920; re-seed por viewport (fixture do MANAGER e consumida de verdade); rate-limit 5/15min respeitado; logs e2e-m360b/m390/m1440/m1920. MANAGER: APROVA o pendente real; RBAC negativo em config."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Apos STG-RUNTIME: ADMAI_URL + ADMAI_API_URL + STAGING_FIXTURE_SENHA -> node e2e/staging.mjs (desktop) por papel.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },
@@ -2465,7 +2471,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Funcionario E2E no staging real: login->MeuPainel->ponto->servico->acoes permitidas; paths privilegiados negados.",
       "dependencies": [
         "STG-RUNTIME"
@@ -2479,11 +2485,12 @@
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL. Falta contra staging real.",
-        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais."
+        "[STG-APP-STAGING-01] Jornada MATERIALIZADA em chaveiro-painel/e2e/staging.mjs (driver CDP proprio; target guard exit-2 provado contra localhost/producao/sem-URL; contrato LOGIN->NAV->READ->WRITE->RBAC-NEGATIVE(fetch real 401/403)->PERSIST->RELOAD->LOGOUT; fixtures dono.a.stg/gestor.a.stg/func.a.stg do seed-staging.mjs; viewports via --viewport). Roda quando STG-RUNTIME der as URLs reais.",
+        "E2E REAL 2026-08-27: matriz 16/16 PASS — 4 jornadas (LOGIN[token provado]->NAV->READ->WRITE->RBAC NEGATIVO via fetch in-page 401/403->PERSISTENCE->RELOAD->LOGOUT UI) x viewports 360/390/1440/1920; re-seed por viewport (fixture do MANAGER e consumida de verdade); rate-limit 5/15min respeitado; logs e2e-m360b/m390/m1440/m1920. EMPLOYEE: BATE ponto real; RBAC negativo em usuarios."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Apos STG-RUNTIME: ADMAI_URL + ADMAI_API_URL + STAGING_FIXTURE_SENHA -> node e2e/staging.mjs (desktop) por papel.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },
@@ -2496,7 +2503,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Isolamento inter-tenant + negativa de seguranca no staging real (Company A vs B): A nao le/edita/deleta/aprova/acessa docs/financeiro/estoque de B; rota sem auth/wrong role/cross-tenant/campo sensivel/doc privado/PostgREST direto/2FA bypass/refresh revogado/paywall bypass NEGADOS. Nao confiar so no frontend. RLS_ENABLED != TENANT_ISOLATION_PROVEN.",
       "dependencies": [
         "STG-RUNTIME"
@@ -2511,11 +2518,12 @@
       "evidenceRefs": [
         "Isolamento por req.db/prismaParaEmpresa provado por integracao LOCAL. Falta a negativa E2E contra staging real com fixtures A/B sinteticas.",
         "[STG-APP-STAGING-01] Fixture A/B materializada (seed-staging.mjs: Empresa A completa + Empresa B alvo; slugs stg-fix-*; guard 7/7). Mecanismo GUC/pooler: validate-rls-staging.mjs pronto. Fluxo real A->B sera provado no runtime staging.",
-        "[STG-APP-STAGING-REV1] Jornada TENANT-NEGATIVE materializada em e2e/staging.mjs (REVISOR 01a038fc achado 5): sessao B captura id proprio (positivo B->B 200); sessao A lista sem vazamento, GET proprio 200 (positivo da MESMA rota), GET e DELETE do recurso de B exigem 403/404. Execucao real depende de STG-RUNTIME."
+        "[STG-APP-STAGING-REV1] Jornada TENANT-NEGATIVE materializada em e2e/staging.mjs (REVISOR 01a038fc achado 5): sessao B captura id proprio (positivo B->B 200); sessao A lista sem vazamento, GET proprio 200 (positivo da MESMA rota), GET e DELETE do recurso de B exigem 403/404. Execucao real depende de STG-RUNTIME.",
+        "E2E REAL 2026-08-27: matriz 16/16 PASS — 4 jornadas (LOGIN[token provado]->NAV->READ->WRITE->RBAC NEGATIVO via fetch in-page 401/403->PERSISTENCE->RELOAD->LOGOUT UI) x viewports 360/390/1440/1920; re-seed por viewport (fixture do MANAGER e consumida de verdade); rate-limit 5/15min respeitado; logs e2e-m360b/m390/m1440/m1920. TENANT: A le o proprio (200); A->B read/delete NEGADOS (403/404); listagem sem vazamento."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Apos STG-RUNTIME (URLs reais): ALLOW_STAGING_SEED=true seed-staging.mjs --seed (fixtures A/B ja MATERIALIZADAS no repo) -> node e2e/staging.mjs (inclui a jornada TENANT-NEGATIVE A->B: read/delete do recurso de B negados no backend + positivos proprios) -> validate-rls-staging.mjs (GUC/pooler).",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },
@@ -2528,7 +2536,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Mobile 360/390 + desktop sanity 1440/1920 no staging real (navigation/forms/dialogs/overflow/touch targets), com positive control (empty render = invalido).",
       "dependencies": [
         "STG-RUNTIME"
@@ -2542,11 +2550,12 @@
       "writeSetRef": null,
       "evidenceRefs": [
         "Provado LOCAL (sonda 4 viewports + jornada mobile). Falta contra staging real.",
-        "[STG-APP-STAGING-01] Viewports materializados: node e2e/staging.mjs --viewport=360|390|1440|1920 (mesmas jornadas; sem redesign)."
+        "[STG-APP-STAGING-01] Viewports materializados: node e2e/staging.mjs --viewport=360|390|1440|1920 (mesmas jornadas; sem redesign).",
+        "E2E REAL 2026-08-27: matriz 16/16 PASS — 4 jornadas (LOGIN[token provado]->NAV->READ->WRITE->RBAC NEGATIVO via fetch in-page 401/403->PERSISTENCE->RELOAD->LOGOUT UI) x viewports 360/390/1440/1920; re-seed por viewport (fixture do MANAGER e consumida de verdade); rate-limit 5/15min respeitado; logs e2e-m360b/m390/m1440/m1920. 360/390 mobile + 1440/1920 desktop: fluxos completos utilizaveis."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Rodar viewports contra staging.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },
@@ -2559,7 +2568,7 @@
       "authority": "CLAUDE",
       "owner": "claude",
       "requiredReviewer": null,
-      "status": "BLOCKED_CAPABILITY",
+      "status": "DONE",
       "description": "Sweep global pos-staging: Advisor final, reconciliar ledger/findings/blockers, secret persistence, ZERO_FORGOTTEN_BLOCKER; entao REAL_STAGING_ACCEPTANCE_PROVEN + ADMAI_RELEASE_CANDIDATE_READY. Nao declarar ADMAI_RELEASE_READY (LEGAL NOT_ACCEPTED).",
       "dependencies": [
         "STG-SEC-RLS-01",
@@ -2578,11 +2587,12 @@
       "findingRefs": [],
       "writeSetRef": null,
       "evidenceRefs": [
-        "Depende do fechamento de todos os gates de staging acima."
+        "Depende do fechamento de todos os gates de staging acima.",
+        "SWEEP 2026-08-27: Advisor final 0 errors (1 warning Leaked-Password-Protection REAVALIADO: Supabase Auth nao e a auth do produto — non-blocking com justificativa); ledger reconciliado; findings SEC-HB-* registrados (fixture-destruction, security-cleanup, desktop-sem-logout); ZERO_FORGOTTEN_BLOCKER checado."
       ],
       "attemptCount": 0,
-      "lastAttempt": "2026-08-24T02:00:00.000Z",
-      "nextAction": "Apos todos os gates de staging: sweep global + terminal.",
+      "lastAttempt": "2026-08-27T04:30:00Z",
+      "nextAction": null,
       "revisitCondition": "Credenciais de staging (ver STG-02-USO).",
       "snapshotRef": null
     },

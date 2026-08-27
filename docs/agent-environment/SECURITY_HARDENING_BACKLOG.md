@@ -147,3 +147,11 @@ qualquer hook (staging inatingível pelo teste por construção; local é descar
 Correção estrutural futura: qualquer fase de teste que altere boundary de segurança deve
 restaurá-lo em finally/trap mesmo em abort — junto com o lifecycle isolado do item
 SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION.
+
+## Achado de UX/sessão: DESKTOP sem controle de logout
+
+Evidência (E2E real 2026-08-27): o único botão "Sair" vive em `/mais` (aba do BottomNav
+mobile); no layout desktop nenhum controle de logout é exposto (sidebar/header/Configurações
+não têm). Usuário desktop só desloga expirando a sessão ou conhecendo a rota /mais. Não é
+vulnerabilidade direta (logout-all existe em Segurança), mas é gap de higiene de sessão em
+máquina compartilhada. Correção pertence à auditoria funcional (DEFERRED) — sem redesign agora.

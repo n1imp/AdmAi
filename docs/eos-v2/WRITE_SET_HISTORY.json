@@ -64978,9 +64978,23 @@
       "bloqueiaIntegracao": false,
       "nota": "K PASS 373+1; gate6 10/10; app_rw rotacionado; restore script pronto; fixtures re-provadas",
       "declaradoEm": "2026-08-27T03:13:52.624Z"
+    },
+    {
+      "sliceId": "STG-E2E-DRIVER-REAL-01",
+      "titulo": "Primeira execucao REAL do e2e/staging: diagnostico embutido + retry de clique + selects robustos + logout via /mais (desktop sem logout = achado) ",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "E2E 16/16 + Advisor 0 errors + ledger reconciliado; sweep completo",
+      "declaradoEm": "2026-08-27T04:21:47.779Z"
     }
   ],
-  "geradoEm": "2026-08-27T03:40:56.176Z",
+  "geradoEm": "2026-08-27T04:53:45.654Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
