@@ -2,10 +2,12 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "GAP_EXECUTION_IN_PROGRESS",
+  "status": "ROUND1_COMPLETE_AWAITING_USER_GATE",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
-    "USER_REAL_CAN_USE_CLASSIFICATION"
+    "USER_REAL_CAN_USE_CLASSIFICATION",
+    "GAP_EXECUTION (round 1)",
+    "REVERIFY_IN_STAGING (round 1)"
   ],
   "diretiva": "Cold start EOS 2026-08-27: usuário iniciou ADMAI_FUNCTIONAL_PRODUCT_AUDIT (inventário canônico → classificação por evidência real de staging → GAP_EXECUTION seguro → REVERIFY_IN_STAGING).",
   "baseline": {
@@ -62,7 +64,7 @@
       "id": "AUD-INPUT-DESKTOP-LOGOUT",
       "origem": "carryover do staging (E2E real 2026-08-27)",
       "descricao": "Desktop nao expoe controle de logout (so /mais, nav mobile)",
-      "estado": "EXECUTADO_AGUARDANDO_REVERIFY (botao Sair no rodape da Sidebar, mesmo logout() de Mais)",
+      "estado": "RESOLVED_REVERIFIED (tour6 FIX1: Sair na Sidebar limpa o token; provado 2x)",
       "vinculadoA": "AUD-CAP-AUTH-LOGIN"
     }
   ],
@@ -74,7 +76,7 @@
       "descricao": "POST /me/2fa/ativar retorna codigosRecuperacao, mas Seguranca.jsx (ativar2fa) DESCARTA a resposta — o usuário ativa 2FA sem nunca ver os códigos de recuperação. A rota de recuperação /auth/login/2fa/recuperar existe, porém o usuário real não tem códigos: risco de lockout permanente ao perder o autenticador.",
       "evidencia": "E1 chaveiro-painel/src/pages/Seguranca.jsx (ativar2fa ignora data) + E3 tour1 ciclo 2FA (modal fecha sem exibir códigos)",
       "classe": "GAP_EXECUTION_CANDIDATE (material: auth → DECISOR antes de implementar)",
-      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (exibicao no Seguranca + consumo no Login)"
+      "execucao": "RESOLVED_REVERIFIED (tour6: 10 códigos exibidos; consumo real de um código pela UI de recuperação; fixture restaurada)"
     },
     {
       "id": "AUD-GAP-FLASH-EMPTY",
@@ -83,7 +85,7 @@
       "descricao": "RESOLVIDO O DIAGNÓSTICO (tour3): os dados chegam — /usuarios lista 3 contas e /tecnicos do gestor lista 1 após o fetch. O defeito real é de LOADING STATE: o contador renderiza '0 contas cadastradas'/'0 cadastrados' ANTES do fetch completar (flash-of-empty enganoso).",
       "evidencia": "E3 tour1 passo 'configuracao/usuarios render' + tour2 passo 'tecnicos render (gestor)' + tour3 rechecks (APARECEU/3 contas; API 200 qtd 1 + UI 1 cadastrado)",
       "classe": "GAP_EXECUTION_CANDIDATE (frontend: não exibir contador/empty antes do primeiro fetch)",
-      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (travessao em carregando||erro; empty de Usuarios com !erro)"
+      "execucao": "RESOLVED_REVERIFIED (tour6: travessão cedo + contagem real pós-fetch; unit tests fixam a regra)"
     },
     {
       "id": "AUD-GAP-ESTOQUE-FUNC-GUARD",
@@ -92,7 +94,7 @@
       "descricao": "Deep-link /estoque como funcionário: rota não tem RequirePermissao no App.jsx (só RequireAuth); backend nega e a tela mostra SIMULTANEAMENTE 'Não foi possível carregar o estoque' e o empty state 'Nenhum material cadastrado. Cadastre materiais…' — mensagens contraditórias para um papel sem acesso.",
       "evidencia": "E3 tour2 passo 'estoque como funcionario' + E1 App.jsx (/estoque e /materiais sem RequirePermissao; /configuracao/usuarios tem)",
       "classe": "GAP_EXECUTION_CANDIDATE (RBAC de UI → DECISOR)",
-      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (RequirePermissao estoque em /estoque e /materiais)"
+      "execucao": "RESOLVED_REVERIFIED (tour6: redirects de /estoque e /materiais para /configuracao)"
     },
     {
       "id": "AUD-GAP-DOCUMENTOS-OFF-STAGING",
@@ -114,7 +116,7 @@
       "id": "AUD-NOTE-TECNICOS-PERFIL-2-PASSOS",
       "capability": "TECNICOS",
       "severidade": "RESOLVIDO_INSTRUMENTAL",
-      "descricao": "Não é gap: o card expande no clique e expõe Ver perfil completo (tour5 chegou a /tecnicos/557). Resta A_CONFIRMAR o conteúdo do perfil (renderizou vazio em 2,5s — loading lento provável; PerfilTecnico tem erro-state próprio que NÃO apareceu).",
+      "descricao": "Não é gap: o card expande no clique e expõe Ver perfil completo (tour5 chegou a /tecnicos/557). Resta A_CONFIRMAR o conteúdo do perfil (renderizou vazio em 2,5s — loading lento provável; PerfilTecnico tem erro-state próprio que NÃO apareceu). RESOLVIDO: API do perfil 200 com payload completo; capturas vazias eram corrida do instrumento.",
       "evidencia": "E3 tour1 passo 'perfil de tecnico' (única falha 37/38)",
       "classe": "REVERIFY_FASE_D"
     },
@@ -158,19 +160,18 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Tours: 5 logins reais (3 papéis) + logout real via /mais; deep-links não-auth redirecionam a /login (tour0); /login tem h1=1; cookies/CSP/USER_GATE do baseline. Challenge 2FA no login provado (tour1). ERROR STATE provado (tour4): senha errada exibe alerta 'Credenciais inválidas' e não estabelece sessão.",
+      "STAGING_EVIDENCE": "Tours: 5 logins reais (3 papéis) + logout real via /mais; deep-links não-auth redirecionam a /login (tour0); /login tem h1=1; cookies/CSP/USER_GATE do baseline. Challenge 2FA no login provado (tour1). ERROR STATE provado (tour4): senha errada exibe alerta 'Credenciais inválidas' e não estabelece sessão. REVERIFY (tour6): Sidebar desktop expõe 'Sair' e o clique limpa o token (provado 2x na sessão real).",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
-      "GAPS": [
-        "AUD-INPUT-DESKTOP-LOGOUT (CONFIRMADO E1+E3): desktop sem controle de logout — GAP_EXECUTION prioridade 1 (bloqueia upgrade a FEATURE_COMPLETE)"
-      ],
-      "NEXT_ACTION": "Fase C: logout na Sidebar; reverificar e promover a FEATURE_COMPLETE",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
+      "GAPS": [],
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates",
         "tour0-unauth 2026-08-27T12:23Z (deep-links, h1) · tour1-dono 12:26Z (login/challenge/logout) · tour2 12:28Z",
-        "tour4 12:44Z 'login senha errada' (Credenciais inválidas)"
+        "tour4 12:44Z 'login senha errada' (Credenciais inválidas)",
+        "tour6-reverify 15:0xZ FIX1 (sairVisivel + tokenLimpo)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-AUTH-2FA",
@@ -182,24 +183,23 @@
       "INTEGRATION_STATE": "OK(E3)",
       "RBAC_STATE": "N/A",
       "PERSISTENCE_STATE": "OK(E3)",
-      "ERROR_STATE": "UNKNOWN",
+      "ERROR_STATE": "OK(E3/unit)",
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E3)",
-      "STAGING_EVIDENCE": "CICLO COMPLETO provado em browser real (tour1): toggle → modal com QR visível + secret (32 chars) → código TOTP digitado na UI → 'Confirmar e ativar' → switch aria-checked=true → GET /me twoFactorAtivo=true → logout → LOGIN COM CHALLENGE REAL (tela 'Verificação em duas etapas', TOTP, sessão estabelecida) → desativar via modal com código → GET /me false. Fixture restaurada. Fecha o 'runtime não observado' do freeze. Mobile 390: switch 2FA visível em /configuracao/seguranca (tour3).",
+      "STAGING_EVIDENCE": "CICLO COMPLETO provado em browser real (tour1): toggle → modal com QR visível + secret (32 chars) → código TOTP digitado na UI → 'Confirmar e ativar' → switch aria-checked=true → GET /me twoFactorAtivo=true → logout → LOGIN COM CHALLENGE REAL (tela 'Verificação em duas etapas', TOTP, sessão estabelecida) → desativar via modal com código → GET /me false. Fixture restaurada. Fecha o 'runtime não observado' do freeze. Mobile 390: switch 2FA visível em /configuracao/seguranca (tour3). REVERIFY (tour6): ativação exibiu os 10 códigos de recuperação (modal fecha só no Concluir) e um código foi CONSUMIDO pela UI de recuperação no login real, estabelecendo sessão; desativação restaurou a fixture. Error state de código inválido coberto por unit (backend valida).",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [
-        "AUD-GAP-2FA-RECOVERY-CODES (ALTA): códigos de recuperação nunca exibidos ao usuário — GAP_EXECUTION candidata (DECISOR)",
-        "2FA por telefone (rotas existem) não observado — depende de WhatsApp/SMS POST_MVP",
-        "código inválido (error state) não sondado"
+        "2FA por telefone permanece atrelado ao WhatsApp POST_MVP (fora desta classificacao)"
       ],
-      "NEXT_ACTION": "Fase C: exibir codigosRecuperacao (DECISOR); só então FEATURE_COMPLETE",
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "tour1-dono 2026-08-27T12:26Z passos '2FA setup/ativar/challenge/desativar' (8 passos OK)",
-        "tour3 12:40Z 'mobile dono: seguranca render' (switch2faVisivel)"
+        "tour3 12:40Z 'mobile dono: seguranca render' (switch2faVisivel)",
+        "tour6-reverify FIX2a (10 códigos) + FIX2b (sessão por código de recuperação)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:27Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-MULTI-TENANCY",
@@ -239,19 +239,18 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Navegação distinta por papel provada (tour1/2: sidebar dono=10 módulos; gestor=Operação/Aprovações/...; func=Meu trabalho/...); RequirePermissao redireciona gestor e func de /configuracao/usuarios → /configuracao; backend nega PATCH /config/empresa a gestor e GET /usuarios a func (E4); /permissoes/catalogo 200 com 3 papéis e 10+ módulos. Recheck (tour3): /configuracao/usuarios lista as 3 contas com papéis/status após fetch — o 0 anterior era flash-of-empty (AUD-GAP-FLASH-EMPTY).",
+      "STAGING_EVIDENCE": "Navegação distinta por papel provada (tour1/2: sidebar dono=10 módulos; gestor=Operação/Aprovações/...; func=Meu trabalho/...); RequirePermissao redireciona gestor e func de /configuracao/usuarios → /configuracao; backend nega PATCH /config/empresa a gestor e GET /usuarios a func (E4); /permissoes/catalogo 200 com 3 papéis e 10+ módulos. Recheck (tour3): /configuracao/usuarios lista as 3 contas com papéis/status após fetch — o 0 anterior era flash-of-empty (AUD-GAP-FLASH-EMPTY). REVERIFY (tour6): deep-links /estoque e /materiais como funcionário redirecionam para /configuracao (sem mensagens contraditórias).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "AUD-GAP-ESTOQUE-FUNC-GUARD: /estoque e /materiais sem RequirePermissao no router (backend nega; UI confusa) — Fase C",
-        "Override granular (MatrizPermissoes) não exercitado em runtime (mutação de permissão de fixture não sondada)"
+        "Override granular (MatrizPermissoes) não exercitado em runtime — VALIDACAO NAO EXECUTADA declarada"
       ],
-      "NEXT_ACTION": "Fase C: guards de rota; declarar override granular como validação não executada",
+      "NEXT_ACTION": "Próxima rodada: exercitar um override granular com reversão",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (RBAC negativo)",
         "tour1 12:26Z (sidebar dono, catalogo) · tour2 12:28Z (navs gestor/func, redirects)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-ONBOARDING",
@@ -320,21 +319,20 @@
       "EMPTY_STATE": "PARTIAL(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Dono e GESTOR veem o técnico (recheck tour3: API 200 qtd 1 + UI '1 cadastrado' — o '0' era flash-of-empty). Card expande ao clique e expõe 'Ver perfil completo' -> /tecnicos/557 alcançado (tour5). PORÉM o perfil renderizou só o título após 2,5s (carregando lento OU falha silenciosa) — A_CONFIRMAR na reverificação. Card rico: telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%, PENDENTE R$92,60 (atualizado pós-rejeição). Truncamento do freeze não reproduzível com 1 técnico.",
+      "STAGING_EVIDENCE": "Dono e GESTOR veem o técnico (recheck tour3: API 200 qtd 1 + UI '1 cadastrado' — o '0' era flash-of-empty). Card expande ao clique e expõe 'Ver perfil completo' -> /tecnicos/557 alcançado (tour5). PORÉM o perfil renderizou só o título após 2,5s (carregando lento OU falha silenciosa) — A_CONFIRMAR na reverificação. Card rico: telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%, PENDENTE R$92,60 (atualizado pós-rejeição). Truncamento do freeze não reproduzível com 1 técnico. RESOLVIDO o A_CONFIRMAR do perfil: GET /tecnicos/557/perfil responde 200 com payload completo (tecnico/meta/periodo/pagamentos) em 1,8-3,6s; as duas capturas vazias foram esperas prematuras do instrumento (esperarTexto casou com a sidebar). /ponto?mes=2026-08 responde 200.",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": "PARTIAL",
       "GAPS": [
-        "Perfil /tecnicos/:id: conteúdo não confirmado (A_CONFIRMAR — reverify Fase D com espera longa)",
-        "/tecnicos segue REDESIGN (freeze) — não re-provado nem refutado com fixtures atuais",
-        "Convite não sondável (e-mail real via Resend)",
-        "AUD-GAP-FLASH-EMPTY: contador 0 cadastrados durante carregamento"
+        "/tecnicos segue REDESIGN (freeze) — nao re-provado nem refutado com 1 tecnico; CardTecnico ja tem a Direcao B (D-SL15)",
+        "Convite nao sondavel (e-mail real via Resend)"
       ],
-      "NEXT_ACTION": "Fase D reverify: perfil com espera longa + /ponto?mes=YYYY-MM (a sonda 400 foi por parâmetro ausente — erro do instrumento)",
+      "NEXT_ACTION": "Próxima rodada: confirmar pintura da UI do perfil com espera correta + reavaliar REDESIGN com 2+ técnicos",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (lista dono + medida truncamento) · tour2 12:28Z (lista gestor)",
-        "tour3 12:40Z recheck gestor (API 1 / UI 1) · tour5 12:53Z 'Ver perfil completo' -> /tecnicos/557"
+        "tour3 12:40Z recheck gestor (API 1 / UI 1) · tour5 12:53Z 'Ver perfil completo' -> /tecnicos/557",
+        "probe-perfil 15:09Z (3x HTTP 200 com chaves completas) · tour6 pontoApiStatus 200"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-FINANCEIRO",
@@ -477,24 +475,23 @@
       "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E3)",
       "INTEGRATION_STATE": "OK(E3)",
-      "RBAC_STATE": "PARTIAL(E3)",
+      "RBAC_STATE": "OK(E3)",
       "PERSISTENCE_STATE": "OK(E3)",
-      "ERROR_STATE": "PARTIAL(E3)",
+      "ERROR_STATE": "OK(E3)",
       "EMPTY_STATE": "PARTIAL(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "CRUD REAL provado (tour1): POST /materiais 201 (id 111, STG-AUD) → UI /materiais MOSTROU o item criado → PATCH 200 → DELETE 200 (limpo). /materiais lista fixtures com preço/saldo/ações Entrada/Saída/Ajuste; /estoque mostra períodos 7D/30D/90D + alerta de reposição real ('STG Cilindro A saldo 3'). Funcionário em deep-link vê erro+empty contraditórios (AUD-GAP-ESTOQUE-FUNC-GUARD).",
+      "STAGING_EVIDENCE": "CRUD REAL provado (tour1): POST /materiais 201 (id 111, STG-AUD) → UI /materiais MOSTROU o item criado → PATCH 200 → DELETE 200 (limpo). /materiais lista fixtures com preço/saldo/ações Entrada/Saída/Ajuste; /estoque mostra períodos 7D/30D/90D + alerta de reposição real ('STG Cilindro A saldo 3'). Funcionário em deep-link vê erro+empty contraditórios (AUD-GAP-ESTOQUE-FUNC-GUARD). REVERIFY (tour6): funcionário não alcança mais /estoque nem /materiais (redirect limpo).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "AUD-GAP-ESTOQUE-FUNC-GUARD (rota sem RequirePermissao + mensagens contraditórias)",
         "Movimentações (Entrada/Saída/Ajuste) via UI não exercitadas"
       ],
       "NEXT_ACTION": "Fase C: guard de rota (DECISOR); janela 2 opcional: uma movimentação de Entrada revertida por Saída",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (CRUD 4 passos + renders) · tour2 12:28Z (func deep-link)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-METRIC-FOUNDATION",
@@ -559,18 +556,17 @@
       "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E3/E4)",
-      "STAGING_EVIDENCE": "Batida real provada no baseline (persistiu pós-reload); /meu-ponto renderiza o dia com sequência Entrada→Almoço→Volta→Saída, 'Próximo: Entrada' e aviso de selfie+localização (tour2); presencaHoje aparece nos indicadores do gestor.",
+      "STAGING_EVIDENCE": "Batida real provada no baseline (persistiu pós-reload); /meu-ponto renderiza o dia com sequência Entrada→Almoço→Volta→Saída, 'Próximo: Entrada' e aviso de selfie+localização (tour2); presencaHoje aparece nos indicadores do gestor. /tecnicos/557/ponto?mes=2026-08 responde 200 (visão gestor/dono acessível).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "Visão gestor/dono do ponto (perfil do técnico + relatório PDF) A_CONFIRMAR — sonda /ponto sem ?mes= deu 400 (parâmetro obrigatório; erro do instrumento); reverify na Fase D",
         "Selfie da batida não exercitável em headless"
       ],
       "NEXT_ACTION": "Recheck perfil técnico (janela 2) inclui aba de ponto",
       "EVIDENCE_POINTERS": [
         "baseline E2E (ponto batido) · tour2 12:28Z (meu-ponto estado do dia)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-CONFIGURACOES",
@@ -664,19 +660,18 @@
       "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Recheck (tour3): /configuracao/usuarios lista '3 contas cadastradas' com papéis e status (Dono você / Gestor / Func Técnico, todos Ativo) + botão '+'; GET /usuarios 200 (3); /permissoes/catalogo 200; config empresa GET/PATCH provados. O '0 contas' era flash-of-empty.",
+      "STAGING_EVIDENCE": "Recheck (tour3): /configuracao/usuarios lista '3 contas cadastradas' com papéis e status (Dono você / Gestor / Func Técnico, todos Ativo) + botão '+'; GET /usuarios 200 (3); /permissoes/catalogo 200; config empresa GET/PATCH provados. O '0 contas' era flash-of-empty. REVERIFY (tour6): contador exibiu travessão cedo e '3 contas cadastradas' após o fetch — sem zero transitório.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "PARTIAL",
       "GAPS": [
-        "Criação/edição de usuário e matriz de permissões não exercitadas (convite dispara e-mail real)",
-        "AUD-GAP-FLASH-EMPTY no contador de contas"
+        "Criação/edição de usuário e matriz de permissões não exercitadas (convite dispara e-mail real) — VALIDACAO NAO EXECUTADA declarada"
       ],
       "NEXT_ACTION": "Declarar validações não executadas; Fase C: flash-of-empty",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (config/catalogo/usuarios API+UI)",
         "tour3 12:40Z recheck usuarios ('3 contas cadastradas')"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
+      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
     {
       "ID": "AUD-CAP-DOCUMENTOS",
@@ -880,6 +875,11 @@
       "quando": "2026-08-27T14:20Z",
       "fase": "GAP_EXECUTION (revisao REVISOR aplicada)",
       "resultado": "REVISOR (thread 01a04392): CORRECOES_NECESSARIAS — sem defeito funcional; bloqueio e de governanca de write-set (disposicao do usuario, preparada em writeSetReconciliacoesPendentes) + 2 testes residuais (aplicados: telefone sem recuperacao; X/backdrop nao descartam) + errata 14->17. Suite pos-correcoes verde. Segue para push staging + REVERIFY E3 e veredito final do REVISOR."
+    },
+    {
+      "quando": "2026-08-27T15:10Z",
+      "fase": "REVERIFY_IN_STAGING (Fase D — ciclo 1 FECHADO)",
+      "resultado": "Push ecf4c14 -> origin/staging; Deploy Staging 33081925408 SUCCESS (14m52s). Sonda de frescor confirmou bundle novo. tour6 12/12 reverificou os 4 fixes em browser real; probe-perfil resolveu o A_CONFIRMAR de TECNICOS (API 200, instrumento raced). UPGRADES: AUTH_LOGIN e AUTH_2FA -> FEATURE_COMPLETE (total 6 FEATURE_COMPLETE). Pendências consolidadas para o GATE DO USUÁRIO (ver gateDoUsuario)."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -935,7 +935,12 @@
           "ERRATA registrada aqui: o commit 62281bd introduziu 17 testes (14 novos em 4 arquivos + 3 extensoes), nao 14 como diz a mensagem (historico nao reescrito por regra do repositorio).",
           "Reconciliacoes de write-set preparadas para o gate do usuario (ver writeSetReconciliacoesPendentes)."
         ],
-        "vereditoFinalPendenteDe": "REVERIFY_IN_STAGING (E3) + resposta do REVISOR na mesma thread"
+        "vereditoFinalPendenteDe": "REVERIFY_IN_STAGING (E3) + resposta do REVISOR na mesma thread",
+        "reverifyE3": {
+          "quando": "2026-08-27T15:05Z",
+          "deploy": "ecf4c14 via Deploy Staging run 33081925408 (gates anti-produção + ci-ok + CSP verdes)",
+          "resultado": "tour6-reverify 12/12: FIX1 logout Sidebar (2x); FIX2a 10 códigos exibidos e modal só fecha no Concluir; FIX2b sessão real estabelecida com código de recuperação consumido pela UI; FIX3 redirects estoque/materiais; FIX4 contador sem zero transitório; fixture 2FA restaurada (twoFactorAtivo=false, backup removido). Bônus: perfil do técnico diagnosticado saudável por API (E2)."
+        }
       }
     }
   ],
@@ -955,5 +960,26 @@
       "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
       "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-C1-GAP-FIX-BATCH', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.' })))\""
     }
-  ]
+  ],
+  "gateDoUsuario": {
+    "geradoEm": "2026-08-27T15:10Z",
+    "decisoesD2Soberanas": [
+      "GAP-LEGAL-MODELO-01: conteúdo jurídico de /termos e /privacidade (modelo + barbers-flow) — RELEASE BLOCKER, evidência fresca de staging (tour0)",
+      "D2-DOC-BUCKET · D2-BACKFILL-PROD · D2-Q010-BACKUP · D2-PROMOTION (produção; inalterados)"
+    ],
+    "autorizacoesOperacionais": [
+      "DOCUMENTOS em staging: autorizar DOCUMENTOS_ENABLED=true no Railway staging para re-sondar o fluxo do usuário (bucket já provado; script de sonda pronto no tour2)",
+      "ONBOARDING: autorizar sonda de signup com tenant descartável + estratégia para verificação de e-mail em staging",
+      "AUDITORIA: decidir se o MVP exige trilha CONSULTÁVEL (viraria gap de UI+endpoint) ou se BACKEND_ONLY encerra",
+      "Messaging WhatsApp (AUD-GAP-MESSAGING-WHATSAPP): copy da landing/dashboard/ajuda vende WhatsApp no presente com a feature POST_MVP — decisão de mensagem de produto"
+    ],
+    "reconciliacoesWriteSet": "Ver writeSetReconciliacoesPendentes (2 comandos prontos; disposição CONTEUDO_ACEITO_ORDEM_VIOLADA sugerida em ambos)",
+    "validacoesNaoExecutadasDeclaradas": [
+      "Stripe checkout/portal reais (BILLING) — operação financeira externa",
+      "Troca de senha e logout-all na fixture compartilhada (SEGURANCA)",
+      "Override granular de permissões (RBAC/ADMIN) e convite de usuário (e-mail real)",
+      "Anonimização LGPD e autoexclusão de conta (irreversíveis por design)",
+      "typecheck (tsc) do painel"
+    ]
+  }
 }

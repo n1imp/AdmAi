@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD-C1-REV-DOCS",
-  "titulo": "Registro da revisao REVISOR + reconciliacoes pendentes no ledger (reparo do ENOENT da fatia anterior)",
+  "sliceId": "AUD-D1-REVERIFY-CLOSE",
+  "titulo": "Fase D: resultados do REVERIFY E3 (tour6 12/12) no ledger + fechamento de ciclo no 02_CURRENT_STATE.md",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T14:22:14.395Z",
+  "declaradoEm": "2026-08-27T14:41:39.899Z",
   "baseCommitPorLane": {
-    "HARNESS": "63041f3d797f5e82bd1a5e99f8ffa013a78b36cd"
+    "HARNESS": "ecf4c1464921932f674be6424ba2726e97e40f82"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -638,8 +638,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "b58a5025659841946c883fb87cfb9eb9199c07023dea9b4c87fe98d1b0844700",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "b89fd20ca9242947104cfefe3dd77a5db0c5c786147e3e3be73e39929c9d4e40",
+      "docs/eos-v2/WRITE_SET.json": "53defcd1aff22bb47b9211885a6ca47af15b9812fb13e6561a257860937c9514",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "921bc68204a9d0afd032b6e94dc11cd94e6abd08973da434648604cfaf891ad3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2589,21 +2589,28 @@
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "revisao AUD-C1 + errata + writeSetReconciliacoesPendentes",
+      "proposito": "gaps RESOLVED_REVERIFIED, upgrades de classificacao, checkpoint Fase D",
       "existiaNaDeclaracao": true,
       "shaNaDeclaracao": "93b6b6811abc7f673ea9571213e63b8bf2c631a494023c0e58a0db7f076f472c",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
+      "precisao": "BOUNDED",
+      "proposito": "FUNCTIONAL_AUDIT_STATUS, READY_FRONTIER e nota do deploy staging ecf4c14",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fcbe25f7eb725d43d136b1d529fc263e61d1dc4933b455acd6537cf72572fe83",
+      "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Escrita do ledger ocorreu ANTES desta declaracao (reparo do ENOENT da fatia AUD-C1-REV-FIXES, que fechou OBSERVED_SUBSET pela mesma razao); nenhuma escrita apos declarar. Trilha completa e honesta para o gate.",
+  "nota": "Fase D fechada apos declaracao correta: ledger (reverify 12/12 + gate do usuario) e CURRENT_STATE escritos DEPOIS de declarar e ANTES de commitar.",
   "aviso": "Declaracao ENCERRADA."
 }

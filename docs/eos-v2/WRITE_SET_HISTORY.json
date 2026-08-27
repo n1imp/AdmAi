@@ -65076,9 +65076,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Escrita do ledger ocorreu ANTES desta declaracao (reparo do ENOENT da fatia AUD-C1-REV-FIXES, que fechou OBSERVED_SUBSET pela mesma razao); nenhuma escrita apos declarar. Trilha completa e honesta para o gate.",
       "declaradoEm": "2026-08-27T14:22:14.395Z"
+    },
+    {
+      "sliceId": "AUD-D1-REVERIFY-CLOSE",
+      "titulo": "Fase D: resultados do REVERIFY E3 (tour6 12/12) no ledger + fechamento de ciclo no 02_CURRENT_STATE.md",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Fase D fechada apos declaracao correta: ledger (reverify 12/12 + gate do usuario) e CURRENT_STATE escritos DEPOIS de declarar e ANTES de commitar.",
+      "declaradoEm": "2026-08-27T14:41:39.899Z"
     }
   ],
-  "geradoEm": "2026-08-27T14:22:36.116Z",
+  "geradoEm": "2026-08-27T14:43:20.964Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
