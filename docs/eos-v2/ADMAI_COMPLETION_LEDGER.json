@@ -2744,6 +2744,19 @@
     "candidato_evidencia": "Fronteira de trabalho seguro VAZIA; sweep tecnico verde (selftests 121/121, 11/11, EOS PASS; registries 28/28, 29/29); painel 252/252; 9/9 jornadas E2E sem WhatsApp; Gate 6 APROVADO. Bloqueios restantes: 6 (1 DEFERRED_BY_D2 legal, 3 BLOCKED_CAPABILITY staging, 2 BLOCKED_D2 backfill/backup) + promocao.",
     "ciclo_stg_unblock": "2026-08-24: tentativa de desbloqueio de staging (diretiva STAGING UNBLOCK). Descoberta secret-safe do §11 EXAURIDA sem tocar producao nem expor secret => STAGING_CREDENTIALS permanece BLOCKED_CAPABILITY (credenciais do admai-staging ausentes; senha do banco nao-recuperavel por CLI/API). Estado autoritativo RECONSTRUIDO neste HEAD (c876527): Gate 6 lock+correcoes 13/13, selftests 121/121·11/11·52/52. Nenhum item de staging pode avancar sem o canal secret-safe do usuario (revisitCondition em STG-02-USO). REAL_STAGING_ACCEPTANCE_PROVEN nao alcancavel neste ciclo — bloqueio de capacidade, nao de trabalho.",
     "ciclo_stg_sec": "2026-08-24: amendment STAGING SECURITY. Finding BLOQUEANTE STG-SEC-RLS-01 (26 tabelas public do admai-staging com RLS off + grants anon/authenticated). Auditoria deterministica (PRISMA_ONLY; anon/authenticated nao usados) -> Codex D1 DECISOR (thread 01a03164, CONCORDO, opcao C ancorada em B). Artefato versionado (lockdown+verify+apply-wrapper+negcontrol+runbook) IMPLEMENTADO, VALIDADO contra Postgres 16 local (A-E PASS; buraco reproduzido e fechado) e APROVADO pelo Codex REVISOR (thread 01a03185: DECISOR+REVISOR+3 deltas -> APROVADO). Aplicacao no admai-staging + negative-control com anon key + re-run do Advisor: BLOCKED_CAPABILITY (credenciais). Finding ABERTO ate a aplicacao/prova no staging. Reconciliacao de migration (STG-MIG-RECON) classificada + estrategia pronta, apos o boundary.",
-    "ciclo_stg_remediation": "2026-08-24: diretiva STAGING REMEDIATION & REAL ACCEPTANCE. Credenciais RE-CONFIRMADAS ausentes. Fronteira A (sem credenciais) executada: A1 re-prova do lockdown aprovado local (verify A-E PASS no HEAD 405d5cf); A2 backend-owner operacional pos-lockdown (INSERT/SELECT/UPDATE/DELETE) + anon negado; A3 handoff READY_FOR_EXTERNAL_APPLY (docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md, §51 A-J com hashes/comandos/pos-condicoes); A4 itens de aceitacao (STG-RUNTIME/E2E-OWNER/MANAGER/EMPLOYEE/TENANT-NEGATIVE/MOBILE/FINAL-SWEEP) adicionados como BLOCKED_CAPABILITY. Fronteira B (apply real -> security accepted -> migration -> storage -> runtime -> E2E -> REAL_STAGING_ACCEPTANCE_PROVEN) inteira BLOCKED_CAPABILITY. Producao intocada. LOCAL_PROOF != STAGING_PROOF."
+    "ciclo_stg_remediation": "2026-08-24: diretiva STAGING REMEDIATION & REAL ACCEPTANCE. Credenciais RE-CONFIRMADAS ausentes. Fronteira A (sem credenciais) executada: A1 re-prova do lockdown aprovado local (verify A-E PASS no HEAD 405d5cf); A2 backend-owner operacional pos-lockdown (INSERT/SELECT/UPDATE/DELETE) + anon negado; A3 handoff READY_FOR_EXTERNAL_APPLY (docs/eos-v2/STG_SEC_RLS_01_HANDOFF.md, §51 A-J com hashes/comandos/pos-condicoes); A4 itens de aceitacao (STG-RUNTIME/E2E-OWNER/MANAGER/EMPLOYEE/TENANT-NEGATIVE/MOBILE/FINAL-SWEEP) adicionados como BLOCKED_CAPABILITY. Fronteira B (apply real -> security accepted -> migration -> storage -> runtime -> E2E -> REAL_STAGING_ACCEPTANCE_PROVEN) inteira BLOCKED_CAPABILITY. Producao intocada. LOCAL_PROOF != STAGING_PROOF.",
+    "STAGING_COMPLETION_LEDGER": "CLOSED",
+    "REAL_STAGING_ACCEPTANCE_PROVEN": "YES",
+    "REMAINING_STAGING_BLOCKERS": 0,
+    "ADMAI_RELEASE_CANDIDATE_READY": "YES",
+    "PRODUCTION_TOUCHED": "NO",
+    "baselineImutavel": {
+      "head": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3",
+      "tag": "admai-staging-accepted-2026-08-27",
+      "artifact": "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md",
+      "data": "2026-08-27"
+    },
+    "READY_FRONTIER": "ADMAI_FUNCTIONAL_PRODUCT_AUDIT",
+    "proximoLedger": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json (NOT_STARTED)"
   }
 }

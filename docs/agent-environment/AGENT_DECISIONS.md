@@ -378,3 +378,15 @@ Aprendizados operacionais: fixture do MANAGER é CONSUMIDA por run (aprova de ve
 re-seed por viewport; rate-limit 5/15min por username é comportamento real de staging ⇒ runs
 espaçados e janela limpa antes da matriz. Estado: 360px = MANAGER/EMPLOYEE/TENANT-NEGATIVE OK;
 OWNER aguardando janela do limiter p/ rodada limpa.
+
+### FECHAMENTO OPERACIONAL DO STAGING (2026-08-27)
+
+Baseline imutável: tag anotada `admai-staging-accepted-2026-08-27` → HEAD `8a53cc5` (o commit
+do REAL_STAGING_ACCEPTANCE_PROVEN; criada ANTES do commit de fechamento, sem mover tags).
+Artifact: `docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md` (zero secrets). Ledger de staging:
+terminal `STAGING_COMPLETION_LEDGER=CLOSED`, `REMAINING_STAGING_BLOCKERS=0`. Carryover:
+2× SEC-HB (ENGINEERING_BACKLOG/TEST_INFRA_DEBT) + desktop-logout (FUNCTIONAL_PRODUCT_AUDIT_INPUT)
+— nenhum reclassificado como blocker do staging aceito. Próxima fase: ledger
+`ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json` NOT_STARTED com regra canônica
+FEATURE_DONE = USER_REAL_CAN_USE. READY_FRONTIER = ADMAI_FUNCTIONAL_PRODUCT_AUDIT.
+ADMAI_RELEASE_READY = NO (LEGAL DEFERRED_BY_D2; promotion NOT_AUTHORIZED).

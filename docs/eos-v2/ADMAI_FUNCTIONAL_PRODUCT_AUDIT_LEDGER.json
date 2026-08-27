@@ -1,0 +1,49 @@
+{
+  "schema": "admai-functional-product-audit-ledger/v1",
+  "criadoEm": "2026-08-27T05:00:00Z",
+  "status": "NOT_STARTED",
+  "baseline": {
+    "ref": "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md",
+    "head": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3",
+    "tag": "admai-staging-accepted-2026-08-27"
+  },
+  "regraCanonica": [
+    "BACKEND_DONE != FEATURE_DONE",
+    "FRONTEND_EXISTS != FEATURE_DONE",
+    "TESTS_PASS != FEATURE_DONE",
+    "FEATURE_DONE = USER_REAL_CAN_USE"
+  ],
+  "categoriasDeEstado": [
+    "DISCUSSED",
+    "SPECIFIED",
+    "BACKEND_IMPLEMENTED",
+    "FRONTEND_IMPLEMENTED",
+    "INTEGRATED",
+    "USER_REAL_CAN_USE",
+    "FEATURE_COMPLETE",
+    "PARTIAL",
+    "BACKEND_ONLY",
+    "FRONTEND_ONLY",
+    "MISSING",
+    "BROKEN",
+    "BLOCKED_D2",
+    "DEFERRED_BY_SCOPE",
+    "POST_MVP"
+  ],
+  "criticalPath": [
+    "FUNCTIONAL_CAPABILITY_INVENTORY",
+    "USER_REAL_CAN_USE_CLASSIFICATION",
+    "GAP_EXECUTION",
+    "REVERIFY_IN_STAGING"
+  ],
+  "entradasIniciais": [
+    {
+      "id": "AUD-INPUT-DESKTOP-LOGOUT",
+      "origem": "carryover do staging (E2E real 2026-08-27)",
+      "descricao": "Desktop nao expoe controle de logout (so /mais, nav mobile)",
+      "estado": "DISCUSSED"
+    }
+  ],
+  "itens": [],
+  "aviso": "AUDITORIA NAO INICIADA. Nao inventariar/corrigir/implementar antes da diretiva propria."
+}

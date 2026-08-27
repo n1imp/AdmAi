@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-E2E-DRIVER-REAL-01",
-  "titulo": "Primeira execucao REAL do e2e/staging: diagnostico embutido + retry de clique + selects robustos + logout via /mais (desktop sem logout = achado) ",
+  "sliceId": "STAGING-OPERATIONAL-CLOSURE",
+  "titulo": "Fechamento operacional do staging aceito: baseline imutavel (tag) + artifact de aceitacao + ledger CLOSED + bootstrap do ledger da auditoria funcional + carryover findings",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T04:21:47.779Z",
+  "declaradoEm": "2026-08-27T11:20:27.150Z",
   "baseCommitPorLane": {
-    "HARNESS": "99ac6d08b18524195bc2fa27f3fd1b951fa55293"
+    "HARNESS": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Driver fora escrito antes do staging existir; a 1a execucao real revelou: cliques one-shot corriam contra fetches (Aprovar/Bater ponto), 2 selects no passo 1 do wizard com resultado ignorado, e desktop SEM controle de logout (so /mais, nav mobile — achado de produto p/ backlog, sem redesign agora). Fixture do MANAGER e consumida por run => re-seed por viewport. Rate-limit 5/15min por username observado (comportamento esperado de staging=prod).",
+  "notaDeMetodo": "Ciclo curto e documental (sem runtime/app). Tag anotada no HEAD comprovado 8a53cc5 ANTES do commit de fechamento (a tag aponta o estado aceito, nao os docs). Sem secrets em nenhum artifact.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -367,7 +367,7 @@
       "chaveiro-painel/e2e/cdp.mjs": "5216cedeace07094e35503498b1c8e58d719e0c1f59f95b54c5d4ae024cd3859",
       "chaveiro-painel/e2e/jornadas.mjs": "ddd675f1681cf43f79f11573808e9bf3153404bf0d68e1f0cba298e2f6766e90",
       "chaveiro-painel/e2e/run.mjs": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
-      "chaveiro-painel/e2e/staging.mjs": "7ff348294163ee8d7bc12a8123ef9fc5393aadc9a1e768d2f9b5e7d63532ff14",
+      "chaveiro-painel/e2e/staging.mjs": "36b23f295c64995ece16e55c58fdb4a5757a544e9c44109eca2bf1d11f59bb7d",
       "chaveiro-painel/eslint.config.js": "2430530cdcb678dd7d595e62c0d292988333e01cb676f14a66d2dabf93480e03",
       "chaveiro-painel/index.html": "d786acd8e9810c307751d15dc9b8ac2b09bcb42d2761aa6b9f25534715c85e88",
       "chaveiro-painel/jsconfig.json": "8c1eaa0a35d0055fe8c59fe9bf60dc932c44adf65b0aef0dbcbdb630322e7134",
@@ -570,7 +570,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "0761094448e037af581beb46198a3b74a0b565625c1e45e631f352300061de37",
+      "docs/agent-environment/AGENT_DECISIONS.md": "001fa20333c29c950762d2f17cf2e38409ed3b9bc367a7e9984f220fa1598760",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -586,7 +586,7 @@
       "docs/agent-environment/SECURITY_CLOSURE_FINAL_REPORT.md": "f925067baa8dfff86a5f369c595e9f5bd47606ef5d1f450c341843b0f4c8ab94",
       "docs/agent-environment/SECURITY_CLOSURE_REPORT.md": "184378e6d3c49b0dac1f51f4ed5b77f972861c38f35119f00eb391f8549e299a",
       "docs/agent-environment/SECURITY_FINAL_REPORT.md": "7880160c25cc70b2efb6bcb50a297ef0a391da4633e6e059f4558b9098c9c04c",
-      "docs/agent-environment/SECURITY_HARDENING_BACKLOG.md": "190e16368ec43930ded0d017839cf58fa49104e1db1e18a81f8a905d43e9e528",
+      "docs/agent-environment/SECURITY_HARDENING_BACKLOG.md": "0e8746895cc2bf3c9163a79bb3dc1330d22733c9c92805f63d9c60a858bd3228",
       "docs/agent-environment/TOKEN_EFFICIENCY_BASELINE.md": "a07575e3519edd0e61b6bef33031dd9bb56272c666c9964a27cf4755b3878fd6",
       "docs/agent-environment/TOOL_ROUTING_MATRIX.md": "af8071aac72cf307ab534f5dbdba3bc36151d92fae523bdc04a201a26138ed3b",
       "docs/db/01-discovery.md": "e04f0eb75bee64cbb024eaf6d9226e2f0d3b26e5e05b05d706dc086e4543ddb1",
@@ -610,7 +610,7 @@
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
       "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "0dde4782e4a70b1841c286889fdbaacba368e545992cc7788358fd52308513dd",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "486f0a62ed5ce3d87bfc50e2339b33ab058aa2bbbd46c861f2eb059bb4bcfa5d",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "35426a71ad98bad7dea25ea807fa455a2b58b5809855b418bdf7bfcc3917cb62",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -633,8 +633,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "eb3788fa2bc76a3600f76cec2342713d4a351fe5a52468be7391abcd2f33bf9e",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "2f3a2062b420d70c434e6899942c4b65dcc4be5fe384c739009cf2204402baeb",
+      "docs/eos-v2/WRITE_SET.json": "51405a9d288c58ce25bad4b4ecd973a2f38a5d5adf60898030f93b9765c1b8b5",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "9019c347b3d103ea137538c02fae29a21c0bba036e3dbb75985616879a62c92a",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2540,40 +2540,38 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/e2e/staging.mjs",
+      "caminho": "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md",
       "precisao": "BOUNDED",
-      "proposito": "diagnostico + retry + selects + logout /mais",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7ff348294163ee8d7bc12a8123ef9fc5393aadc9a1e768d2f9b5e7d63532ff14",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "BOUNDED",
-      "proposito": "registro da rodada E2E real",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0761094448e037af581beb46198a3b74a0b565625c1e45e631f352300061de37",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/SECURITY_HARDENING_BACKLOG.md",
-      "precisao": "BOUNDED",
-      "proposito": "achado: desktop sem logout na UI",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "190e16368ec43930ded0d017839cf58fa49104e1db1e18a81f8a905d43e9e528",
+      "proposito": "NOVO: artifact de aceitacao (baseline/tag/urls/matriz de gates; zero secrets)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "estados E2E/viewports",
+      "proposito": "terminal: STAGING_COMPLETION_LEDGER=CLOSED",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "486f0a62ed5ce3d87bfc50e2339b33ab058aa2bbbd46c861f2eb059bb4bcfa5d",
+      "shaNaDeclaracao": "35426a71ad98bad7dea25ea807fa455a2b58b5809855b418bdf7bfcc3917cb62",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: bootstrap NOT_STARTED com categorias e regra canonica",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
+      "precisao": "BOUNDED",
+      "proposito": "registro do fechamento + carryover + READY_FRONTIER",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "001fa20333c29c950762d2f17cf2e38409ed3b9bc367a7e9984f220fa1598760",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2584,6 +2582,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "E2E 16/16 + Advisor 0 errors + ledger reconciliado; sweep completo",
+  "nota": "Fechamento documental: baseline+tag+ledgers; zero mudanças de runtime",
   "aviso": "Declaracao ENCERRADA."
 }

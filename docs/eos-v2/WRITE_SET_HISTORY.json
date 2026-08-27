@@ -64992,9 +64992,23 @@
       "bloqueiaIntegracao": false,
       "nota": "E2E 16/16 + Advisor 0 errors + ledger reconciliado; sweep completo",
       "declaradoEm": "2026-08-27T04:21:47.779Z"
+    },
+    {
+      "sliceId": "STAGING-OPERATIONAL-CLOSURE",
+      "titulo": "Fechamento operacional do staging aceito: baseline imutavel (tag) + artifact de aceitacao + ledger CLOSED + bootstrap do ledger da auditoria funcional + carryover findings",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Fechamento documental: baseline+tag+ledgers; zero mudanças de runtime",
+      "declaradoEm": "2026-08-27T11:20:27.150Z"
     }
   ],
-  "geradoEm": "2026-08-27T04:53:45.654Z",
+  "geradoEm": "2026-08-27T11:21:43.631Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
