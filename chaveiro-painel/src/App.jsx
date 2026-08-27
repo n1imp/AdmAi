@@ -282,14 +282,19 @@ function AppContent() {
               }
             />
 
-            {/* Materiais (ex-Catálogo) e Estoque agora são abas próprias */}
+            {/* Materiais (ex-Catálogo) e Estoque agora são abas próprias.
+                RequirePermissao é UX (o backend já nega estoque:ver): sem ele, o deep-link
+                de um papel sem permissão renderizava erro de carregamento e estado vazio
+                ao mesmo tempo. [AUD-GAP-ESTOQUE-FUNC-GUARD] */}
             <Route
               path="/materiais"
               element={
                 <RequireAuth>
-                  <Layout>
-                    <Catalogo />
-                  </Layout>
+                  <RequirePermissao modulo="estoque">
+                    <Layout>
+                      <Catalogo />
+                    </Layout>
+                  </RequirePermissao>
                 </RequireAuth>
               }
             />
@@ -297,9 +302,11 @@ function AppContent() {
               path="/estoque"
               element={
                 <RequireAuth>
-                  <Layout>
-                    <Estoque />
-                  </Layout>
+                  <RequirePermissao modulo="estoque">
+                    <Layout>
+                      <Estoque />
+                    </Layout>
+                  </RequirePermissao>
                 </RequireAuth>
               }
             />

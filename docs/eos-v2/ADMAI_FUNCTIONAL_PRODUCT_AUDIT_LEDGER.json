@@ -62,7 +62,7 @@
       "id": "AUD-INPUT-DESKTOP-LOGOUT",
       "origem": "carryover do staging (E2E real 2026-08-27)",
       "descricao": "Desktop nao expoe controle de logout (so /mais, nav mobile)",
-      "estado": "CONFIRMED_E3 (tour1: aside sem 'Sair'; controles = Painel/Relatórios/Equipe/Serviços/Aprovações/Materiais/Estoque/Usuários/Configurações/Ajuda) + CONFIRMED_E1 (Sidebar.jsx rodapé só avatar/nome/papel)",
+      "estado": "EXECUTADO_AGUARDANDO_REVERIFY (botao Sair no rodape da Sidebar, mesmo logout() de Mais)",
       "vinculadoA": "AUD-CAP-AUTH-LOGIN"
     }
   ],
@@ -73,7 +73,8 @@
       "severidade": "ALTA",
       "descricao": "POST /me/2fa/ativar retorna codigosRecuperacao, mas Seguranca.jsx (ativar2fa) DESCARTA a resposta — o usuário ativa 2FA sem nunca ver os códigos de recuperação. A rota de recuperação /auth/login/2fa/recuperar existe, porém o usuário real não tem códigos: risco de lockout permanente ao perder o autenticador.",
       "evidencia": "E1 chaveiro-painel/src/pages/Seguranca.jsx (ativar2fa ignora data) + E3 tour1 ciclo 2FA (modal fecha sem exibir códigos)",
-      "classe": "GAP_EXECUTION_CANDIDATE (material: auth → DECISOR antes de implementar)"
+      "classe": "GAP_EXECUTION_CANDIDATE (material: auth → DECISOR antes de implementar)",
+      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (exibicao no Seguranca + consumo no Login)"
     },
     {
       "id": "AUD-GAP-FLASH-EMPTY",
@@ -81,7 +82,8 @@
       "severidade": "MEDIA",
       "descricao": "RESOLVIDO O DIAGNÓSTICO (tour3): os dados chegam — /usuarios lista 3 contas e /tecnicos do gestor lista 1 após o fetch. O defeito real é de LOADING STATE: o contador renderiza '0 contas cadastradas'/'0 cadastrados' ANTES do fetch completar (flash-of-empty enganoso).",
       "evidencia": "E3 tour1 passo 'configuracao/usuarios render' + tour2 passo 'tecnicos render (gestor)' + tour3 rechecks (APARECEU/3 contas; API 200 qtd 1 + UI 1 cadastrado)",
-      "classe": "GAP_EXECUTION_CANDIDATE (frontend: não exibir contador/empty antes do primeiro fetch)"
+      "classe": "GAP_EXECUTION_CANDIDATE (frontend: não exibir contador/empty antes do primeiro fetch)",
+      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (travessao em carregando||erro; empty de Usuarios com !erro)"
     },
     {
       "id": "AUD-GAP-ESTOQUE-FUNC-GUARD",
@@ -89,7 +91,8 @@
       "severidade": "MEDIA",
       "descricao": "Deep-link /estoque como funcionário: rota não tem RequirePermissao no App.jsx (só RequireAuth); backend nega e a tela mostra SIMULTANEAMENTE 'Não foi possível carregar o estoque' e o empty state 'Nenhum material cadastrado. Cadastre materiais…' — mensagens contraditórias para um papel sem acesso.",
       "evidencia": "E3 tour2 passo 'estoque como funcionario' + E1 App.jsx (/estoque e /materiais sem RequirePermissao; /configuracao/usuarios tem)",
-      "classe": "GAP_EXECUTION_CANDIDATE (RBAC de UI → DECISOR)"
+      "classe": "GAP_EXECUTION_CANDIDATE (RBAC de UI → DECISOR)",
+      "execucao": "EXECUTADO_AGUARDANDO_REVERIFY (RequirePermissao estoque em /estoque e /materiais)"
     },
     {
       "id": "AUD-GAP-DOCUMENTOS-OFF-STAGING",
@@ -122,6 +125,22 @@
       "descricao": "PATCH /config/empresa não chama registrarAudit (trilha cobre usuarios.*, convite.enviado, lgpd.*, conta.excluida). Mudança de configuração da empresa fica fora da auditoria.",
       "evidencia": "E1 admin.js (call sites de registrarAudit)",
       "classe": "ENGINEERING_BACKLOG"
+    },
+    {
+      "id": "AUD-NOTE-LOGOUT-LOCAL-ONLY",
+      "capability": "AUTH_LOGIN/SEGURANCA",
+      "severidade": "BAIXA",
+      "descricao": "logout() do AuthContext (usado por Mais e agora pela Sidebar) limpa somente o token local; POST /auth/logout existe para invalidar o refresh cookie e nao e chamado. Encerramento local funciona; a invalidacao server-side do refresh fica como hardening.",
+      "evidencia": "Apontado pelo DECISOR AUD-C1 (restricao nao bloqueante) + E1 AuthContext/Mais.jsx",
+      "classe": "ENGINEERING_BACKLOG"
+    },
+    {
+      "id": "AUD-NOTE-TECNICOS-REDESIGN-DIRECAO-B",
+      "capability": "TECNICOS",
+      "severidade": "INFO",
+      "descricao": "CardTecnico ja implementa a \"Direcao B do DECISOR (D-SL15)\": em lg+ o nome quebra em linha integral (lg:whitespace-normal) em vez de truncar \"An...\". O REDESIGN do freeze pode estar parcialmente enderecado pos-freeze; reavaliar com mais de 1 tecnico em fixture antes de manter a classificacao REDESIGN.",
+      "evidencia": "E1 Tecnicos.jsx CardTecnico (comentario D-SL15) durante a Fase C",
+      "classe": "AUDIT_NOTE"
     }
   ],
   "itens": [
@@ -851,6 +870,11 @@
       "quando": "2026-08-27T12:40-12:55Z",
       "fase": "USER_REAL_CAN_USE_CLASSIFICATION (rodada 2 — rechecks; FASE B ENCERRADA)",
       "resultado": "tour3 21/25, tour4 12/12, tour5 4/4 (5 tours no total: 89/93 passos; 4 falhas instrumentais, todas recuperadas). FECHADO: error state login ('Credenciais inválidas'); wizard func mobile completo -> pendente -> REJEIÇÃO com modal -> fila re-empty; repartição CONSOLIDADO com valores reais cruzando com dashboard; /metricas catálogo 10 ids + série; mobile 390 (bottom-nav por papel, KPIs, sessões, switch 2FA, Sair); flash-of-empty diagnosticado (dados chegam; contador 0 durante loading); perfil técnico alcançável em 2 passos (conteúdo A_CONFIRMAR)."
+    },
+    {
+      "quando": "2026-08-27T13:10Z",
+      "fase": "GAP_EXECUTION (Fase C — lote AUD-C1 implementado)",
+      "resultado": "Consenso DECISOR (thread 01a04345) aplicado: 4 gaps corrigidos no chaveiro-painel (logout desktop na Sidebar; codigos de recuperacao 2FA exibidos pos-ativacao E consumiveis no Login via /auth/login/2fa/recuperar; guards estoque nas rotas /estoque e /materiais; flash-of-empty nos contadores de Tecnicos/Usuarios com regra carregando||erro e empty com !erro). Validacao: vitest 269/269, eslint 0 erros, prettier OK, build OK, git diff --check OK. PENDENTE: REVISOR, push staging e REVERIFY E3."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -878,5 +902,19 @@
       "EVIDENCE_POINTERS",
       "LAST_VERIFIED_HEAD"
     ]
-  }
+  },
+  "decisoesMateriais": [
+    {
+      "id": "AUD-C1-GAP-FIX-BATCH-2026-08-27",
+      "missao": "ADMAI_FUNCTIONAL_PRODUCT_AUDIT / GAP_EXECUTION",
+      "threadDecisor": "01a04345-724a-7c13-8146-60670847b0fa",
+      "resultado": "DISCORDO -> CONSENSO (Claude aceitou as variacoes minimas do Codex)",
+      "posicaoClaude": "4 fixes minimos frontend: logout Sidebar; exibir codigosRecuperacao pos-ativacao; RequirePermissao estoque em /estoque+/materiais; travessao no contador durante loading.",
+      "posicaoCodex": "Itens 1 e 3 aprovados como propostos. Item 2 exige TAMBEM o consumo: modo \"Usar codigo de recuperacao\" no Login (so TOTP, 10 chars maiusculos, POST /auth/login/2fa/recuperar com o mesmo desafio); exibicao de codigos so em memoria, Copiar todos, fechar apenas no Concluir (sem X/backdrop/Escape), sem tocar o Overlay compartilhado. Item 4: travessao durante carregando||erro e empty de Usuarios ganha !erro.",
+      "decisaoFinal": "Implementadas as 4 correcoes COM as variacoes do Codex. Somente chaveiro-painel.",
+      "impacto": "AUTH_LOGIN (logout desktop), AUTH_2FA (exibicao+consumo de recovery codes), RBAC/ESTOQUE (guard de rota), ADMIN/TECNICOS (flash-of-empty).",
+      "testes": "vitest 269/269 (novos: Sidebar 3, Seguranca.2fa 3, Login.recuperacao2fa 4, Usuarios 4; estendidos: Tecnicos +2, Guards +1); eslint 0 erros; prettier check OK; vite build OK; git diff --check OK. Reverify E3 em staging PENDENTE (Fase D).",
+      "achadoExtraDoDecisor": "AuthContext.logout() limpa apenas o token local; /auth/logout existe para invalidar o refresh cookie server-side — registrado como AUD-NOTE-LOGOUT-LOCAL-ONLY (backlog). O item 1 NAO e revogacao server-side de sessao."
+    }
+  ]
 }

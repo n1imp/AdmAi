@@ -89,4 +89,21 @@ describe('Tecnicos — selecao de estado da lista', () => {
     render(<Tecnicos />);
     expect(await screen.findByText(/^1 cadastrado$/)).toBeInTheDocument();
   });
+
+  /* AUD-GAP-FLASH-EMPTY — staging real mostrou "0 cadastrados" com dados na API:
+     o contador renderizava fora do guard de carregamento que a lista já tinha. */
+  it('carregando: contador mostra "—" e nunca o zero transitorio', () => {
+    mockGet.mockReturnValue(new Promise(() => {}));
+    render(<Tecnicos />);
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText(/^0 cadastrados?$/)).not.toBeInTheDocument();
+  });
+
+  it('erro: contador nao afirma zero (contagem desconhecida)', async () => {
+    mockGet.mockRejectedValue(new Error('falha de rede'));
+    render(<Tecnicos />);
+    expect(await screen.findByText(/Não foi possível carregar os técnicos/)).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText(/^0 cadastrados?$/)).not.toBeInTheDocument();
+  });
 });

@@ -168,4 +168,23 @@ describe('<RequirePermissao>', () => {
     );
     expect(pode).toHaveBeenCalledWith('estoque', 'ver');
   });
+
+  /* AUD-GAP-ESTOQUE-FUNC-GUARD — deep-link de papel sem estoque:ver caía direto na
+     página (o backend nega e a tela mostrava erro + vazio ao mesmo tempo, provado em
+     staging). O guard agora envolve /estoque e /materiais no App; aqui fica o contrato
+     de negação para o módulo. */
+  it('funcionário sem estoque:ver é redirecionado no deep-link', () => {
+    mockAuth.mockReturnValue({
+      user: { id: 3, papel: 'funcionario' },
+      permissoes: { estoque: { ver: false } },
+      pode: () => false,
+    });
+    renderizarComRota(
+      <RequirePermissao modulo="estoque">
+        <Protegido />
+      </RequirePermissao>
+    );
+    expect(screen.getByText('TELA_CONFIGURACAO')).toBeInTheDocument();
+    expect(screen.queryByText('CONTEUDO_PROTEGIDO')).not.toBeInTheDocument();
+  });
 });

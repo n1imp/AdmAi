@@ -191,6 +191,10 @@ export default function Seguranca() {
   const [codigoAtivar, setCodigoAtivar] = useState('');
   const [ativando, setAtivando] = useState(false);
   const [erro2fa, setErro2fa] = useState('');
+  // Códigos de recuperação: o backend os devolve UMA única vez na ativação (no banco
+  // fica só o hash). Ficam apenas em memória e são limpos no "Concluir" — nunca em
+  // storage, log ou analytics. [AUD-GAP-2FA-RECOVERY-CODES · DECISOR AUD-C1]
+  const [codigosRecuperacao, setCodigosRecuperacao] = useState(null); // string[] | null
 
   // 2FA — desativação (confirmação com código)
   const [confirmarDesativar, setConfirmarDesativar] = useState(false);
@@ -282,22 +286,33 @@ export default function Seguranca() {
     }
   }
 
-  // Ativação — passo 2: confirma o código do app autenticador.
+  // Ativação — passo 2: confirma o código do app autenticador. A resposta traz os
+  // códigos de recuperação; descartá-los deixava o usuário sem saída ao perder o
+  // autenticador (a rota /auth/login/2fa/recuperar existe, mas ele nunca via os códigos).
   async function ativar2fa() {
     if (codigoAtivar.length !== 6) return;
     setAtivando(true);
     setErro2fa('');
     try {
-      await api.post('/me/2fa/ativar', { codigo: codigoAtivar });
+      const { data } = await api.post('/me/2fa/ativar', { codigo: codigoAtivar });
       setDados((d) => ({ ...d, twoFactorAtivo: true }));
       setSetup2fa(null);
       setCodigoAtivar('');
+      setCodigosRecuperacao(Array.isArray(data?.codigosRecuperacao) ? data.codigosRecuperacao : []);
       toast('2FA ativado', 'success');
     } catch (err) {
       setErro2fa(err.response?.data?.erro ?? 'Código inválido');
     } finally {
       setAtivando(false);
     }
+  }
+
+  function copiarCodigosRecuperacao() {
+    if (!codigosRecuperacao?.length) return;
+    navigator.clipboard
+      ?.writeText(codigosRecuperacao.join('\n'))
+      .then(() => toast('Códigos copiados', 'success'))
+      .catch(() => {});
   }
 
   function abrirDesativar() {
@@ -629,6 +644,36 @@ export default function Seguranca() {
           >
             {ativando ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
             {ativando ? 'Verificando…' : 'Confirmar e ativar'}
+          </button>
+        </Modal>
+      )}
+
+      {/* Modal — códigos de recuperação (exibição única pós-ativação).
+          onClose é no-op DE PROPÓSITO: X/backdrop/Escape não podem descartar códigos
+          que nunca mais serão exibidos — só o "Concluir" fecha (configuração local;
+          o Overlay compartilhado não muda). */}
+      {codigosRecuperacao && (
+        <Modal titulo="Guarde seus códigos de recuperação" onClose={() => {}}>
+          <p className="text-muted text-xs leading-relaxed">
+            Se você perder o acesso ao app autenticador, um destes códigos é a única forma de
+            entrar. Cada um funciona uma vez. Guarde-os em um lugar seguro — eles não serão
+            mostrados novamente.
+          </p>
+          <ul className="grid grid-cols-2 gap-2" aria-label="Códigos de recuperação">
+            {codigosRecuperacao.map((c) => (
+              <li
+                key={c}
+                className="input font-mono text-sm text-center tracking-widest select-all"
+              >
+                {c}
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={copiarCodigosRecuperacao} className="btn-secondary">
+            <Copy size={16} /> Copiar todos
+          </button>
+          <button type="button" onClick={() => setCodigosRecuperacao(null)} className="btn-primary">
+            <Check size={16} /> Concluir — já guardei os códigos
           </button>
         </Modal>
       )}

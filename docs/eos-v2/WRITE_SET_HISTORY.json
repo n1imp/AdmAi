@@ -65020,9 +65020,37 @@
       "bloqueiaIntegracao": false,
       "nota": "Pacote documental completo; validacoes §41 PASS; auditoria NOT_STARTED",
       "declaradoEm": "2026-08-27T11:40:54.238Z"
+    },
+    {
+      "sliceId": "AUD-CAP-INVENTORY-CLASSIFICATION",
+      "titulo": "ADMAI_FUNCTIONAL_PRODUCT_AUDIT — Fases A/B: inventário canônico e classificação por evidência no ledger",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "UNKNOWN_PROVENANCE",
+      "bloqueiaIntegracao": true,
+      "nota": "Fases A/B da auditoria concluidas: inventario (02c5c5b) + classificacao rodadas 1-2 (f842280, 47740de) no ledger. 02_CURRENT_STATE.md declarado mas intencionalmente nao tocado nesta fatia (fechamento de ciclo fica para a fatia final).",
+      "declaradoEm": "2026-08-27T12:04:43.615Z"
+    },
+    {
+      "sliceId": "AUD-C1-GAP-FIX-BATCH",
+      "titulo": "ADMAI_FUNCTIONAL_PRODUCT_AUDIT — Fase C: 4 gaps frontend (logout desktop, 2FA recovery codes exibicao+consumo, guards estoque, flash-of-empty) por consenso DECISOR AUD-C1-GAP-FIX-BATCH-2026-08-27 (thread 01a04345-724a-7c13-8146-60670847b0fa)",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Fase C implementada e validada (vitest 269/269, eslint 0 erros, prettier, build, diff --check) ANTES de commitar — fechamento na mesma base da declaracao.",
+      "declaradoEm": "2026-08-27T12:56:38.263Z"
     }
   ],
-  "geradoEm": "2026-08-27T11:44:07.289Z",
+  "geradoEm": "2026-08-27T13:10:48.322Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

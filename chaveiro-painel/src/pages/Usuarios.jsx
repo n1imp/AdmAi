@@ -361,8 +361,11 @@ export default function Usuarios() {
 
       <div className="px-4 pt-2 pb-4">
         <p className="text-muted text-xs">
-          {usuarios.length} conta{usuarios.length !== 1 ? 's' : ''} cadastrada
-          {usuarios.length !== 1 ? 's' : ''}
+          {/* Contagem desconhecida durante carregamento/falha — sem "0 contas" transitório.
+              [AUD-GAP-FLASH-EMPTY] */}
+          {carregando || erro
+            ? '—'
+            : `${usuarios.length} conta${usuarios.length !== 1 ? 's' : ''} cadastrada${usuarios.length !== 1 ? 's' : ''}`}
         </p>
       </div>
 
@@ -373,7 +376,10 @@ export default function Usuarios() {
           <div className="lg:col-span-2">
             <SkeletonLista qtd={3} />
           </div>
-        ) : usuarios.length === 0 ? (
+        ) : usuarios.length === 0 && !erro ? (
+          /* Falha de carregamento não é evidência de lista vazia (mesma regra de
+             Tecnicos.jsx / DOG-002): com `erro`, o banner acima já comunica e oferece
+             retry — afirmar "Nenhuma conta" declararia um fato sem evidência. */
           <div className="lg:col-span-2">
             <EstadoVazio
               mensagem="Nenhuma conta cadastrada"

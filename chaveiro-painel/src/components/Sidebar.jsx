@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { buildNavigation } from '../config/navigation.js';
 
@@ -42,7 +42,7 @@ function Grupo({ titulo, itens }) {
 }
 
 export default function Sidebar() {
-  const { user, papel, permissoes, pode, podeProprio } = useAuth();
+  const { user, papel, permissoes, pode, podeProprio, logout } = useAuth();
   const carregando = papel !== 'dono' && permissoes === null;
   const grupos = carregando ? [] : buildNavigation({ papel, pode, podeProprio }).desktopGroups;
   const papelLabel = user?.admin ? 'Administrador' : (PAPEL_LABEL[papel] ?? 'Conta');
@@ -87,6 +87,17 @@ export default function Sidebar() {
             <p className="text-[11px] text-muted truncate">{papelLabel}</p>
           </div>
         </div>
+        {/* No desktop este era o único viewport SEM logout — o "Sair" vivia só em /mais,
+            aba da navegação mobile. Mesmo logout() que Mais.jsx usa; encerramento local
+            da sessão (o token some do storage). [AUD-INPUT-DESKTOP-LOGOUT] */}
+        <button
+          type="button"
+          onClick={logout}
+          className="mt-2 w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium min-h-[44px] text-muted hover:text-danger hover:bg-dark-700 transition-all"
+        >
+          <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
+          <span className="tracking-wide">Sair</span>
+        </button>
       </div>
     </aside>
   );

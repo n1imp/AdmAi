@@ -258,7 +258,12 @@ export default function Tecnicos() {
           Técnicos
         </h1>
         <p className="text-muted text-xs mt-0.5 tnum">
-          {tecnicos.length} cadastrado{tecnicos.length !== 1 ? 's' : ''}
+          {/* Enquanto carregando (ou após falha) a contagem é DESCONHECIDA — afirmar
+              "0 cadastrados" aqui era o flash-of-empty visto em staging. Mesma regra
+              do estado vazio abaixo (DOG-002). [AUD-GAP-FLASH-EMPTY] */}
+          {carregando || erro
+            ? '—'
+            : `${tecnicos.length} cadastrado${tecnicos.length !== 1 ? 's' : ''}`}
         </p>
       </div>
 

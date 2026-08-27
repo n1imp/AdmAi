@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "ADMAI-COLD-START-PACKAGE",
-  "titulo": "Cold Start Package p/ proxima sessao: docs/eos-v2/current/* (7 arquivos) + schema futuro no audit ledger + nota em decisions",
+  "sliceId": "AUD-C1-GAP-FIX-BATCH",
+  "titulo": "ADMAI_FUNCTIONAL_PRODUCT_AUDIT — Fase C: 4 gaps frontend (logout desktop, 2FA recovery codes exibicao+consumo, guards estoque, flash-of-empty) por consenso DECISOR AUD-C1-GAP-FIX-BATCH-2026-08-27 (thread 01a04345-724a-7c13-8146-60670847b0fa)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T11:40:54.238Z",
+  "declaradoEm": "2026-08-27T12:56:38.263Z",
   "baseCommitPorLane": {
-    "HARNESS": "ac036824a43f4541bc60e7cddc217b392b763048"
+    "HARNESS": "47740de0f657949775ac2c833f480f25d688eb04"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Ciclo documental curto. HISTORY->CURRENT_TRUTH; pointers em vez de blobs; zero secrets; auditoria permanece NOT_STARTED.",
+  "notaDeMetodo": "Consenso com DECISOR (DISCORDO aceito): itens 1 e 3 como propostos; item 2 ganha consumo de codigo de recuperacao no Login (rota /auth/login/2fa/recuperar ja existente); item 4 usa travessao durante carregando||erro e empty de Usuarios ganha !erro. Somente chaveiro-painel; zero backend/schema/deps.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -570,7 +570,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "9daefbccbde555d180bb0595a8731987d6f25a0133317df03210b1265c90d585",
+      "docs/agent-environment/AGENT_DECISIONS.md": "fb82b06c94bbb435f0a505316fbc10256d2c5154d3a39b5153b7ddb0adc6f0f0",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -613,7 +613,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "3bb1aa5d95447255bd930a11a921527f76acf9e94a118ce082dbef178b5d1748",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "81fc7b456cb65d11bc1b9265bef04553884c1da57771584f98df31ba1b36910c",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
@@ -635,12 +635,19 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "17b42332dfa33c588e33cddafb7026ca7b5ccd469dc51bafcaffc71e898054b9",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "a54748a754084b82a83eb73176423922fe978ccf8bededb78942345a5993ed40",
+      "docs/eos-v2/WRITE_SET.json": "47275aef9cf855c619e7dbd766bae0bae17ef9d1d1161810bad56830edf7c017",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "2df09f5c1583c9b4ebfb303062611f36c2347195be1590f513eda13f8b4fec8d",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
       "docs/eos-v2/bootstrap/SL-BOOT-01-BASELINE.md": "a3fc6940da450150f53e50235b5af72a65a44e4e7a21ea505fced70d1ee8f3e3",
+      "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md": "5dff019c75a2e45115cc32791306b2b4be1612bc70760f1fe7a171b210157d2f",
+      "docs/eos-v2/current/02_CURRENT_STATE.md": "fcbe25f7eb725d43d136b1d529fc263e61d1dc4933b455acd6537cf72572fe83",
+      "docs/eos-v2/current/03_PROJECT_INDEX.md": "a74f81e76df05ba22fa4596bdaf5c9ef5d88dcb65d1ad3bbb6878ea6e93b7759",
+      "docs/eos-v2/current/04_DECISION_INVARIANTS.md": "27c5a338209c1842d0d4636a50a5b51222e44f22be524a34afd4dc8ebdb6edcf",
+      "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md": "567eb1b04919fa4884e16e1fb33e18e28c3de43c7107b0ba4c660d2130d1f043",
+      "docs/eos-v2/current/06_CONTEXT_ECONOMY_POLICY.md": "c56f1ceb4296acce0878cddd3e091e7bb44b0f7df5eddd6b4c59002135463639",
+      "docs/eos-v2/current/NEXT_SESSION_PROMPT.md": "ea1b3369ff81bca9d9284889acf6d4f9d14b56879d1c53363dc20217cf5072b6",
       "docs/eos-v2/plans/PLAN_A_FOUNDATIONS.md": "2e7156b583641368ea081ed623f431e0bf8a1ecc0751c9702a8b5d17be968b47",
       "docs/eos-v2/plans/PLAN_B_EOS_KERNEL.md": "5e52f5865eae7a712ef19b0fe121f5de02c0849a5735ba909c024f5d588aef95",
       "docs/eos-v2/plans/PLAN_C_CODEX_COGNITIVE_PLANE.md": "d2606b19eee04f8d4338680250de729fd42bb0a97cd024a3c0bceae062935f03",
@@ -2542,93 +2549,129 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md",
+      "caminho": "chaveiro-painel/src/components/Sidebar.jsx",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: bootstrap principal",
+      "proposito": "Botao Sair no rodape desktop (mesmo logout() de Mais.jsx)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a392dd7898f7bf4d89825e3fc368b83df7b80ba6079f786cf1d7bfa38ddbd239",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Seguranca.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Passo pos-ativacao 2FA exibindo codigosRecuperacao (memoria, copiar todos, concluir; sem fechamento incidental)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6946e2b375292f20f9329cfda52927bdea47b425d8632821e7417e7f08a17460",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Login.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Modo 'Usar codigo de recuperacao' no desafio TOTP chamando /auth/login/2fa/recuperar",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5af38cca0d1f3c7baa9fc771f6b32acd9dbb078f679e8cd105a0a1c5046fabf5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/App.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "RequirePermissao modulo=estoque em /estoque e /materiais (padrao de /configuracao/usuarios)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "8cc047df868b3a770a9c91de12bcdc4904a248b0f607112831446d0c7f816324",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Tecnicos.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Contador exibe travessao durante carregando||erro (flash-of-empty)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "755d6d0d12f357d0e37280761030ad0ebe537705dd5dd03c687608d3ee3bcf06",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Usuarios.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Contador com travessao durante carregando||erro + empty state ganha !erro",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "fa8956510870b6b4136636eab16b5929346c14669b5f914d1d10f25d1fc476fa",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/__tests__/Sidebar.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: botao Sair visivel e chama logout uma vez",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Seguranca.2fa.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: snapshot key/value",
+      "proposito": "NOVO: ativacao mostra os 10 codigos, copiar todos, concluir limpa",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/03_PROJECT_INDEX.md",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Login.recuperacao2fa.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: mapa de navegacao",
+      "proposito": "NOVO: modo recuperacao chama /auth/login/2fa/recuperar e estabelece sessao",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/04_DECISION_INVARIANTS.md",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Tecnicos.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: decisoes nao-redescobriveis",
+      "proposito": "ESTENDER: contador travessao em loading/erro; sem zero transitorio",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "efd998d7f68a5be485aa8de17df325a67e34ddf68f1a6ec86188b9894b950c69",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Usuarios.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: estados do contador e empty nao aparece com erro",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md",
+      "caminho": "chaveiro-painel/src/components/__tests__/Guards.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: findings vivos",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/06_CONTEXT_ECONOMY_POLICY.md",
-      "precisao": "BOUNDED",
-      "proposito": "NOVO: politica de economia de contexto",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/NEXT_SESSION_PROMPT.md",
-      "precisao": "BOUNDED",
-      "proposito": "NOVO: prompt pointer-based",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "ESTENDER: RequirePermissao modulo estoque nega/permite",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7942d259364499a58e44d150756587a12ca28bf3f076df7a6de427a4f50492e6",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "schemaDeItemFuturo + pointer ao pacote",
+      "proposito": "Registrar decisao material AUD-C1 (consenso DECISOR) + status da execucao dos gaps",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "3bb1aa5d95447255bd930a11a921527f76acf9e94a118ce082dbef178b5d1748",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
-      "precisao": "BOUNDED",
-      "proposito": "nota do ciclo",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "9daefbccbde555d180bb0595a8731987d6f25a0133317df03210b1265c90d585",
+      "shaNaDeclaracao": "81fc7b456cb65d11bc1b9265bef04553884c1da57771584f98df31ba1b36910c",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "UNDECLARED_ARTIFACT_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Pacote documental completo; validacoes §41 PASS; auditoria NOT_STARTED",
+  "bloqueiaIntegracao": true,
+  "nota": "Fase C implementada e validada (vitest 269/269, eslint 0 erros, prettier, build, diff --check) ANTES de commitar — fechamento na mesma base da declaracao.",
   "aviso": "Declaracao ENCERRADA."
 }

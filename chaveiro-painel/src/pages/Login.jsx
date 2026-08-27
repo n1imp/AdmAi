@@ -37,6 +37,10 @@ export default function Login() {
   const [desafio2fa, setDesafio2fa] = useState(null); // string opaca devolvida pela API
   const [codigo2fa, setCodigo2fa] = useState('');
   const [metodo2fa, setMetodo2fa] = useState('totp'); // 'totp' | 'telefone'
+  // Recuperação 2FA (somente TOTP): quem perdeu o autenticador entra com um dos
+  // códigos de 10 caracteres exibidos na ativação. [AUD-GAP-2FA-RECOVERY-CODES]
+  const [modoRecuperacao, setModoRecuperacao] = useState(false);
+  const [codigoRecuperacao, setCodigoRecuperacao] = useState('');
 
   // Verificação de telefone por OTP logo após o cadastro.
   const [etapaOtp, setEtapaOtp] = useState(false);
@@ -132,8 +136,34 @@ export default function Login() {
   function voltarLogin() {
     setDesafio2fa(null);
     setCodigo2fa('');
+    setModoRecuperacao(false);
+    setCodigoRecuperacao('');
     setDesambiguacao(null);
     setErro('');
+  }
+
+  // Recuperação: consome um código de uso único em /auth/login/2fa/recuperar com o
+  // MESMO desafio do login — a resposta é uma sessão normal (token).
+  async function verificarRecuperacao(e) {
+    e.preventDefault();
+    if (codigoRecuperacao.length !== 10) {
+      setErro('Digite o código de recuperação de 10 caracteres.');
+      return;
+    }
+    setCarregando(true);
+    setErro('');
+    try {
+      const { data } = await api.post('/auth/login/2fa/recuperar', {
+        desafio: desafio2fa,
+        codigo: codigoRecuperacao,
+      });
+      login(data.token);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setErro(err.response?.data?.erro ?? 'Código de recuperação inválido ou já utilizado.');
+    } finally {
+      setCarregando(false);
+    }
   }
 
   // Trata a resposta de sessão (login normal OU social): token direto, desafio 2FA
@@ -467,32 +497,65 @@ export default function Login() {
                     Verificação em duas etapas
                   </p>
                   <p className="text-muted text-sm mt-1">
-                    {metodo2fa === 'telefone'
-                      ? 'Digite o código de 6 dígitos que enviamos pelo WhatsApp.'
-                      : 'Digite o código de 6 dígitos do seu app autenticador.'}
+                    {modoRecuperacao
+                      ? 'Digite um dos seus códigos de recuperação de 10 caracteres.'
+                      : metodo2fa === 'telefone'
+                        ? 'Digite o código de 6 dígitos que enviamos pelo WhatsApp.'
+                        : 'Digite o código de 6 dígitos do seu app autenticador.'}
                   </p>
                 </div>
 
-                <form onSubmit={verificar2fa} className="flex flex-col gap-4">
-                  <div>
-                    <label className="kpi-label block mb-1.5">Código de verificação</label>
-                    <input
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      autoFocus
-                      value={codigo2fa}
-                      onChange={(e) => setCodigo2fa(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="000000"
-                      className="input text-center text-2xl font-display tracking-[0.4em] font-bold"
-                    />
-                  </div>
+                <form
+                  onSubmit={modoRecuperacao ? verificarRecuperacao : verificar2fa}
+                  className="flex flex-col gap-4"
+                >
+                  {modoRecuperacao ? (
+                    <div>
+                      <label className="kpi-label block mb-1.5">Código de recuperação</label>
+                      <input
+                        autoComplete="off"
+                        maxLength={10}
+                        autoFocus
+                        value={codigoRecuperacao}
+                        onChange={(e) =>
+                          setCodigoRecuperacao(
+                            e.target.value
+                              .toUpperCase()
+                              .replace(/[^0-9A-Z]/g, '')
+                              .slice(0, 10)
+                          )
+                        }
+                        placeholder="XXXXXXXXXX"
+                        aria-label="Código de recuperação"
+                        className="input text-center text-xl font-mono tracking-[0.3em] font-bold"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="kpi-label block mb-1.5">Código de verificação</label>
+                      <input
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        autoFocus
+                        value={codigo2fa}
+                        onChange={(e) =>
+                          setCodigo2fa(e.target.value.replace(/\D/g, '').slice(0, 6))
+                        }
+                        placeholder="000000"
+                        className="input text-center text-2xl font-display tracking-[0.4em] font-bold"
+                      />
+                    </div>
+                  )}
 
                   {erro && <BannerErro>{erro}</BannerErro>}
 
                   <button
                     type="submit"
-                    disabled={carregando || codigo2fa.length !== 6}
+                    disabled={
+                      carregando ||
+                      (modoRecuperacao ? codigoRecuperacao.length !== 10 : codigo2fa.length !== 6)
+                    }
                     className="btn-primary mt-1"
                   >
                     {carregando ? (
@@ -502,6 +565,22 @@ export default function Login() {
                     )}
                     {carregando ? 'Verificando…' : 'Verificar'}
                   </button>
+
+                  {/* Recuperação só existe para TOTP: o desafio por telefone tem outro canal. */}
+                  {metodo2fa === 'totp' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModoRecuperacao((m) => !m);
+                        setErro('');
+                        setCodigo2fa('');
+                        setCodigoRecuperacao('');
+                      }}
+                      className="flex items-center justify-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
+                    >
+                      {modoRecuperacao ? 'Usar código do app' : 'Usar código de recuperação'}
+                    </button>
+                  )}
 
                   <button
                     type="button"
