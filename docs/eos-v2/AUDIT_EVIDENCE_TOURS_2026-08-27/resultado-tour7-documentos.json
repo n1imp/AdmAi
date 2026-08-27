@@ -1,0 +1,98 @@
+{
+  "tour": "tour7-documentos",
+  "quando": "2026-08-27T18:21:18.366Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login func.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "FLAG ON: GET /me/documentos 200",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "qtd": 0
+      }
+    },
+    {
+      "passo": "UI /meus-documentos com affordance de upload",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meus-documentos",
+        "pathname": "/meus-documentos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário Sair DOCUMENTOS MEUS DOCUMENTOS Armazenados em local privado e seguro. © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "chars": 278,
+        "controles": "/meus-documentos | controles=[\"Início\",\"Ponto\",\"Registrar\",\"Meus serviços\",\"Perfil\",\"Documentos\",\"Segurança\",\"Ajuda\",\"Sair\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\"] | campos=[]"
+      }
+    },
+    {
+      "passo": "UPLOAD data-URI (STG-AUD) 201",
+      "ok": true,
+      "detalhe": {
+        "id": 34,
+        "mime": "image/png",
+        "tamanho": 70
+      }
+    },
+    {
+      "passo": "UI lista o documento enviado",
+      "ok": true,
+      "detalhe": {
+        "visto": true
+      }
+    },
+    {
+      "passo": "STORAGE: GET arquivo -> redirect assinado",
+      "ok": true,
+      "detalhe": {
+        "type": "opaqueredirect",
+        "status": 0
+      }
+    },
+    {
+      "passo": "PERSISTENCIA: reload mantem o doc",
+      "ok": true,
+      "detalhe": {
+        "persistiu": true
+      }
+    },
+    {
+      "passo": "ERRO COERENTE: upload invalido 400 com mensagem",
+      "ok": true,
+      "detalhe": {
+        "status": 400,
+        "erro": "Arquivo inválido (use PDF/JPEG/PNG em data URI base64)"
+      }
+    },
+    {
+      "passo": "DELETE + lista volta ao vazio (empty state)",
+      "ok": true,
+      "detalhe": {
+        "removido": true,
+        "telaFinal": "c A Staging Funcionário Sair DOCUMENTOS MEUS DOCUMENTOS Armazenados em local privado e seguro. ENVIAR NOVO DOCUMENTO Contrato RG CPF CNH Comprovante Outro Escolher arquivo PDF, JPEG ou PNG · até 5 MB. ENVIAR DOCUMENTO Ne"
+      }
+    },
+    {
+      "passo": "logout func",
+      "ok": true
+    },
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "RBAC NEGATIVO: dono (sem vinculo de tecnico) -> 403",
+      "ok": true,
+      "detalhe": {
+        "status": 403,
+        "erro": "Sem permissão para documentos"
+      }
+    },
+    {
+      "passo": "logout dono",
+      "ok": true
+    }
+  ]
+}

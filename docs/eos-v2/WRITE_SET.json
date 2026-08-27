@@ -1,18 +1,20 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P3-AUDITORIA-BACK",
-  "titulo": "P3 backend (D3): GET /auditoria adminOnly com keyset cursor, DTO allowlist por acao + redigirSensiveis, via req.db (consenso DECISOR 01a04465)",
+  "sliceId": "AUD2-P12-EVIDENCE-LEDGER",
+  "titulo": "P1/P2: classificacao DOCUMENTOS (FEATURE_COMPLETE) + ONBOARDING (FEATURE_COMPLETE) + provas colhidas p/ RBAC/SEGURANCA/ADMIN/TECNICOS + evidencia tour7/8 + pendencia de write-set",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T18:22:46.171Z",
+  "declaradoEm": "2026-08-27T18:48:23.933Z",
   "baseCommitPorLane": {
-    "HARNESS": "97fe7ef46dcfbfecb4316298f9cd48076cd6465e"
+    "HARNESS": "7d9fa34eb69300136f68ddb81e72e54f7e36d4c9"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
     "HARNESS": {
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -139,11 +141,12 @@
       "chaveiro-bot/src/middlewares/rateLimiters.js": "8807a450a96817ccf77e78b1b76842dee960a68aa7ec60109f85e8ad17035187",
       "chaveiro-bot/src/queues/email.js": "5120b32bcd3eeb1da58f16b2d356f64fdff0599ad58ebc574e45e7737269ad9d",
       "chaveiro-bot/src/queues/mensagens.js": "1e82a0ff717fe3a106cc3d3aa2681568feade2e381a4696f04dfb6feefa8fe47",
+      "chaveiro-bot/src/routes/__tests__/admin.auditoria.test.js": "0cba0875b99b3c618f50c0502954101c2ce0d9235f573bc4574b40a77faf39b0",
       "chaveiro-bot/src/routes/__tests__/billing.test.js": "a6cf62a8e50a17800e4cc0da8b084b23b9b3defc4101d30d2772776db84625ab",
       "chaveiro-bot/src/routes/__tests__/documentos-storage-key.test.js": "d6e66e57c6fbb1e607db31d81bb2ae935ebe12d5c770c39305875f6e05091a99",
       "chaveiro-bot/src/routes/__tests__/tecnicos-foto-perfil.test.js": "22973f83c17c54697b9baab998e38d512218ab43e1df029f821d688ee351f610",
       "chaveiro-bot/src/routes/account.js": "3ec3c304d347deb1177518a784e44a9da0b0114c3b026d7da37b71886bf5753e",
-      "chaveiro-bot/src/routes/admin.js": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
+      "chaveiro-bot/src/routes/admin.js": "ef2ef525b8ec34224a05b75d00df19b7064a62bc17b3576273121864a65fb9ee",
       "chaveiro-bot/src/routes/api.js": "f6370de32b436ac1e1b052c0e21ec50b2fa76dbb11e493061b32a4b634cf9347",
       "chaveiro-bot/src/routes/auth.js": "026d92403305ee36b67bdd938988a92f24cbf70a7f40ff1efbde24dae239de92",
       "chaveiro-bot/src/routes/billing.js": "995f254a8f31fe9de516fd022afb34967ce79d7561e37396ddf6bdda1806a938",
@@ -616,7 +619,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "0d4b224ea57f0cfb0abbf1c8d356754e3b54c84c6c0e69ae1872ac13fbeacf43",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "6a78b734087456a12f96a6088db2e4adf960a30eb11de1570db59f3abc45ad1e",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
@@ -645,8 +648,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "8acecb0e9751dcdc1dd767f1cac5318f87e896eaf32e3d9fa895b92fb41b3512",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5d252d69bac407bab77fd76c3df8200844b3b456645f8d4d4320ead717eb8020",
+      "docs/eos-v2/WRITE_SET.json": "18840855cc4eebd5325dd9835007e4bde48bececa4ca397ea41b47340e4f7f46",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5364a62e120a5737cbc038182587dc467ac6ec58ead843e056718d87daf0a5ff",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2594,39 +2597,43 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/admin.js",
-      "precisao": "BOUNDED",
-      "proposito": "rota GET /auditoria + funcoes puras exportadas (allowlist/DTO/keyset)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/routes/__tests__/admin.auditoria.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "NOVO: unit das funcoes puras (DTO/allowlist/paginacao/cursor)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "registro do consenso + implementacao",
+      "proposito": "classificacoes P1/P2 + provas + writeSetReconciliacoesPendentes",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "0d4b224ea57f0cfb0abbf1c8d356754e3b54c84c6c0e69ae1872ac13fbeacf43",
+      "shaNaDeclaracao": "6a78b734087456a12f96a6088db2e4adf960a30eb11de1570db59f3abc45ad1e",
       "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json",
+      "precisao": "BOUNDED",
+      "proposito": "evidencia bruta DOCUMENTOS 13/13",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json",
+      "precisao": "BOUNDED",
+      "proposito": "evidencia bruta ONBOARDING 22/22",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
+      "sujoNaDeclaracao": true,
+      "reescritaDeclarada": true,
+      "motivoDaReescrita": "caminho ja sujo nesta frente"
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "OBSERVED_SUBSET",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P3 backend fechado antes do commit (rota+funcoes puras+12 unit; consenso registrado).",
+  "nota": "P1/P2 fechados apos declarar: ledger com DOCUMENTOS/ONBOARDING FEATURE_COMPLETE + provas + evidencias tour7/8 versionadas + pendencia AUD2-P1 registrada.",
   "aviso": "Declaracao ENCERRADA."
 }

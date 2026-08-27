@@ -108,9 +108,10 @@
       "id": "AUD-GAP-MESSAGING-WHATSAPP",
       "capability": "CONFIGURACOES/LANDING",
       "severidade": "MEDIA",
-      "descricao": "Com WHATSAPP=POST_MVP (D2 amendment), o produto ainda VENDE WhatsApp no presente: landing/login ('01 WhatsApp integrado — Técnicos registram serviços no chat'), dashboard do dono ('Seus serviços e finanças organizados direto do WhatsApp' + CTA 'Conectar o WhatsApp'), e /ajuda ensina 'Registrar um serviço pelo WhatsApp' como primeiro guia. /configuracao/whatsapp diz honestamente 'Em breve'. Mensagem contradiz o escopo vigente.",
+      "descricao": "Com WHATSAPP=POST_MVP (D2 amendment), o produto ainda VENDE WhatsApp no presente: landing/login ('01 WhatsApp integrado — Técnicos registram serviços no chat'), dashboard do dono ('Seus serviços e finanças organizados direto do WhatsApp' + CTA 'Conectar o WhatsApp'), e /ajuda ensina 'Registrar um serviço pelo WhatsApp' como primeiro guia. /configuracao/whatsapp diz honestamente 'Em breve'. Mensagem contradiz o escopo vigente. [Ciclo 2 tour8] CONFIRMADO na etapa OTP do cadastro: \"CONFIRME SEU WHATSAPP — Enviamos um código de 6 dígitos pelo WhatsApp do robô\" com o bot desconectado (claim falso). DECISOR AUD2-P3 item (v): gate da etapaOtp por featureAtiva(WHATSAPP) aprovado.",
       "evidencia": "E3 tour0 (landing/login) + tour1 (home dono, ajuda, configuracao/whatsapp 'Em breve')",
-      "classe": "GATE_USUARIO (copy de produto/marketing = decisão do usuário; nota: GAP-UX-CONFIG-PROMESSA-01 do freeze mudou de forma — /configuracao não tem mais 'em breve'; /assinatura hoje é página real de billing)"
+      "classe": "GATE_USUARIO (copy de produto/marketing = decisão do usuário; nota: GAP-UX-CONFIG-PROMESSA-01 do freeze mudou de forma — /configuracao não tem mais 'em breve'; /assinatura hoje é página real de billing)",
+      "execucao": "EM_EXECUCAO (P4)"
     },
     {
       "id": "AUD-NOTE-TECNICOS-PERFIL-2-PASSOS",
@@ -150,7 +151,8 @@
       "severidade": "ALTA",
       "descricao": "Com DOCUMENTOS_ENABLED=true, POST /me/documentos 500a no Railway staging. Diagnostico discriminante: (1) upload service-role DIRETO no bucket com creds do repo => 200; (2) o MESMO codigo do backend (services/storage.js uploadPrivado + urlAssinada) rodado localmente com o env de staging => OK. Codigo e credenciais do repositorio saudaveis; a var SUPABASE_SERVICE_ROLE_KEY preenchida a mao no dashboard Railway e a suspeita (o caminho de upload do backend nunca fora exercitado ate hoje). Correcao: fase external-secrets ganhou --force-names (re-upsert OPACO da copia provada do GitHub Environment; guardas: so SECRETOS_EXTERNOS, validacao de forma, valores nunca impressos; default continua nunca-sobrescrever). ATUALIZACAO (phase logs): a chave re-upsertada NAO resolveu; o runtime revelou a causa raiz — Railway em Node 20 com @supabase/supabase-js que deprecou Node <=20 (local Node 24 passa; estoque /materiais/upload tambem 500a). Correcao: NIXPACKS_NODE_VERSION=22 no service staging via prepare. ERRO REAL (logs+attributes): \"Node.js detected but native WebSocket not found ... Ensure you are running Node.js 22+\" — supabase-js lanca na criacao do client em Node 20. NIXPACKS_NODE_VERSION nao se aplica (service builda pelo Dockerfile). Fix definitivo: Dockerfile node:20-alpine -> node:22-alpine (builder+runner) + CI 20->22 por consistencia.",
       "evidencia": "tour7 (500 + 8/13) · diag-storage (REST 200) · diag local uploadPrivado OK · selftest 20/20",
-      "classe": "GAP_EXECUTION_IN_PROGRESS (causa raiz: Node do runtime; fix em aplicacao)"
+      "classe": "GAP_EXECUTION_IN_PROGRESS (causa raiz: Node do runtime; fix em aplicacao)",
+      "execucao": "RESOLVED_REVERIFIED (Dockerfile node:22-alpine; tour7 13/13)"
     },
     {
       "id": "AUD2-FIX-BOOTSTRAP-DOMAINS-QUERY",
@@ -263,16 +265,17 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Navegação distinta por papel provada (tour1/2: sidebar dono=10 módulos; gestor=Operação/Aprovações/...; func=Meu trabalho/...); RequirePermissao redireciona gestor e func de /configuracao/usuarios → /configuracao; backend nega PATCH /config/empresa a gestor e GET /usuarios a func (E4); /permissoes/catalogo 200 com 3 papéis e 10+ módulos. Recheck (tour3): /configuracao/usuarios lista as 3 contas com papéis/status após fetch — o 0 anterior era flash-of-empty (AUD-GAP-FLASH-EMPTY). REVERIFY (tour6): deep-links /estoque e /materiais como funcionário redirecionam para /configuracao (sem mensagens contraditórias).",
+      "STAGING_EVIDENCE": "Navegação distinta por papel provada (tour1/2: sidebar dono=10 módulos; gestor=Operação/Aprovações/...; func=Meu trabalho/...); RequirePermissao redireciona gestor e func de /configuracao/usuarios → /configuracao; backend nega PATCH /config/empresa a gestor e GET /usuarios a func (E4); /permissoes/catalogo 200 com 3 papéis e 10+ módulos. Recheck (tour3): /configuracao/usuarios lista as 3 contas com papéis/status após fetch — o 0 anterior era flash-of-empty (AUD-GAP-FLASH-EMPTY). REVERIFY (tour6): deep-links /estoque e /materiais como funcionário redirecionam para /configuracao (sem mensagens contraditórias). [Ciclo 2 tour8] OVERRIDE GRANULAR EFETIVO provado: dono nega estoque.ver ao funcionario via MatrizPermissoes (UI); funcionario logado recebe 403 na API de estoque E redirect do deep-link /estoque → /configuracao. Era o unico criterio faltante do ciclo 1.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "Override granular (MatrizPermissoes) não exercitado em runtime — VALIDACAO NAO EXECUTADA declarada"
+        "NENHUM pendente — override granular agora provado (tour8)"
       ],
-      "NEXT_ACTION": "Próxima rodada: exercitar um override granular com reversão",
+      "NEXT_ACTION": "P5: promover a FEATURE_COMPLETE",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (RBAC negativo)",
-        "tour1 12:26Z (sidebar dono, catalogo) · tour2 12:28Z (navs gestor/func, redirects)"
+        "tour1 12:26Z (sidebar dono, catalogo) · tour2 12:28Z (navs gestor/func, redirects)",
+        "tour8 override efetivo (estoqueApi 403 + redirect)"
       ],
       "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
@@ -281,26 +284,27 @@
       "NAME": "ONBOARDING",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "PARTIAL(E3)",
-      "BACKEND_STATE": "PARTIAL(E1)",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "N/A",
-      "PERSISTENCE_STATE": "UNKNOWN",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3)",
+      "PERSISTENCE_STATE": "OK(E3)",
+      "ERROR_STATE": "OK(E3)",
+      "EMPTY_STATE": "N/A",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Landing pública renderiza com CTA (tour0); rotas backend /auth/register, /setup, verificação de e-mail, convite/:token existem (E1). O fluxo signup→wizard NÃO foi executado: criar tenant novo está fora do envelope de fixtures autorizado, e a verificação de e-mail exige caixa real (Resend). Pós-login: banner de tutorial no dashboard ('VER TUTORIAL / Dispensar', tour3 mobile).",
-      "USER_REAL_CAN_USE": "UNKNOWN",
-      "FINAL_CLASSIFICATION": "PARTIAL",
+      "STAGING_EVIDENCE": "tour8 22/22 com tenant DESCARTÁVEL (USER GATE D5): signup UI completo → register 201 (sessao imediata) → primeira entrada coerente (dashboard dono novo, trial, tutorial) → /me papel dono + emailVerificado=false → persistencia (reload) → NEGATIVOS (username duplicado 409, senha fraca 400) → CLEANUP-PROVA: autoexclusao em cascata (LGPD) apaga a empresa inteira; DB read-only confirma empresa=0/usuarios=0; sessao morta no backend (token velho → 401) + relogin negado; fixtures A/B intactas (login dono.a + /servicos 200). Verificacao de e-mail: MECANISMO provado (reenvio 200; token invalido/ausente/forjado 400 — o forjado com segredo LOCAL rejeitado confirma o binding do JWT_SECRET do Railway).",
+      "USER_REAL_CAN_USE": "YES",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [
-        "Signup ponta-a-ponta não verificável sem decisão: tenant descartável autorizado + estratégia p/ e-mail de verificação em staging"
+        "Verificacao POSITIVA de e-mail: VALIDACAO NAO-EXECUTAVEL POR DESIGN (o JWT_SECRET do Railway nao e exportado — propriedade de seguranca desejada — e delivered@resend.dev descarta; nem forjavel nem legivel). NAO e gap de produto.",
+        "Cadastro via OAuth (google/microsoft/apple) nao exercitado (provedores off em staging: /auth/providers 3x false)"
       ],
-      "NEXT_ACTION": "GATE_USUARIO: autorizar sonda de signup com tenant descartável (e como tratar verificação de e-mail); janela 2: render do form de cadastro (sem submit)",
+      "NEXT_ACTION": "NONE (verificacao positiva de e-mail declarada nao-executavel por design)",
       "EVIDENCE_POINTERS": [
-        "tour0 12:23Z (landing) · E1 routes/auth.js"
+        "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json (22/22)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:23Z"
+      "LAST_VERIFIED_HEAD": "7d9fa34 (staging Node22 + auditoria backend) @ 2026-08-27 Ciclo 2"
     },
     {
       "ID": "AUD-CAP-SERVICOS-CRUD",
@@ -343,18 +347,18 @@
       "EMPTY_STATE": "PARTIAL(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Dono e GESTOR veem o técnico (recheck tour3: API 200 qtd 1 + UI '1 cadastrado' — o '0' era flash-of-empty). Card expande ao clique e expõe 'Ver perfil completo' -> /tecnicos/557 alcançado (tour5). PORÉM o perfil renderizou só o título após 2,5s (carregando lento OU falha silenciosa) — A_CONFIRMAR na reverificação. Card rico: telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%, PENDENTE R$92,60 (atualizado pós-rejeição). Truncamento do freeze não reproduzível com 1 técnico. RESOLVIDO o A_CONFIRMAR do perfil: GET /tecnicos/557/perfil responde 200 com payload completo (tecnico/meta/periodo/pagamentos) em 1,8-3,6s; as duas capturas vazias foram esperas prematuras do instrumento (esperarTexto casou com a sidebar). /ponto?mes=2026-08 responde 200.",
+      "STAGING_EVIDENCE": "Dono e GESTOR veem o técnico (recheck tour3: API 200 qtd 1 + UI '1 cadastrado' — o '0' era flash-of-empty). Card expande ao clique e expõe 'Ver perfil completo' -> /tecnicos/557 alcançado (tour5). PORÉM o perfil renderizou só o título após 2,5s (carregando lento OU falha silenciosa) — A_CONFIRMAR na reverificação. Card rico: telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%, PENDENTE R$92,60 (atualizado pós-rejeição). Truncamento do freeze não reproduzível com 1 técnico. RESOLVIDO o A_CONFIRMAR do perfil: GET /tecnicos/557/perfil responde 200 com payload completo (tecnico/meta/periodo/pagamentos) em 1,8-3,6s; as duas capturas vazias foram esperas prematuras do instrumento (esperarTexto casou com a sidebar). /ponto?mes=2026-08 responde 200. [Ciclo 2 tour8] Com 3 tecnicos de nomes LONGOS reais (ate 52 chars) em 1440px: NAO ha truncamento (scrollWidth==clientWidth 350px, white-space:normal) — o CardTecnico ja aplica a \"Direcao B (D-SL15)\". Perfil /tecnicos/:id PINTA conteudo com espera correta (fecha o A_CONFIRMAR do ciclo 1: a corrida era do instrumento). O achado REDESIGN do freeze (nomes colapsando \"An…\") NAO se reproduz.",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": "PARTIAL",
       "GAPS": [
-        "/tecnicos segue REDESIGN (freeze) — nao re-provado nem refutado com 1 tecnico; CardTecnico ja tem a Direcao B (D-SL15)",
-        "Convite nao sondavel (e-mail real via Resend)"
+        "REDESIGN do freeze provavelmente ja enderecado (D-SL15) — refutado com nomes longos reais; convite/aceite nao exercitado (e-mail real)"
       ],
-      "NEXT_ACTION": "Próxima rodada: confirmar pintura da UI do perfil com espera correta + reavaliar REDESIGN com 2+ técnicos",
+      "NEXT_ACTION": "P6: reclassificar (candidata USER_REAL_CAN_USE; registrar refutacao do REDESIGN)",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (lista dono + medida truncamento) · tour2 12:28Z (lista gestor)",
         "tour3 12:40Z recheck gestor (API 1 / UI 1) · tour5 12:53Z 'Ver perfil completo' -> /tecnicos/557",
-        "probe-perfil 15:09Z (3x HTTP 200 com chaves completas) · tour6 pontoApiStatus 200"
+        "probe-perfil 15:09Z (3x HTTP 200 com chaves completas) · tour6 pontoApiStatus 200",
+        "tour8 tecnicos longos (sem truncamento) + perfil pinta"
       ],
       "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
@@ -425,16 +429,17 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E3)",
-      "STAGING_EVIDENCE": "Baseline: RLS v2 PASS, 26 sondas negadas, bucket privado, advisor 0 errors. Tours: CSP/XFO-DENY/nosniff no painel (tour0); /configuracao/seguranca renderiza senha (medidor de força), 2FA, sessões ativas ('Este dispositivo'), sair-de-todos, ferramentas LGPD; 401 sem token re-provado. Mobile: sessões ativas listam dispositivo/IP reais (Chrome em Windows) — tour3.",
+      "STAGING_EVIDENCE": "Baseline: RLS v2 PASS, 26 sondas negadas, bucket privado, advisor 0 errors. Tours: CSP/XFO-DENY/nosniff no painel (tour0); /configuracao/seguranca renderiza senha (medidor de força), 2FA, sessões ativas ('Este dispositivo'), sair-de-todos, ferramentas LGPD; 401 sem token re-provado. Mobile: sessões ativas listam dispositivo/IP reais (Chrome em Windows) — tour3. [Ciclo 2 tour8] Troca de senha via UI provada (sessao renovada, 200 pos-troca) + \"Sair de todos os dispositivos\" (logout-all) com relogin usando a senha NOVA — no tenant descartavel, sem tocar fixtures A/B. Eram os criterios nao-executados do ciclo 1.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "Troca de senha não exercitada (mudaria a senha da fixture compartilhada — fora do envelope); logout-all não exercitado (mataria sessões do tour)"
+        "Hardening backlog (SECURITY_HARDENING_BACKLOG.md) — nao blocker"
       ],
-      "NEXT_ACTION": "Classificar com validações-não-executadas declaradas; hardening backlog segue em docs/agent-environment/SECURITY_HARDENING_BACKLOG.md",
+      "NEXT_ACTION": "P5: promover a FEATURE_COMPLETE",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates",
-        "tour0 12:23Z (headers) · tour1 12:26Z (seguranca render)"
+        "tour0 12:23Z (headers) · tour1 12:26Z (seguranca render)",
+        "tour8 senha+logout-all"
       ],
       "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
@@ -684,16 +689,17 @@
       "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Recheck (tour3): /configuracao/usuarios lista '3 contas cadastradas' com papéis e status (Dono você / Gestor / Func Técnico, todos Ativo) + botão '+'; GET /usuarios 200 (3); /permissoes/catalogo 200; config empresa GET/PATCH provados. O '0 contas' era flash-of-empty. REVERIFY (tour6): contador exibiu travessão cedo e '3 contas cadastradas' após o fetch — sem zero transitório.",
+      "STAGING_EVIDENCE": "Recheck (tour3): /configuracao/usuarios lista '3 contas cadastradas' com papéis e status (Dono você / Gestor / Func Técnico, todos Ativo) + botão '+'; GET /usuarios 200 (3); /permissoes/catalogo 200; config empresa GET/PATCH provados. O '0 contas' era flash-of-empty. REVERIFY (tour6): contador exibiu travessão cedo e '3 contas cadastradas' após o fetch — sem zero transitório. [Ciclo 2 tour8] Criacao de usuario via UI (modal Nova conta: nome/usuario/senha/papel Funcionario) + MatrizPermissoes (override de modulo) provadas no tenant descartavel; usuario criado loga e sofre o override. Convite segue nao exercitado (dispara e-mail real).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "PARTIAL",
       "GAPS": [
-        "Criação/edição de usuário e matriz de permissões não exercitadas (convite dispara e-mail real) — VALIDACAO NAO EXECUTADA declarada"
+        "Convite de usuario (POST /usuarios/convidar) nao exercitado — e-mail real via Resend"
       ],
-      "NEXT_ACTION": "Declarar validações não executadas; Fase C: flash-of-empty",
+      "NEXT_ACTION": "P6: reclassificar (candidata USER_REAL_CAN_USE/FEATURE_COMPLETE; convite declarado nao-executado)",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (config/catalogo/usuarios API+UI)",
-        "tour3 12:40Z recheck usuarios ('3 contas cadastradas')"
+        "tour3 12:40Z recheck usuarios ('3 contas cadastradas')",
+        "tour8 ADMIN criacao+matriz"
       ],
       "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
     },
@@ -704,26 +710,25 @@
       "PRIORITY": "P1",
       "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "BLOCKED(E3)",
-      "RBAC_STATE": "OK(E1)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3)",
       "PERSISTENCE_STATE": "OK(E4)",
-      "ERROR_STATE": "PARTIAL(E3)",
-      "EMPTY_STATE": "PARTIAL(E3)",
+      "ERROR_STATE": "OK(E3)",
+      "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
-      "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "FLAG DESLIGADA em staging: GET /me/documentos → 404 'Recurso não disponível' (tour2). UI /meus-documentos renderiza 'Armazenados em local privado e seguro' vazia SEM comunicar indisponibilidade, e o menu Mais do funcionário PROMETE a feature. Bucket privado provado no baseline via service-role (upload OK, assinada 200, pública 400). Contrato completo no código (upload data-URI, magic bytes, self-scope sem IDOR).",
-      "USER_REAL_CAN_USE": "NO",
-      "FINAL_CLASSIFICATION": "PARTIAL",
+      "MOBILE_STATE": "N/A",
+      "STAGING_EVIDENCE": "DOCUMENTOS_ENABLED=true aplicado no Railway staging (USER GATE D2). tour7 13/13 (browser real func.a.stg): GET /me/documentos 200 → UI com affordance → upload data-URI 201 → UI LISTA o doc → GET arquivo → redirect assinado (302/opaqueredirect, storage proof) → reload persiste → upload invalido 400 coerente → DELETE → empty state. RBAC negativo: dono.a.stg (sem vinculo de tecnico) → 403. Causa raiz do 500 inicial (Node 20 vs supabase-js WebSocket) corrigida no Dockerfile (node:22-alpine).",
+      "USER_REAL_CAN_USE": "YES",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [
-        "AUD-GAP-DOCUMENTOS-OFF-STAGING (ALTA): DOCUMENTOS_ENABLED != true no Railway staging — usuário real NÃO consegue usar; requer autorização para mudar env externa",
-        "UI silenciosa quando flag off (não diferencia vazio de indisponível)",
-        "D2-DOC-BUCKET segue aberto para PRODUÇÃO (não afeta staging)"
+        "D2-DOC-BUCKET de PRODUCAO permanece (nao afeta staging; produção DENY)"
       ],
-      "NEXT_ACTION": "GATE_USUARIO: autorizar DOCUMENTOS_ENABLED=true no Railway staging; então re-sondar upload→lista→arquivo assinado→delete (script pronto no tour2)",
+      "NEXT_ACTION": "NONE em staging (bucket de produção segue D2 do usuário)",
       "EVIDENCE_POINTERS": [
-        "tour2 12:28Z (404 + renders) · baseline STG_SEC_RLS_J"
+        "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json (13/13)",
+        "baseline STG_SEC_RLS_J (bucket privado)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
+      "LAST_VERIFIED_HEAD": "7d9fa34 (staging Node22 + auditoria backend) @ 2026-08-27 Ciclo 2"
     },
     {
       "ID": "AUD-CAP-STAGING",
@@ -919,6 +924,11 @@
       "quando": "2026-08-27 (Ciclo 2)",
       "fase": "P3 backend implementado",
       "resultado": "GET /auditoria conforme consenso; 12 unit novos verdes; suite bot verde. Aguarda frontend + deploy + E3."
+    },
+    {
+      "quando": "2026-08-27 (Ciclo 2)",
+      "fase": "P1 DOCUMENTOS + P2 ONBOARDING concluidos",
+      "resultado": "DOCUMENTOS → FEATURE_COMPLETE (tour7 13/13; causa raiz Node20/supabase-js corrigida no Dockerfile). ONBOARDING → FEATURE_COMPLETE (tour8 22/22 com tenant descartavel; cascata provada por DB + backend; A/B intactas; verificacao positiva de e-mail declarada nao-executavel por design). Provas colhidas p/ RBAC(override), SEGURANCA(senha+logout-all), ADMIN(criacao+matriz), TECNICOS(nomes longos sem truncamento — refuta REDESIGN). 0 orfaos STG-AUD. Claim WhatsApp falso no OTP confirmado (P4). Pendencia de write-set AUD2-P1 registrada p/ gate."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -1052,5 +1062,14 @@
         "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
       }
     ]
-  }
+  },
+  "writeSetReconciliacoesPendentes": [
+    {
+      "sliceId": "AUD2-P1-RAILWAY-DOCS-FLAG",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "causa": "HEAD moveu entre a declaracao da P1 e seu fechamento porque as fatias de fix subsequentes (P1B-P1F: d4014ff..97fe7ef) commitaram no meio. Mesma classe do D1 (HEAD movido durante fatia). A escrita foi exatamente a entrada declarada (DOCUMENTOS_ENABLED no tool).",
+      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD2-P1-RAILWAY-DOCS-FLAG', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'HEAD movido por fatias de fix subsequentes; escrita foi exatamente DOCUMENTOS_ENABLED declarado.' })))\""
+    }
+  ]
 }

@@ -65240,9 +65240,23 @@
       "bloqueiaIntegracao": false,
       "nota": "P3 backend fechado antes do commit (rota+funcoes puras+12 unit; consenso registrado).",
       "declaradoEm": "2026-08-27T18:22:46.171Z"
+    },
+    {
+      "sliceId": "AUD2-P12-EVIDENCE-LEDGER",
+      "titulo": "P1/P2: classificacao DOCUMENTOS (FEATURE_COMPLETE) + ONBOARDING (FEATURE_COMPLETE) + provas colhidas p/ RBAC/SEGURANCA/ADMIN/TECNICOS + evidencia tour7/8 + pendencia de write-set",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1/P2 fechados apos declarar: ledger com DOCUMENTOS/ONBOARDING FEATURE_COMPLETE + provas + evidencias tour7/8 versionadas + pendencia AUD2-P1 registrada.",
+      "declaradoEm": "2026-08-27T18:48:23.933Z"
     }
   ],
-  "geradoEm": "2026-08-27T18:25:49.141Z",
+  "geradoEm": "2026-08-27T18:49:44.104Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

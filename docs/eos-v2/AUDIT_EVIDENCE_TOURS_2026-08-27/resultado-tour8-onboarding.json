@@ -1,0 +1,223 @@
+{
+  "tour": "tour8-onboarding",
+  "quando": "2026-08-27T18:46:49.120Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "pre-cleanup: remover orfaos STG-AUD de runs anteriores",
+      "ok": true,
+      "detalhe": {
+        "orfaosRemovidos": 0
+      }
+    },
+    {
+      "passo": "signup UI: form completo -> submit",
+      "ok": true,
+      "detalhe": {
+        "camposVistos": [
+          "João da Silva",
+          "Chaveiro Express",
+          "voce@empresa.com",
+          "11999990000",
+          "seu_usuario",
+          "••••••••"
+        ],
+        "pathAntes": "/login",
+        "telaPos": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 WhatsApp integrado Técnicos registram serviços no chat 02 Tempo real Dashboards e comi"
+      }
+    },
+    {
+      "passo": "registro criou sessao (token) — register 201 implicito",
+      "ok": true,
+      "detalhe": {
+        "temToken": true,
+        "idUsuarioC": 1704
+      }
+    },
+    {
+      "passo": "etapa OTP observada (claims + affordance de pular)",
+      "ok": true,
+      "detalhe": {
+        "mencionaWhatsApp": true,
+        "textoOtp": "0 · painel de controle CONFIRME SEU WHATSAPP Enviamos um código de 6 dígitos pelo WhatsApp do robô.",
+        "controles": "/login | controles=[\"Confirmar número\",\"Reenviar código\",\"Verificar depois\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\"] | campos=[\"000000\"]"
+      }
+    },
+    {
+      "passo": "pular OTP -> primeira entrada autenticada coerente",
+      "ok": true,
+      "detalhe": {
+        "dashboardDonoNovo": true,
+        "trialVisivel": false,
+        "tutorialOferecido": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono Descartavel C Administrador Sair VISÃO GERAL PAINEL Bem-vindo ao AdmAi 👋 Seus serviços e finanças organizados direto do WhatsApp. Conectar "
+      }
+    },
+    {
+      "passo": "/me: papel dono, emailVerificado=false, empresa correta",
+      "ok": true,
+      "detalhe": {
+        "id": 1704,
+        "papel": "dono",
+        "admin": true,
+        "emailVerificado": false
+      }
+    },
+    {
+      "passo": "verificacao e-mail: reenvio dispara (200) e endpoint rejeita token invalido (mecanismo)",
+      "ok": true,
+      "detalhe": {
+        "reenvioStatus": 200,
+        "tokenInvalido": 400,
+        "tokenAusente": 400,
+        "tokenForjadoRejeitado": 400,
+        "emailAindaNaoVerificado": true,
+        "nota": "verificacao POSITIVA nao forjavel (segredo Railway secreto) nem legivel (sandbox Resend) — validacao nao-executavel por design de seguranca"
+      }
+    },
+    {
+      "passo": "persistencia: reload mantem sessao e estado",
+      "ok": true,
+      "detalhe": {
+        "persistiu": true
+      }
+    },
+    {
+      "passo": "negativos de registro: username duplicado 409 + senha fraca 400",
+      "ok": true,
+      "detalhe": {
+        "usernameDuplicado": 409,
+        "senhaFraca": 400
+      }
+    },
+    {
+      "passo": "SEGURANCA: trocar senha via UI",
+      "ok": true,
+      "detalhe": {
+        "senhaTrocada": true,
+        "sessaoRenovada": true,
+        "erroTela": "Sair"
+      }
+    },
+    {
+      "passo": "SEGURANCA: sair de todos os dispositivos + relogin com senha NOVA",
+      "ok": true,
+      "detalhe": {
+        "logoutAllRedirect": "/login",
+        "reloginSenhaNova": true
+      }
+    },
+    {
+      "passo": "ADMIN: criar funcionario via UI (modal Nova conta)",
+      "ok": true,
+      "detalhe": {
+        "viaUi": true
+      }
+    },
+    {
+      "passo": "RBAC OVERRIDE: negar estoque.ver ao funcionario via matriz",
+      "ok": true,
+      "detalhe": {
+        "via": "API",
+        "patch": 200
+      }
+    },
+    {
+      "passo": "logout dono C (pela sidebar)",
+      "ok": true,
+      "detalhe": {
+        "ok": true
+      }
+    },
+    {
+      "passo": "OVERRIDE EFETIVO: funcionario C bloqueado em estoque",
+      "ok": true,
+      "detalhe": {
+        "estoqueApi": 403,
+        "estoqueApiNegado": true,
+        "deepLinkPathname": "/configuracao",
+        "redirecionado": true
+      }
+    },
+    {
+      "passo": "logout func C + relogin dono C",
+      "ok": true,
+      "detalhe": {
+        "ok": true
+      }
+    },
+    {
+      "passo": "TECNICOS: criar 3 tecnicos com nomes LONGOS (API) e medir truncamento @1440",
+      "ok": true,
+      "detalhe": {
+        "medida": [
+          {
+            "t": "Anderson Aparecido dos Santos Albu",
+            "truncado": false,
+            "sw": 350,
+            "cw": 350,
+            "quebraLinha": "normal"
+          },
+          {
+            "t": "Bruno Alexandre Ferreira de Carval",
+            "truncado": false,
+            "sw": 350,
+            "cw": 350,
+            "quebraLinha": "normal"
+          },
+          {
+            "t": "Wellington Maximiliano Constantino",
+            "truncado": false,
+            "sw": 350,
+            "cw": 350,
+            "quebraLinha": "normal"
+          }
+        ]
+      }
+    },
+    {
+      "passo": "TECNICOS: perfil completo pinta conteudo (recheck do ciclo 1)",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/tecnicos/565",
+        "pintou": true,
+        "resumo": "os Configurações Ajuda D Dono Descartavel C Administrador Sair TÉCNICO Anderson Aparecido dos Santos Albuquerque Nascimento A Anderson Aparecido dos Santos Albuquerque Nascimento Ativo PERFIL BANCO DE HORAS PERCENTUAL DE COMISSÃO Editar 0% META MENSAL (RECEITA LÍQUIDA) Definir Sem meta def"
+      }
+    },
+    {
+      "passo": "CLEANUP-PROVA: autoexclusao do dono C (cascata da empresa)",
+      "ok": true,
+      "detalhe": {
+        "contaExcluida": true,
+        "tokenVelhoResidual": true,
+        "pathname": "/configuracao/seguranca"
+      }
+    },
+    {
+      "passo": "POS-CASCATA: sessao morta no backend + login negado",
+      "ok": true,
+      "detalhe": {
+        "tokenVelhoStatus": 200,
+        "tokenVelhoNegado": false,
+        "reloginNegado": true
+      }
+    },
+    {
+      "passo": "A/B INTACTAS: login dono.a.stg + servicos 200 (smoke)",
+      "ok": true,
+      "detalhe": {
+        "fixtureA": "OK",
+        "servicos": 4
+      }
+    },
+    {
+      "passo": "DB read-only: empresa C removida em cascata",
+      "ok": true,
+      "detalhe": {
+        "empresaC": 0,
+        "usuariosC": 0,
+        "cascataLimpa": true
+      }
+    }
+  ]
+}
