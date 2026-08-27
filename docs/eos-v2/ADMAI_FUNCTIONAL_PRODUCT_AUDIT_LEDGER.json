@@ -35,7 +35,7 @@
   ],
   "convencaoDeCampos": {
     "estadosDimensionais": "OK | PARTIAL | MISSING | BROKEN | UNKNOWN | N/A — sufixo (E1..E4) indica o tipo de evidência; UNKNOWN nunca conta como PASS.",
-    "tiposDeEvidencia": "E1=código direcionado · E2=sonda API staging · E3=browser real staging · E4=reuso da baseline aceita 8a53cc5",
+    "tiposDeEvidencia": "E1=código direcionado · E2=sonda API staging · E3=browser real staging (tours 2026-08-27T12:23-12:29Z, deploy da baseline 8a53cc5) · E4=reuso da baseline aceita 8a53cc5",
     "USER_REAL_CAN_USE": "YES | NO | UNKNOWN — YES exige E3/E4 com fluxo real + persistência observável + papel correto + states adequados",
     "FINAL_CLASSIFICATION": "null enquanto pendente; valor somente da taxonomia categoriasDeEstado"
   },
@@ -45,12 +45,13 @@
     "GAP_EXECUTION",
     "REVERIFY_IN_STAGING"
   ],
+  "instrumentoDeObservacao": "Tours CDP headless próprios (scratchpad tour0/1/2, derivados do driver provado e2e/staging.mjs): tour0-unauth 13/13 · tour1-dono 37/38 (única falha instrumental: lista /tecnicos sem <a href> p/ perfil) · tour2-gestor-func 21/21. Fixtures A (1327); mutações etiquetadas STG-AUD com limpeza; ciclo 2FA restaurado (twoFactorAtivo=false ao final).",
   "divergencias": [
     {
       "id": "DIVERGENCE-WHATSAPP-SCOPE",
-      "descricao": "ADMAI_SCOPE_FREEZE.md (2026-08-22) lista WHATSAPP como MVP P1 DONE; 01_SESSION_BOOTSTRAP.md (2026-08-27, mais recente) declara WHATSAPP = POST_MVP. Efeito prático idêntico nesta auditoria: inventariado, classificado POST_MVP/EXTERNAL_RUNTIME_ACCEPTANCE_PENDING, zero gap execution. Reconciliação formal de escopo é matéria do usuário (D2) no próximo gate.",
-      "resolucaoNestaAuditoria": "POST_MVP",
-      "reconciliacaoPendente": "USUARIO_D2"
+      "descricao": "ADMAI_SCOPE_FREEZE.md (2026-08-22) lista WHATSAPP como MVP P1 DONE; bootstrap (2026-08-27) declara POST_MVP.",
+      "resolucao": "RESOLVIDA POR EVIDÊNCIA: chaveiro-painel/src/lib/featureFlags.js registra '[D2 amendment] WhatsApp e SUPERINTEGRATION POST_MVP: fora dos acceptance requirements do release. OFF por padrao' — a emenda D2 do usuário pós-data o freeze. WHATSAPP=POST_MVP é o estado vigente; não há conflito a reconciliar.",
+      "reconciliacaoPendente": "NAO"
     }
   ],
   "entradasIniciais": [
@@ -58,8 +59,58 @@
       "id": "AUD-INPUT-DESKTOP-LOGOUT",
       "origem": "carryover do staging (E2E real 2026-08-27)",
       "descricao": "Desktop nao expoe controle de logout (so /mais, nav mobile)",
-      "estado": "INVENTORIED",
+      "estado": "CONFIRMED_E3 (tour1: aside sem 'Sair'; controles = Painel/Relatórios/Equipe/Serviços/Aprovações/Materiais/Estoque/Usuários/Configurações/Ajuda) + CONFIRMED_E1 (Sidebar.jsx rodapé só avatar/nome/papel)",
       "vinculadoA": "AUD-CAP-AUTH-LOGIN"
+    }
+  ],
+  "achadosNovosDaAuditoria": [
+    {
+      "id": "AUD-GAP-2FA-RECOVERY-CODES",
+      "capability": "AUTH_2FA",
+      "severidade": "ALTA",
+      "descricao": "POST /me/2fa/ativar retorna codigosRecuperacao, mas Seguranca.jsx (ativar2fa) DESCARTA a resposta — o usuário ativa 2FA sem nunca ver os códigos de recuperação. A rota de recuperação /auth/login/2fa/recuperar existe, porém o usuário real não tem códigos: risco de lockout permanente ao perder o autenticador.",
+      "evidencia": "E1 chaveiro-painel/src/pages/Seguranca.jsx (ativar2fa ignora data) + E3 tour1 ciclo 2FA (modal fecha sem exibir códigos)",
+      "classe": "GAP_EXECUTION_CANDIDATE (material: auth → DECISOR antes de implementar)"
+    },
+    {
+      "id": "AUD-GAP-USUARIOS-LISTA-ZERO",
+      "capability": "ADMIN/RBAC",
+      "severidade": "A_CONFIRMAR",
+      "descricao": "/configuracao/usuarios (dono) renderizou 'USUÁRIOS 0 contas cadastradas' enquanto GET /usuarios devolve 3. Padrão repetido em /tecnicos como gestor ('0 cadastrados' vs 1 como dono). Pode ser flash-of-empty (empty state exibido antes do fetch) ou defeito real de dados por papel.",
+      "evidencia": "E3 tour1 passo 'configuracao/usuarios render' + tour2 passo 'tecnicos render (gestor)'",
+      "classe": "RECHECK_OBRIGATORIO (probe janela 2 com espera longa + status da API por papel)"
+    },
+    {
+      "id": "AUD-GAP-ESTOQUE-FUNC-GUARD",
+      "capability": "ESTOQUE/RBAC",
+      "severidade": "MEDIA",
+      "descricao": "Deep-link /estoque como funcionário: rota não tem RequirePermissao no App.jsx (só RequireAuth); backend nega e a tela mostra SIMULTANEAMENTE 'Não foi possível carregar o estoque' e o empty state 'Nenhum material cadastrado. Cadastre materiais…' — mensagens contraditórias para um papel sem acesso.",
+      "evidencia": "E3 tour2 passo 'estoque como funcionario' + E1 App.jsx (/estoque e /materiais sem RequirePermissao; /configuracao/usuarios tem)",
+      "classe": "GAP_EXECUTION_CANDIDATE (RBAC de UI → DECISOR)"
+    },
+    {
+      "id": "AUD-GAP-DOCUMENTOS-OFF-STAGING",
+      "capability": "DOCUMENTOS",
+      "severidade": "ALTA",
+      "descricao": "DOCUMENTOS_ENABLED != 'true' no backend staging: GET /me/documentos → 404 'Recurso não disponível'. A UI /meus-documentos renderiza vazia sem avisar indisponibilidade, e o menu 'Mais' do funcionário PROMETE 'Documentos — Contrato, RG, CNH e comprovantes'. Bucket staging existe e foi provado no baseline (STG_SEC_RLS_J); falta somente a env no Railway.",
+      "evidencia": "E3 tour2 passos GET /me/documentos (404) + 'meus-documentos render' + 'mais render (funcionario)'",
+      "classe": "BLOCKED_AUTHORIZATION (mudar env do Railway staging = operação externa; pedir no gate: DOCUMENTOS_ENABLED=true + re-sonda)"
+    },
+    {
+      "id": "AUD-GAP-MESSAGING-WHATSAPP",
+      "capability": "CONFIGURACOES/LANDING",
+      "severidade": "MEDIA",
+      "descricao": "Com WHATSAPP=POST_MVP (D2 amendment), o produto ainda VENDE WhatsApp no presente: landing/login ('01 WhatsApp integrado — Técnicos registram serviços no chat'), dashboard do dono ('Seus serviços e finanças organizados direto do WhatsApp' + CTA 'Conectar o WhatsApp'), e /ajuda ensina 'Registrar um serviço pelo WhatsApp' como primeiro guia. /configuracao/whatsapp diz honestamente 'Em breve'. Mensagem contradiz o escopo vigente.",
+      "evidencia": "E3 tour0 (landing/login) + tour1 (home dono, ajuda, configuracao/whatsapp 'Em breve')",
+      "classe": "GATE_USUARIO (copy de produto/marketing = decisão do usuário; nota: GAP-UX-CONFIG-PROMESSA-01 do freeze mudou de forma — /configuracao não tem mais 'em breve'; /assinatura hoje é página real de billing)"
+    },
+    {
+      "id": "AUD-GAP-TECNICOS-PERFIL-SEM-LINK",
+      "capability": "TECNICOS",
+      "severidade": "BAIXA_INSTRUMENTAL",
+      "descricao": "Lista /tecnicos não expõe <a href='/tecnicos/:id'> (card provavelmente navega via onClick). Perfil do técnico ainda não observado; recheck com clique no card.",
+      "evidencia": "E3 tour1 passo 'perfil de tecnico' (única falha 37/38)",
+      "classe": "RECHECK_OBRIGATORIO"
     }
   ],
   "itens": [
@@ -68,49 +119,56 @@
       "NAME": "AUTH_LOGIN",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "OK(E4)",
-      "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "OK(E4)",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3/E4)",
+      "INTEGRATION_STATE": "OK(E3)",
       "RBAC_STATE": "OK(E4)",
-      "PERSISTENCE_STATE": "OK(E4)",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "N/A",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Login real dono/gestor/funcionario em browser (E2E 16/16, 4 viewports); cookies/CSP/CORS provados; USER_GATE 9/9",
+      "STAGING_EVIDENCE": "Tours: 5 logins reais (3 papéis) + logout real via /mais; deep-links não-auth redirecionam a /login (tour0); /login tem h1=1; cookies/CSP/USER_GATE do baseline. Challenge 2FA no login provado (tour1).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [
-        "AUD-INPUT-DESKTOP-LOGOUT: desktop nao expoe controle de logout (so /mais na nav mobile)",
-        "GAP-UX-CABECALHO-01: superficies de auth sem h1 (MEDIA)"
+        "AUD-INPUT-DESKTOP-LOGOUT (CONFIRMADO E1+E3): desktop sem controle de logout — GAP_EXECUTION prioridade 1",
+        "ERROR_STATE do login (senha errada) ainda não observado — probe janela 2"
       ],
-      "NEXT_ACTION": "Fase B: observar error state (senha errada) e loading; Fase C: executar gap do logout desktop",
+      "NEXT_ACTION": "Janela 2: sonda de senha errada (1 tentativa) p/ ERROR_STATE; Fase C: logout desktop",
       "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (E2E, USER_GATE, cookies/login)"
+        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates",
+        "tour0-unauth 2026-08-27T12:23Z (deep-links, h1) · tour1-dono 12:26Z (login/challenge/logout) · tour2 12:28Z"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
     },
     {
       "ID": "AUD-CAP-AUTH-2FA",
       "NAME": "AUTH_2FA",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "N/A",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "N/A",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA — scope freeze declara explicitamente runtime nao observado",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "CICLO COMPLETO provado em browser real (tour1): toggle → modal com QR visível + secret (32 chars) → código TOTP digitado na UI → 'Confirmar e ativar' → switch aria-checked=true → GET /me twoFactorAtivo=true → logout → LOGIN COM CHALLENGE REAL (tela 'Verificação em duas etapas', TOTP, sessão estabelecida) → desativar via modal com código → GET /me false. Fixture restaurada. Fecha o 'runtime não observado' do freeze.",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B prioridade 1: descoberta E1 (routes/auth.js, services/auth.js, Seguranca.jsx) + observacao real do setup/challenge 2FA em staging com fixture",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "GAPS": [
+        "AUD-GAP-2FA-RECOVERY-CODES (ALTA): códigos de recuperação nunca exibidos ao usuário — GAP_EXECUTION candidata (DECISOR)",
+        "2FA por telefone (rotas existem) não observado — depende de WhatsApp/SMS POST_MVP",
+        "código inválido (error state) não sondado"
+      ],
+      "NEXT_ACTION": "Fase C: exibir codigosRecuperacao no fluxo de ativação (após DECISOR); mobile check janela 2",
+      "EVIDENCE_POINTERS": [
+        "tour1-dono 2026-08-27T12:26Z passos '2FA setup/ativar/challenge/desativar' (8 passos OK)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:27Z"
     },
     {
       "ID": "AUD-CAP-MULTI-TENANCY",
@@ -126,11 +184,11 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "TENANT_NEGATIVE PASS: A->A 200; A->B read/delete 403/404; sem vazamento em listagem; GUC_POOLER PASS (set_config nao vaza pos-COMMIT); RLS v2 26 ENABLED",
+      "STAGING_EVIDENCE": "TENANT_NEGATIVE PASS (A→A 200; A→B 403/404; sem vazamento em listagem); GUC_POOLER PASS; RLS v2 26 ENABLED/0 FORCE. Capability invisível ao usuário por design.",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": null,
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [],
-      "NEXT_ACTION": "Fase B: fechar classificacao (candidata a FEATURE_COMPLETE por E4; capability invisivel ao usuario)",
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (TENANT_NEGATIVE, GUC_POOLER, RLS)"
       ],
@@ -141,242 +199,269 @@
       "NAME": "RBAC",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "OK(E4)",
+      "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "OK(E4)",
-      "RBAC_STATE": "OK(E4)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3/E4)",
       "PERSISTENCE_STATE": "UNKNOWN",
-      "ERROR_STATE": "UNKNOWN",
+      "ERROR_STATE": "PARTIAL(E3)",
       "EMPTY_STATE": "N/A",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Jornadas por papel (dono/gestor/funcionario) PASS em browser real; RBAC negativo do backend provado no E2E",
+      "STAGING_EVIDENCE": "Navegação distinta por papel provada (tour1/2: sidebar dono=10 módulos; gestor=Operação/Aprovações/...; func=Meu trabalho/...); RequirePermissao redireciona gestor e func de /configuracao/usuarios → /configuracao; backend nega PATCH /config/empresa a gestor e GET /usuarios a func (E4); /permissoes/catalogo 200 com 3 papéis e 10+ módulos.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: verificar overrides granulares (MatrizPermissoes) em runtime staging — persistencia e efeito real de um override",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (E2E OWNER/MANAGER/EMPLOYEE + RBAC negativo)"
+      "GAPS": [
+        "AUD-GAP-ESTOQUE-FUNC-GUARD: /estoque e /materiais sem RequirePermissao no router (backend nega; UI confusa)",
+        "Override granular (MatrizPermissoes) não exercitado em runtime — depende do recheck de /configuracao/usuarios"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "NEXT_ACTION": "Recheck usuarios (janela 2); Fase C: guards de rota p/ estoque/materiais (DECISOR)",
+      "EVIDENCE_POINTERS": [
+        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (RBAC negativo)",
+        "tour1 12:26Z (sidebar dono, catalogo) · tour2 12:28Z (navs gestor/func, redirects)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
     },
     {
       "ID": "AUD-CAP-ONBOARDING",
       "NAME": "ONBOARDING",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "PARTIAL(E3)",
+      "BACKEND_STATE": "PARTIAL(E1)",
       "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
+      "RBAC_STATE": "N/A",
       "PERSISTENCE_STATE": "UNKNOWN",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "UNKNOWN",
       "LOADING_STATE": "UNKNOWN",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Indireta: fixtures criadas via seed-staging.mjs, nao via wizard de usuario — o fluxo signup->wizard nao foi observado como usuario real",
+      "STAGING_EVIDENCE": "Landing pública renderiza com CTA (tour0); rotas backend /auth/register, /setup, verificação de e-mail, convite/:token existem (E1). O fluxo signup→wizard NÃO foi executado: criar tenant novo está fora do envelope de fixtures autorizado, e a verificação de e-mail exige caixa real (Resend).",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 (Landing.jsx, fluxo pos-login, /api/setup) + observacao staging do wizard; mutacao fora de fixtures exige decisao na hora (tenant descartavel vs dry-run)",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "GAPS": [
+        "Signup ponta-a-ponta não verificável sem decisão: tenant descartável autorizado + estratégia p/ e-mail de verificação em staging"
+      ],
+      "NEXT_ACTION": "GATE_USUARIO: autorizar sonda de signup com tenant descartável (e como tratar verificação de e-mail); janela 2: render do form de cadastro (sem submit)",
+      "EVIDENCE_POINTERS": [
+        "tour0 12:23Z (landing) · E1 routes/auth.js"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:23Z"
     },
     {
       "ID": "AUD-CAP-SERVICOS-CRUD",
       "NAME": "SERVICOS_CRUD",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "OK(E4)",
-      "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "OK(E4)",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3/E4)",
+      "INTEGRATION_STATE": "OK(E3/E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Escrita real provada no E2E: servico criado em staging (persistencia observavel); jornadas 4 viewports",
+      "STAGING_EVIDENCE": "Create via wizard 4 etapas + persistência pós-reload (E4); lista com 4 registros, busca por técnico, filtros por local, visão por papel (dono e gestor veem os 4; func vê os próprios com tabs Todos/Aguardando/Aprovados/Rejeitados) (tour1/2); wizard do funcionário (3 etapas) renderiza etapa 1 (tour2); transições iniciar/concluir existem (E1).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: cobrir read/update/delete/list e states (empty/error/loading) — E2E provou create+list parcial",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (escrita real: servico criado)"
+      "GAPS": [
+        "Delete próprio e transições iniciar/concluir não observados; empty/error states não observados"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "NEXT_ACTION": "Janela 2: submit do wizard func (cria pendente real; repõe fila de aprovações) + rejeição pelo dono",
+      "EVIDENCE_POINTERS": [
+        "baseline E2E (serviço criado) · tour1 12:26Z (lista dono) · tour2 12:28Z (lista gestor/func, wizard func)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
     },
     {
       "ID": "AUD-CAP-TECNICOS",
       "NAME": "TECNICOS",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "PARTIAL(E1)",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "PARTIAL(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "PARTIAL(E3)",
+      "RBAC_STATE": "A_CONFIRMAR",
+      "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "PARTIAL(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Superficie /tecnicos inventariada no freeze como REDESIGN (nomes colapsam para 'An…'/'Br…' em 1440px com ~55% da largura vazia)",
+      "STAGING_EVIDENCE": "Dono vê 1 técnico com card rico (Ativo, telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%) (tour1); GESTOR vê '0 cadastrados' — divergência A_CONFIRMAR (AUD-GAP-USUARIOS-LISTA-ZERO); truncamento do freeze NÃO reproduzível com 1 técnico só (truncados=[], main 1184px); perfil /tecnicos/:id não alcançado (sem <a href>; card onClick — recheck).",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [
-        "/tecnicos = REDESIGN nao iniciado (unica superficie REDESIGN do freeze)",
-        "GAP-UX-DESKTOP-LARGURA-01: card de largura fixa trunca o identificador (ALTA, 6 superficies)"
+        "AUD-GAP-USUARIOS-LISTA-ZERO (gestor vê 0 técnicos) — recheck obrigatório",
+        "AUD-GAP-TECNICOS-PERFIL-SEM-LINK — recheck com clique no card",
+        "/tecnicos segue REDESIGN (freeze) — não re-provado nem refutado com fixtures atuais",
+        "Convite (POST /usuarios/convidar) não sondável: dispara e-mail real (Resend)"
       ],
-      "NEXT_ACTION": "Fase B: observar /tecnicos + convite/aceite (ConviteAceitar.jsx, routes/tecnicos.js) em staging; Fase C: avaliar redesign via DECISOR",
+      "NEXT_ACTION": "Janela 2: recheck gestor + clique no card do técnico (perfil + ponto do técnico)",
       "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#superficies-de-release (REDESIGN /tecnicos)"
+        "tour1 12:26Z (lista dono + medida truncamento) · tour2 12:28Z (lista gestor)"
       ],
-      "LAST_VERIFIED_HEAD": null
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
     },
     {
       "ID": "AUD-CAP-FINANCEIRO",
       "NAME": "FINANCEIRO",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E2)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E1)",
+      "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta (dashboards nao percorridos com asserts funcionais no E2E)",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "GET /dashboard 200 com 12 chaves financeiras (receitaBruta/Liquida, ticketMedio, comissão, lucro, margem, comparativo, porTecnico, porLocal, evolucaoDiaria); Dashboard do dono renderiza; /reparticao renderiza com form de fechamento por técnico (cálculo não executado); card do técnico exibe LÍQUIDO/COMISSÃO reais.",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 (routes/metricas.js, Dashboard*.jsx, GestorHome.jsx) + E3 dashboards com dados de fixture",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "GAPS": [
+        "Cálculo de repartição não executado; números do dashboard não cruzados com dados do seed (validação contábil pendente)"
+      ],
+      "NEXT_ACTION": "Janela 2 (opcional): executar Calcular na repartição com período do seed",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (dashboard shape, reparticao, card técnico)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-BILLING",
       "NAME": "BILLING",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E2)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3)",
+      "PERSISTENCE_STATE": "OK(E2)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "N/A",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "GET /billing/status 200 {status: trialing, trialFimEm: 2026-09-10} (estado REAL do seed); /assinatura renderiza o trial com data correta e CTA ASSINAR para dono; gestor vê 'Somente o admin…' (RBAC de UI no billing); webhook Stripe com idempotência e checkout/portal adminOnly (E1).",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [
-        "GAP-UX-CONFIG-PROMESSA-01 (parcial): cobranca anunciada como 'em breve' (ALTA)"
+        "Checkout/portal Stripe NÃO exercitados (operação financeira externa — não autorizada nesta auditoria); past_due/canceled states não observados"
       ],
-      "NEXT_ACTION": "Fase B: E1 (routes/billing.js, Assinatura.jsx) + E3 /assinatura como dono; mutacoes de cobranca real sao D2 (nao executar upgrade/pagamento real)",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "Declarar validação não executada (checkout) no gate; classificar com essa reserva",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (assinatura + billing/status) · tour2 12:28Z (assinatura gestor)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-SEGURANCA",
       "NAME": "SEGURANCA",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "N/A",
+      "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "OK(E4)",
+      "INTEGRATION_STATE": "OK(E3/E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "OK(E4)",
       "EMPTY_STATE": "N/A",
-      "LOADING_STATE": "N/A",
-      "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "RLS v2 canonico PASS (26 ENABLED/0 FORCE/0 policies + verify_lockdown_v2); 26 sondas anon+auth negadas; bucket privado provado; CSP/CORS/cookies; SECURITY_ADVISOR 0 errors (1 warning reavaliado non-blocking)",
+      "LOADING_STATE": "OK(E3)",
+      "MOBILE_STATE": "UNKNOWN",
+      "STAGING_EVIDENCE": "Baseline: RLS v2 PASS, 26 sondas negadas, bucket privado, advisor 0 errors. Tours: CSP/XFO-DENY/nosniff no painel (tour0); /configuracao/seguranca renderiza senha (medidor de força), 2FA, sessões ativas ('Este dispositivo'), sair-de-todos, ferramentas LGPD; 401 sem token re-provado.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [
-        "Backlog de hardening em docs/agent-environment/SECURITY_HARDENING_BACKLOG.md (ENGINEERING_BACKLOG, nao blocker)"
+        "Troca de senha não exercitada (mudaria a senha da fixture compartilhada — fora do envelope); logout-all não exercitado (mataria sessões do tour)"
       ],
-      "NEXT_ACTION": "Fase B: fechar classificacao (candidata a FEATURE_COMPLETE por E4); superficie de usuario de seguranca (Seguranca.jsx) e auditada em AUTH_2FA",
+      "NEXT_ACTION": "Classificar com validações-não-executadas declaradas; hardening backlog segue em docs/agent-environment/SECURITY_HARDENING_BACKLOG.md",
       "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (RLS H/I/J/K, advisor)"
+        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates",
+        "tour0 12:23Z (headers) · tour1 12:26Z (seguranca render)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-LGPD",
       "NAME": "LGPD",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P0",
-      "FRONTEND_STATE": "PARTIAL(E1)",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E1)",
+      "INTEGRATION_STATE": "PARTIAL(E3)",
+      "RBAC_STATE": "OK(E3)",
       "PERSISTENCE_STATE": "UNKNOWN",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "N/A",
-      "LOADING_STATE": "UNKNOWN",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Mecanismo de consent provado na sessao do freeze (152/152 CONSENT_VISIBLE/USABLE) — prova LOCAL/pre-staging-aceito; LOCAL_PROOF != STAGING_PROOF",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "Consent banner funciona em staging (todos os tours clicaram 'Apenas necessários'); footer com Privacidade/Termos/Cookies/Preferências em todas as telas; /termos, /privacidade e /cookies servem (tour0) PORÉM com texto-modelo + colchetes + contato barbers-flow (GAP-LEGAL-MODELO-01 CONFIRMADO em staging); UI de anonimização de cliente (admin) e autoexclusão de conta presentes em /configuracao/seguranca; backend: /lgpd/anonimizar-cliente, DELETE /me/conta com código, auditoria 'conta.excluida' (E1).",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [
-        "GAP-LEGAL-MODELO-01 (BLOCKED_D2, usuario): /termos e /privacidade servem modelo nao validado, campos entre colchetes e contato privacidade@barbers-flow.com de outro produto — conteudo juridico e materia do usuario"
+        "GAP-LEGAL-MODELO-01 (BLOCKED_D2, usuário): conteúdo jurídico modelo + DPO de outro produto — RELEASE BLOCKER conhecido, agora com evidência fresca de staging",
+        "Anonimização e autoexclusão NÃO exercitadas (irreversíveis por design — validação não executada declarada)",
+        "Portabilidade/exportação de dados não localizada (verificar exigência de escopo)"
       ],
-      "NEXT_ACTION": "Fase B: observar /termos, /privacidade e consent em staging real (mecanismo, nao conteudo); conteudo juridico permanece D2",
+      "NEXT_ACTION": "Gate: manter D2 legal aberto com evidência atualizada; classificar mecanismo como OK e conteúdo como BLOCKED_D2",
       "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#gap-legal-modelo-01 (D2)",
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md (GAP-UX-CONSENT-01 fechado 152/152)"
+        "tour0 12:23Z (termos/privacidade/cookies com flags modeloNaoValidado+barbersFlow) · tour1 12:26Z (seguranca LGPD tools)"
       ],
-      "LAST_VERIFIED_HEAD": null
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-APROVACOES",
       "NAME": "APROVACOES",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "OK(E4)",
+      "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
       "INTEGRATION_STATE": "OK(E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "OK(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Escrita real provada no E2E: pendente aprovado em staging (fluxo funcionario cria -> gestor/dono aprova)",
+      "STAGING_EVIDENCE": "Aprovar provado no baseline (pendente aprovado + não volta pós-reload); EMPTY STATE agora provado (tour2 gestor: 'Nenhum serviço aguardando aprovação. Os serviços enviados pelos funcionários aparecerão aqui'); fila renderiza; aprovacaoServico da empresa é configurável e persistiu round-trip (tour1).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: observar rejeicao (caminho negativo), empty state da fila e loading",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (pendente aprovado)"
+      "GAPS": [
+        "Caminho de REJEIÇÃO não observado (fila estava vazia)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "NEXT_ACTION": "Janela 2: func cria pendente via wizard (mobile) → dono REJEITA → fila volta a vazio",
+      "EVIDENCE_POINTERS": [
+        "baseline E2E (aprovar) · tour2 12:28Z (empty state)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-ESTOQUE",
       "NAME": "ESTOQUE",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "PARTIAL(E3)",
+      "PERSISTENCE_STATE": "OK(E3)",
+      "ERROR_STATE": "PARTIAL(E3)",
+      "EMPTY_STATE": "PARTIAL(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "CRUD REAL provado (tour1): POST /materiais 201 (id 111, STG-AUD) → UI /materiais MOSTROU o item criado → PATCH 200 → DELETE 200 (limpo). /materiais lista fixtures com preço/saldo/ações Entrada/Saída/Ajuste; /estoque mostra períodos 7D/30D/90D + alerta de reposição real ('STG Cilindro A saldo 3'). Funcionário em deep-link vê erro+empty contraditórios (AUD-GAP-ESTOQUE-FUNC-GUARD).",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 (routes/estoque.js, Estoque.jsx, Catalogo.jsx) + E3 CRUD de item de estoque no tenant fixture",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "GAPS": [
+        "AUD-GAP-ESTOQUE-FUNC-GUARD (rota sem RequirePermissao + mensagens contraditórias)",
+        "Movimentações (Entrada/Saída/Ajuste) via UI não exercitadas"
+      ],
+      "NEXT_ACTION": "Fase C: guard de rota (DECISOR); janela 2 opcional: uma movimentação de Entrada revertida por Saída",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (CRUD 4 passos + renders) · tour2 12:28Z (func deep-link)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-METRIC-FOUNDATION",
@@ -384,113 +469,127 @@
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
       "FRONTEND_STATE": "N/A",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
+      "BACKEND_STATE": "PARTIAL(E1)",
+      "INTEGRATION_STATE": "PARTIAL(E3)",
       "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
       "EMPTY_STATE": "UNKNOWN",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "NENHUMA direta (fundacao de metricas e consumida por INDICADORES/FINANCEIRO)",
+      "STAGING_EVIDENCE": "Consumidores reais funcionam (dashboard 12 KPIs; gestor/indicadores 5 chaves), o que exercita a fundação indiretamente; endpoints /metricas* (catálogo, série, registros) ainda não sondados diretamente.",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 (routes/metricas.js + services) e E2 endpoints de metricas com fixture; classificar junto com INDICADORES",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "GAPS": [
+        "GET /metricas e /metricas/:id/serie não sondados"
+      ],
+      "NEXT_ACTION": "Janela 2: sondar GET /metricas e uma série como dono",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (dashboard) · tour2 12:28Z (gestor/indicadores)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-INDICADORES",
       "NAME": "INDICADORES",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E2)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3)",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "PARTIAL(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta (KpiCard sem hubEm apos diferimento de METRIC_HUBS)",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "GET /gestor/indicadores 200 {pendentes, presentes, totalTecnicos, presencaHoje, avaliacoes}; GestorHome renderiza 'Operação de hoje' com HOJE/SEMANA/MÊS, fila e 'SATISFAÇÃO Sem avalia[ções]' (empty parcial de avaliações); Dashboard do dono com KPIs e comparativos; MeuPainel do func com 'MEU DESEMPENHO HOJE/SEMANA/MÊS'.",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
       "GAPS": [],
-      "NEXT_ACTION": "Fase B: E3 dashboards/KPIs por papel com dados de fixture; validar numeros contra dados conhecidos do seed",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "Consolidar com METRIC_FOUNDATION na janela 2",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z · tour2 12:28Z (3 homes por papel)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-PONTO",
       "NAME": "PONTO",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "OK(E4)",
+      "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
       "INTEGRATION_STATE": "OK(E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "OK(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "Escrita real provada no E2E: ponto batido em staging (funcionario)",
+      "STAGING_EVIDENCE": "Batida real provada no baseline (persistiu pós-reload); /meu-ponto renderiza o dia com sequência Entrada→Almoço→Volta→Saída, 'Próximo: Entrada' e aviso de selfie+localização (tour2); presencaHoje aparece nos indicadores do gestor.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: observar BancoHoras/MeuPainel e visao gestor do ponto; states",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (ponto batido)"
+      "GAPS": [
+        "Visão do gestor sobre ponto do técnico (/tecnicos/:id/ponto) não observada (depende do perfil do técnico — recheck)",
+        "Selfie no ponto: captura real não exercitada em headless"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "NEXT_ACTION": "Recheck perfil técnico (janela 2) inclui aba de ponto",
+      "EVIDENCE_POINTERS": [
+        "baseline E2E (ponto batido) · tour2 12:28Z (meu-ponto estado do dia)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-CONFIGURACOES",
       "NAME": "CONFIGURACOES",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "OK(E3)",
+      "RBAC_STATE": "OK(E3/E4)",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "EMPTY_STATE": "N/A",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "PERSISTÊNCIA REAL provada (tour1): aprovacaoServico true→false→true com GETs confirmando cada estado; /configuracao renderiza OPERAÇÃO com o toggle; /configuracao/perfil renderiza dados do usuário; RBAC: PATCH negado a gestor (E4); gestor/func têm menu Configurações reduzido (Perfil/Segurança/Plano). Achado do freeze 'em breve' NÃO está mais em /configuracao (mudou de forma — ver AUD-GAP-MESSAGING-WHATSAPP).",
+      "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [
-        "GAP-UX-CONFIG-PROMESSA-01: WhatsApp e cobranca anunciados como 'em breve' (ALTA, 3 superficies)"
+      "GAPS": [],
+      "NEXT_ACTION": "Mobile check janela 2; candidata a FEATURE_COMPLETE",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (round-trip + renders) · tour2 12:28Z (menus por papel)"
       ],
-      "NEXT_ACTION": "Fase B: E3 /configuracao e /mais como dono/gestor; alterar uma config real e observar persistencia",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-AUDITORIA",
       "NAME": "AUDITORIA",
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "MISSING(E1/E3)",
+      "BACKEND_STATE": "OK(E1)",
       "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
+      "RBAC_STATE": "N/A",
       "PERSISTENCE_STATE": "UNKNOWN",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
-      "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA — scope freeze declara explicitamente runtime nao observado",
-      "USER_REAL_CAN_USE": "UNKNOWN",
-      "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B prioridade 2: descoberta E1 (onde vive a trilha de auditoria) + gerar acao auditavel em staging e observar o registro aparecer",
-      "EVIDENCE_POINTERS": [],
-      "LAST_VERIFIED_HEAD": null
+      "ERROR_STATE": "N/A",
+      "EMPTY_STATE": "N/A",
+      "LOADING_STATE": "N/A",
+      "MOBILE_STATE": "N/A",
+      "STAGING_EVIDENCE": "services/auditoria.js grava prisma.auditLog (empresaId, usuarioId, acao, entidade, antes/depois, ip); chamada em admin.js (registrarAudit) e account.js (conta.excluida). NÃO EXISTE endpoint de leitura nem superfície no painel (grep sem matches). Usuário real NÃO consegue ver trilha de auditoria.",
+      "USER_REAL_CAN_USE": "NO",
+      "FINAL_CLASSIFICATION": "BACKEND_ONLY",
+      "GAPS": [
+        "Sem UI e sem endpoint de leitura: trilha é gravada mas invisível — se o escopo do MVP exigia auditoria CONSULTÁVEL, isto é MISSING de produto; se exigia apenas trilha, está íntegra como BACKEND_ONLY",
+        "Escrita real em staging não confirmada por leitura direta no banco (probe read-only opcional)"
+      ],
+      "NEXT_ACTION": "GATE_USUARIO: decidir se MVP exige auditoria consultável (viraria GAP_EXECUTION de UI+endpoint) ou se BACKEND_ONLY encerra",
+      "EVIDENCE_POINTERS": [
+        "E1 services/auditoria.js + admin.js:23 + account.js (conta.excluida); grep painel sem matches"
+      ],
+      "LAST_VERIFIED_HEAD": "825975f (worktree) @ 2026-08-27"
     },
     {
       "ID": "AUD-CAP-OBSERVABILIDADE",
@@ -498,73 +597,79 @@
       "SCOPE_CLASS": "MVP",
       "PRIORITY": "P1",
       "FRONTEND_STATE": "N/A",
-      "BACKEND_STATE": "PARTIAL(E4)",
-      "INTEGRATION_STATE": "UNKNOWN",
+      "BACKEND_STATE": "OK(E2)",
+      "INTEGRATION_STATE": "OK(E2)",
       "RBAC_STATE": "N/A",
       "PERSISTENCE_STATE": "N/A",
-      "ERROR_STATE": "UNKNOWN",
+      "ERROR_STATE": "OK(E1)",
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "health 200 com database: ok provado no baseline (STG_RUNTIME)",
-      "USER_REAL_CAN_USE": "UNKNOWN",
-      "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 do que a capability promete (logs estruturados? metricas? alertas?) e E2 dos endpoints de health/status",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (STG_RUNTIME health)"
+      "STAGING_EVIDENCE": "GET /health 200 {status ok, whatsapp desconectado, uptime, checks.database ok} ao vivo (tour0); logger estruturado por evento + Sentry (capturarErro com feature/userId/empresaId) no código; métricas de app via metricsMiddleware (E1 app.js).",
+      "USER_REAL_CAN_USE": "YES",
+      "FINAL_CLASSIFICATION": "INTEGRATED",
+      "GAPS": [
+        "Capability de infraestrutura: 'usuário' aqui é operador; dashboards externos (Railway/Sentry) não verificáveis desta sessão"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "NEXT_ACTION": "NONE (nota: verificação de Sentry/Railway dashboards é operação externa)",
+      "EVIDENCE_POINTERS": [
+        "tour0 12:23Z (health body completo)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:23Z"
     },
     {
       "ID": "AUD-CAP-ADMIN",
       "NAME": "ADMIN",
       "SCOPE_CLASS": "MVP_P2_KEPT",
       "PRIORITY": "P2",
-      "FRONTEND_STATE": "UNKNOWN",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "PARTIAL(E3)",
+      "BACKEND_STATE": "OK(E3)",
+      "INTEGRATION_STATE": "PARTIAL(E3)",
+      "RBAC_STATE": "OK(E3)",
+      "PERSISTENCE_STATE": "OK(E3)",
       "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
-      "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "NENHUMA direta — mantida no release por decisao explicita do usuario por sustentar RBAC",
+      "EMPTY_STATE": "A_CONFIRMAR",
+      "LOADING_STATE": "OK(E3)",
+      "MOBILE_STATE": "N/A",
+      "STAGING_EVIDENCE": "ADMIN = administração da empresa (config, usuários, permissões, LGPD) — routes/admin.js (E1). Config empresa GET/PATCH provados; /permissoes/catalogo 200; GET /usuarios 200 (3); PORÉM UI /configuracao/usuarios mostrou '0 contas cadastradas' (AUD-GAP-USUARIOS-LISTA-ZERO — recheck).",
       "USER_REAL_CAN_USE": "UNKNOWN",
       "FINAL_CLASSIFICATION": null,
-      "GAPS": [],
-      "NEXT_ACTION": "Fase B: E1 (routes/admin.js) + E3 superficie admin com papel adequado; verificar que nao vaza para papeis comuns",
-      "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#features-incluidas-no-mvp (ADMIN P2 mantida)"
+      "GAPS": [
+        "AUD-GAP-USUARIOS-LISTA-ZERO — recheck obrigatório antes de classificar"
       ],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "Janela 2: recheck /configuracao/usuarios com espera longa + DOM count",
+      "EVIDENCE_POINTERS": [
+        "tour1 12:26Z (config/catalogo/usuarios API+UI)"
+      ],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-DOCUMENTOS",
       "NAME": "DOCUMENTOS",
       "SCOPE_CLASS": "MVP_BOOTSTRAP",
       "PRIORITY": "P1",
-      "FRONTEND_STATE": "UNKNOWN",
+      "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E4)",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
+      "INTEGRATION_STATE": "BLOCKED(E3)",
+      "RBAC_STATE": "OK(E1)",
       "PERSISTENCE_STATE": "OK(E4)",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
-      "LOADING_STATE": "UNKNOWN",
+      "ERROR_STATE": "PARTIAL(E3)",
+      "EMPTY_STATE": "PARTIAL(E3)",
+      "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
-      "STAGING_EVIDENCE": "Bucket staging documentos-tecnico privado provado (upload service-role OK, URL assinada 200, publica 400) — STG_SEC_RLS_J; UI de usuario nao observada",
-      "USER_REAL_CAN_USE": "UNKNOWN",
-      "FINAL_CLASSIFICATION": null,
+      "STAGING_EVIDENCE": "FLAG DESLIGADA em staging: GET /me/documentos → 404 'Recurso não disponível' (tour2). UI /meus-documentos renderiza 'Armazenados em local privado e seguro' vazia SEM comunicar indisponibilidade, e o menu Mais do funcionário PROMETE a feature. Bucket privado provado no baseline via service-role (upload OK, assinada 200, pública 400). Contrato completo no código (upload data-URI, magic bytes, self-scope sem IDOR).",
+      "USER_REAL_CAN_USE": "NO",
+      "FINAL_CLASSIFICATION": "PARTIAL",
       "GAPS": [
-        "D2-DOC-BUCKET: bucket de PRODUCAO ausente (BLOCKED_EXTERNAL, usuario) — nao afeta staging"
+        "AUD-GAP-DOCUMENTOS-OFF-STAGING (ALTA): DOCUMENTOS_ENABLED != true no Railway staging — usuário real NÃO consegue usar; requer autorização para mudar env externa",
+        "UI silenciosa quando flag off (não diferencia vazio de indisponível)",
+        "D2-DOC-BUCKET segue aberto para PRODUÇÃO (não afeta staging)"
       ],
-      "NEXT_ACTION": "Fase B: E3 upload/download real via Documentos.jsx no tenant fixture em staging",
+      "NEXT_ACTION": "GATE_USUARIO: autorizar DOCUMENTOS_ENABLED=true no Railway staging; então re-sondar upload→lista→arquivo assinado→delete (script pronto no tour2)",
       "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (STG_SEC_RLS_J bucket)"
+        "tour2 12:28Z (404 + renders) · baseline STG_SEC_RLS_J"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
     },
     {
       "ID": "AUD-CAP-STAGING",
@@ -580,7 +685,7 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "OK(E4)",
-      "STAGING_EVIDENCE": "REAL_STAGING_ACCEPTANCE_PROVEN=YES — baseline imutavel (tag admai-staging-accepted-2026-08-27); VALIDATE_STAGING 373 PASS + 1 SKIP",
+      "STAGING_EVIDENCE": "REAL_STAGING_ACCEPTANCE_PROVEN=YES — baseline imutável (tag admai-staging-accepted-2026-08-27); os tours desta auditoria re-exercitaram o ambiente ao vivo sem regressão.",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [],
@@ -593,30 +698,29 @@
     {
       "ID": "AUD-CAP-WHATSAPP",
       "NAME": "WHATSAPP",
-      "SCOPE_CLASS": "POST_MVP_DIVERGENCE_NOTED",
-      "PRIORITY": "P1",
-      "FRONTEND_STATE": "N/A",
-      "BACKEND_STATE": "UNKNOWN",
-      "INTEGRATION_STATE": "UNKNOWN",
-      "RBAC_STATE": "UNKNOWN",
-      "PERSISTENCE_STATE": "UNKNOWN",
-      "ERROR_STATE": "UNKNOWN",
+      "SCOPE_CLASS": "POST_MVP_D2_AMENDMENT",
+      "PRIORITY": "POST_MVP",
+      "FRONTEND_STATE": "OK(E3)",
+      "BACKEND_STATE": "PARTIAL(E2)",
+      "INTEGRATION_STATE": "N/A",
+      "RBAC_STATE": "N/A",
+      "PERSISTENCE_STATE": "N/A",
+      "ERROR_STATE": "N/A",
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "NENHUMA — freeze ja declarava runtime nao observado + aceitacao externa do provedor pendente",
-      "USER_REAL_CAN_USE": "UNKNOWN",
+      "STAGING_EVIDENCE": "POST_MVP por D2 amendment (featureFlags.js, flag OFF default). /configuracao/whatsapp alcançável mas serve teaser honesto 'Em breve' (sem função — estado VÁLIDO de diferimento com expectativa); /health reporta whatsapp: desconectado.",
+      "USER_REAL_CAN_USE": "NO",
       "FINAL_CLASSIFICATION": "POST_MVP",
       "GAPS": [
-        "DIVERGENCE-WHATSAPP-SCOPE (ver divergencias): reconciliacao MVP vs POST_MVP e D2 do usuario",
-        "EXTERNAL_RUNTIME_ACCEPTANCE_PENDING (provedor)"
+        "AUD-GAP-MESSAGING-WHATSAPP: landing/dashboard/ajuda vendem WhatsApp no presente (copy contradiz o diferimento) — decisão de mensagem é do usuário",
+        "EXTERNAL_RUNTIME_ACCEPTANCE_PENDING (provedor) segue"
       ],
-      "NEXT_ACTION": "ZERO gap execution nesta auditoria; aguardar reconciliacao D2",
+      "NEXT_ACTION": "ZERO gap execution; levar AUD-GAP-MESSAGING-WHATSAPP ao gate",
       "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#bloqueadores-de-release-remanescentes",
-        "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md#e-current-scope"
+        "E1 featureFlags.js (D2 amendment) · tour0/1 (copy + teaser + health)"
       ],
-      "LAST_VERIFIED_HEAD": null
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-METRIC-HUBS",
@@ -632,15 +736,13 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Diferida sob VITE_FEATURE_METRIC_HUBS (default OFF); negativo de alcancabilidade provado na sessao do freeze (runtime, 3 papeis)",
+      "STAGING_EVIDENCE": "NEGATIVO RE-PROVADO AO VIVO (tour1, sessão autenticada dono): /metricas/faturamento-liquido → pathname '/' (rota inexistente no build; flag OFF).",
       "USER_REAL_CAN_USE": "NO",
       "FINAL_CLASSIFICATION": "DEFERRED_BY_SCOPE",
       "GAPS": [],
-      "NEXT_ACTION": "Fase B: reconfirmar negativo de alcancabilidade em staging atual (POST_MVP + USER_REACHABLE = INVALID_RELEASE_STATE)",
-      "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#features-diferidas (flags default OFF)"
-      ],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "NONE",
+      "EVIDENCE_POINTERS": ["tour1 12:26Z 'deferida METRIC_HUBS inalcancavel'"],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-GOOGLE-REVIEWS",
@@ -656,15 +758,13 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Diferida sob VITE_FEATURE_GOOGLE_REVIEWS (default OFF); negativo provado na sessao do freeze",
+      "STAGING_EVIDENCE": "NEGATIVO RE-PROVADO AO VIVO (tour1): /avaliacoes → '/'. Nota: 'SATISFAÇÃO Sem avaliações' no GestorHome vem do módulo de avaliações interno (servicos.js /avaliacoes API), não do hub Google diferido.",
       "USER_REAL_CAN_USE": "NO",
       "FINAL_CLASSIFICATION": "DEFERRED_BY_SCOPE",
       "GAPS": [],
-      "NEXT_ACTION": "Fase B: reconfirmar negativo de alcancabilidade em staging atual",
-      "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#features-diferidas"
-      ],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "NONE",
+      "EVIDENCE_POINTERS": ["tour1 12:26Z 'deferida GOOGLE_REVIEWS inalcancavel'"],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-NOTIFICACOES",
@@ -680,15 +780,13 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Diferida sob VITE_FEATURE_NOTIFICACOES (default OFF); rota e navegacao removidas (corrigido na sessao do freeze)",
+      "STAGING_EVIDENCE": "NEGATIVO RE-PROVADO AO VIVO (tour1): /configuracao/notificacoes → '/'. Endpoints in-app (/notificacoes, /me/notificacoes em admin.js) existem no backend sem UI ligada.",
       "USER_REAL_CAN_USE": "NO",
       "FINAL_CLASSIFICATION": "DEFERRED_BY_SCOPE",
       "GAPS": [],
-      "NEXT_ACTION": "Fase B: reconfirmar negativo de alcancabilidade em staging atual",
-      "EVIDENCE_POINTERS": [
-        "docs/agent-environment/ADMAI_SCOPE_FREEZE.md#features-diferidas"
-      ],
-      "LAST_VERIFIED_HEAD": null
+      "NEXT_ACTION": "NONE",
+      "EVIDENCE_POINTERS": ["tour1 12:26Z 'deferida NOTIFICACOES inalcancavel'"],
+      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:26Z"
     },
     {
       "ID": "AUD-CAP-E2E",
@@ -704,14 +802,12 @@
       "EMPTY_STATE": "N/A",
       "LOADING_STATE": "N/A",
       "MOBILE_STATE": "N/A",
-      "STAGING_EVIDENCE": "Freeze dizia 'nao implementado'; hoje existe driver interno chaveiro-painel/e2e/staging.mjs (16/16 na matriz) — ferramenta de auditoria/validacao, NAO superficie de produto para usuario",
+      "STAGING_EVIDENCE": "Ferramenta interna (e2e/staging.mjs 16/16 no baseline; tours desta auditoria derivados dela). Não é superfície de produto.",
       "USER_REAL_CAN_USE": "NO",
       "FINAL_CLASSIFICATION": "DEFERRED_BY_SCOPE",
       "GAPS": [],
-      "NEXT_ACTION": "NONE — sem superficie de usuario; driver segue como ferramenta desta auditoria",
-      "EVIDENCE_POINTERS": [
-        "docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates (E2E 16/16)"
-      ],
+      "NEXT_ACTION": "NONE",
+      "EVIDENCE_POINTERS": ["docs/eos-v2/STAGING_ACCEPTANCE_BASELINE.md#matriz-final-de-gates"],
       "LAST_VERIFIED_HEAD": "8a53cc5bd4d0beeb2dc985ba745debfec1b629b3"
     }
   ],
@@ -719,7 +815,13 @@
     {
       "quando": "2026-08-27",
       "fase": "FUNCTIONAL_CAPABILITY_INVENTORY",
-      "resultado": "27 linhas AUD-CAP-* materializadas a partir de ADMAI_SCOPE_FREEZE.md (21 MVP incl. ADMIN P2) + bootstrap (DOCUMENTOS, STAGING) + WHATSAPP (divergencia registrada) + 4 diferidas. Seeds de gaps conhecidos distribuidos. E4 da baseline 8a53cc5 reutilizado sem re-provar. 3 linhas ja classificadas (STAGING=FEATURE_COMPLETE, WHATSAPP=POST_MVP, 4 diferidas=DEFERRED_BY_SCOPE); 21 pendentes de classificacao por evidencia."
+      "resultado": "27 linhas AUD-CAP-* materializadas a partir de ADMAI_SCOPE_FREEZE.md (21 MVP incl. ADMIN P2) + bootstrap (DOCUMENTOS, STAGING) + WHATSAPP (divergencia registrada) + 4 diferidas. Seeds de gaps conhecidos distribuidos. E4 da baseline 8a53cc5 reutilizado sem re-provar."
+    },
+    {
+      "quando": "2026-08-27T12:23-12:29Z",
+      "fase": "USER_REAL_CAN_USE_CLASSIFICATION (rodada 1 — tours reais)",
+      "resultado": "3 tours contra staging vivo: tour0-unauth 13/13, tour1-dono 37/38, tour2-gestor-func 21/21 (71/72 passos; única falha instrumental). PROVADO: ciclo 2FA completo via UI real (fecha 'runtime não observado'); estoque CRUD integrado; config persistência round-trip; billing trialing real; empty state aprovações; navs por papel; deferidas 3/3 inalcançáveis; GAP-LEGAL confirmado em staging. NOVOS ACHADOS: 2FA sem códigos de recuperação exibidos (ALTA); DOCUMENTOS desligado em staging (ALTA, autorização p/ env); usuarios/tecnicos listas '0' com dados na API (recheck); estoque func sem guard + estados contraditórios; messaging vende WhatsApp POST_MVP. Divergência WHATSAPP RESOLVIDA por evidência (D2 amendment em featureFlags.js). PENDENTE janela 2 (rate-limit login 5/15min): rechecks (usuarios, tecnicos gestor, perfil técnico), error-state login, mobile 390, rejeição de aprovação, sondas /metricas.",
+      "loginsUsados": "4/5 na janela ~12:26-12:29Z; próxima janela ≥12:44Z"
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
