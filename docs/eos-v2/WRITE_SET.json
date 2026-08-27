@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P1D-NODE22",
-  "titulo": "P1d: NIXPACKS_NODE_VERSION=22 no service staging (supabase-js deprecou Node<=20; uploads 500 no runtime 20, OK no 24 local)",
+  "sliceId": "AUD2-P1F-NODE22-DOCKERFILE",
+  "titulo": "P1f: base node:22-alpine no Dockerfile do bot (supabase-js exige WebSocket nativo/Node22; erro real capturado via logs+attributes) + CI 20->22 por consistencia",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T17:57:20.363Z",
+  "declaradoEm": "2026-08-27T18:03:15.721Z",
   "baseCommitPorLane": {
-    "HARNESS": "adb341bf36b6baf7548de60d5d34e34530a99205"
+    "HARNESS": "74a0b59ccd8b34416d9a663e402369e976036f23"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -616,7 +616,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "604cbc35185db913f3929c2b183d639abb674d346b8ed966e0e637b87beb31fc",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "7ca03ddafc7ee154448d7a5ec88ee57040afb8e514641196e1d733acf6dc3245",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
@@ -645,8 +645,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "687162e5f0412c5ed14bf0f12d5f677dbc9484d334e08939b6f4536378cb8d5d",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "36c96b482f1319b8c51339c01358313e94458a531debc780aeb9f38e66056ca3",
+      "docs/eos-v2/WRITE_SET.json": "5f2c7ef2ac2a92abce781f227fc01a877987d6a47b600f0f2ca203e1296c5016",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "181de2213407b6141681e0af3c36b4a9cffbc7ee2f93cd00dbc0ee927cb360c4",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -771,7 +771,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "acafcfde0431011004fd6f56e1eda338ca6b697f98c5d8f5fed817b13ca2e1d9"
+      "tools/railway-staging-bootstrap.mjs": "1cd4f6e5eb2ea160406fccd16ea22d01352523ade0657015a435c0edc83660d1"
     }
   },
   "artefatosPorLane": {
@@ -2594,20 +2594,29 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/railway-staging-bootstrap.mjs",
+      "caminho": "chaveiro-bot/Dockerfile",
       "precisao": "BOUNDED",
-      "proposito": "adicionar NIXPACKS_NODE_VERSION as vars nao-secretas",
+      "proposito": "builder e runner em node:22-alpine",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "acafcfde0431011004fd6f56e1eda338ca6b697f98c5d8f5fed817b13ca2e1d9",
+      "shaNaDeclaracao": "b5bbd76ab49d5d99369c447eca189148eb40938eafee326549dde9d997c083b0",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": ".github/workflows/ci.yml",
+      "precisao": "BOUNDED",
+      "proposito": "jobs em node-version 20 -> 22",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "025499c89275beee140b31be3b667f80b88d7d4dea50db7958346c600558c50b",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "registrar causa raiz do 500 + operacao",
+      "proposito": "registrar erro real + fix",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "604cbc35185db913f3929c2b183d639abb674d346b8ed966e0e637b87beb31fc",
+      "shaNaDeclaracao": "7ca03ddafc7ee154448d7a5ec88ee57040afb8e514641196e1d733acf6dc3245",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2618,6 +2627,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P1d fechado antes do commit: NIXPACKS_NODE_VERSION=22 + registro da causa raiz (Node 20 vs supabase-js).",
+  "nota": "P1f fechado antes do commit: Dockerfile node:22-alpine + CI 22 + ledger com o erro real.",
   "aviso": "Declaracao ENCERRADA."
 }

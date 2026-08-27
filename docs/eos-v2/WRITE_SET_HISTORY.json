@@ -65198,9 +65198,37 @@
       "bloqueiaIntegracao": false,
       "nota": "P1d fechado antes do commit: NIXPACKS_NODE_VERSION=22 + registro da causa raiz (Node 20 vs supabase-js).",
       "declaradoEm": "2026-08-27T17:57:20.363Z"
+    },
+    {
+      "sliceId": "AUD2-P1E-LOGS-ATTRS",
+      "titulo": "P1e: deploymentLogs com attributes (winston JSON vira attributes no Railway; o campo erro do 500 mora la)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1e fechado antes do commit: attributes no deploymentLogs (scrubbed), selftest 21/21.",
+      "declaradoEm": "2026-08-27T18:00:12.453Z"
+    },
+    {
+      "sliceId": "AUD2-P1F-NODE22-DOCKERFILE",
+      "titulo": "P1f: base node:22-alpine no Dockerfile do bot (supabase-js exige WebSocket nativo/Node22; erro real capturado via logs+attributes) + CI 20->22 por consistencia",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P1f fechado antes do commit: Dockerfile node:22-alpine + CI 22 + ledger com o erro real.",
+      "declaradoEm": "2026-08-27T18:03:15.721Z"
     }
   ],
-  "geradoEm": "2026-08-27T17:57:51.221Z",
+  "geradoEm": "2026-08-27T18:03:35.144Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

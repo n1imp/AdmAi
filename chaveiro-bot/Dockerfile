@@ -1,7 +1,10 @@
 # ── Backend ChaveiroBot — imagem de produção (guia §5.1) ────────────────────
 # Multi-stage: deps + prisma generate no builder; runtime enxuto e NÃO-root.
 
-FROM node:20-alpine AS builder
+# Node 22: o @supabase/supabase-js atual exige WebSocket nativo (Node >= 22) e lança
+# "native WebSocket not found" na criação do client em Node 20 — uploads de storage
+# 500avam no Railway com o mesmo código passando em Node >= 22. [AUD2-P1F]
+FROM node:22-alpine AS builder
 WORKDIR /app
 # Prisma no Alpine (musl) precisa de openssl para o engine; libc6-compat ajuda os binários.
 RUN apk add --no-cache openssl libc6-compat
@@ -12,7 +15,7 @@ RUN npm ci --omit=dev
 COPY prisma ./prisma
 RUN npx prisma generate
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 
