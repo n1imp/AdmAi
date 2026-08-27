@@ -65090,9 +65090,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Fase D fechada apos declaracao correta: ledger (reverify 12/12 + gate do usuario) e CURRENT_STATE escritos DEPOIS de declarar e ANTES de commitar.",
       "declaradoEm": "2026-08-27T14:41:39.899Z"
+    },
+    {
+      "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
+      "titulo": "Preservar evidencia bruta dos tours 0-6 no repo (apontamento do REVISOR) + errata-2 (270/270)",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "Evidencia dos tours preservada + errata-2 + veredito final USUARIO_NECESSARIO registrados; escrita toda apos declarar, fechamento antes do commit.",
+      "declaradoEm": "2026-08-27T14:47:07.987Z"
     }
   ],
-  "geradoEm": "2026-08-27T14:43:20.964Z",
+  "geradoEm": "2026-08-27T14:47:40.975Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

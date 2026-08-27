@@ -1,0 +1,39 @@
+{
+  "tour": "tour5-perfil",
+  "quando": "2026-08-27T12:45:07.835Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "tecnicos: expandir card e abrir perfil completo",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/tecnicos/557",
+        "chegouNoPerfil": true,
+        "temPonto": false,
+        "temComissao": false,
+        "temMeta": false,
+        "resumo": "rações Ajuda D Dono A Staging Administrador TÉCNICO © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies"
+      }
+    },
+    {
+      "passo": "ponto do tecnico + relatorio PDF (status)",
+      "ok": true,
+      "detalhe": {
+        "id": "557",
+        "pontoStatus": 400,
+        "relatorio": {
+          "status": 400,
+          "tipo": "application/json; charset=utf-8"
+        }
+      }
+    },
+    {
+      "passo": "logout",
+      "ok": true
+    }
+  ]
+}

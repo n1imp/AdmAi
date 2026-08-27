@@ -1,0 +1,384 @@
+{
+  "tour": "tour1-dono",
+  "quando": "2026-08-27T12:26:38.872Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "home dashboard (dono)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador VISÃO GERAL PAINEL Bem-vindo ao AdmAi 👋 Seus serviços e finanças organizados direto do WhatsApp. Conectar o WhatsApp Registrar um servi",
+        "chars": 454
+      }
+    },
+    {
+      "passo": "GET /dashboard shape",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "keys": [
+          "totalServicos",
+          "receitaBruta",
+          "totalMaterial",
+          "receitaLiquida",
+          "ticketMedio",
+          "totalComissao",
+          "lucro",
+          "margemLucro",
+          "comparativo",
+          "porTecnico",
+          "porLocal",
+          "evolucaoDiaria"
+        ]
+      }
+    },
+    {
+      "passo": "sidebar desktop SEM logout (AUD-INPUT-DESKTOP-LOGOUT)",
+      "ok": true,
+      "detalhe": {
+        "aside": true,
+        "temSair": false,
+        "controles": [
+          "Painel",
+          "Relatórios",
+          "Equipe",
+          "Serviços",
+          "Aprovações",
+          "Materiais",
+          "Estoque",
+          "Usuários",
+          "Configurações",
+          "Ajuda"
+        ]
+      }
+    },
+    {
+      "passo": "servicos lista (fixture visivel)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/servicos",
+        "pathname": "/servicos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador REGISTROS Serviços 4 registros Novo serviço Buscar por técnico Filtros Endereço LOCAL TODOS CASA DO CLIENTE CONTRATO PONTO DA LOJA OUTRO",
+        "chars": 804
+      }
+    },
+    {
+      "passo": "reparticao",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/reparticao",
+        "pathname": "/reparticao",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador REPARTIÇÃO Fechamento por técnico DE ATÉ CALCULAR Selecione o período Defina as datas de início e fim e clique em Calcular © 2026 AdmAi·",
+        "chars": 370
+      }
+    },
+    {
+      "passo": "tecnicos lista + medida de truncamento (REDESIGN)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/tecnicos",
+        "pathname": "/tecnicos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador EQUIPE TÉCNICOS 1 cadastrado F Func A Staging Ativo Funcionário +55 (11) 9 3000-0001 SERVIÇOS 4 LÍQUIDO R$ 463,00 COMISSÃO 20% PENDENTE ",
+        "chars": 414,
+        "truncados": [],
+        "larguraMain": 1184
+      }
+    },
+    {
+      "passo": "perfil de tecnico (/tecnicos/:id)",
+      "ok": false,
+      "erro": "nenhum link /tecnicos/:id na lista"
+    },
+    {
+      "passo": "materiais (catalogo) render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/materiais",
+        "pathname": "/materiais",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador MATERIAIS STG Cilindro A un R$ 60,00 saldo 3 Entrada Saída Ajuste STG Fechadura A un R$ 120,00 saldo 10 Entrada Saída Ajuste + © 2026 Ad",
+        "chars": 374
+      }
+    },
+    {
+      "passo": "estoque render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/estoque",
+        "pathname": "/estoque",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador ESTOQUE 7D 30D 90D 1 material com alerta de reposição STG Cilindro A Saldo: 3 un consumo 1 un Repor STG Fechadura A Saldo: 10 un consumo",
+        "chars": 403
+      }
+    },
+    {
+      "passo": "ESTOQUE CRUD sonda: POST /materiais",
+      "ok": true,
+      "detalhe": {
+        "status": 201,
+        "id": 111
+      }
+    },
+    {
+      "passo": "UI /materiais mostra o material criado (integracao real)",
+      "ok": true,
+      "detalhe": {
+        "visto": true
+      }
+    },
+    {
+      "passo": "PATCH /materiais/:id",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "precoVenda": 3
+      }
+    },
+    {
+      "passo": "DELETE /materiais/:id (limpeza)",
+      "ok": true,
+      "detalhe": {
+        "status": 200
+      }
+    },
+    {
+      "passo": "assinatura render (BILLING)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/assinatura",
+        "pathname": "/assinatura",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador ASSINATURA PERÍODO DE TESTE Teste gratuito até 10/09/2026, 01:49. Assine para continuar usando o painel depois dessa data. ASSINAR © 202",
+        "chars": 378
+      }
+    },
+    {
+      "passo": "GET /billing/status",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "body": {
+          "status": "trialing",
+          "trialFimEm": "2026-09-10T04:49:23.899Z",
+          "periodoFimEm": null,
+          "canceladoEm": null
+        }
+      }
+    },
+    {
+      "passo": "configuracao render + promessas \"em breve\"",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao",
+        "pathname": "/configuracao",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador CONFIGURAÇÕES OPERAÇÃO Exigir aprovação dos serviços dos funcionários Serviços lançados por funcionários ficam pendentes até um gestor a",
+        "chars": 554,
+        "emBreve": false,
+        "trechosEmBreve": []
+      }
+    },
+    {
+      "passo": "CONFIG round-trip aprovacaoServico (persistencia real)",
+      "ok": true,
+      "detalhe": {
+        "valorOriginal": true,
+        "flip": true,
+        "restaurado": true,
+        "nomeEmpresa": "STG Fixture — Empresa A"
+      }
+    },
+    {
+      "passo": "configuracao/perfil render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/perfil",
+        "pathname": "/configuracao/perfil",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador PERFIL Dono A Staging dono.a.stg admin NOME E-MAIL confirmado TELEFONE E-mail e telefone são usados apenas para contato e identificação ",
+        "chars": 404
+      }
+    },
+    {
+      "passo": "configuracao/usuarios render (ADMIN/RBAC)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/usuarios",
+        "pathname": "/configuracao/usuarios",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador USUÁRIOS 0 contas cadastradas + © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "chars": 279
+      }
+    },
+    {
+      "passo": "GET /permissoes/catalogo",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "papeis": [
+          "dono",
+          "gestor",
+          "funcionario"
+        ],
+        "modulos": [
+          "dashboard",
+          "servicos",
+          "tecnicos",
+          "estoque",
+          "financeiro",
+          "avaliacoes",
+          "ponto",
+          "aprovacoes",
+          "usuarios",
+          "configuracao"
+        ]
+      }
+    },
+    {
+      "passo": "GET /usuarios (lista da empresa)",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "qtd": 3
+      }
+    },
+    {
+      "passo": "configuracao/whatsapp (POST_MVP reachable?)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/whatsapp",
+        "pathname": "/configuracao/whatsapp",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador WHATSAPP Em breve ROBÔ DO WHATSAPP Em breve seus técnicos vão poder registrar serviços e bater ponto conversando com o robô no WhatsApp,",
+        "chars": 556,
+        "emBreve": true
+      }
+    },
+    {
+      "passo": "deferida METRIC_HUBS inalcancavel",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/"
+      }
+    },
+    {
+      "passo": "deferida GOOGLE_REVIEWS inalcancavel",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/"
+      }
+    },
+    {
+      "passo": "deferida NOTIFICACOES inalcancavel",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/"
+      }
+    },
+    {
+      "passo": "ajuda render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/ajuda",
+        "pathname": "/ajuda",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador COMO USAR Guia rápido do AdmAi. Toque em uma seção para ver o passo a passo. Registrar um serviço pelo WhatsApp O técnico envia a mensag",
+        "chars": 1162
+      }
+    },
+    {
+      "passo": "mais render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/mais",
+        "pathname": "/mais",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador DONO A STAGING MAIS GESTÃO Serviços Todos os atendimentos Aprovações Serviços aguardando aval RECURSOS Materiais Catálogo de peças e pre",
+        "chars": 525
+      }
+    },
+    {
+      "passo": "seguranca render (sessoes, LGPD, exclusao)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/seguranca",
+        "pathname": "/configuracao/seguranca",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador SEGURANÇA SENHA SENHA ATUAL NOVA SENHA CONFIRMAR NOVA SENHA ALTERAR SENHA VERIFICAÇÃO EM DUAS ETAPAS Autenticação 2FA Camada extra de se",
+        "chars": 1277
+      }
+    },
+    {
+      "passo": "GET /me estado 2FA inicial",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "twoFactorAtivo": false
+      }
+    },
+    {
+      "passo": "2FA setup via UI (toggle -> modal com QR+secret)",
+      "ok": true,
+      "detalhe": {
+        "secretVisivel": true,
+        "tamanhoSecret": 32,
+        "qrVisivel": true,
+        "backup": "gravado"
+      }
+    },
+    {
+      "passo": "2FA ativar via UI (codigo TOTP + Confirmar e ativar)",
+      "ok": true,
+      "detalhe": {
+        "ativado": true
+      }
+    },
+    {
+      "passo": "GET /me confirma twoFactorAtivo=true",
+      "ok": true,
+      "detalhe": {
+        "twoFactorAtivo": true
+      }
+    },
+    {
+      "passo": "logout para provar o challenge",
+      "ok": true
+    },
+    {
+      "passo": "LOGIN com challenge 2FA real (tela + TOTP)",
+      "ok": true,
+      "detalhe": {
+        "sessaoComToken": true
+      }
+    },
+    {
+      "passo": "2FA desativar via UI (toggle -> modal -> codigo)",
+      "ok": true,
+      "detalhe": {
+        "desativadoViaUi": true
+      }
+    },
+    {
+      "passo": "GET /me confirma twoFactorAtivo=false (fixture restaurada)",
+      "ok": true,
+      "detalhe": {
+        "twoFactorAtivo": false,
+        "backupRemovido": true
+      }
+    },
+    {
+      "passo": "logout final",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "tour": "tour3-recheck",
+  "quando": "2026-08-27T12:40:35.501Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login senha ERRADA -> error state visivel",
+      "ok": true,
+      "detalhe": {
+        "mensagemErro": null,
+        "aindaNoLogin": true
+      }
+    },
+    {
+      "passo": "login func.a.stg (mobile 390)",
+      "ok": true
+    },
+    {
+      "passo": "mobile MeuPainel render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": true,
+        "resumo": "? MEU PAINEL Olá, técnico MEU DESEMPENHO HOJE SEMANA MÊS ATALHOS Bater ponto Registrar entrada, almoço e saída Registrar serviço Lançar um novo atendimento Meus serviços Ver histórico e status © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies Início Ponto Registrar Perfil Mais",
+        "chars": 291
+      }
+    },
+    {
+      "passo": "mobile meu-ponto render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meu-ponto",
+        "pathname": "/meu-ponto",
+        "loadingVisto": true,
+        "resumo": "MEU PONTO PONTO DE HOJE Próximo: Entrada Entrada Próxima batida — Saída para o almoço — Volta do almoço — Saída — BATER PONTO — ENTRADA Ao bater, capturamos uma selfie e sua localização para comprovar a jornada. Política de Privacidade. © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies Início Ponto Regist",
+        "chars": 335
+      }
+    },
+    {
+      "passo": "mobile bottom-nav presente",
+      "ok": true,
+      "detalhe": {
+        "temNav": true,
+        "itens": [
+          "Início",
+          "Ponto",
+          "Registrar",
+          "Meus serviços",
+          "Perfil",
+          "Documentos",
+          "Segurança",
+          "Ajuda"
+        ]
+      }
+    },
+    {
+      "passo": "mobile wizard func: criar pendente STG-AUD-REJ",
+      "ok": false,
+      "erro": "controle nao encontrado: ^Casa do cliente$ [/meus-servicos/novo | controles=[\"Voltar\",\"Continuar\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\",\"Início\",\"Ponto\",\"Registrar\",\"Perfil\",\"Mais\"] | campos=[\"select\",\"Endereço do atendimento (opcional)\",\"Descreva o serviço realizado\"]]"
+    },
+    {
+      "passo": "mobile meus-servicos: pendente aparece como Aguardando",
+      "ok": false,
+      "erro": "texto nao apareceu: /STG-AUD-REJ 280963/ | tela: \"REGISTROS MEUS SERVIÇOS 4 registros Todos (4) Aguardando (0) Aprovados (4) Rejeitados (0) Aprovado Casa do cliente Servico staging 497040 STG jor\""
+    },
+    {
+      "passo": "mobile mais render + logout",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/mais",
+        "pathname": "/mais",
+        "loadingVisto": true,
+        "resumo": "FUNC A STAGING MAIS MEU TRABALHO Meus serviços Histórico dos seus registros CONTA Documentos Contrato, RG, CNH e comprovantes Segurança Senha e acesso Ajuda Dúvidas e suporte Sair © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies Início Ponto Registrar Perfil Mais",
+        "chars": 278
+      }
+    },
+    {
+      "passo": "login dono.a.stg (recheck)",
+      "ok": true
+    },
+    {
+      "passo": "RECHECK /configuracao/usuarios (espera longa + DOM)",
+      "ok": true,
+      "detalhe": {
+        "lista": "APARECEU",
+        "contador": "3 contas cadastradas",
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador USUÁRIOS 3 contas cadastradas D Dono A Staging Dono você @dono.a.stg Ativo G Gestor A Staging Gestor @gestor.a.stg Ativo F Func A Staging Funcionário Técnico @func.a.stg Ativo + © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de co"
+      }
+    },
+    {
+      "passo": "RECHECK perfil tecnico via clique no card",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/tecnicos",
+        "chegouNoPerfil": false,
+        "temPonto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador EQUIPE TÉCNICOS 1 cadastrado F Func A Staging Ativo Funcionário +55 (11) 9 3000-0001 SERVIÇOS 4 LÍQUIDO R$ 463,00 CO"
+      }
+    },
+    {
+      "passo": "GET /metricas (catalogo)",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "ids": [
+          "faturamento-liquido",
+          "ticket-medio",
+          "comissao-total",
+          "servicos-concluidos",
+          "taxa-aprovacao",
+          "producao-por-tecnico",
+          "horas-trabalhadas",
+          "nota-media-avaliacao",
+          "taxa-recompra",
+          "taxa-conversao-orcamento"
+        ],
+        "shape": [
+          "metricas"
+        ]
+      }
+    },
+    {
+      "passo": "GET /metricas/:id + serie",
+      "ok": true,
+      "detalhe": {
+        "id": "faturamento-liquido",
+        "detStatus": 200,
+        "serieStatus": 200
+      }
+    },
+    {
+      "passo": "REPARTICAO calcular (agosto/2026)",
+      "ok": true,
+      "detalhe": {
+        "resultado": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador REPARTIÇÃO Fechamento por técnico DE ATÉ CALCULANDO... © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "temValores": false
+      }
+    },
+    {
+      "passo": "APROVACOES: fila tem o pendente STG-AUD-REJ",
+      "ok": false,
+      "erro": "texto nao apareceu: /STG-AUD-REJ 280963/ | tela: \"ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configur\""
+    },
+    {
+      "passo": "APROVACOES: REJEITAR o pendente (caminho negativo)",
+      "ok": false,
+      "erro": "controle nao encontrado: Rejeitar|Recusar [/aprovacoes | controles=[\"Painel\",\"Relatórios\",\"Equipe\",\"Serviços\",\"Aprovações\",\"Materiais\",\"Estoque\",\"Usuários\",\"Configurações\",\"Ajuda\",\"Voltar\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\"] | campos=[]]"
+    },
+    {
+      "passo": "mobile dono via token: sessao restaurada",
+      "ok": true,
+      "detalhe": {
+        "logado": true
+      }
+    },
+    {
+      "passo": "mobile dono: dashboard render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": true,
+        "resumo": "VISÃO GERAL PAINEL Bem-vindo ao AdmAi 👋 Seus serviços e finanças organizados direto do WhatsApp. Conectar o WhatsApp Registrar um serviço Acompanhar no painel VER TUTORIAL Dispensar HOJE SEMANA MÊS PERÍODO LUCRO DO PERÍODO R$ 370,40 após material e comissões 57.6% MARGEM SATISFAÇÃO Sem avaliações RECEITA BRUTA R$ 643,",
+        "chars": 992
+      }
+    },
+    {
+      "passo": "mobile dono: servicos render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/servicos",
+        "pathname": "/servicos",
+        "loadingVisto": true,
+        "resumo": "REGISTROS Serviços 4 registros Novo serviço Buscar por técnico Filtros Endereço LOCAL TODOS CASA DO CLIENTE CONTRATO PONTO DA LOJA OUTRO Func A Staging Casa do cliente Servico staging 497040 27/08/2026, 08:35 R$ 1,50 líquido Func A Staging Casa do cliente Servico staging 165162 27/08/2026, 01:49 R$ 1,50 líquido Func A ",
+        "chars": 650
+      }
+    },
+    {
+      "passo": "mobile dono: configuracao render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao",
+        "pathname": "/configuracao",
+        "loadingVisto": false,
+        "resumo": "CONFIGURAÇÕES OPERAÇÃO Exigir aprovação dos serviços dos funcionários Serviços lançados por funcionários ficam pendentes até um gestor aprovar. CONTA Perfil Nome, e-mail e telefone Segurança Senha e verificação em duas etapas Usuários Gerenciar acessos da equipe PLANO Plano e cobrança Assinatura e faturas © 2026 AdmAi·",
+        "chars": 400
+      }
+    },
+    {
+      "passo": "mobile dono: seguranca render (2FA visivel)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/seguranca",
+        "pathname": "/configuracao/seguranca",
+        "loadingVisto": true,
+        "resumo": "SEGURANÇA SENHA SENHA ATUAL NOVA SENHA CONFIRMAR NOVA SENHA ALTERAR SENHA VERIFICAÇÃO EM DUAS ETAPAS Autenticação 2FA Camada extra de segurança no login SESSÕES ATIVAS Este dispositivo 189.100.71.241 · Último acesso: 27/08/2026 Atual Chrome em Windows 189.100.71.241 · Último acesso: 27/08/2026 Chrome em Windows 189.100",
+        "chars": 1245,
+        "switch2faVisivel": true
+      }
+    },
+    {
+      "passo": "mobile dono: mais render (Sair presente)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/mais",
+        "pathname": "/mais",
+        "loadingVisto": false,
+        "resumo": "DONO A STAGING MAIS GESTÃO Serviços Todos os atendimentos Aprovações Serviços aguardando aval RECURSOS Materiais Catálogo de peças e preços Estoque Saldo e movimentações ADMINISTRAÇÃO Usuários Contas e permissões Configurações Preferências da conta Ajuda Dúvidas e suporte Sair © 2026 AdmAi·Privacidade·Termos·Cookies·Pr",
+        "chars": 371,
+        "temSair": true
+      }
+    },
+    {
+      "passo": "login gestor.a.stg (recheck)",
+      "ok": true
+    },
+    {
+      "passo": "RECHECK /tecnicos como gestor (espera longa + API)",
+      "ok": true,
+      "detalhe": {
+        "apiStatus": 200,
+        "apiQtd": 1,
+        "ui": "TECNICO_VISIVEL",
+        "contadorUi": "1 cadastrado"
+      }
+    },
+    {
+      "passo": "logout gestor (fim)",
+      "ok": true
+    }
+  ]
+}

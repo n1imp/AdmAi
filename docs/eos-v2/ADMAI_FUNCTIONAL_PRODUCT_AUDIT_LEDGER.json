@@ -933,14 +933,18 @@
           "Teste novo: 'desafio por TELEFONE nao oferece recuperacao por codigo (so TOTP)' em Login.recuperacao2fa.test.jsx",
           "Teste estendido: X (Fechar) e backdrop nao descartam o passo de codigos em Seguranca.2fa.test.jsx",
           "ERRATA registrada aqui: o commit 62281bd introduziu 17 testes (14 novos em 4 arquivos + 3 extensoes), nao 14 como diz a mensagem (historico nao reescrito por regra do repositorio).",
-          "Reconciliacoes de write-set preparadas para o gate do usuario (ver writeSetReconciliacoesPendentes)."
+          "Reconciliacoes de write-set preparadas para o gate do usuario (ver writeSetReconciliacoesPendentes).",
+          "ERRATA-2: a mensagem do commit 63041f3 diz 271/271; o real e 270/270 (269 + 1 teste novo; X/backdrop entrou como extensao). ecf4c14 e o ledger registram 270/270. Historico nao reescrito.",
+          "Evidencia bruta preservada: docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0..tour6.json (verificado sem secrets: apenas tamanhoSecret numerico e o rotulo literal codigosRec[0])."
         ],
         "vereditoFinalPendenteDe": "REVERIFY_IN_STAGING (E3) + resposta do REVISOR na mesma thread",
         "reverifyE3": {
           "quando": "2026-08-27T15:05Z",
           "deploy": "ecf4c14 via Deploy Staging run 33081925408 (gates anti-produção + ci-ok + CSP verdes)",
           "resultado": "tour6-reverify 12/12: FIX1 logout Sidebar (2x); FIX2a 10 códigos exibidos e modal só fecha no Concluir; FIX2b sessão real estabelecida com código de recuperação consumido pela UI; FIX3 redirects estoque/materiais; FIX4 contador sem zero transitório; fixture 2FA restaurada (twoFactorAtivo=false, backup removido). Bônus: perfil do técnico diagnosticado saudável por API (E2)."
-        }
+        },
+        "vereditoFinal": "USUARIO_NECESSARIO",
+        "vereditoFinalDetalhe": "REVISOR (mesma thread 01a04392, apos E3): nenhuma correcao tecnica adicional necessaria; lote funcional APROVADO tecnicamente; aprovacao FORMAL depende das 2 disposicoes de write-set, que pertencem ao usuario (writeSetReconciliacoesPendentes)."
       }
     }
   ],
@@ -959,6 +963,14 @@
       "artefatos": "chaveiro-painel/dist/** (build de validacao do vite; conteudo legitimo e reproduzivel)",
       "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
       "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-C1-GAP-FIX-BATCH', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'dist/** e efeito do vite build de validacao exigido pelo DECISOR; a declaracao deveria ter listado artefatos: [chaveiro-painel/dist]. Nenhuma escrita de produto fora do declarado.' })))\""
+    },
+    {
+      "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
+      "comparacao": "UNDECLARED_WRITE",
+      "causa": "A declaracao listou o DIRETORIO docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27; o gate compara SHA por CAMINHO DE ARQUIVO — os 7 resultado-tour*.json ficaram formalmente nao declarados. Conteudo intencional, revisado (sem secrets) e pedido pelo REVISOR.",
+      "licao": "Declaracoes de write-set devem listar ARQUIVOS, nunca diretorios.",
+      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
     }
   ],
   "gateDoUsuario": {
@@ -973,13 +985,14 @@
       "AUDITORIA: decidir se o MVP exige trilha CONSULTÁVEL (viraria gap de UI+endpoint) ou se BACKEND_ONLY encerra",
       "Messaging WhatsApp (AUD-GAP-MESSAGING-WHATSAPP): copy da landing/dashboard/ajuda vende WhatsApp no presente com a feature POST_MVP — decisão de mensagem de produto"
     ],
-    "reconciliacoesWriteSet": "Ver writeSetReconciliacoesPendentes (2 comandos prontos; disposição CONTEUDO_ACEITO_ORDEM_VIOLADA sugerida em ambos)",
+    "reconciliacoesWriteSet": "TRES disposicoes pendentes em writeSetReconciliacoesPendentes (comandos prontos; mesma disposicao CONTEUDO_ACEITO_ORDEM_VIOLADA sugerida nas tres). NOTA: este registro final foi escrito apos o fechamento da fatia AUD-D2 (parte do proprio registro do fechamento), em transparencia.",
     "validacoesNaoExecutadasDeclaradas": [
       "Stripe checkout/portal reais (BILLING) — operação financeira externa",
       "Troca de senha e logout-all na fixture compartilhada (SEGURANCA)",
       "Override granular de permissões (RBAC/ADMIN) e convite de usuário (e-mail real)",
       "Anonimização LGPD e autoexclusão de conta (irreversíveis por design)",
       "typecheck (tsc) do painel"
-    ]
+    ],
+    "vereditoRevisorFinal": "USUARIO_NECESSARIO — aplicar/rejeitar as 2 disposicoes de write-set encerra a revisao formal do lote AUD-C1."
   }
 }

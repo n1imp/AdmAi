@@ -1,0 +1,95 @@
+{
+  "tour": "tour4-final",
+  "quando": "2026-08-27T12:44:03.173Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login senha errada: capturar mensagem",
+      "ok": true,
+      "detalhe": {
+        "alertas": [
+          "Credenciais inválidas"
+        ],
+        "textoNovo": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 WhatsApp integrado Técnicos registram serviços no chat 02 Tempo re",
+        "logou": false
+      }
+    },
+    {
+      "passo": "login func.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "wizard func (select Local + campos) -> criar pendente",
+      "ok": true,
+      "detalhe": {
+        "local": "Casa do cliente",
+        "etapa2": "/meus-servicos/novo | controles=[\"Voltar\",\"Voltar\",\"Continuar\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\",\"Início\",\"Ponto\",\"Registrar\",\"Perfil\",",
+        "etapaFinal": "/meus-servicos/novo | controles=[\"Voltar\",\"Voltar\",\"Registrar serviço\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\",\"Início\",\"Ponto\",\"Registrar\",\"",
+        "pathname": "/meus-servicos/novo"
+      }
+    },
+    {
+      "passo": "func ve pendente como Aguardando (1)",
+      "ok": true,
+      "detalhe": {
+        "visto": true,
+        "aguardando": "Aguardando (1)"
+      }
+    },
+    {
+      "passo": "logout func",
+      "ok": true
+    },
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "aprovacoes: pendente visivel",
+      "ok": true,
+      "detalhe": {
+        "visivel": true,
+        "controles": "/aprovacoes | controles=[\"Painel\",\"Relatórios\",\"Equipe\",\"Serviços\",\"Aprovações\",\"Materiais\",\"Estoque\",\"Usuários\",\"Configurações\",\"Ajuda\",\"Voltar\",\"Aprovar\",\"Rejeitar\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências de cookies\"] | campos=[]"
+      }
+    },
+    {
+      "passo": "REJEITAR pendente (caminho negativo real)",
+      "ok": true,
+      "detalhe": {
+        "modal": "/aprovacoes | controles=[\"Painel\",\"Relatórios\",\"Equipe\",\"Serviços\",\"Aprovações\",\"Materiais\",\"Estoque\",\"Usuários\",\"Configurações\",\"Ajuda\",\"Voltar\",\"Sim, rejeitar\",\"Cancelar\",\"Privacidade\",\"Termos\",\"Cookies\",\"Preferências ",
+        "sumiuDaFila": true,
+        "fila": "da D Dono A Staging Administrador APROVAÇÕES Fila de aprovação dos funcionários Nenhum serviço aguardando aprovação Os serviços enviados pelos funcionários aparecerão aqui © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de co"
+      }
+    },
+    {
+      "passo": "perfil tecnico: clique no ELEMENTO MAIS PROFUNDO",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/tecnicos",
+        "chegouNoPerfil": false,
+        "temBancoHoras": false,
+        "temComissao": true,
+        "resumo": "ÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador EQUIPE TÉCNICOS 1 cadastrado F Func A Staging Ativo Funcionário +55 (11) 9 3000-0001 SERVIÇOS 4 LÍQUIDO R$ 463,00 COMISSÃO 20% PENDENTE R$ 92,60 Ver perfil completo + © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies"
+      }
+    },
+    {
+      "passo": "relatorio de ponto do tecnico (status via API)",
+      "ok": true,
+      "detalhe": {
+        "pulado": "sem id na URL"
+      }
+    },
+    {
+      "passo": "reparticao: calcular com espera longa",
+      "ok": true,
+      "detalhe": {
+        "temValores": true,
+        "resultado": "da D Dono A Staging Administrador REPARTIÇÃO Fechamento por técnico DE ATÉ CALCULAR CONSOLIDADO TOTAL SERVIÇOS 4 TICKET MÉDIO R$ 115,75 RECEITA BRUTA R$ 643,00 REC. LÍQUIDA R$ 463,00 POR TÉCNICO TÉCNICO SVÇ. LÍQUIDO % Func A Staging Bruto: R$ 643,00 4 R$ 463,00 100% Total 4 R$ 463,00 100% EXPORTAR PDF © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies"
+      }
+    },
+    {
+      "passo": "logout final",
+      "ok": true
+    }
+  ]
+}

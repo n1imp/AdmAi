@@ -1,0 +1,154 @@
+{
+  "tour": "tour0-unauth",
+  "quando": "2026-08-27T12:23:57.430Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "landing /",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": false,
+        "resumo": "Usamos cookies para manter sua sessão e melhorar o produto. Cookies necessários são essenciais para o funcionamento do painel. Os demais (analíticos e suporte) são opcionais. Saiba mais ACEITAR TODOS Apenas necessários ADMAI Entrar GESTÃO PARA CHAVEIROS · BETA SUA OPERAÇÃO DE CHAVEIRO SOB CONTROLE Registre serviços pel",
+        "chars": 1414
+      }
+    },
+    {
+      "passo": "login render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/login",
+        "pathname": "/login",
+        "loadingVisto": false,
+        "resumo": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 WhatsApp integrado Técnicos registram serviços no chat 02 Tempo real Dashboards e comissões automáticos 03 Multi-empresa seguro Dados isolados por",
+        "chars": 636
+      }
+    },
+    {
+      "passo": "h1 no /login (GAP-UX-CABECALHO)",
+      "ok": true,
+      "detalhe": 1
+    },
+    {
+      "passo": "termos",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/termos",
+        "pathname": "/termos",
+        "loadingVisto": false,
+        "resumo": "ADMAI Voltar TERMOS DE USO Última atualização: 28/06/2026 Este é um modelo. Substitua os dados entre colchetes e valide com um advogado antes de publicar. 1. Aceitação Ao criar uma conta ou usar o AdmAi, você concorda com estes Termos e com a Política de Privacidade. Se não concordar, não utilize a plataforma. 2. O ser",
+        "chars": 2962,
+        "modeloNaoValidado": true,
+        "barbersFlow": true,
+        "colchetes": [
+          "[Detalhe cobrança, cancelamento e reembolso.]",
+          "[NOME DA EMPRESA]",
+          "[valor]",
+          "[NOME DA EMPRESA]"
+        ]
+      }
+    },
+    {
+      "passo": "privacidade",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/privacidade",
+        "pathname": "/privacidade",
+        "loadingVisto": false,
+        "resumo": "ADMAI Voltar POLÍTICA DE PRIVACIDADE Última atualização: 28/06/2026 Este é um modelo. Substitua os dados entre colchetes e valide com um advogado antes de publicar. 1. Quem somos O AdmAi é um serviço (SaaS) que permite a empresas de chaveiro registrarem serviços via WhatsApp e gerirem receita, comissões, estoque e aval",
+        "chars": 3717,
+        "modeloNaoValidado": true,
+        "barbersFlow": true
+      }
+    },
+    {
+      "passo": "cookies",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/cookies",
+        "pathname": "/cookies",
+        "loadingVisto": false,
+        "resumo": "ADMAI Voltar POLÍTICA DE COOKIES Última atualização: 28/06/2026 1. O que são cookies Cookies são pequenos arquivos de texto armazenados no seu navegador ou dispositivo quando você acessa o AdmAi. Usamos tecnologias similares (localStorage, sessionStorage) para o mesmo propósito. 2. Cookies que usamos • Necessários — au",
+        "chars": 1738
+      }
+    },
+    {
+      "passo": "recuperar-senha render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/recuperar-senha",
+        "pathname": "/recuperar-senha",
+        "loadingVisto": false,
+        "resumo": "ADMAI RECUPERAR SENHA Digite seu e-mail e enviamos um link de redefinição. E-MAIL ENVIAR LINK Voltar ao login",
+        "chars": 109
+      }
+    },
+    {
+      "passo": "deep-link auth-negativo /servicos -> login",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/servicos",
+        "pathname": "/login",
+        "loadingVisto": false,
+        "resumo": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 WhatsApp integrado Técnicos registram serviços no chat 02 Tempo real Dashboards e comissões automáticos 03 Multi-empresa seguro Dados isolados por",
+        "chars": 636
+      }
+    },
+    {
+      "passo": "deep-link auth-negativo /configuracao -> login",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao",
+        "pathname": "/login",
+        "loadingVisto": false,
+        "resumo": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 WhatsApp integrado Técnicos registram serviços no chat 02 Tempo real Dashboards e comissões automáticos 03 Multi-empresa seguro Dados isolados por",
+        "chars": 636
+      }
+    },
+    {
+      "passo": "GET /health (backend)",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "body": {
+          "status": "ok",
+          "whatsapp": "desconectado",
+          "uptime": 2360.262849282,
+          "timestamp": "2026-08-27T12:23:55.364Z",
+          "checks": {
+            "database": "ok"
+          }
+        }
+      }
+    },
+    {
+      "passo": "GET /api/auth/providers",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "body": {
+          "google": false,
+          "microsoft": false,
+          "apple": false
+        }
+      }
+    },
+    {
+      "passo": "GET /api/usuarios sem token -> 401/403",
+      "ok": true,
+      "detalhe": {
+        "status": 401
+      }
+    },
+    {
+      "passo": "security headers do painel",
+      "ok": true,
+      "detalhe": {
+        "csp": "default-src 'self'; script-src 'self' https://accounts.google.com https://apis.google.com https://alcdn.msauth.net https",
+        "xfo": "DENY",
+        "nosniff": "nosniff"
+      }
+    }
+  ]
+}

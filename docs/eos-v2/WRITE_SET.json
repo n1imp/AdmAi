@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD-D1-REVERIFY-CLOSE",
-  "titulo": "Fase D: resultados do REVERIFY E3 (tour6 12/12) no ledger + fechamento de ciclo no 02_CURRENT_STATE.md",
+  "sliceId": "AUD-D2-EVIDENCE-PRESERVE",
+  "titulo": "Preservar evidencia bruta dos tours 0-6 no repo (apontamento do REVISOR) + errata-2 (270/270)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T14:41:39.899Z",
+  "declaradoEm": "2026-08-27T14:47:07.987Z",
   "baseCommitPorLane": {
-    "HARNESS": "ecf4c1464921932f674be6424ba2726e97e40f82"
+    "HARNESS": "0cfc5dc6c434cd299caf3bd3bcc36a5ff1b13eb4"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -616,7 +616,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "93b6b6811abc7f673ea9571213e63b8bf2c631a494023c0e58a0db7f076f472c",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "eda60dc2a5ded2f3dfe3ae56a8aa7ec1246cbab385a69e51052247427660bceb",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
@@ -638,14 +638,14 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "53defcd1aff22bb47b9211885a6ca47af15b9812fb13e6561a257860937c9514",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "921bc68204a9d0afd032b6e94dc11cd94e6abd08973da434648604cfaf891ad3",
+      "docs/eos-v2/WRITE_SET.json": "a275e46c8fcfae648404811129a072ec9225f042fc2c72502ad80dd0707371ea",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "11532e018b84fc0310f8e1a5b0156194007064a7142341e2da5d467ab8d0566e",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
       "docs/eos-v2/bootstrap/SL-BOOT-01-BASELINE.md": "a3fc6940da450150f53e50235b5af72a65a44e4e7a21ea505fced70d1ee8f3e3",
       "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md": "5dff019c75a2e45115cc32791306b2b4be1612bc70760f1fe7a171b210157d2f",
-      "docs/eos-v2/current/02_CURRENT_STATE.md": "fcbe25f7eb725d43d136b1d529fc263e61d1dc4933b455acd6537cf72572fe83",
+      "docs/eos-v2/current/02_CURRENT_STATE.md": "9b4bf7590f19bbbdd382814370c702f38ae803f03915c9c7df6514068aef6bbe",
       "docs/eos-v2/current/03_PROJECT_INDEX.md": "a74f81e76df05ba22fa4596bdaf5c9ef5d88dcb65d1ad3bbb6878ea6e93b7759",
       "docs/eos-v2/current/04_DECISION_INVARIANTS.md": "27c5a338209c1842d0d4636a50a5b51222e44f22be524a34afd4dc8ebdb6edcf",
       "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md": "567eb1b04919fa4884e16e1fb33e18e28c3de43c7107b0ba4c660d2130d1f043",
@@ -2587,30 +2587,30 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27",
       "precisao": "BOUNDED",
-      "proposito": "gaps RESOLVED_REVERIFIED, upgrades de classificacao, checkpoint Fase D",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "93b6b6811abc7f673ea9571213e63b8bf2c631a494023c0e58a0db7f076f472c",
+      "proposito": "JSONs brutos resultado-tour0..tour6 (sem secrets; backups de 2FA foram destruidos)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
+      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "FUNCTIONAL_AUDIT_STATUS, READY_FRONTIER e nota do deploy staging ecf4c14",
+      "proposito": "errata-2 (63041f3 diz 271/271; real 270/270) + veredito final USUARIO_NECESSARIO + ponteiro da evidencia preservada",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "fcbe25f7eb725d43d136b1d529fc263e61d1dc4933b455acd6537cf72572fe83",
+      "shaNaDeclaracao": "eda60dc2a5ded2f3dfe3ae56a8aa7ec1246cbab385a69e51052247427660bceb",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "Fase D fechada apos declaracao correta: ledger (reverify 12/12 + gate do usuario) e CURRENT_STATE escritos DEPOIS de declarar e ANTES de commitar.",
+  "bloqueiaIntegracao": true,
+  "nota": "Evidencia dos tours preservada + errata-2 + veredito final USUARIO_NECESSARIO registrados; escrita toda apos declarar, fechamento antes do commit.",
   "aviso": "Declaracao ENCERRADA."
 }

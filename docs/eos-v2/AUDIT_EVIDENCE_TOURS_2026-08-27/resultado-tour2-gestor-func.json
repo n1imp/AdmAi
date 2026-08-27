@@ -1,0 +1,209 @@
+{
+  "tour": "tour2-gestor-func",
+  "quando": "2026-08-27T12:28:51.251Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login gestor.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "home GestorHome render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor OPERAÇÃO Operação de hoje Indicadores, fila de serviços, aprovações e equipe. HOJE SEMANA MÊS APROVAÇÕES PENDENTES — SATISFAÇÃO Sem avalia",
+        "chars": 561
+      }
+    },
+    {
+      "passo": "GET /gestor/indicadores",
+      "ok": true,
+      "detalhe": {
+        "status": 200,
+        "keys": [
+          "pendentes",
+          "presentes",
+          "totalTecnicos",
+          "presencaHoje",
+          "avaliacoes"
+        ]
+      }
+    },
+    {
+      "passo": "aprovacoes EMPTY state (pendente foi aprovado no acceptance)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/aprovacoes",
+        "pathname": "/aprovacoes",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor APROVAÇÕES Fila de aprovação dos funcionários Nenhum serviço aguardando aprovação Os serviços enviados pelos funcionários aparecerão aqui ",
+        "chars": 383,
+        "aguardaAprovacao": false
+      }
+    },
+    {
+      "passo": "servicos render (gestor)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/servicos",
+        "pathname": "/servicos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor REGISTROS Serviços 4 registros Novo serviço Buscar por técnico Filtros Endereço LOCAL TODOS CASA DO CLIENTE CONTRATO PONTO DA LOJA OUTRO F",
+        "chars": 802
+      }
+    },
+    {
+      "passo": "tecnicos render (gestor)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/tecnicos",
+        "pathname": "/tecnicos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor EQUIPE TÉCNICOS 0 cadastrados + © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "chars": 277
+      }
+    },
+    {
+      "passo": "assinatura como gestor (visibilidade)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/assinatura",
+        "pathname": "/assinatura",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor ASSINATURA PERÍODO DE TESTE Teste gratuito até 10/09/2026, 01:49. Assine para continuar usando o painel depois dessa data. Somente o admin",
+        "chars": 430,
+        "billingStatus": 200
+      }
+    },
+    {
+      "passo": "configuracao/usuarios como gestor (RBAC UI)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/usuarios",
+        "pathname": "/configuracao",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE OPERAÇÃO Operação Aprovações Serviços EQUIPE Equipe RECURSOS Estoque Materiais ACOMPANHAMENTO Relatórios CONTA Configurações Ajuda G Gestor A Staging Gestor CONFIGURAÇÕES CONTA Perfil Nome, e-mail e telefone Segurança Senha e verificação em duas etapas PLANO Plano e cobrança Assinatura e fatura",
+        "chars": 385
+      }
+    },
+    {
+      "passo": "logout gestor",
+      "ok": true
+    },
+    {
+      "passo": "login func.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "home MeuPainel render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/",
+        "pathname": "/",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário ? MEU PAINEL Olá, técnico MEU DESEMPENHO HOJE SEMANA MÊS ATALHOS Bater ponto Registrar entrada, almoço e saída Registrar serviço Lançar um novo atendimento Meus serviços Ver hi",
+        "chars": 400
+      }
+    },
+    {
+      "passo": "meu-ponto render (estado do dia)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meu-ponto",
+        "pathname": "/meu-ponto",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário MEU PONTO PONTO DE HOJE Próximo: Entrada Entrada Próxima batida — Saída para o almoço — Volta do almoço — Saída — BATER PONTO — ENTRADA Ao bater, capturamos uma selfie e sua lo",
+        "chars": 444
+      }
+    },
+    {
+      "passo": "meus-servicos render",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meus-servicos",
+        "pathname": "/meus-servicos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário REGISTROS MEUS SERVIÇOS 4 registros NOVO Todos (4) Aguardando (0) Aprovados (4) Rejeitados (0) Aprovado Casa do cliente Servico staging 497040 STG jornada 497040 27/08/2026, 08",
+        "chars": 828
+      }
+    },
+    {
+      "passo": "meus-servicos/novo render (wizard funcionario)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meus-servicos/novo",
+        "pathname": "/meus-servicos/novo",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário REGISTRAR SERVIÇO 1 Serviço 2 Valores 3 Revisão Etapa 1 de 3: Serviço Local Casa do cliente Contrato Ponto da loja Outro Endereço Descrição do serviço * Continuar © 2026 AdmAi·",
+        "chars": 370
+      }
+    },
+    {
+      "passo": "GET /me/documentos (flag ligada?)",
+      "ok": true,
+      "detalhe": {
+        "status": 404,
+        "qtd": null,
+        "erro": "Recurso não disponível"
+      }
+    },
+    {
+      "passo": "DOCUMENTOS indisponivel para sondar (registrar achado)",
+      "ok": true,
+      "detalhe": {
+        "motivo": "status 404 Recurso não disponível"
+      }
+    },
+    {
+      "passo": "meus-documentos render (estado final)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/meus-documentos",
+        "pathname": "/meus-documentos",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário DOCUMENTOS MEUS DOCUMENTOS Armazenados em local privado e seguro. © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "chars": 273
+      }
+    },
+    {
+      "passo": "RBAC UI: /configuracao/usuarios como funcionario",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/configuracao/usuarios",
+        "pathname": "/configuracao",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário CONFIGURAÇÕES CONTA Perfil Nome, e-mail e telefone Segurança Senha e verificação em duas etapas PLANO Plano e cobrança Assinatura e faturas © 2026 AdmAi·Privacidade·Termos·Cook",
+        "chars": 347
+      }
+    },
+    {
+      "passo": "estoque como funcionario (visibilidade)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/estoque",
+        "pathname": "/estoque",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário ESTOQUE 7D 30D 90D Não foi possível carregar o estoque. Nenhum material cadastrado Cadastre materiais na aba Materiais e dê entrada no estoque Ver catálogo de materiais © 2026 ",
+        "chars": 376
+      }
+    },
+    {
+      "passo": "mais render (funcionario)",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/mais",
+        "pathname": "/mais",
+        "loadingVisto": true,
+        "resumo": "ADMAI PAINEL DE CONTROLE MEU TRABALHO Início Ponto Registrar Meus serviços CONTA Perfil Documentos Segurança Ajuda F Func A Staging Funcionário FUNC A STAGING MAIS MEU TRABALHO Meus serviços Histórico dos seus registros CONTA Documentos Contrato, RG, CNH e comprovantes Segurança Senha e acesso Ajuda Dúvidas e suporte S",
+        "chars": 387
+      }
+    },
+    {
+      "passo": "logout funcionario",
+      "ok": true
+    }
+  ]
+}

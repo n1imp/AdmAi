@@ -1,0 +1,94 @@
+{
+  "tour": "tour6-reverify",
+  "quando": "2026-08-27T14:39:46.340Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "FIX4 contador usuarios: sem zero transitorio",
+      "ok": true,
+      "detalhe": {
+        "zeroTransitorio": false,
+        "travessaoCedo": true,
+        "contadorFinal": "3 contas cadastradas"
+      }
+    },
+    {
+      "passo": "RECHECK perfil tecnico: conteudo com espera longa",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/tecnicos/557",
+        "conteudoCarregou": true,
+        "temComissao": false,
+        "temPonto": false,
+        "pontoApiStatus": 200,
+        "resumo": "rações Ajuda D Dono A Staging Administrador Sair TÉCNICO © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies"
+      }
+    },
+    {
+      "passo": "FIX2a 2FA: setup + ativar via UI + CODIGOS EXIBIDOS",
+      "ok": true,
+      "detalhe": {
+        "codigosExibidos": 10,
+        "modalFechouNoConcluir": true
+      }
+    },
+    {
+      "passo": "FIX1 logout pela SIDEBAR desktop",
+      "ok": true,
+      "detalhe": {
+        "sairVisivel": true,
+        "tokenLimpo": true
+      }
+    },
+    {
+      "passo": "FIX2b login por CODIGO DE RECUPERACAO real",
+      "ok": true,
+      "detalhe": {
+        "sessaoPorCodigoDeRecuperacao": true,
+        "codigoConsumido": "codigosRec[0]"
+      }
+    },
+    {
+      "passo": "2FA desativar via UI (restaurar fixture)",
+      "ok": true,
+      "detalhe": {
+        "twoFactorAtivo": false,
+        "backupRemovido": true
+      }
+    },
+    {
+      "passo": "logout final dono (sidebar de novo)",
+      "ok": true,
+      "detalhe": {
+        "ok": true
+      }
+    },
+    {
+      "passo": "login func.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "FIX3 /estoque redireciona funcionario",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/configuracao",
+        "semMensagensContraditorias": true
+      }
+    },
+    {
+      "passo": "FIX3 /materiais redireciona funcionario",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/configuracao"
+      }
+    },
+    {
+      "passo": "logout func",
+      "ok": true
+    }
+  ]
+}
