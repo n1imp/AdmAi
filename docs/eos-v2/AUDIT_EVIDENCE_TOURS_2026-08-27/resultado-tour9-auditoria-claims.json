@@ -1,0 +1,145 @@
+{
+  "tour": "tour9-auditoria-claims",
+  "quando": "2026-08-27T19:35:19.908Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "gerar eventos: criar usuario descartavel (usuario.criado)",
+      "ok": true,
+      "detalhe": {
+        "id": 1707
+      }
+    },
+    {
+      "passo": "gerar evento: PATCH permissoes (usuario.permissoes_alteradas)",
+      "ok": true,
+      "detalhe": {
+        "ok": true
+      }
+    },
+    {
+      "passo": "gerar evento: DELETE usuario (usuario.excluido) — limpa a conta",
+      "ok": true,
+      "detalhe": {
+        "ok": true
+      }
+    },
+    {
+      "passo": "AUDITORIA API: GET /auditoria 200 com os eventos",
+      "ok": true,
+      "detalhe": {
+        "qtd": 3,
+        "temCriado": true,
+        "temPerm": true,
+        "temExcluido": true,
+        "semSegredo": true,
+        "autorPresente": true
+      }
+    },
+    {
+      "passo": "AUDITORIA UI: card em Configuracao -> pagina lista eventos",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/configuracao/auditoria",
+        "temEventos": true,
+        "temAutor": true,
+        "resumo": "ÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador Sair AUDITORIA Registro das ações administrativas da sua empresa (usuários, permissões e privacidade). Usuário excluído STG-AUD Audit User · funcionario 27/08/2026, 16:34 · por Dono A Staging · 189.100.71.241 Permissões alteradas permis"
+      }
+    },
+    {
+      "passo": "AUDITORIA paginacao: take=1 devolve proximoCursor",
+      "ok": true,
+      "detalhe": {
+        "p1id": 222,
+        "p2id": 221,
+        "distintos": true,
+        "cursorFunciona": true
+      }
+    },
+    {
+      "passo": "AUDITORIA negativo: cursor de fora do tenant -> 400 opaco",
+      "ok": true,
+      "detalhe": {
+        "status": 400,
+        "negadoOpaco": true
+      }
+    },
+    {
+      "passo": "CLAIMS: dashboard do dono sem CTA/claim WhatsApp presente",
+      "ok": true,
+      "detalhe": {
+        "claimPresente": false,
+        "ok": true
+      }
+    },
+    {
+      "passo": "CLAIMS: /ajuda sem secoes do robo WhatsApp",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/ajuda",
+        "pathname": "/ajuda",
+        "loadingVisto": false,
+        "resumo": "ADMAI PAINEL DE CONTROLE VISÃO Painel Relatórios GESTÃO Equipe Serviços Aprovações RECURSOS Materiais Estoque ADMINISTRAÇÃO Usuários Configurações Ajuda D Dono A Staging Administrador Sair COMO USAR Guia rápido do AdmAi. Toque em uma seção para ver o passo a passo. Fechar o período (Repartição) Vá em Mais → Repartição.",
+        "chars": 764,
+        "claimPresente": false,
+        "ok": true
+      }
+    },
+    {
+      "passo": "logout dono",
+      "ok": true
+    },
+    {
+      "passo": "CLAIMS: landing publica sem claim WhatsApp presente",
+      "ok": true,
+      "detalhe": {
+        "claimPresente": false,
+        "temMencaoFutura": false,
+        "ok": true,
+        "trecho": ""
+      }
+    },
+    {
+      "passo": "CLAIMS: /login (pitch lateral) sem claim WhatsApp presente",
+      "ok": true,
+      "detalhe": {
+        "rotaPedida": "/login",
+        "pathname": "/login",
+        "loadingVisto": false,
+        "resumo": "ADMAI SISTEMA OPERACIONAL DE CAMPO SUA OPERAÇÃO SOB CONTROLE Registro de serviços, gestão de técnicos, estoque e avaliações de clientes — tudo num painel só. 01 Registro rápido Serviços lançados em segundos no painel 02 Tempo real Dashboards e comissões automáticos 03 Multi-empresa seguro Dados isolados por conta v1.0 ",
+        "chars": 624,
+        "claimPresente": false,
+        "ok": true,
+        "trecho": ""
+      }
+    },
+    {
+      "passo": "login gestor.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "AUDITORIA RBAC: gestor -> GET /auditoria 403",
+      "ok": true,
+      "detalhe": {
+        "status": 403,
+        "negado": true
+      }
+    },
+    {
+      "passo": "AUDITORIA RBAC: deep-link /configuracao/auditoria redireciona (nao-admin)",
+      "ok": true,
+      "detalhe": {
+        "pathname": "/configuracao",
+        "redirecionado": true
+      }
+    },
+    {
+      "passo": "logout gestor",
+      "ok": true
+    }
+  ]
+}

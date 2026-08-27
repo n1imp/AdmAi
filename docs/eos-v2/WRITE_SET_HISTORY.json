@@ -65268,9 +65268,23 @@
       "bloqueiaIntegracao": false,
       "nota": "P34 fechado apos declarar: Auditoria.jsx + rota + card + claims WhatsApp gated + etapaOtp gate; dist declarado; suite 278/278, lint 0 erros, build OK, format OK.",
       "declaradoEm": "2026-08-27T18:50:48.120Z"
+    },
+    {
+      "sliceId": "AUD2-P3456-LEDGER",
+      "titulo": "P3/P4/P5/P6: AUDITORIA FEATURE_COMPLETE + ZERO_CURRENT_WHATSAPP_FALSE_CLAIMS + reavaliacao (14 FC) + evidencia tour9",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P3456 fechado: ledger com 14 FEATURE_COMPLETE + tour9 evidencia; escrita apos declarar.",
+      "declaradoEm": "2026-08-27T19:37:38.558Z"
     }
   ],
-  "geradoEm": "2026-08-27T19:04:33.165Z",
+  "geradoEm": "2026-08-27T19:37:41.063Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
