@@ -59681,9 +59681,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Prefixo corrigido; validador 4/4",
       "declaradoEm": "2026-08-27T00:52:49.823Z"
+    },
+    {
+      "sliceId": "STG-K-MIGRATE-POOLER-FIX-01",
+      "titulo": "Fix do stall do validate:staging: global-setup escolhe URL de migracao provadamente do MESMO banco fora do pooler 6543 + fail-fast anti-hang",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Fix + verify alvo concluidos; retry full em execucao observavel",
+      "declaradoEm": "2026-08-27T01:04:57.123Z"
     }
   ],
-  "geradoEm": "2026-08-27T00:52:52.939Z",
+  "geradoEm": "2026-08-27T01:06:39.694Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

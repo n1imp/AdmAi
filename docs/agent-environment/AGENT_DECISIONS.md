@@ -290,3 +290,24 @@ posterior for destrutiva — evidência de fixture deve ser re-observada imediat
 
 Nota: ID canônico do finding no ledger = `SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION`
 (prefixo SEC-HB- exigido pela convenção de refs do completion-ledger; item no backlog).
+
+### STALL RECOVERY — validate:staging travado 50min (2026-08-27) → root cause → fix → retry
+
+**Evidência de processo**: árvore node/vitest/prisma com ~3s de CPU acumulada em ~50min; staging
+com 0 advisory locks e 0 atividade; output capturado: `Datasource "db": ... at
+"aws-1-sa-east-1.pooler.supabase.com:6543"` no passo 3/3. **Classe: DATABASE_WAIT.**
+**Root cause**: conflito entre SAFE-MIG-01 (global-setup fixa `DIRECT_URL:=DATABASE_URL` para
+garantir migration no MESMO banco dos testes) e validate:staging (DATABASE_URL = pooler
+TRANSACTION 6543) ⇒ `prisma migrate deploy` através de pgbouncer transaction-mode trava nos
+locks indefinidamente — exatamente o cenário que o próprio validate-staging bloqueia no passo 1.
+**Fix (test-harness only)**: `escolherUrlDeMigracao()` — usa DIRECT_URL SOMENTE se provadamente
+o mesmo banco (username+dbname+família de host) e porta != 6543; senão DATABASE_URL; escolha
+final em 6543 ⇒ throw imediato (anti-hang: erro em ms, nunca 50min mudo). Invariante SAFE-MIG-01
+PRESERVADO e endurecido (igualdade provada em vez de forçada). Verify: 4/4 casos + setup() real
+9.1s via :5432. Kill da árvore stalled provado sem órfãos; gate K = CORRECTION_REQUIRED → retry.
+**Política operacional registrada**: BACKGROUND_RUNNING != HEALTHY; LONG_RUNNING != PROGRESSING;
+mesmo-erro-sem-informação-nova ⇒ não seguir esperando; progress-timeout em background de caminho
+crítico (sem output novo por ~10min ⇒ diagnosticar/terminar); NUNCA `| tail` em task longa de
+background (buffer esconde o progresso — observabilidade foi perdida neste stall por isso).
+**Nuance do finding SEC-HB-STG-INTEGRATION-FIXTURE-DESTRUCTION**: sob validate:staging a suíte
+mira o STAGING (finding válido); localmente mira o container descartável admai-test-pg (55432).

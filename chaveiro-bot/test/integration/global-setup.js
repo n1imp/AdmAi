@@ -22,6 +22,46 @@ import { execSync } from 'node:child_process';
  *   esteja certo. Aqui o ambiente do subprocesso é montado explicitamente: a migration vai para o
  *   MESMO banco que os testes usam, e `DIRECT_URL` herdado é descartado.
  */
+/* COMPLEMENTO AO SAFE-MIG-01 [SEC-HB — stall de 2026-08-27, root cause provado]:
+ * fixar `DIRECT_URL := DATABASE_URL` era seguro no caso local (55432, conexão direta),
+ * mas sob `validate:staging` o DATABASE_URL é o POOLER TRANSACTION (6543) do Supabase —
+ * e `prisma migrate deploy` através de pgbouncer em transaction mode TRAVA para sempre
+ * nos locks (observado: 3s de CPU em 50min, datasource "...pooler...:6543", zero
+ * atividade no servidor). O invariante do SAFE-MIG-01 continua valendo: a migration só
+ * pode ir para o MESMO banco dos testes. A regra agora prova essa igualdade em vez de
+ * forçá-la pela troca cega de URL:
+ *   - usa `DIRECT_URL` do ambiente SOMENTE se for provadamente o mesmo banco que
+ *     `DATABASE_URL` (mesmo username, mesmo dbname, mesmo hostname OU ambos na família
+ *     pooler.supabase.com) e não estiver na porta 6543;
+ *   - senão, mantém `DATABASE_URL` (caso local: conexão já é direta);
+ *   - e se a escolha FINAL ainda for porta 6543, falha ALTO imediatamente — um erro em
+ *     1s é diagnosticável; um hang de 50min não. */
+export function escolherUrlDeMigracao(env = process.env) {
+  const runtime = new URL(env.DATABASE_URL);
+  let escolhida = env.DATABASE_URL;
+  if (env.DIRECT_URL) {
+    try {
+      const direta = new URL(env.DIRECT_URL);
+      const mesmoBanco =
+        direta.username === runtime.username &&
+        direta.pathname === runtime.pathname &&
+        (direta.hostname === runtime.hostname ||
+          (/(^|\.)pooler\.supabase\.com$/.test(direta.hostname) &&
+            /(^|\.)pooler\.supabase\.com$/.test(runtime.hostname)));
+      if (mesmoBanco && direta.port !== '6543') escolhida = env.DIRECT_URL;
+    } catch {
+      /* DIRECT_URL malformada ⇒ descartada (mesmo efeito do SAFE-MIG-01 original) */
+    }
+  }
+  if (new URL(escolhida).port === '6543') {
+    throw new Error(
+      'migrations através do pooler TRANSACTION (porta 6543) travam nos locks do Prisma — ' +
+        'forneça um DIRECT_URL do MESMO banco (porta 5432/direta) para os testes de integração.'
+    );
+  }
+  return escolhida;
+}
+
 export async function setup() {
   if (!process.env.DATABASE_URL) {
     throw new Error(
@@ -29,10 +69,11 @@ export async function setup() {
     );
   }
 
+  const urlDeMigracao = escolherUrlDeMigracao();
   execSync('npx prisma migrate deploy', {
     stdio: 'inherit',
-    /* Sobrepõe `DIRECT_URL` em vez de apenas repassar `process.env`: repassar deixaria o valor
-       vindo do `.env` intacto, que é exatamente o defeito. */
-    env: { ...process.env, DIRECT_URL: process.env.DATABASE_URL },
+    /* Ambos fixados na URL escolhida: `prisma.config.ts` resolve DIRECT_URL ?? DATABASE_URL,
+       e qualquer valor herdado de um `.env` alheio é descartado (defeito original do SAFE-MIG-01). */
+    env: { ...process.env, DATABASE_URL: urlDeMigracao, DIRECT_URL: urlDeMigracao },
   });
 }
