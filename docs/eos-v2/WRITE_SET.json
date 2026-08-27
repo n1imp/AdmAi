@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "STG-APP-OPAQUE-SECRETS-01",
-  "titulo": "Transferencia OPACA dos secrets externos: fase external-secrets no bootstrap (GH env-secrets -> Railway) + drenador local de clipboard (valor nunca no modelo)",
+  "sliceId": "STG-CHAIN-EXEC-01",
+  "titulo": "Evidencias da cadeia real de staging: USER_GATE PASS -> connect -> health -> publish -> provas CSP/CORS/network -> seed -> bucket -> H/I/GUC",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
-  "estado": "CLOSED",
-  "declaradoEm": "2026-08-26T02:45:49.188Z",
+  "estado": "DECLARED",
+  "declaradoEm": "2026-08-27T00:18:43.551Z",
   "baseCommitPorLane": {
-    "HARNESS": "b15a82f12792216d03364e0f0387d3a38eacf629"
+    "HARNESS": "7a3f8b96383578e8d1b1aff9b4ba5dd8b0da747f"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Principio OPAQUE_TRANSFER != MODEL_READ (ja aplicado nos 3 internos). Nova fase external-secrets: le secrets do GitHub Environment staging (DATABASE_URL/DIRECT_URL/SUPABASE_SERVICE_ROLE_KEY/RESEND_API_KEY quando presentes) e upserta no Railway via API — valores so no runner. Drenador local tools/drenar-clipboard-secret.mjs: Get-Clipboard -> arquivo 600 -> distribui p/ .env.staging (campo nomeado) e gh secret set — sem echo, sem argv com valor, valida SO a FORMA (regex) reportando VALID/INVALID, limpa clipboard e shred do temp. Requisitos 1-8 da diretiva cumpridos.",
+  "notaDeMetodo": "So documentos de governanca (ledger + decisions). Execucao real com provas verificaveis por runs/HTTP; nenhuma mudanca de codigo nesta fatia.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -28,7 +28,7 @@
       ".github/workflows/deploy.yml": "2408b0d13ef9db5b72f3324bd33ffb523f122c2a6e9d99f8ecfa7ee00ef81a59",
       ".github/workflows/release.yml": "b3e4489396437d4ba09fd3390d86148d802b9f9aabfa85c4e00a268dff3fb7c2",
       ".github/workflows/security.yml": "a6dd019103bd7a8083fbf8f91b891730c9c8fe76bffa528c30004853794c15b5",
-      ".github/workflows/staging-backend-bootstrap.yml": "27e4d9f487f00257ba4bbc637d782f0260cd8853ec41be733030c9e53aa23a09",
+      ".github/workflows/staging-backend-bootstrap.yml": "fbde40caedfd97663188ac8362573d2d307726a6a95fc716fb72090ed9d7d24f",
       ".gitignore": "df256c858cb833acf3c4b08b646d5114465ce4fbe6c466a1a568beaf8f89e331",
       ".gitleaks.toml": "68f349e50ec07b0ac44e836f76d7ca856f6c67e026c5fcd403224dd04084b3c5",
       "AGENTS.md": "b3a4450cf51f4f4f2fcb9cc96a44abefb8aa3455f3ee2fbcdc0bb9c7c10365da",
@@ -568,7 +568,7 @@
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "docs/agent-environment/AGENT_DECISIONS.md": "1ba000f7c7e46bb95d68e7862b52515d22f80f5b9527e99fca9dcd2b47ae3f0d",
+      "docs/agent-environment/AGENT_DECISIONS.md": "4d446a5aa883fb764a2633f89febbd5dbf22656ab6d2746eaecc353b81f46a98",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
       "docs/agent-environment/EOS_NEXT_SESSION_HANDOFF.md": "e3234ee968175be5f61335c9b55e1aadd75f54e43794a217e44e9ee0344253e6",
@@ -607,8 +607,8 @@
       "docs/eos-v2/04_GAP_ANALYSIS.md": "48c29114c75a4912b2e9ead06bad3e7b2ddaeff35b29200555c3c237b8ca326d",
       "docs/eos-v2/05_MIGRATION_PLAN.md": "308873ecdd0621900820065bbf60edfc6f7a9a98e47acbca755c046986033fbe",
       "docs/eos-v2/06_IMPLEMENTATION_STATE.md": "9209d27ae30343cfea5cb50f65460a5bed031999d2aa2e155fec6f8370db6f91",
-      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "a45c7dd1bcc687880d2b76e03cb14ea024b86bf2e1e7b6c3c1697635b997d595",
-      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "5ec525d670bbbc348062bcda92f60d78c0e595cddadf79f5e1bc98ab91eea2f6",
+      "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md": "0dde4782e4a70b1841c286889fdbaacba368e545992cc7788358fd52308513dd",
+      "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "b928abbad65fa481cdb129e3a9c87a3dc8730d726cef00189fea55cc62462b43",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
@@ -631,8 +631,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "35c1239b48c7e1166cec9b43d2f30f6f9921d2f0049bccb39120b6e41b24bdc0",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "85338b539fb8844b80b3ace98dc541d5c91dbc5f50521de98466b2d5e992c39d",
+      "docs/eos-v2/WRITE_SET.json": "adecfc1d926d79b65f31ce6789b1e1f978aacd199c2838ae6fcc174ea1d6ceb4",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "e3d55f644f233970f41291aea49762ef57cb0f431f1e9eca469900a083ecb626",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -694,6 +694,7 @@
       "tools/codex-policy/approval-policy.test.mjs": "456f3b95e0cc245bed05e1897a695a44cf37eed58bef41ed3d1bcf07ad9f696d",
       "tools/codex-policy/envoltorio.test.mjs": "20d71b12fb920f7050e5eab46bb3e94ec6873938eb5d463a46b00d63cc874bfc",
       "tools/codex-policy/flags.test.mjs": "7247118e3d1f172a8038380cbc675e842e4e7cf0525b43403f1ee2dd4c66c640",
+      "tools/drenar-clipboard-secret.mjs": "747eb540602b828a6dd29bbf5b93e6b3479b707b9e0f6464938856db64104ec3",
       "tools/eos/accounting/fixtures.json": "a9217383675619845e87fd5f278b020a353a8e773aca4c7ad37b46f7cb97a1bc",
       "tools/eos/accounting/measure.mjs": "6400ad27525168dfaef72281428fd9f9f29274471fb72572fca3815cc394640b",
       "tools/eos/accounting/run.mjs": "1732b61f002b4e5cb6355b275b83c6b0616392da074178438d387949163f9de1",
@@ -749,7 +750,7 @@
       "tools/eos/selftest/serena-probe.mjs": "ae7867d4ea9e043f255330862bdec38c1526ee67df751f093c4035c49e83fa57",
       "tools/eos/verification/findings.mjs": "44d10804a3e38c5edf2eeb7dd012be5242ae9172595db6e1dce0aa8fc1476337",
       "tools/eos/verify-layout.mjs": "5a0a1c9be1e584286631c5d977672e8b4580bfc56f73ea10102c27ca699e791d",
-      "tools/railway-staging-bootstrap.mjs": "1cadbaf66772a8aea06b2066925e4d4ec632a612ac27953e709f2db5d833c43c"
+      "tools/railway-staging-bootstrap.mjs": "47081715a8553283bf16a24d3772e34205c6b46529897391cf5c5605c7b0f39d"
     }
   },
   "artefatosPorLane": {
@@ -781,7 +782,7 @@
       ".serena/project.local.yml": "407:1786143159645",
       ".serena/project.yml": "9789:1786143160556",
       "chaveiro-bot/.env": "1383:1787404776680",
-      "chaveiro-bot/.env.staging": "1317:1787711616917",
+      "chaveiro-bot/.env.staging": "2578:1787789761233",
       "chaveiro-bot/.env.test": "1502:1786676272079",
       "chaveiro-bot/coverage/base.css": "5394:1785730588610",
       "chaveiro-bot/coverage/block-navigation.js": "2655:1785730588611",
@@ -2525,66 +2526,21 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "tools/railway-staging-bootstrap.mjs",
-      "precisao": "BOUNDED",
-      "proposito": "fase external-secrets (env do runner -> upsert; nomes-somente no output) + selftest",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1cadbaf66772a8aea06b2066925e4d4ec632a612ac27953e709f2db5d833c43c",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
-      "precisao": "BOUNDED",
-      "proposito": "phase external-secrets mapeando secrets do Environment staging p/ env do step",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "27e4d9f487f00257ba4bbc637d782f0260cd8853ec41be733030c9e53aa23a09",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "tools/drenar-clipboard-secret.mjs",
-      "precisao": "BOUNDED",
-      "proposito": "dreno opaco clipboard->'.env.staging'+gh secret (novo; nunca exibe valor; valida forma; limpa clipboard)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "evidencias",
+      "proposito": "estados/evidencias dos gates provados",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "5ec525d670bbbc348062bcda92f60d78c0e595cddadf79f5e1bc98ab91eea2f6",
+      "shaNaDeclaracao": "b928abbad65fa481cdb129e3a9c87a3dc8730d726cef00189fea55cc62462b43",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/agent-environment/AGENT_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "registro do desenho opaco + resultados",
+      "proposito": "apendice de execucao da cadeia",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1ba000f7c7e46bb95d68e7862b52515d22f80f5b9527e99fca9dcd2b47ae3f0d",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_APPLICATION_STAGING_DEPLOY_PACKAGE.md",
-      "precisao": "BOUNDED",
-      "proposito": "protocolo clipboard-relay + enabler supabase login documentados",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "a45c7dd1bcc687880d2b76e03cb14ea024b86bf2e1e7b6c3c1697635b997d595",
+      "shaNaDeclaracao": "4d446a5aa883fb764a2633f89febbd5dbf22656ab6d2746eaecc353b81f46a98",
       "sujoNaDeclaracao": false
     }
-  ],
-  "comparacao": "UNKNOWN_DIFFERENCE",
-  "escopoDaComparacao": "LANE_UNICA",
-  "lanesObservadas": [
-    "HARNESS"
-  ],
-  "provenance": "UNKNOWN_PROVENANCE",
-  "bloqueiaIntegracao": true,
-  "nota": "Transferencia opaca executada: external-secrets phase + drenador; service_role CONFIGURED fim-a-fim (run 32924987362); commits da fatia empurrados antes do fechamento na MESMA sequencia declarada",
-  "aviso": "Declaracao ENCERRADA."
+  ]
 }

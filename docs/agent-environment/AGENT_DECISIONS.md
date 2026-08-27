@@ -257,3 +257,15 @@ BLOQUEADO pelo classificador da plataforma (linha da regra de campos de credenci
 CANCELADO sem aplicar reset; nenhuma mutação. DB password e Resend key ficam como RELAY humano
 de 1 clique (usuário copia; agente drena e faz o resto) — documentado no pacote de deploy.
 Nenhuma tentativa de contornar o bloqueio foi feita.
+
+### Apêndice — Cadeia real de staging pós USER_GATE=PASS (2026-08-27)
+
+Relays concluídos (protocolo opaco; 2ª tentativa do DB com ordem estrita após divergência
+copy→reset na 1ª — 5 AUTH_FAILED genuínos + circuit breaker do pooler por retry agressivo meu,
+corrigido para testes espaçados): DB positive control PASS nas 2 URLs; Resend HTTP 200.
+Cadeia: external-secrets 33025568469 (3 configurados) → connect 33025613197 CONNECT_OK →
+/health 200 database:ok (admai-staging-staging-c42d.up.railway.app, URL re-observada) →
+VITE_API_URL_STAGING → Deploy Staging 33025736808 success → CSP connect-src só staging →
+CORS +/- PASS → network browser 13/13 staging-only → seed A(44)/B(45) → bucket provision+
+validate+smoke PASS (STG-03 DONE) → H-mut 22×401 / I 26×403 (JWT sintético derivado
+opacamente) / GUC pooler PASS. K (validate:staging = migrate+integração no pooler) em execução.
