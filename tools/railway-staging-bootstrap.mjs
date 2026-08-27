@@ -472,13 +472,21 @@ export async function logsDeErro(gql, { projectId, environmentId, serviceId }, {
   if (!nos.length) falhar('nenhum deployment encontrado para o service staging.');
   const alvo = nos.find((n) => n.status === 'SUCCESS') ?? nos[0];
   const l = await gql(
-    `query($deploymentId: String!, $limit: Int!) { deploymentLogs(deploymentId: $deploymentId, limit: $limit) { message severity timestamp } }`,
+    `query($deploymentId: String!, $limit: Int!) { deploymentLogs(deploymentId: $deploymentId, limit: $limit) { message severity timestamp attributes { key value } } }`,
     { deploymentId: alvo.id, limit: limite }
   );
+  /* Winston JSON em produção: o Railway promove as chaves extras (ex.: `erro`) a
+     `attributes` e deixa em `message` só o texto — sem os attributes, o diagnóstico
+     via `logger.error('...', { erro })` fica cego. */
+  const atributos = (x) =>
+    (x.attributes ?? [])
+      .filter((a) => !['level', 'timestamp'].includes(a.key))
+      .map((a) => `${a.key}=${scrubLinha(a.value)}`)
+      .join(' ');
   const linhas = (l.data?.deploymentLogs ?? [])
-    .filter((x) => FILTRO_ERRO.test(x.message ?? ''))
+    .filter((x) => FILTRO_ERRO.test(`${x.message ?? ''} ${atributos(x)}`))
     .slice(-40)
-    .map((x) => `${x.timestamp ?? ''} [${x.severity ?? '?'}] ${scrubLinha(x.message)}`);
+    .map((x) => `${x.timestamp ?? ''} [${x.severity ?? '?'}] ${scrubLinha(x.message)} | ${atributos(x)}`);
   return { deploymentId: alvo.id, status: alvo.status, criadoEm: alvo.createdAt, linhasDeErro: linhas };
 }
 
@@ -964,8 +972,11 @@ export async function autoteste() {
       if (query.includes('project(')) return { status: 200, json: async () => NO_PROJETO_OK([{ id: 'e', name: 'staging' }], [{ id: 's', name: 'admai-staging' }]) };
       if (query.includes('deployments(')) return { status: 200, json: async () => ({ data: { deployments: { edges: [{ node: { id: 'dep1', status: 'SUCCESS', createdAt: 't' } }] } } }) };
       if (query.includes('deploymentLogs(')) return { status: 200, json: async () => ({ data: { deploymentLogs: [
-        { message: 'boot ok tudo bem', severity: 'info', timestamp: '1' },
-        { message: 'Erro POST /me/documentos { erro: "Falha no upload privado: token eyJabcdefgh.ijklmnop.qrstuvwx" }', severity: 'error', timestamp: '2' },
+        { message: 'boot ok tudo bem', severity: 'info', timestamp: '1', attributes: [] },
+        { message: 'Erro POST /me/documentos { erro: "Falha no upload privado: token eyJabcdefgh.ijklmnop.qrstuvwx" }', severity: 'error', timestamp: '2', attributes: [
+          { key: 'erro', value: 'Falha no upload privado b/k: bearer eyJatributo.assinado.aqui1' },
+          { key: 'level', value: 'error' },
+        ] },
       ] } }) };
       return { status: 200, json: async () => ({ errors: [{ message: 'sem stub' }] }) };
     };
@@ -976,6 +987,9 @@ export async function autoteste() {
       && r.linhasDeErro.length === 1
       && r.linhasDeErro[0].includes('[JWT]')
       && !r.linhasDeErro[0].includes('eyJabcdefgh')
+      && r.linhasDeErro[0].includes('erro=Falha no upload privado')
+      && !r.linhasDeErro[0].includes('eyJatributo')
+      && !r.linhasDeErro[0].includes('level=')
       && !JSON.stringify(r).includes('boot ok tudo bem');
   });
 
