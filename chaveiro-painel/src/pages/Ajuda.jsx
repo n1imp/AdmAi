@@ -10,6 +10,7 @@ import {
   Mail,
 } from 'lucide-react';
 import BackHeader from '../components/BackHeader.jsx';
+import { featureAtiva } from '../lib/featureFlags.js';
 
 function abrirCrisp() {
   if (typeof window !== 'undefined' && window.$crisp) {
@@ -20,9 +21,13 @@ function abrirCrisp() {
 }
 
 // Conteúdo do tutorial — cada seção é um passo-a-passo conciso e fiel ao app.
-const SECOES = [
+// [D4] As seções marcadas `whatsapp: true` ensinam a usar o robô do WhatsApp: com a feature
+// POST_MVP elas SOMEM do tutorial (ensinar algo que não funciona é um claim falso). Voltam
+// junto com a flag — o conteúdo fica preservado, não apagado.
+const TODAS_SECOES = [
   {
     id: 'whatsapp-servico',
+    whatsapp: true,
     titulo: 'Registrar um serviço pelo WhatsApp',
     icon: MessageCircle,
     cor: 'text-success',
@@ -58,6 +63,7 @@ const SECOES = [
   },
   {
     id: 'conectar-whatsapp',
+    whatsapp: true,
     titulo: 'Conectar o WhatsApp',
     icon: QrCode,
     cor: 'text-accent-300',
@@ -187,6 +193,8 @@ function Acordeao({ secao, aberto, onToggle }) {
 }
 
 export default function Ajuda() {
+  // [D4] Sem a feature WHATSAPP, as seções do robô saem do tutorial.
+  const SECOES = TODAS_SECOES.filter((s) => !s.whatsapp || featureAtiva('WHATSAPP'));
   // Primeira seção aberta por padrão para orientar o usuário.
   const [aberto, setAberto] = useState(SECOES[0].id);
 

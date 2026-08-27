@@ -65254,9 +65254,23 @@
       "bloqueiaIntegracao": false,
       "nota": "P1/P2 fechados apos declarar: ledger com DOCUMENTOS/ONBOARDING FEATURE_COMPLETE + provas + evidencias tour7/8 versionadas + pendencia AUD2-P1 registrada.",
       "declaradoEm": "2026-08-27T18:48:23.933Z"
+    },
+    {
+      "sliceId": "AUD2-P34-FRONT",
+      "titulo": "P3 frontend (Auditoria consultavel) + P4 (claims WhatsApp honestos) — lote unico p/ um deploy",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P34 fechado apos declarar: Auditoria.jsx + rota + card + claims WhatsApp gated + etapaOtp gate; dist declarado; suite 278/278, lint 0 erros, build OK, format OK.",
+      "declaradoEm": "2026-08-27T18:50:48.120Z"
     }
   ],
-  "geradoEm": "2026-08-27T18:49:44.104Z",
+  "geradoEm": "2026-08-27T19:04:33.165Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

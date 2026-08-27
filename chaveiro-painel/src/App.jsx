@@ -37,6 +37,7 @@ import ConfiguracaoBot from './pages/ConfiguracaoBot.jsx';
 import Estoque from './pages/Estoque.jsx';
 import Catalogo from './pages/Catalogo.jsx';
 import Usuarios from './pages/Usuarios.jsx';
+import Auditoria from './pages/Auditoria.jsx';
 import Ajuda from './pages/Ajuda.jsx';
 import Privacidade from './pages/Privacidade.jsx';
 import Termos from './pages/Termos.jsx';
@@ -408,6 +409,18 @@ function AppContent() {
                       <Usuarios />
                     </Layout>
                   </RequirePermissao>
+                </RequireAuth>
+              }
+            />
+            {/* Auditoria consultável (USER GATE D3): a própria página faz o autogate por
+                isAdmin (espelhando o adminOnly do backend, que é autoritativo). */}
+            <Route
+              path="/configuracao/auditoria"
+              element={
+                <RequireAuth>
+                  <Layout>
+                    <Auditoria />
+                  </Layout>
                 </RequireAuth>
               }
             />

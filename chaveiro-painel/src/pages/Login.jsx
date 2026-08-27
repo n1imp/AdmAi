@@ -14,9 +14,11 @@ import {
   ShieldCheck,
   Zap,
   MessageSquare,
+  ClipboardList,
   ArrowLeft,
 } from 'lucide-react';
 import api, { register } from '../lib/api.js';
+import { featureAtiva } from '../lib/featureFlags.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import BotoesSociais from '../components/BotoesSociais.jsx';
 import RodapeLegal from '../components/RodapeLegal.jsx';
@@ -215,6 +217,15 @@ export default function Login() {
         telefone: telefone.trim().replace(/\D/g, ''),
         senha: password,
       });
+      // [D4-v · DECISOR AUD2-P3] A etapa de OTP por WhatsApp SÓ existe com a feature ligada.
+      // Com WHATSAPP POST_MVP, o bot está desconectado e o código nunca chegaria — mostrar
+      // "Enviamos um código pelo WhatsApp" seria um claim falso que prende o usuário. Sem a
+      // flag, conclui o cadastro direto (o telefone pode ser verificado depois em Segurança).
+      if (!featureAtiva('WHATSAPP')) {
+        login(data.token);
+        navigate('/', { replace: true });
+        return;
+      }
       // Guarda o token para autenticar a verificação por OTP, sem ativar a sessão
       // no contexto ainda (senão o painel já navegaria para fora da tela de OTP).
       localStorage.setItem('admai_token', data.token);
@@ -313,18 +324,26 @@ export default function Login() {
             <span className="text-accent-400">sob controle</span>
           </h2>
           <p className="text-muted mt-6 leading-relaxed max-w-sm">
-            Registro de serviços via WhatsApp, gestão de técnicos, estoque e avaliações de clientes
-            — tudo num painel só.
+            {/* [D4] WhatsApp é POST_MVP: o manifesto não o anuncia como presente. */}
+            Registro de serviços, gestão de técnicos, estoque e avaliações de clientes — tudo num
+            painel só.
           </p>
 
           <div className="mt-10 flex flex-col divide-y divide-dark-600/70 border-y border-dark-600/70">
             {[
-              {
-                n: '01',
-                Icon: MessageSquare,
-                t: 'WhatsApp integrado',
-                s: 'Técnicos registram serviços no chat',
-              },
+              featureAtiva('WHATSAPP')
+                ? {
+                    n: '01',
+                    Icon: MessageSquare,
+                    t: 'WhatsApp integrado',
+                    s: 'Técnicos registram serviços no chat',
+                  }
+                : {
+                    n: '01',
+                    Icon: ClipboardList,
+                    t: 'Registro rápido',
+                    s: 'Serviços lançados em segundos no painel',
+                  },
               { n: '02', Icon: Zap, t: 'Tempo real', s: 'Dashboards e comissões automáticos' },
               {
                 n: '03',

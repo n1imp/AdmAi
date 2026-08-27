@@ -168,7 +168,7 @@ export default function BancoHoras({ tecnicoId }) {
           {dias.length === 0 ? (
             <EstadoVazio
               mensagem="Sem registros neste mês"
-              sub="Os registros aparecem quando o técnico bate ponto pelo WhatsApp."
+              sub="Os registros aparecem quando o técnico bate ponto pelo painel."
             />
           ) : (
             <div className="card overflow-x-auto">

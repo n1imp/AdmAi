@@ -9,7 +9,7 @@ import { useEffect } from 'react';
  */
 const TITULO_BASE = 'AdmAi — Gestão para chaveiros';
 const DESCRICAO_BASE =
-  'Registre serviços pelo WhatsApp e acompanhe receita, comissões, estoque e avaliações num painel só.';
+  'Registre serviços e acompanhe receita, comissões, estoque e avaliações da sua chaveiraria num painel só.';
 
 export function useDocumentHead({ titulo, descricao, indexavel = false } = {}) {
   useEffect(() => {

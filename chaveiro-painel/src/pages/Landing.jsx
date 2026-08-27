@@ -8,20 +8,32 @@ import {
   Package,
   ArrowRight,
   CheckCircle2,
+  ClipboardList,
 } from 'lucide-react';
 import RodapeLegal from '../components/RodapeLegal.jsx';
 import { useDocumentHead } from '../hooks/useDocumentHead.js';
+import { featureAtiva } from '../lib/featureFlags.js';
 
 /**
  * Página pública de apresentação (landing). Exibida em "/" para visitantes não
  * autenticados (ver App.jsx → Home). CTA principal leva ao cadastro do beta.
+ *
+ * [D4] O WhatsApp é POST_MVP: a landing não pode vendê-lo como funcionalidade PRESENTE.
+ * O primeiro recurso e os passos "como funciona" trocam para a experiência real (registro
+ * no painel) enquanto a feature está diferida, e voltam junto com a flag — sem redesenho.
  */
-const RECURSOS = [
-  {
-    Icon: MessageSquare,
-    t: 'WhatsApp integrado',
-    s: 'Técnicos registram serviços conversando no chat — sem app extra.',
-  },
+const RECURSO_WHATSAPP = {
+  Icon: MessageSquare,
+  t: 'WhatsApp integrado (em breve)',
+  s: 'Em breve: técnicos vão registrar serviços conversando no chat, sem app extra.',
+};
+const RECURSO_PAINEL = {
+  Icon: ClipboardList,
+  t: 'Registro rápido no painel',
+  s: 'Lance serviços em segundos pelo painel — no computador ou no celular, em campo.',
+};
+
+const RECURSOS_FIXOS = [
   {
     Icon: BarChart3,
     t: 'Painel em tempo real',
@@ -49,9 +61,14 @@ const RECURSOS = [
   },
 ];
 
-const PASSOS = [
+const PASSOS_WHATSAPP = [
   'O técnico manda "serviço" no WhatsApp e responde uma pergunta por vez.',
   'O serviço é registrado, o estoque baixa e um resumo vai pro grupo.',
+  'O dono acompanha tudo pelo painel e recebe o resumo da semana.',
+];
+const PASSOS_PAINEL = [
+  'O técnico lança o serviço pelo painel, em campo, em poucos toques.',
+  'O serviço é registrado e o estoque baixa automaticamente.',
   'O dono acompanha tudo pelo painel e recebe o resumo da semana.',
 ];
 
@@ -59,6 +76,9 @@ export default function Landing() {
   useDocumentHead({ indexavel: true });
   const navigate = useNavigate();
   const irParaBeta = () => navigate('/login?modo=cadastrar');
+  const comWhatsapp = featureAtiva('WHATSAPP');
+  const RECURSOS = [comWhatsapp ? RECURSO_WHATSAPP : RECURSO_PAINEL, ...RECURSOS_FIXOS];
+  const PASSOS = comWhatsapp ? PASSOS_WHATSAPP : PASSOS_PAINEL;
 
   return (
     <div className="min-h-dvh bg-dark-900 text-white">
@@ -94,8 +114,8 @@ export default function Landing() {
             Sua operação de chaveiro <span className="text-accent-400">sob controle</span>
           </h1>
           <p className="text-muted mt-5 leading-relaxed max-w-xl text-lg">
-            Registre serviços pelo WhatsApp e acompanhe receita, comissões, estoque e avaliações num
-            painel só. Feito para quem trabalha em campo.
+            Registre serviços e acompanhe receita, comissões, estoque e avaliações num painel só.
+            Feito para quem trabalha em campo.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <button onClick={irParaBeta} className="btn-primary sm:w-auto sm:px-8">

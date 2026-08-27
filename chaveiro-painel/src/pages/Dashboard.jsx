@@ -230,7 +230,11 @@ export default function Dashboard() {
         <div className="px-4 mb-4">
           <EstadoVazio
             mensagem="Nenhum serviço neste período"
-            sub="Registre o primeiro pelo painel — ou pelo WhatsApp, se o robô estiver conectado. Os números aparecem aqui na hora."
+            sub={
+              featureAtiva('WHATSAPP')
+                ? 'Registre o primeiro pelo painel — ou pelo WhatsApp, se o robô estiver conectado. Os números aparecem aqui na hora.'
+                : 'Registre o primeiro pelo painel. Os números aparecem aqui na hora.'
+            }
             cta={{ to: '/servicos/novo', label: 'Registrar serviço' }}
           />
         </div>

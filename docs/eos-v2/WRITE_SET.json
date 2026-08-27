@@ -1,20 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P12-EVIDENCE-LEDGER",
-  "titulo": "P1/P2: classificacao DOCUMENTOS (FEATURE_COMPLETE) + ONBOARDING (FEATURE_COMPLETE) + provas colhidas p/ RBAC/SEGURANCA/ADMIN/TECNICOS + evidencia tour7/8 + pendencia de write-set",
+  "sliceId": "AUD2-P34-FRONT",
+  "titulo": "P3 frontend (Auditoria consultavel) + P4 (claims WhatsApp honestos) — lote unico p/ um deploy",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T18:48:23.933Z",
+  "declaradoEm": "2026-08-27T18:50:48.120Z",
   "baseCommitPorLane": {
-    "HARNESS": "7d9fa34eb69300136f68ddb81e72e54f7e36d4c9"
+    "HARNESS": "e50fcda15a51c36fb7a3b7a0f4f952698e46d90c"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "Auditoria.jsx no molde de Usuarios.jsx (autogate isAdmin, espelhando adminOnly do backend); card na secao Conta (isAdmin); claims WhatsApp corrigidos nas superficies MVP inventariadas; etapaOtp do cadastro atras de featureAtiva(WHATSAPP) (DECISOR AUD2-P3 v). build declara dist.",
   "baselinePorLane": {
     "HARNESS": {
-      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
-      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -619,7 +618,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "6a78b734087456a12f96a6088db2e4adf960a30eb11de1570db59f3abc45ad1e",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "3d711a6c20939a52dc14ae7315fa4b47a4d4309182b041b45e6e30ffaf3446b6",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
@@ -629,6 +628,8 @@
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour4-final.json": "04317f11e843cf8e2e8c91c0288d4edfad70081bd09afaee87d25198fb10bdfa",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour5-perfil.json": "2e80c34f58ab2bc708591e58664014878cc76ff21e8ea72880763337a5611339",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour6-reverify.json": "4379d5251d2da97f4c2d5e73e4184be532b8d507d099dc5152f656d3fe8a763a",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -648,8 +649,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "18840855cc4eebd5325dd9835007e4bde48bececa4ca397ea41b47340e4f7f46",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "5364a62e120a5737cbc038182587dc467ac6ec58ead843e056718d87daf0a5ff",
+      "docs/eos-v2/WRITE_SET.json": "e2c4658357d8106a6c22ccd72e126da46235ffdc654e7fb6dc10550db4aebe7f",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "69941d687d7de7fd03fa6225ceae31836330ef40b6682a38087dda6a133a6c55",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2594,46 +2595,135 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
+  "artefatos": [
+    "chaveiro-painel/dist"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "caminho": "chaveiro-painel/src/pages/Auditoria.jsx",
       "precisao": "BOUNDED",
-      "proposito": "classificacoes P1/P2 + provas + writeSetReconciliacoesPendentes",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6a78b734087456a12f96a6088db2e4adf960a30eb11de1570db59f3abc45ad1e",
+      "proposito": "NOVO: pagina de auditoria consultavel",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json",
+      "caminho": "chaveiro-painel/src/App.jsx",
       "precisao": "BOUNDED",
-      "proposito": "evidencia bruta DOCUMENTOS 13/13",
+      "proposito": "rota /configuracao/auditoria",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "27711c2fd07004dd7cda0b29e7b089581a8b96aad2fdd4baea9418bb3be158da",
+      "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json",
+      "caminho": "chaveiro-painel/src/pages/Configuracao.jsx",
       "precisao": "BOUNDED",
-      "proposito": "evidencia bruta ONBOARDING 22/22",
+      "proposito": "card Auditoria (isAdmin)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "12f5cee4aa8a827abdcef4c1a26c86370c3f1c47aa49cf8280eabc28e999bdcf",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Login.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "etapaOtp atras de featureAtiva(WHATSAPP) (D4-v)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a06a66e38c6fcadf1512d6b339e7a8286e32d7ba98b2a7484d8353aa23fca55e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Landing.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "claims WhatsApp honestos",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5c00172d312a20d168ae4e6174f8cffc105591db5c090b02106fce114409fbed",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/hooks/useDocumentHead.js",
+      "precisao": "BOUNDED",
+      "proposito": "meta description sem claim presente",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "041deae91d917df5e22964961bcd59481dd810a79d687a08fbae6c12410aef60",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/WelcomeCard.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "CTA WhatsApp sem afordancia funcional falsa",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6719ef24e2a0f2ca5e0deef8b16b74f4ff30c5f300c47dff5c898b94a811a5b3",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Dashboard.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "sub do empty state painel-first",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "d3d90b8a76bd442c2a97d78bc5c76450295944f762c932aa561052d1fe0abbd5",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Ajuda.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "guias WhatsApp marcados em breve/painel-first",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c6f78e2029332ec5256d17817db17bf82a2a0fab1df2ecbd40f0d134a4d74c6c",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/components/BancoHoras.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "sub painel-first",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "6e10e256abaa92ecd098a95bcb9aa65fe9100384f613a44acda84423231cc85e",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Tecnicos.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "EstadoVazio sub painel-first",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "81113331a0fda38b8747ae37286aa5848f5bfb294eb20679086e25eb444a3296",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Auditoria.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: estados + autogate + carregar mais",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Login.otp-gate.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "NOVO: etapaOtp so com flag ON",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P1/P2 fechados apos declarar: ledger com DOCUMENTOS/ONBOARDING FEATURE_COMPLETE + provas + evidencias tour7/8 versionadas + pendencia AUD2-P1 registrada.",
+  "nota": "P34 fechado apos declarar: Auditoria.jsx + rota + card + claims WhatsApp gated + etapaOtp gate; dist declarado; suite 278/278, lint 0 erros, build OK, format OK.",
   "aviso": "Declaracao ENCERRADA."
 }

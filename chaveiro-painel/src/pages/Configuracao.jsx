@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Lock, Bell, MessageCircle, Users, CreditCard, ShieldCheck } from 'lucide-react';
+import {
+  User,
+  Lock,
+  Bell,
+  MessageCircle,
+  Users,
+  CreditCard,
+  ShieldCheck,
+  FileText,
+} from 'lucide-react';
 import api from '../lib/api.js';
 import BackHeader from '../components/BackHeader.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -79,6 +88,16 @@ const CARD_USUARIOS = {
   icon: Users,
   titulo: 'Usuários',
   sub: 'Gerenciar acessos da equipe',
+  cor: 'text-indigo-300',
+  bg: 'bg-indigo-400/10',
+};
+
+// Auditoria consultável (USER GATE D3) — admin apenas, como Usuários.
+const CARD_AUDITORIA = {
+  to: '/configuracao/auditoria',
+  icon: FileText,
+  titulo: 'Auditoria',
+  sub: 'Histórico de ações administrativas',
   cor: 'text-indigo-300',
   bg: 'bg-indigo-400/10',
 };
@@ -211,7 +230,9 @@ export default function Configuracao() {
     // não aparece — o MVP não promete a superintegração diferida.
     .filter((s) => s.titulo !== 'Integrações' || featureAtiva('WHATSAPP'))
     .map((s) =>
-      s.titulo === 'Conta' && isAdmin ? { ...s, cards: [...s.cards, CARD_USUARIOS] } : s
+      s.titulo === 'Conta' && isAdmin
+        ? { ...s, cards: [...s.cards, CARD_USUARIOS, CARD_AUDITORIA] }
+        : s
     );
 
   function abrir(card) {
