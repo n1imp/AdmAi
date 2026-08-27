@@ -59628,9 +59628,34 @@
         ],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "STG-CHAIN-EXEC-01",
+      "titulo": "Evidencias da cadeia real de staging: USER_GATE PASS -> connect -> health -> publish -> provas CSP/CORS/network -> seed -> bucket -> H/I/GUC",
+      "estado": "CLOSED",
+      "comparacao": "UNKNOWN_DIFFERENCE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "UNKNOWN_PROVENANCE",
+      "bloqueiaIntegracao": false,
+      "nota": "Evidencias da cadeia (ledger+decisions) escritas e commitadas; K ainda em execucao segue em fatia futura",
+      "declaradoEm": "2026-08-27T00:18:43.551Z",
+      "reconciliacao": {
+        "em": "2026-08-27T00:19:34.101Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Padrao ja reconciliado 3x nesta frente (commit precede fechamento em fatias de evidencia)",
+        "justificativa": "Commit de evidencia feito antes do fechar; escritas identicas as 2 entradas declaradas.",
+        "caminhos": [
+          "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json",
+          "docs/agent-environment/AGENT_DECISIONS.md"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-26T03:11:12.088Z",
+  "geradoEm": "2026-08-27T00:19:34.102Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

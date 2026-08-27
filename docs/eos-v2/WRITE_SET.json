@@ -5,7 +5,7 @@
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
-  "estado": "DECLARED",
+  "estado": "CLOSED",
   "declaradoEm": "2026-08-27T00:18:43.551Z",
   "baseCommitPorLane": {
     "HARNESS": "7a3f8b96383578e8d1b1aff9b4ba5dd8b0da747f"
@@ -2542,5 +2542,14 @@
       "shaNaDeclaracao": "4d446a5aa883fb764a2633f89febbd5dbf22656ab6d2746eaecc353b81f46a98",
       "sujoNaDeclaracao": false
     }
-  ]
+  ],
+  "comparacao": "UNKNOWN_DIFFERENCE",
+  "escopoDaComparacao": "LANE_UNICA",
+  "lanesObservadas": [
+    "HARNESS"
+  ],
+  "provenance": "UNKNOWN_PROVENANCE",
+  "bloqueiaIntegracao": true,
+  "nota": "Evidencias da cadeia (ledger+decisions) escritas e commitadas; K ainda em execucao segue em fatia futura",
+  "aviso": "Declaracao ENCERRADA."
 }
