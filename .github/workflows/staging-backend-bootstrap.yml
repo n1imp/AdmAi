@@ -92,25 +92,35 @@ jobs:
         if: ${{ steps.fase.outputs.phase != 'register' }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          # Fase external-secrets (só nela são lidos): secrets do Environment staging.
-          # Ausentes ⇒ a fase reporta ausentesNoRunner por NOME (nunca valores).
-          STG_DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
-          STG_DIRECT_URL: ${{ secrets.DIRECT_URL_STAGING }}
-          STG_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
-          STG_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_STAGING }}
+          # [REVISOR 01a044bb achado 1] Inputs vão para o AMBIENTE (nunca interpolados no shell):
+          # `${{ inputs.X }}` inline no `run` executaria `$(...)`/backticks do input ANTES dos
+          # controles do Node — com RAILWAY_TOKEN e os STG_* no escopo. Como env vars, o valor é
+          # literal; o script os cita um a um num array. defense-in-depth mesmo com IDs = UUID.
+          INPUT_PHASE: ${{ inputs.phase }}
+          INPUT_PROJECT_ID: ${{ inputs.project_id }}
+          INPUT_ENVIRONMENT_ID: ${{ inputs.environment_id }}
+          INPUT_SERVICE_ID: ${{ inputs.service_id }}
+          INPUT_WORKSPACE_ID: ${{ inputs.workspace_id }}
+          INPUT_FORCE_NAMES: ${{ inputs.force_names }}
+          # STG_* só existem no ambiente na fase external-secrets (a única que os lê); nas demais
+          # fases (prepare/connect/internal-secrets/logs) ficam vazios — reduz a superfície.
+          STG_DATABASE_URL: ${{ inputs.phase == 'external-secrets' && secrets.DATABASE_URL_STAGING || '' }}
+          STG_DIRECT_URL: ${{ inputs.phase == 'external-secrets' && secrets.DIRECT_URL_STAGING || '' }}
+          STG_SUPABASE_SERVICE_ROLE_KEY: ${{ inputs.phase == 'external-secrets' && secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING || '' }}
+          STG_RESEND_API_KEY: ${{ inputs.phase == 'external-secrets' && secrets.RESEND_API_KEY_STAGING || '' }}
         run: |
           # pipefail OBRIGATÓRIO [REVISOR 01a03bb9 achado 1]: sem ele, o status do
           # pipe é o do `tee` e um bootstrap que sai 1 viraria step VERDE.
           set -euo pipefail
-          ARGS="--phase=${{ inputs.phase }}"
-          [ -n "${{ inputs.project_id }}" ] && ARGS="$ARGS --project-id=${{ inputs.project_id }}"
-          [ -n "${{ inputs.environment_id }}" ] && ARGS="$ARGS --environment-id=${{ inputs.environment_id }}"
-          [ -n "${{ inputs.service_id }}" ] && ARGS="$ARGS --service-id=${{ inputs.service_id }}"
-          [ -n "${{ inputs.workspace_id }}" ] && ARGS="$ARGS --workspace-id=${{ inputs.workspace_id }}"
-          [ -n "${{ inputs.force_names }}" ] && ARGS="$ARGS --force-names=${{ inputs.force_names }}"
-          node tools/railway-staging-bootstrap.mjs $ARGS | tee saida.txt
+          args=(--phase="$INPUT_PHASE")
+          [ -n "$INPUT_PROJECT_ID" ] && args+=(--project-id="$INPUT_PROJECT_ID")
+          [ -n "$INPUT_ENVIRONMENT_ID" ] && args+=(--environment-id="$INPUT_ENVIRONMENT_ID")
+          [ -n "$INPUT_SERVICE_ID" ] && args+=(--service-id="$INPUT_SERVICE_ID")
+          [ -n "$INPUT_WORKSPACE_ID" ] && args+=(--workspace-id="$INPUT_WORKSPACE_ID")
+          [ -n "$INPUT_FORCE_NAMES" ] && args+=(--force-names="$INPUT_FORCE_NAMES")
+          node tools/railway-staging-bootstrap.mjs "${args[@]}" | tee saida.txt
           {
-            echo "## Staging Backend Bootstrap — ${{ inputs.phase }}"
+            echo "## Staging Backend Bootstrap — ${INPUT_PHASE}"
             echo '```'
             cat saida.txt
             echo '```'

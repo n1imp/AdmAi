@@ -1,19 +1,19 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P3456-LEDGER",
-  "titulo": "P3/P4/P5/P6: AUDITORIA FEATURE_COMPLETE + ZERO_CURRENT_WHATSAPP_FALSE_CLAIMS + reavaliacao (14 FC) + evidencia tour9",
+  "sliceId": "AUD2-REV-FIXES",
+  "titulo": "Correcoes do REVISOR (thread 01a044bb): shell-injection no workflow (ALTA), gql pode ecoar secret (ALTA), engines>=22 (MEDIA) + evidencia real da invalidacao de sessao pos-exclusao",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T19:37:38.558Z",
+  "declaradoEm": "2026-08-27T19:47:58.355Z",
   "baseCommitPorLane": {
-    "HARNESS": "3d623357c19f310fe59aefdb7de8b349d8358042"
+    "HARNESS": "908dd604053967b3a7e12e02aa084e973a717108"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "Achados 1-3 corrigidos; achado 4 (evidencia) resolvido: probe controlado prova invalidacao correta (401) — o 200 do tour8 foi janela da cascata em andamento (timing), nao SEC.",
   "baselinePorLane": {
     "HARNESS": {
-      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour9-auditoria-claims.json": "07fa748620d4a3fbce420a925b790b654e3fd0b36410c7c35475d26a697349f0",
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
       ".eos-bootstrap/BOOTSTRAP_SOURCE_SNAPSHOT.json": "f28b975e934dc47bf1bfd49e2f76acccb174297ac55356c36bfcbf10294e1684",
       ".eos-bootstrap/snapshot.mjs": "a527a6de4cc9de1b00df562c21a995d0221e12143db152e9b3a7a69f85a44aac",
@@ -633,6 +633,7 @@
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour6-reverify.json": "4379d5251d2da97f4c2d5e73e4184be532b8d507d099dc5152f656d3fe8a763a",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour7-documentos.json": "e6ef05443ebaf193a09a17baf758e2f441940b369de651073d6434f04bdacebc",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json": "749402fd04d9ef49113a2922b4213b727c38872974e5e91d8b8522524586bff5",
+      "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour9-auditoria-claims.json": "07fa748620d4a3fbce420a925b790b654e3fd0b36410c7c35475d26a697349f0",
       "docs/eos-v2/CONTROLE_ARTEFATO.md": "5fe44df854e07ad92f499e0bb7725ac8c806f688391bedd828b63adbe3f5cf8f",
       "docs/eos-v2/DOCS_RECONCILIATION_F6.md": "31ed26ae2e47dbff1192d514c3d301d35b261564d5bdce006dd8d46b6b74afd3",
       "docs/eos-v2/EVIDENCE_BUNDLE.json": "cb87c25354ba2c0ed8396f9ea71855a4dd27456cfd85eb56bcbbe91a711b1838",
@@ -652,8 +653,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "4fda01a3d9ce9752811a744282546a279a354edaa1227c0847453327ac1ad59a",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "409ffc2445d9c0a4743a196f25313a296110aa69a60ab22b529dec2d1d3dfd25",
+      "docs/eos-v2/WRITE_SET.json": "3f2720cb9a905c45d2f1e8a4de34f632e2391bbf8aaa63c66456d986f20c6236",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "04b09633dd64d97ecbee6de5a0ca915ce5f74cd2e7489eb42f7e690b5f8be7b9",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2601,34 +2602,57 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "caminho": ".github/workflows/staging-backend-bootstrap.yml",
       "precisao": "BOUNDED",
-      "proposito": "classificacoes P3-P6 + provas",
+      "proposito": "inputs via env + array bash citado (sem interpolacao no shell); STG_* so na fase external-secrets",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "feea79346e7b6b2bcfeaff619293efeee38d36b80e21901f835eff29731a08fc",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "d2ea18c22a9decad641e8799cb4d9d85e2b9ea465b371ca24a6aa507bca80f49",
+      "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour9-auditoria-claims.json",
+      "caminho": "tools/railway-staging-bootstrap.mjs",
       "precisao": "BOUNDED",
-      "proposito": "evidencia tour9 17/17",
+      "proposito": "gql redige valores das variables na mensagem de erro (nunca ecoar secret) + selftest",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "07fa748620d4a3fbce420a925b790b654e3fd0b36410c7c35475d26a697349f0",
-      "sujoNaDeclaracao": true,
-      "reescritaDeclarada": true,
-      "motivoDaReescrita": "caminho ja sujo nesta frente"
+      "shaNaDeclaracao": "1cd4f6e5eb2ea160406fccd16ea22d01352523ade0657015a435c0edc83660d1",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-bot/package.json",
+      "precisao": "BOUNDED",
+      "proposito": "engines node >=22 (supabase-js exige)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f8d7ae07aa137582ea754c24e30615a9542c4cdf9dd905a7d613ef0287a45986",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "veredito REVISOR + correcao da evidencia de invalidacao de sessao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "feea79346e7b6b2bcfeaff619293efeee38d36b80e21901f835eff29731a08fc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/probe-token-pos-exclusao.txt",
+      "precisao": "BOUNDED",
+      "proposito": "evidencia bruta: token de usuario apagado -> 401",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P3456 fechado: ledger com 14 FEATURE_COMPLETE + tour9 evidencia; escrita apos declarar.",
+  "nota": "Correcoes REVISOR fechadas: 2 ALTA seguranca + engines + evidencia; selftest 23/23, bot format/lint OK.",
   "aviso": "Declaracao ENCERRADA."
 }

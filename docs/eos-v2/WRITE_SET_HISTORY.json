@@ -65282,9 +65282,23 @@
       "bloqueiaIntegracao": false,
       "nota": "P3456 fechado: ledger com 14 FEATURE_COMPLETE + tour9 evidencia; escrita apos declarar.",
       "declaradoEm": "2026-08-27T19:37:38.558Z"
+    },
+    {
+      "sliceId": "AUD2-REV-FIXES",
+      "titulo": "Correcoes do REVISOR (thread 01a044bb): shell-injection no workflow (ALTA), gql pode ecoar secret (ALTA), engines>=22 (MEDIA) + evidencia real da invalidacao de sessao pos-exclusao",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Correcoes REVISOR fechadas: 2 ALTA seguranca + engines + evidencia; selftest 23/23, bot format/lint OK.",
+      "declaradoEm": "2026-08-27T19:47:58.355Z"
     }
   ],
-  "geradoEm": "2026-08-27T19:37:41.063Z",
+  "geradoEm": "2026-08-27T19:51:12.095Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

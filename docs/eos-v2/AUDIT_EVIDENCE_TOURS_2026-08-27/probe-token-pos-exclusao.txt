@@ -1,0 +1,5 @@
+GET /me ANTES da exclusao: 200
+DELETE /me/conta: 200 {"ok":true,"escopo":"empresa","mensagem":"Conta e empresa excluídas permanentemente"}
+GET /me IMEDIATO pos-exclusao: 401
+GET /me 4s pos-exclusao: 401
+empresa TokenTest restante no DB: 0

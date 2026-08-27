@@ -77,7 +77,37 @@ const falhar = (msg, manual = null) => {
   throw e;
 };
 
-/** Cliente GraphQL. `fetchFn` injetável (selftest). Erros nunca ecoam o token. */
+/**
+ * Coleta recursivamente os valores STRING enviados nas `variables` — para redigi-los de uma
+ * mensagem de erro do upstream. [REVISOR 01a044bb achado 2] A mutation de secrets envia o VALOR
+ * do service_role nas variables; se o Railway ecoasse o valor rejeitado em errors[].message, o
+ * gql o propagaria e o `tee`/summary o capturaria. Redigir os valores exatos fecha o vazamento
+ * para QUALQUER mutation, não só o upsert. Só strings com >= 8 chars entram (evita redigir "1"/ids).
+ */
+function valoresParaRedigir(obj, acc = new Set()) {
+  if (obj == null) return acc;
+  if (typeof obj === 'string') {
+    if (obj.length >= 8) acc.add(obj);
+    return acc;
+  }
+  if (Array.isArray(obj)) {
+    for (const v of obj) valoresParaRedigir(v, acc);
+    return acc;
+  }
+  if (typeof obj === 'object') {
+    for (const v of Object.values(obj)) valoresParaRedigir(v, acc);
+  }
+  return acc;
+}
+export function redigirValores(msg, variables) {
+  let saida = String(msg);
+  for (const valor of valoresParaRedigir(variables)) {
+    saida = saida.split(valor).join('[REDACTED]');
+  }
+  return saida;
+}
+
+/** Cliente GraphQL. `fetchFn` injetável (selftest). Erros nunca ecoam o token NEM valores enviados. */
 export function criarCliente(token, fetchFn = fetch) {
   return async function gql(query, variables = {}, { permitirErros = false } = {}) {
     const r = await fetchFn(API, {
@@ -93,7 +123,8 @@ export function criarCliente(token, fetchFn = fetch) {
     }
     const corpo = await r.json();
     if (corpo.errors?.length && !permitirErros) {
-      const msgs = corpo.errors.map((e) => e.message).join(' | ');
+      // Redige os VALORES enviados (service_role, DB_URL, etc.) caso o upstream os ecoe.
+      const msgs = redigirValores(corpo.errors.map((e) => e.message).join(' | '), variables);
       falhar(`GraphQL recusou: ${msgs}`);
     }
     return corpo;
@@ -1018,6 +1049,28 @@ export async function autoteste() {
       && JSON.stringify(r.ausentesNoRunner) === '["SUPABASE_SERVICE_ROLE_KEY"]'
       && upsertado && Object.keys(upsertado).length === 2
       && !JSON.stringify(r).includes('pw@'); // nenhum valor vaza no relato
+  });
+
+  await caso('gql: erro upstream que ECOA o valor enviado e REDIGIDO na mensagem [REVISOR 01a044bb-2]', async () => {
+    const segredo = 'sb_secret_valor_super_secreto_123';
+    const fetchFake = async () => ({
+      status: 200,
+      json: async () => ({ errors: [{ message: `invalid value: ${segredo}` }] }),
+    });
+    const gql = criarCliente('t', fetchFake);
+    try {
+      await gql('mutation($input: X!) { variableCollectionUpsert(input: $input) }', {
+        input: { variables: { SUPABASE_SERVICE_ROLE_KEY: segredo } },
+      });
+      return false; // deveria ter lancado
+    } catch (e) {
+      return e.message.includes('[REDACTED]') && !e.message.includes(segredo);
+    }
+  });
+
+  await caso('redigirValores: so redige strings >= 8 chars (nao redige ids curtos)', () => {
+    const r = redigirValores('erro em p e no valor_longo_secreto', { a: 'p', b: 'valor_longo_secreto' });
+    return r === 'erro em p e no [REDACTED]';
   });
 
   await caso('externalSecrets --force-names: re-upserta nome PRESENTE (recuperacao) sem vazar valor; fora da lista falha', async () => {

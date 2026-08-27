@@ -302,7 +302,8 @@
       ],
       "NEXT_ACTION": "NONE (verificacao positiva de e-mail declarada nao-executavel por design)",
       "EVIDENCE_POINTERS": [
-        "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json (22/22)"
+        "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json (22/22)",
+        "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/probe-token-pos-exclusao.txt (invalidacao 401)"
       ],
       "LAST_VERIFIED_HEAD": "7d9fa34 (staging Node22 + auditoria backend) @ 2026-08-27 Ciclo 2"
     },
@@ -637,7 +638,9 @@
       "STAGING_EVIDENCE": "USER GATE D3 executado (BACKEND_ONLY não é terminal). GET /auditoria adminOnly implementado (consenso DECISOR AUD2-P3) + página consultável. tour9 17/17 em staging real: eventos reais gerados (usuario descartável criar→PATCH permissões→excluir) → GET /auditoria 200 com os 3 eventos (usuario.criado/permissoes_alteradas/excluido), autor presente, SEM segredos no DTO; UI /configuracao/auditoria lista os eventos (ação/identidade/hora/autor); paginação take=1 devolve proximoCursor e a 2ª página traz id distinto; cursor de fora do tenant → 400 opaco; RBAC: gestor → 403 na API E deep-link redireciona (não-admin). Backend cobre empty/error por unit (12 testes).",
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
-      "GAPS": [],
+      "GAPS": [
+        "DTO expoe PII ALLOWLISTED (nome/email de convite/IP) ao admin do proprio tenant, por design — garantia e sem PII nao-allowlisted; escopado por empresa"
+      ],
       "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour9-auditoria-claims.json",
@@ -934,6 +937,11 @@
       "quando": "2026-08-27 (Ciclo 2)",
       "fase": "P3 AUDITORIA + P4 CLAIMS + P5/P6 reavaliação (tour9 17/17)",
       "resultado": "AUDITORIA → FEATURE_COMPLETE (endpoint adminOnly + UI + paginação keyset + RBAC 403 + sem segredos, browser real). ZERO_CURRENT_WHATSAPP_FALSE_CLAIMS provado (claims gateados por flag). Promoções por critério (não mecânicas): RBAC, SEGURANCA, ESTOQUE, FINANCEIRO, INDICADORES → FEATURE_COMPLETE. ADMIN/TECNICOS → USER_REAL_CAN_USE (convite não-executável por e-mail real). SERVICOS/PONTO/BILLING mantêm USER_REAL_CAN_USE com gaps declarados (delete UI / selfie headless / checkout D7). TECNICOS: REDESIGN do freeze REFUTADO por evidência. Deploy exigiu fix de format:check do bot."
+    },
+    {
+      "quando": "2026-08-27 (Ciclo 2)",
+      "fase": "P7 REVISOR — correcoes aplicadas",
+      "resultado": "REVISOR (thread 01a044bb) CORRECOES_NECESSARIAS: 2 ALTA de seguranca (shell-injection no workflow; gql podia ecoar secret) + 1 MEDIA (engines) + 1 evidencia (token pos-exclusao). Todos corrigidos e revalidados (selftest 23/23, bot format/lint OK, probe 401). Evidencia de invalidacao substituida pelo probe controlado."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -1009,6 +1017,18 @@
       "decisaoFinal": "(i) GET /auditoria adminOnly (frontend espelha isAdmin); (ii) DTO allowlist top-level + allowlist POR ACAO nos antes/depois com default fechado + redigirSensiveis como defesa extra + autorNome com lookup escopado por empresaId; (iii) keyset por (criadoEm,id) DESC com Zod, take<=50 default 20, take+1 -> {itens, proximoCursor}, cursor de fora do tenant = 400 opaco; (iv) register-OTP: REJEITADO com evidencia (gerarEEnviarOtp ja tolera canal caido em auth.js:164-167; apenas prova dirigida no probe); (v) etapaOtp do cadastro atras de featureAtiva(WHATSAPP) usando data.token direto (nao state).",
       "implementacao": "Backend implementado nesta fatia: admin.js GET /auditoria + detalhesAuditoria/dtoAuditoria/whereKeyset exportadas (padrao billing/T-BILL-01); 12 unit tests novos; suite completa do bot verde. Frontend Auditoria.jsx (autogate isAdmin) + card Configuracao + rota; deploy staging (Deploy Staging run 33107833885 SUCCESS após corrigir format:check do bot que bloqueou o ci-ok); reverificado tour9 17/17.",
       "pendente": "Frontend (Auditoria.jsx + card isAdmin) e prova E3 em staging."
+    },
+    {
+      "id": "AUD2-REVISAO-CICLO2",
+      "threadRevisor": "01a044bb-0d29-7660-869b-bcf9b1915829",
+      "veredito": "CORRECOES_NECESSARIAS -> CORRIGIDO",
+      "achados": [
+        "ALTA-1 shell injection: inputs do workflow (force_names + os pre-existentes project_id/etc) interpolados via ${{ inputs.X }} direto no run — $() do input executaria com RAILWAY_TOKEN+STG_* no escopo. CORRIGIDO: inputs via env INPUT_* + array bash citado; STG_* condicionados a phase==external-secrets.",
+        "ALTA-2 gql pode ecoar secret: errors[].message propagado sem redaction; a mutation de secrets envia o valor nas variables. CORRIGIDO: redigirValores() redige os valores enviados (>=8 chars) na mensagem de erro; 2 selftests novos (23/23).",
+        "MEDIA-3 engines>=20 incoerente: diagnostico provou falha funcional no Node 20 (supabase-js WebSocket). CORRIGIDO: chaveiro-bot/package.json engines node>=22 (Docker+CI ja em 22).",
+        "EVIDENCIA-4 tour8 tokenVelhoStatus:200: a afirmacao de invalidacao de sessao nao era sustentada pelo artefato. RESOLVIDO: probe controlado (probe-token-pos-exclusao) prova invalidacao CORRETA (GET /me pos-DELETE = 401 imediato e 4s; DB empresa=0). O 200 do tour8 foi a janela da cascata de exclusao AINDA em andamento (pathname ainda /configuracao/seguranca, token residual) — timing do instrumento, NAO defeito de seguranca. requireAuth revalida o usuario no banco (auth.js:23-28)."
+      ],
+      "notaRevisor": "REVISOR tambem observou que a auditoria expoe PII allowlisted (nome/email de convite/IP) ao admin do tenant por design — a garantia e SEM PII NAO-ALLOWLISTED, nao zero-PII. Registrado: a exposicao e intencional (o admin da empresa audita a propria empresa) e escopada por tenant."
     }
   ],
   "gateDoUsuario": {
