@@ -22,7 +22,7 @@ import { variantesTelefone } from '../services/parser.js';
 import { requireAuth, adminOnly, requirePermissao, senhaProvisoria } from '../middlewares/auth.js';
 import { registrar as registrarAudit } from '../services/auditoria.js';
 import { enviarEmailConvite } from '../services/email.js';
-import { logger } from '../utils/logger.js';
+import { logger, redigirSensiveis } from '../utils/logger.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -475,6 +475,149 @@ router.post('/usuarios/convidar', requirePermissao('usuarios', 'editar'), async 
     res.json({ enviado: true });
   } catch (erro) {
     logger.error('Erro POST /usuarios/convidar', { erro: erro.message });
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ── AUDITORIA CONSULTÁVEL (USER GATE D3 · DECISOR AUD2-P3, thread 01a04465) ──
+// A trilha (services/auditoria.js → AuditLog) era gravada mas invisível ao produto.
+// Leitura adminOnly (least privilege: o conteúdo é administração de usuários/permissões/
+// LGPD — matéria do dono; `configuracao.ver` é extensível a não-donos e foi rejeitada).
+// Saída por ALLOWLIST POR AÇÃO com default fechado: `antes/depois` são Json livres e um
+// call site futuro poderia gravar algo sensível — ação desconhecida NÃO expõe detalhes.
+// `redigirSensiveis` entra como segunda linha de defesa, nunca como a única.
+
+const auditoriaQuerySchema = z.object({
+  take: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.coerce.number().int().positive().optional(),
+});
+
+/** Matriz de permissões reduzida às chaves CONHECIDAS do catálogo (booleans). */
+function matrizConhecida(permissoes) {
+  if (!permissoes || typeof permissoes !== 'object') return null;
+  const saida = {};
+  for (const modulo of MODULOS) {
+    const acoes = permissoes[modulo];
+    if (!acoes || typeof acoes !== 'object') continue;
+    const linha = {};
+    for (const acao of ACOES_POR_MODULO[modulo] ?? []) {
+      if (typeof acoes[acao] === 'boolean') linha[acao] = acoes[acao];
+    }
+    if (Object.keys(linha).length) saida[modulo] = linha;
+  }
+  const proprio = permissoes.proprio;
+  if (proprio && typeof proprio === 'object') {
+    const linha = {};
+    for (const cap of CAPACIDADES_PROPRIO) {
+      if (typeof proprio[cap] === 'boolean') linha[cap] = proprio[cap];
+    }
+    if (Object.keys(linha).length) saida.proprio = linha;
+  }
+  return Object.keys(saida).length ? saida : null;
+}
+
+/** Allowlist de `antes/depois` por ação. Default FECHADO: ação fora da lista → null. */
+export function detalhesAuditoria(acao, antes, depois) {
+  const str = (v) => (typeof v === 'string' ? v : null);
+  const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const bool = (v) => (typeof v === 'boolean' ? v : null);
+  switch (acao) {
+    case 'usuario.criado':
+      return { antes: null, depois: depois ? { nome: str(depois.nome), papel: str(depois.papel) } : null };
+    case 'usuario.permissoes_alteradas': {
+      const lado = (v) =>
+        v ? { papel: str(v.papel), permissoes: matrizConhecida(v.permissoes) } : null;
+      return { antes: lado(antes), depois: lado(depois) };
+    }
+    case 'usuario.excluido':
+      return {
+        antes: antes ? { nome: str(antes.nome), papel: str(antes.papel), admin: bool(antes.admin) } : null,
+        depois: null,
+      };
+    case 'convite.enviado':
+      return { antes: null, depois: depois ? { email: str(depois.email), papel: str(depois.papel) } : null };
+    case 'lgpd.cliente_anonimizado':
+      return {
+        antes: null,
+        depois: depois
+          ? {
+              servicosAnonimizados: num(depois.servicosAnonimizados),
+              avaliacoesAnonimizadas: num(depois.avaliacoesAnonimizadas),
+            }
+          : null,
+      };
+    case 'conta.excluida':
+      return {
+        antes: null,
+        depois: depois ? { escopo: str(depois.escopo), usuariosAfetados: num(depois.usuariosAfetados) } : null,
+      };
+    default:
+      return { antes: null, depois: null };
+  }
+}
+
+/** DTO por registro — allowlist top-level explícita, nunca spread do registro Prisma. */
+export function dtoAuditoria(reg, autoresPorId) {
+  const det = redigirSensiveis(detalhesAuditoria(reg.acao, reg.antes, reg.depois));
+  return {
+    id: reg.id,
+    criadoEm: reg.criadoEm,
+    acao: reg.acao,
+    entidade: reg.entidade ?? null,
+    entidadeId: reg.entidadeId ?? null,
+    ip: reg.ip ?? null,
+    autorNome: (reg.usuarioId != null && autoresPorId.get(reg.usuarioId)) || null,
+    antes: det.antes,
+    depois: det.depois,
+  };
+}
+
+/** Keyset por (criadoEm, id) DESC — a tupla da ordenação, nunca só o id. */
+export function whereKeyset(cursorReg) {
+  if (!cursorReg) return {};
+  return {
+    OR: [
+      { criadoEm: { lt: cursorReg.criadoEm } },
+      { criadoEm: cursorReg.criadoEm, id: { lt: cursorReg.id } },
+    ],
+  };
+}
+
+router.get('/auditoria', adminOnly, async (req, res) => {
+  const parse = auditoriaQuerySchema.safeParse(req.query);
+  if (!parse.success) return res.status(400).json({ erro: 'Parâmetros inválidos' });
+  const { take, cursor } = parse.data;
+  try {
+    let cursorReg = null;
+    if (cursor !== undefined) {
+      // Resolvido DENTRO do tenant (req.db escopa AuditLog): cursor de outra empresa ou
+      // inexistente é 400 opaco — não revela existência.
+      cursorReg = await req.db.auditLog.findFirst({
+        where: { id: cursor },
+        select: { id: true, criadoEm: true },
+      });
+      if (!cursorReg) return res.status(400).json({ erro: 'Cursor inválido' });
+    }
+    const registros = await req.db.auditLog.findMany({
+      where: whereKeyset(cursorReg),
+      orderBy: [{ criadoEm: 'desc' }, { id: 'desc' }],
+      take: take + 1,
+    });
+    const pagina = registros.slice(0, take);
+    const ids = [...new Set(pagina.map((r) => r.usuarioId).filter((v) => v != null))];
+    const autores = ids.length
+      ? await prisma.usuario.findMany({
+          where: { empresaId: req.user.empresaId, id: { in: ids } },
+          select: { id: true, nome: true },
+        })
+      : [];
+    const autoresPorId = new Map(autores.map((a) => [a.id, a.nome]));
+    res.json({
+      itens: pagina.map((r) => dtoAuditoria(r, autoresPorId)),
+      proximoCursor: registros.length > take ? pagina[pagina.length - 1].id : null,
+    });
+  } catch (erro) {
+    logger.error('Erro GET /auditoria', { erro: erro.message });
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

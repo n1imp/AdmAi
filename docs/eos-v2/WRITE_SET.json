@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2-P1F-NODE22-DOCKERFILE",
-  "titulo": "P1f: base node:22-alpine no Dockerfile do bot (supabase-js exige WebSocket nativo/Node22; erro real capturado via logs+attributes) + CI 20->22 por consistencia",
+  "sliceId": "AUD2-P3-AUDITORIA-BACK",
+  "titulo": "P3 backend (D3): GET /auditoria adminOnly com keyset cursor, DTO allowlist por acao + redigirSensiveis, via req.db (consenso DECISOR 01a04465)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-27T18:03:15.721Z",
+  "declaradoEm": "2026-08-27T18:22:46.171Z",
   "baseCommitPorLane": {
-    "HARNESS": "74a0b59ccd8b34416d9a663e402369e976036f23"
+    "HARNESS": "97fe7ef46dcfbfecb4316298f9cd48076cd6465e"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -22,7 +22,7 @@
       ".gitattributes": "db49541543c0149c45f8695561c1b8d88c448e215759d1427b22ccb7700dcb83",
       ".github/dependabot.yml": "a15089719d525ed0f5b78d296eb5e91b8cd35bbb596e18822b0be68e249f15ad",
       ".github/workflows/cf-preview-guard.yml": "52c05d5a21bda6d297628cd5da443efa2f633a40b30782304d64d95f8b8d5df2",
-      ".github/workflows/ci.yml": "025499c89275beee140b31be3b667f80b88d7d4dea50db7958346c600558c50b",
+      ".github/workflows/ci.yml": "2d6c8d9d03a81fc139de6dc6a900ecd6216e555abdcab7f76d73a21d35e48c2d",
       ".github/workflows/deploy-staging.yml": "1ea7adfb4c1ed9da43482dc3fc899ee86a84a36ce018397ea7fc86193b59e9c0",
       ".github/workflows/deploy.yml": "2408b0d13ef9db5b72f3324bd33ffb523f122c2a6e9d99f8ecfa7ee00ef81a59",
       ".github/workflows/release.yml": "b3e4489396437d4ba09fd3390d86148d802b9f9aabfa85c4e00a268dff3fb7c2",
@@ -42,7 +42,7 @@
       "chaveiro-bot/.env.test.example": "be9bb9066e15212198aa8da07cb68d4318dd3f1ed0a12e0a8565f9c4689de942",
       "chaveiro-bot/.prettierrc": "a0d3222464b9a568be39016a6ecb1f8d59503093d7a7cef9a3c03e15924262c0",
       "chaveiro-bot/Caddyfile": "a29ef64552302391b49627b0ee49b5bfead6b9dc94f7ff7ade024eec1cae06a3",
-      "chaveiro-bot/Dockerfile": "b5bbd76ab49d5d99369c447eca189148eb40938eafee326549dde9d997c083b0",
+      "chaveiro-bot/Dockerfile": "c2d3b488f9330ea94e9995426e05947d91c5c2727f8a065486e7ba48abf66b42",
       "chaveiro-bot/docker-compose.monitoring.yml": "fc1fd1a64235addc17d4d8d3243cb39310301e21cec8ba9511818d412e95f2c4",
       "chaveiro-bot/docker-compose.prod.yml": "032c97dd1a2e02c272dff9c66f1f5fc6531d5fd7e809683410083910a2a685b3",
       "chaveiro-bot/docker-compose.yml": "64b6476ec4ee91d4c19691dac1351765ef338e80a62b9fadf5d062e2b822e899",
@@ -616,7 +616,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "7ca03ddafc7ee154448d7a5ec88ee57040afb8e514641196e1d733acf6dc3245",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "0d4b224ea57f0cfb0abbf1c8d356754e3b54c84c6c0e69ae1872ac13fbeacf43",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour0-unauth.json": "2127bd8c6e0c829b16b472abda9d5e62aa45f5be86d578313c403d9bf223b6c0",
@@ -645,8 +645,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "5f2c7ef2ac2a92abce781f227fc01a877987d6a47b600f0f2ca203e1296c5016",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "181de2213407b6141681e0af3c36b4a9cffbc7ee2f93cd00dbc0ee927cb360c4",
+      "docs/eos-v2/WRITE_SET.json": "8acecb0e9751dcdc1dd767f1cac5318f87e896eaf32e3d9fa895b92fb41b3512",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "5d252d69bac407bab77fd76c3df8200844b3b456645f8d4d4320ead717eb8020",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2594,29 +2594,29 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/Dockerfile",
+      "caminho": "chaveiro-bot/src/routes/admin.js",
       "precisao": "BOUNDED",
-      "proposito": "builder e runner em node:22-alpine",
+      "proposito": "rota GET /auditoria + funcoes puras exportadas (allowlist/DTO/keyset)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "b5bbd76ab49d5d99369c447eca189148eb40938eafee326549dde9d997c083b0",
+      "shaNaDeclaracao": "2491815423bb54840a278def5e010170206c591df717562785e9ed1b904e8ab5",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": ".github/workflows/ci.yml",
+      "caminho": "chaveiro-bot/src/routes/__tests__/admin.auditoria.test.js",
       "precisao": "BOUNDED",
-      "proposito": "jobs em node-version 20 -> 22",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "025499c89275beee140b31be3b667f80b88d7d4dea50db7958346c600558c50b",
+      "proposito": "NOVO: unit das funcoes puras (DTO/allowlist/paginacao/cursor)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "registrar erro real + fix",
+      "proposito": "registro do consenso + implementacao",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "7ca03ddafc7ee154448d7a5ec88ee57040afb8e514641196e1d733acf6dc3245",
+      "shaNaDeclaracao": "0d4b224ea57f0cfb0abbf1c8d356754e3b54c84c6c0e69ae1872ac13fbeacf43",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2627,6 +2627,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "P1f fechado antes do commit: Dockerfile node:22-alpine + CI 22 + ledger com o erro real.",
+  "nota": "P3 backend fechado antes do commit (rota+funcoes puras+12 unit; consenso registrado).",
   "aviso": "Declaracao ENCERRADA."
 }

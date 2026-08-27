@@ -914,6 +914,11 @@
       "quando": "2026-08-27 (Ciclo 2)",
       "fase": "P1 em andamento (D2)",
       "resultado": "DOCUMENTOS_ENABLED=true aplicado via prepare (PREPARE_OK, dominio canonico reusado apos fix da domains-query); redeploy detectado (uptime reset); tour7 revelou upload 500 => diagnostico fechou em var de secret do Railway; force-names implementado (selftest 20/20) aguardando dispatch."
+    },
+    {
+      "quando": "2026-08-27 (Ciclo 2)",
+      "fase": "P3 backend implementado",
+      "resultado": "GET /auditoria conforme consenso; 12 unit novos verdes; suite bot verde. Aguarda frontend + deploy + E3."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -980,6 +985,15 @@
         "vereditoFinal": "USUARIO_NECESSARIO",
         "vereditoFinalDetalhe": "REVISOR (mesma thread 01a04392, apos E3): nenhuma correcao tecnica adicional necessaria; lote funcional APROVADO tecnicamente; aprovacao FORMAL depende das 2 disposicoes de write-set, que pertencem ao usuario (writeSetReconciliacoesPendentes)."
       }
+    },
+    {
+      "id": "AUD2-P3-AUDITORIA-CONSULTAVEL-2026-08-27",
+      "missao": "Ciclo 2 / USER GATE D3",
+      "threadDecisor": "01a04465-1c70-7b43-aaba-d29943a78ad9",
+      "resultado": "DISCORDO -> CONSENSO (variacoes aceitas integralmente)",
+      "decisaoFinal": "(i) GET /auditoria adminOnly (frontend espelha isAdmin); (ii) DTO allowlist top-level + allowlist POR ACAO nos antes/depois com default fechado + redigirSensiveis como defesa extra + autorNome com lookup escopado por empresaId; (iii) keyset por (criadoEm,id) DESC com Zod, take<=50 default 20, take+1 -> {itens, proximoCursor}, cursor de fora do tenant = 400 opaco; (iv) register-OTP: REJEITADO com evidencia (gerarEEnviarOtp ja tolera canal caido em auth.js:164-167; apenas prova dirigida no probe); (v) etapaOtp do cadastro atras de featureAtiva(WHATSAPP) usando data.token direto (nao state).",
+      "implementacao": "Backend implementado nesta fatia: admin.js GET /auditoria + detalhesAuditoria/dtoAuditoria/whereKeyset exportadas (padrao billing/T-BILL-01); 12 unit tests novos; suite completa do bot verde.",
+      "pendente": "Frontend (Auditoria.jsx + card isAdmin) e prova E3 em staging."
     }
   ],
   "gateDoUsuario": {

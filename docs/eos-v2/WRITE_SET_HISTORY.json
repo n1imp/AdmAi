@@ -65226,9 +65226,23 @@
       "bloqueiaIntegracao": false,
       "nota": "P1f fechado antes do commit: Dockerfile node:22-alpine + CI 22 + ledger com o erro real.",
       "declaradoEm": "2026-08-27T18:03:15.721Z"
+    },
+    {
+      "sliceId": "AUD2-P3-AUDITORIA-BACK",
+      "titulo": "P3 backend (D3): GET /auditoria adminOnly com keyset cursor, DTO allowlist por acao + redigirSensiveis, via req.db (consenso DECISOR 01a04465)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "P3 backend fechado antes do commit (rota+funcoes puras+12 unit; consenso registrado).",
+      "declaradoEm": "2026-08-27T18:22:46.171Z"
     }
   ],
-  "geradoEm": "2026-08-27T18:03:35.144Z",
+  "geradoEm": "2026-08-27T18:25:49.141Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
