@@ -30,7 +30,11 @@ export function useWidgetPrefs(ids) {
   // sejam puros (React/StrictMode pode reexecutar updaters; side effects lá dentro repetem).
   // `origemUsuario` marca mudança vinda de AÇÃO do usuário (não do load inicial nem da
   // reconciliação com o servidor) — evita PUT redundante em loop.
-  const [estado, setEstado] = useState(() => ({ ...carregar(ids), anuncio: '', origemUsuario: false }));
+  const [estado, setEstado] = useState(() => ({
+    ...carregar(ids),
+    anuncio: '',
+    origemUsuario: false,
+  }));
   const [editando, setEditando] = useState(false);
 
   useEffect(() => {

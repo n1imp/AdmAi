@@ -65444,9 +65444,23 @@
       "bloqueiaIntegracao": false,
       "nota": "YAML parseado OK; steps na ordem; prova com run real ocorre no push p/ staging",
       "declaradoEm": "2026-08-28T01:01:52.621Z"
+    },
+    {
+      "sliceId": "RD-FMT-WIDGETPREFS",
+      "titulo": "Prettier no useWidgetPrefs.js (linha longa do fix RD-FIX-WIDGETPREFS)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "format:check verde pos-write; vitest completo 280/280; lint 0 erros/12 warnings pre-existentes; build OK",
+      "declaradoEm": "2026-08-28T01:04:56.764Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:02:47.646Z",
+  "geradoEm": "2026-08-28T01:05:24.612Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
