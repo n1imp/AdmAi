@@ -65612,9 +65612,23 @@
       "bloqueiaIntegracao": false,
       "nota": "matrix 20 caps + journeys + grafo de invalidacao; expansion contract 11 futuras com seams/impact/fitness",
       "declaradoEm": "2026-08-28T23:31:01.544Z"
+    },
+    {
+      "sliceId": "FR-D1-PRINCIPLES-GLOSSARY",
+      "titulo": "Product Design Principles (anti-AI policy operacionalizada + disposicoes de referencia) + Product Glossary",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "principios com anti-AI gate + 7 disposicoes de referencia; glossario com verbos/status/erros/vazios/dinheiro + RESERVED_FUTURE",
+      "declaradoEm": "2026-08-28T23:34:13.750Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:32:57.020Z",
+  "geradoEm": "2026-08-28T23:35:38.125Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,12 +1,12 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-C-MAPPING-CONTRACTS",
-  "titulo": "Capability x Surface Matrix + Future Expansion Contract (FR-1/FR-1A/FR-2/FR-3/FR-4)",
+  "sliceId": "FR-D1-PRINCIPLES-GLOSSARY",
+  "titulo": "Product Design Principles (anti-AI policy operacionalizada + disposicoes de referencia) + Product Glossary",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:31:01.544Z",
+  "declaradoEm": "2026-08-28T23:34:13.750Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
@@ -605,18 +605,18 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_FRONTEND_CAPABILITY_SURFACE_MATRIX.md",
+      "caminho": "docs/agent-environment/ADMAI_PRODUCT_DESIGN_PRINCIPLES.md",
       "precisao": "BOUNDED",
-      "proposito": "20 capabilities MVP x contratos backend x superficies x papeis x jobs x estados + role priorities + journeys",
+      "proposito": "Principios do novo produto + anti-AI review + referencia->disposicao",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_FRONTEND_FUTURE_EXPANSION_CONTRACT.md",
+      "caminho": "docs/agent-environment/ADMAI_PRODUCT_GLOSSARY.md",
       "precisao": "BOUNDED",
-      "proposito": "11 capabilities futuras: tipo A/B/C/D, pressoes, seams AGORA, DO-NOT-IMPLEMENT, impact matrix, fitness questions",
+      "proposito": "Linguagem canonica: verbos, status, erros, vazios, dinheiro/data; RESERVED_FUTURE",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -629,6 +629,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "matrix 20 caps + journeys + grafo de invalidacao; expansion contract 11 futuras com seams/impact/fitness",
+  "nota": "principios com anti-AI gate + 7 disposicoes de referencia; glossario com verbos/status/erros/vazios/dinheiro + RESERVED_FUTURE",
   "aviso": "Declaracao ENCERRADA."
 }
