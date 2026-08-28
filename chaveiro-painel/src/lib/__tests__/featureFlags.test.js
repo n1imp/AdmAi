@@ -35,14 +35,20 @@ describe('featureFlags', () => {
     expect(featureAtiva('qualquer-coisa')).toBe(true);
   });
 
-  it('o conjunto de flags é FECHADO: só as quatro diferidas', () => {
+  it('o conjunto de flags é FECHADO: só as cinco diferidas', () => {
     /* Flag nova aparecendo aqui sem decisão de escopo é sinal de que alguém retirou algo do
-       release sem registrar. O teste força a conversa. */
+       release sem registrar. O teste força a conversa. SUBSCRIPTIONS_BILLING entrou por
+       decisão soberana D2 (Refoundation Cycle 1, 2026-08-28): assinaturas fora do MVP. */
     expect(Object.keys(FLAGS).sort()).toEqual([
       'GOOGLE_REVIEWS',
       'METRIC_HUBS',
       'NOTIFICACOES',
+      'SUBSCRIPTIONS_BILLING',
       'WHATSAPP',
     ]);
+  });
+
+  it('SUBSCRIPTIONS_BILLING é OFF por padrão (assinaturas fora do MVP, D2)', () => {
+    expect(FLAGS.SUBSCRIPTIONS_BILLING).toBe(false);
   });
 });

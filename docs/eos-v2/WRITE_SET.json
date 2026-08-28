@@ -1,16 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-A-BACK-LINTFIX",
-  "titulo": "Fix no-unexpected-multiline no billing_free_mode (padrao agente do arquivo irmao)",
+  "sliceId": "FR-A-FRONT-SUBSCRIPTIONS-FLAG",
+  "titulo": "SUBSCRIPTIONS_BILLING no mecanismo de flags (DECISOR iii terceira solucao): rota+card+redirect 402 atras da flag, default OFF",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:13:45.268Z",
+  "declaradoEm": "2026-08-28T23:15:43.907Z",
   "baseCommitPorLane": {
-    "HARNESS": "4ac3df702ae736cb43a6c435c024082aba5ec314"
+    "HARNESS": "26ba9d499d949be51d18a4d489ce3410598ff3e4"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "Zero codigo orfao: Assinatura.jsx/testes ficam onde estao; rota gated (padrao NOTIFICACOES), secao Plano filtrada (padrao Integracoes), interceptor 402 condicionado; testes atualizados p/ default OFF + modo ON via re-import.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -246,7 +247,7 @@
       "chaveiro-bot/test/integration/auth.test.js": "c1f2857cdd824477ee94bb247102699842052931220b2a789f89971eabd9df4d",
       "chaveiro-bot/test/integration/autoexclusao_conta.test.js": "2e7ce404ed3d94fe4478e94b17e9731a098f6efa6b04ccb6f0e8e9b2b2a81151",
       "chaveiro-bot/test/integration/billing_access_audit.test.js": "258b2efd1171b291e592dd4319ab70e13e1f24b51960bad316696bb16d9f108f",
-      "chaveiro-bot/test/integration/billing_free_mode.test.js": "e66dff2b9bf4f2cc83f9152e432e46580d861430b768fa9a37ab2eec91ec2a18",
+      "chaveiro-bot/test/integration/billing_free_mode.test.js": "0f8a5afed0b833ff6a771d996ee6558941a17840ec649702949fbb89bc583cca",
       "chaveiro-bot/test/integration/billing_google_auth.test.js": "003b8c5ab47c13720d212b1db37e108735364a638bcd65ee26a67d0564185d51",
       "chaveiro-bot/test/integration/bugs_regressao.test.js": "e6abed84fdf4e0a272be02eae90bc8a12a773722269a6598023945e807534293",
       "chaveiro-bot/test/integration/cadastro_otp.test.js": "b851790d47b835ec48fb18092c1af0e8042b641fd3339e992e0ff7583b6d61b7",
@@ -665,8 +666,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "d2bd2a058259c08e41eb40732c6b500fc2a4f2b1dc23268358a66c2466ed2654",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "983ca09de1a47b1d19ee2e91d6d6fba38dbbb19e629b2efacd0b2b988b5c3c75",
+      "docs/eos-v2/WRITE_SET.json": "87f786ab6981fb6dc2d418c9db7ec07100f47a881185572d2e8fe38cf6dc72cb",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "60b98443bc0207ab1adbe29a83da5d22ca4ab1f92bc8bebb4e7479e002e81076",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2614,14 +2615,71 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
+  "artefatos": [
+    "chaveiro-painel/dist"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/billing_free_mode.test.js",
+      "caminho": "chaveiro-painel/src/lib/featureFlags.js",
       "precisao": "BOUNDED",
-      "proposito": "const agente = request(app) antes do acesso computado",
+      "proposito": "FLAGS.SUBSCRIPTIONS_BILLING (D2: fora do MVP)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "e66dff2b9bf4f2cc83f9152e432e46580d861430b768fa9a37ab2eec91ec2a18",
+      "shaNaDeclaracao": "ff67b7823faace4c45077d2811cce7711037caaf87cce50d549859b619860ebc",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/App.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Rota /assinatura atras da flag",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e8e62b6dd3bd45061ac046fe1d1ab550435a7782643c3a958657d3eee2cef7d6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/Configuracao.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Secao Plano filtrada pela flag",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f1f7fdb981d9157ff7612e08aa0ab4ae11bc320acf9cdd587913c358208cede8",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/api.js",
+      "precisao": "BOUNDED",
+      "proposito": "Redirect 402 condicionado a featureAtiva",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "09b240d3e8b8dbc7cf03c6014b73db319e10339603cac0ceb6614fc16e30e097",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/__tests__/featureFlags.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "Conjunto fechado passa a 5 diferidas",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "af24655a3996122542550bd129dea1476491d72e9833eaaba6701082669df777",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/__tests__/api.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "402 default sem redirect; redirect/sem-loop preservados sob flag ON re-import",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "aaa30f79e5fbe53122a9cdd1ee85b7b944ea56f9750ad13372d58fa77df33aca",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Default: link Plano ausente; flag ON: presente",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "a770a13e308d57846c8fcb40bbc4b90487298092059dd95eb85ffd5ff1ab421b",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2632,6 +2690,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "eslint 0 problemas no arquivo; prettier verde",
+  "nota": "vitest 33/33 nos 4 arquivos; RD changed 0 novos; lint 0 erros; prettier; build OK",
   "aviso": "Declaracao ENCERRADA."
 }

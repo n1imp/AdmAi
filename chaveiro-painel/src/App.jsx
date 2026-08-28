@@ -332,16 +332,20 @@ function AppContent() {
                 </RequireAuth>
               }
             />
-            <Route
-              path="/assinatura"
-              element={
-                <RequireAuth>
-                  <Layout>
-                    <Assinatura />
-                  </Layout>
-                </RequireAuth>
-              }
-            />
+            {/* [D2 Refoundation] Assinaturas fora do MVP: rota atrás da flag — deep-link
+                desligado junto com o card e o redirect 402 (fronteira única). */}
+            {featureAtiva('SUBSCRIPTIONS_BILLING') && (
+              <Route
+                path="/assinatura"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <Assinatura />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+            )}
             <Route
               path="/configuracao"
               element={

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { featureAtiva } from './featureFlags.js';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -74,8 +75,14 @@ api.interceptors.response.use(
     } else if (status === 402) {
       /* Assinatura morta: TODA página de produto ficava em branco (jornada F5 mediu a tela).
          O destino certo existe desde SL-10: /assinatura mostra o motivo e a ação. /billing é
-         allowlisted no backend e a própria página de assinatura consome /billing — sem loop. */
-      if (!window.location.pathname.startsWith('/assinatura')) {
+         allowlisted no backend e a própria página de assinatura consome /billing — sem loop.
+         [D2 Refoundation] Com SUBSCRIPTIONS_BILLING desligada (MVP sem paywall), a rota
+         /assinatura não existe: o 402 — que o backend em free mode não emite — cai na
+         rejeição comum e o chamador trata como erro, em vez de navegar para lugar nenhum. */
+      if (
+        featureAtiva('SUBSCRIPTIONS_BILLING') &&
+        !window.location.pathname.startsWith('/assinatura')
+      ) {
         window.location.href = '/assinatura';
       }
     } else if (status === 403 && data?.codigo === 'senha_provisoria') {

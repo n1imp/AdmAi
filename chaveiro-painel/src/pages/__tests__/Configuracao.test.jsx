@@ -25,13 +25,25 @@ vi.mock('react-router-dom', () => ({
   ),
 }));
 
-const flagWhatsapp = { valor: false };
+/* Espelha o default real: diferidas OFF (WHATSAPP e SUBSCRIPTIONS_BILLING), o resto ligado.
+   vi.hoisted: o mock é consultado já na fase de IMPORT (algum módulo da cadeia chama
+   featureAtiva no top-level), então o estado precisa existir antes dos imports. */
+const flags = vi.hoisted(() => ({ WHATSAPP: false, SUBSCRIPTIONS_BILLING: false }));
+const flagWhatsapp = {
+  get valor() {
+    return flags.WHATSAPP;
+  },
+  set valor(v) {
+    flags.WHATSAPP = v;
+  },
+};
 vi.mock('../../lib/featureFlags.js', () => ({
-  featureAtiva: (nome) => (nome === 'WHATSAPP' ? flagWhatsapp.valor : true),
+  featureAtiva: (nome) => (nome in flags ? flags[nome] : true),
 }));
 
 beforeEach(() => {
-  flagWhatsapp.valor = false;
+  flags.WHATSAPP = false;
+  flags.SUBSCRIPTIONS_BILLING = false;
 });
 afterEach(cleanup);
 
@@ -50,11 +62,10 @@ describe('Configuracao — WhatsApp atrás do flag POST_MVP', () => {
     expect(alvo.textContent).toMatch(/whatsapp/i);
   });
 
-  it('Plano e cobrança continua um link real (independe do WhatsApp)', () => {
+  it('Plano e cobrança NÃO aparece no MVP (assinaturas fora do escopo, D2 Refoundation)', () => {
     render(<Configuracao />);
-    const link = document.querySelector('a[href="/assinatura"]');
-    expect(link).not.toBeNull();
-    expect(link.textContent).toMatch(/plano e cobrança/i);
+    expect(document.querySelector('a[href="/assinatura"]')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/plano e cobrança/i);
   });
 
   it('nenhum card promete "em breve" — nem com o flag OFF nem ON', () => {

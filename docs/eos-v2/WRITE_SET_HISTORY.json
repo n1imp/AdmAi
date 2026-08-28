@@ -65570,9 +65570,23 @@
       "bloqueiaIntegracao": false,
       "nota": "eslint 0 problemas no arquivo; prettier verde",
       "declaradoEm": "2026-08-28T23:13:45.268Z"
+    },
+    {
+      "sliceId": "FR-A-FRONT-SUBSCRIPTIONS-FLAG",
+      "titulo": "SUBSCRIPTIONS_BILLING no mecanismo de flags (DECISOR iii terceira solucao): rota+card+redirect 402 atras da flag, default OFF",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "vitest 33/33 nos 4 arquivos; RD changed 0 novos; lint 0 erros; prettier; build OK",
+      "declaradoEm": "2026-08-28T23:15:43.907Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:14:39.446Z",
+  "geradoEm": "2026-08-28T23:27:37.772Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

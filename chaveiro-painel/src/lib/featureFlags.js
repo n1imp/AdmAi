@@ -41,6 +41,10 @@ export const FLAGS = Object.freeze({
   /* [D2 amendment] WhatsApp e SUPERINTEGRATION POST_MVP: fora dos acceptance requirements do
      release. OFF por padrao — a implementacao existe atras deste flag. */
   WHATSAPP: ligada(import.meta.env.VITE_FEATURE_WHATSAPP),
+  /* [D2 Refoundation Cycle 1, 2026-08-28] Assinaturas pagas/Stripe SAIRAM do MVP. A pagina,
+     o card de Plano e o redirect 402 vivem atras desta flag; a implementacao (frontend e
+     backend) fica preservada intacta para o futuro ciclo comercial. */
+  SUBSCRIPTIONS_BILLING: ligada(import.meta.env.VITE_FEATURE_SUBSCRIPTIONS_BILLING),
 });
 
 /** @param {keyof typeof FLAGS} nome */

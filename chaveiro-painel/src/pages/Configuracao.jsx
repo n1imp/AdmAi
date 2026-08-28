@@ -229,6 +229,8 @@ export default function Configuracao() {
     // [D2 amendment] WhatsApp é POST_MVP: sem o flag, a seção Integrações (só WhatsApp hoje)
     // não aparece — o MVP não promete a superintegração diferida.
     .filter((s) => s.titulo !== 'Integrações' || featureAtiva('WHATSAPP'))
+    /* [D2 Refoundation] Assinaturas fora do MVP: a seção Plano some junto com a rota. */
+    .filter((s) => s.titulo !== 'Plano' || featureAtiva('SUBSCRIPTIONS_BILLING'))
     .map((s) =>
       s.titulo === 'Conta' && isAdmin
         ? { ...s, cards: [...s.cards, CARD_USUARIOS, CARD_AUDITORIA] }

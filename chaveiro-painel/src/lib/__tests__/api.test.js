@@ -73,15 +73,40 @@ describe('interceptor de resposta', () => {
     expect(localFalso.href).toBe('/login');
   });
 
-  it('402 redireciona para /assinatura — pagina de produto nunca fica em branco', async () => {
+  it('402 no MVP (SUBSCRIPTIONS_BILLING off, default): rejeita SEM navegar — a rota /assinatura não existe', async () => {
+    /* [D2 Refoundation] Assinaturas fora do MVP: o backend em free mode não emite 402;
+       se um 402 aparecer (defesa em profundidade), ele é um erro comum para o chamador. */
     await expect(api.get('/servicos', { __status: 402 })).rejects.toBeDefined();
-    expect(localFalso.href).toBe('/assinatura');
+    expect(localFalso.href).toBe('http://x/servicos');
   });
 
-  it('402 estando JÁ em /assinatura não redireciona (sem loop)', async () => {
-    localFalso.pathname = '/assinatura';
-    localFalso.href = 'http://x/assinatura';
-    await expect(api.get('/servicos', { __status: 402 })).rejects.toBeDefined();
-    expect(localFalso.href).toBe('http://x/assinatura');
+  describe('402 com SUBSCRIPTIONS_BILLING ligada (futuro ciclo comercial)', () => {
+    let apiOn;
+
+    beforeEach(async () => {
+      // Re-importa o cliente com a flag LIGADA (featureFlags é lida no load do módulo).
+      vi.resetModules();
+      vi.stubEnv('VITE_FEATURE_SUBSCRIPTIONS_BILLING', 'true');
+      ({ default: apiOn } = await import('../api.js'));
+      apiOn.defaults.adapter = api.defaults.adapter;
+    });
+
+    afterEach(() => {
+      delete apiOn.defaults.adapter;
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
+
+    it('402 redireciona para /assinatura — pagina de produto nunca fica em branco', async () => {
+      await expect(apiOn.get('/servicos', { __status: 402 })).rejects.toBeDefined();
+      expect(localFalso.href).toBe('/assinatura');
+    });
+
+    it('402 estando JÁ em /assinatura não redireciona (sem loop)', async () => {
+      localFalso.pathname = '/assinatura';
+      localFalso.href = 'http://x/assinatura';
+      await expect(apiOn.get('/servicos', { __status: 402 })).rejects.toBeDefined();
+      expect(localFalso.href).toBe('http://x/assinatura');
+    });
   });
 });
