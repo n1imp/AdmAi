@@ -391,16 +391,22 @@ function AppContent() {
                 }
               />
             )}
-            <Route
-              path="/configuracao/whatsapp"
-              element={
-                <RequireAuth>
-                  <Layout>
-                    <ConfiguracaoBot />
-                  </Layout>
-                </RequireAuth>
-              }
-            />
+            {/* [Refoundation §26 + fitness de coerência] WhatsApp é POST_MVP: a rota segue o
+                mesmo padrão de NOTIFICACOES — com a flag off, nem deep-link alcança a
+                superfície (o card em /configuracao já era gated; a rota viva era o "estado
+                inválido que a flag existe para impedir"). */}
+            {featureAtiva('WHATSAPP') && (
+              <Route
+                path="/configuracao/whatsapp"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <ConfiguracaoBot />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+            )}
             {/* Rotas antigas redirecionadas para as novas abas */}
             <Route path="/configuracao/estoque" element={<Navigate to="/estoque" replace />} />
             <Route path="/configuracao/catalogo" element={<Navigate to="/materiais" replace />} />

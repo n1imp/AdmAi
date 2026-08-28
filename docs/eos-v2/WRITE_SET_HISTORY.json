@@ -65626,9 +65626,45 @@
       "bloqueiaIntegracao": false,
       "nota": "principios com anti-AI gate + 7 disposicoes de referencia; glossario com verbos/status/erros/vazios/dinheiro + RESERVED_FUTURE",
       "declaradoEm": "2026-08-28T23:34:13.750Z"
+    },
+    {
+      "sliceId": "FR-E1-CAPABILITY-REGISTRY",
+      "titulo": "Capability registry estatico leve (evolucao do featureFlags, sem plugin runtime) + fitness tests §105",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "registry consulta FLAGS direto (featureAtiva default-true seria exposicao acidental); rotas corrigidas ao router real; teste de coerencia ainda VERMELHO no gate do whatsapp — fix na fatia seguinte (App.jsx)",
+      "declaradoEm": "2026-08-28T23:38:54.767Z"
+    },
+    {
+      "sliceId": "FR-E2-WHATSAPP-ROUTE-GATE",
+      "titulo": "Alinhar /configuracao/whatsapp a politica de exposure (§26): rota atras de featureAtiva('WHATSAPP') — achado do fitness test de coerencia",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "fitness 6/6 verdes pos-gate; lint/prettier ok; build OK; convergencia independente com o DECISOR (achado identico)",
+      "declaradoEm": "2026-08-28T23:42:00.437Z",
+      "reconciliacao": {
+        "em": "2026-08-28T23:47:07.223Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Diretiva soberana FRONTEND REFOUNDATION §128 (classificar corretamente; sem rollback de conteudo valido) — execucao Claude",
+        "justificativa": "prettier --write formatou capabilities.js e capabilities.test.js (arquivos da fatia FR-E1 imediatamente anterior, mesma linha de trabalho) enquanto a fatia viva FR-E2 declarava apenas App.jsx. Escrita = formatacao pura (sem mudanca semantica; vitest 6/6 antes e depois). Falha de processo: prettier deveria ter rodado dentro da FR-E1.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-28T23:35:38.125Z",
+  "geradoEm": "2026-08-28T23:47:07.225Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
