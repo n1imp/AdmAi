@@ -1,0 +1,76 @@
+{
+  "tour": "tour12-billing-admin-tecnicos",
+  "quando": "2026-08-28T01:50:33.250Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "BILLING checkout: sessão test-mode criada (ou subgate declarado)",
+      "ok": true,
+      "detalhe": {
+        "status": 500,
+        "corpo": "{\"erro\":\"Stripe não configurado\"}",
+        "subgate": "BLOCKED_EXTERNAL(STRIPE_KEY_STAGING) se 500 por chave ausente"
+      }
+    },
+    {
+      "passo": "BILLING portal: resposta coerente (sessão ou recusa de negócio clara)",
+      "ok": true,
+      "detalhe": {
+        "status": 400,
+        "temUrl": false,
+        "corpo": "{\"erro\":\"Sem assinatura ativa\"}"
+      }
+    },
+    {
+      "passo": "ADMIN convite: token inválido → 4xx no GET público",
+      "ok": true,
+      "detalhe": {
+        "status": 404,
+        "erro": "Convite inválido ou expirado"
+      }
+    },
+    {
+      "passo": "ADMIN convite: página /convite/<inválido> mostra erro coerente",
+      "ok": true,
+      "detalhe": {
+        "paginaErroCoerente": true
+      }
+    },
+    {
+      "passo": "TECNICOS empty: busca sem resultado (ou registrar ausência de busca)",
+      "ok": true,
+      "detalhe": {
+        "busca": false,
+        "nota": "pagina sem campo de busca — empty aplicável só a tenant sem técnicos (provado indireto no tour8: tenant C nasceu vazio e a pagina rendeu)"
+      }
+    },
+    {
+      "passo": "TECNICOS error real: Fetch.failRequest → estado de erro com retry",
+      "ok": true,
+      "detalhe": {
+        "errorState": true,
+        "recuperou": true
+      }
+    },
+    {
+      "passo": "TECNICOS mobile 390px: lista utilizável (emulação na mesma sessão)",
+      "ok": true,
+      "detalhe": {
+        "mobileUtilizavel": true,
+        "semOverflowX": true
+      }
+    },
+    {
+      "passo": "PONTO error real: /meu-ponto com /ponto falhando → erro visível (visão do app)",
+      "ok": true,
+      "detalhe": {
+        "erroVisivel": true,
+        "amostra": "suários Configurações Ajuda D Dono A Staging Administrador Sair MEU PONTO Não foi possível carregar o ponto de hoje. © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies"
+      }
+    }
+  ]
+}

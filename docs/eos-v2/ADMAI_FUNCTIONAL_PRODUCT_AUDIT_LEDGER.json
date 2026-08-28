@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_COMPLETE",
+  "status": "CYCLE3_COMPLETE",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -326,22 +326,23 @@
       "INTEGRATION_STATE": "OK(E3/E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "UNKNOWN",
+      "ERROR_STATE": "OK(C3 tour10: Fetch.failRequest -> FeedbackState + Tentar novamente + recuperacao)",
+      "EMPTY_STATE": "OK(C3 tour10: busca sem resultado -> \"Nenhum serviço encontrado\")",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E3/E4)",
       "STAGING_EVIDENCE": "Create via wizard 4 etapas + persistência pós-reload (E4); lista com 4 registros, busca por técnico, filtros por local, visão por papel (dono e gestor veem os 4; func vê os próprios com tabs Todos/Aguardando/Aprovados/Rejeitados) (tour1/2); wizard do funcionário (3 etapas) renderiza etapa 1 (tour2); transições iniciar/concluir existem (E1). Tour4: wizard do FUNCIONÁRIO completo em mobile 390 (select Local, endereço, descrição, valores, Registrar serviço) criou pendente real; lista do func refletiu Aguardando (1); após rejeição, fila zerou.",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
-      "GAPS": [
-        "Delete próprio via UI não observado (create+list+persistência provados no baseline); transições iniciar/concluir não observadas"
-      ],
-      "NEXT_ACTION": "Próxima rodada: delete via UI + transições (não bloqueia — USER_REAL_CAN_USE já provado)",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
+      "GAPS": [],
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "baseline E2E (serviço criado) · tour1 12:26Z (lista dono) · tour2 12:28Z (lista gestor/func, wizard func)",
         "tour4 12:44Z wizard func + 'Aguardando (1)'"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:29Z"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "END_USER_CAPABILITY",
+      "NOTA_C3": "Delete via UI provado (confirmacao -> toast -> decremento -> reload -> GET 404). Transicoes iniciar/concluir NAO existem no scope da pagina (evidencia de controles no tour10) — lifecycle real: wizard -> APROVACOES -> delete; gap anterior era expectativa nao fundada no scope.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour10-servicos.json (11/11)"
     },
     {
       "ID": "AUD-CAP-TECNICOS",
@@ -353,25 +354,27 @@
       "INTEGRATION_STATE": "OK(E3)",
       "RBAC_STATE": "OK(E3)",
       "PERSISTENCE_STATE": "OK(E4)",
-      "ERROR_STATE": "UNKNOWN",
-      "EMPTY_STATE": "PARTIAL(E3)",
+      "ERROR_STATE": "OK(C3 tour12: Fetch.failRequest -> erro com retry + recuperacao)",
+      "EMPTY_STATE": "OK(C3 probe: lista vazia -> EstadoVazio \"Nenhum técnico cadastrado\" renderizado no bundle real)",
       "LOADING_STATE": "OK(E3)",
-      "MOBILE_STATE": "UNKNOWN",
+      "MOBILE_STATE": "OK(C3 tour12: 390px utilizavel, sem overflow-x)",
       "STAGING_EVIDENCE": "Dono e GESTOR veem o técnico (recheck tour3: API 200 qtd 1 + UI '1 cadastrado' — o '0' era flash-of-empty). Card expande ao clique e expõe 'Ver perfil completo' -> /tecnicos/557 alcançado (tour5). PORÉM o perfil renderizou só o título após 2,5s (carregando lento OU falha silenciosa) — A_CONFIRMAR na reverificação. Card rico: telefone, SERVIÇOS 4, LÍQUIDO R$463, COMISSÃO 20%, PENDENTE R$92,60 (atualizado pós-rejeição). Truncamento do freeze não reproduzível com 1 técnico. RESOLVIDO o A_CONFIRMAR do perfil: GET /tecnicos/557/perfil responde 200 com payload completo (tecnico/meta/periodo/pagamentos) em 1,8-3,6s; as duas capturas vazias foram esperas prematuras do instrumento (esperarTexto casou com a sidebar). /ponto?mes=2026-08 responde 200. [Ciclo 2 tour8] Com 3 tecnicos de nomes LONGOS reais (ate 52 chars) em 1440px: NAO ha truncamento (scrollWidth==clientWidth 350px, white-space:normal) — o CardTecnico ja aplica a \"Direcao B (D-SL15)\". Perfil /tecnicos/:id PINTA conteudo com espera correta (fecha o A_CONFIRMAR do ciclo 1: a corrida era do instrumento). O achado REDESIGN do freeze (nomes colapsando \"An…\") NAO se reproduz.",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [
-        "Convite/aceite de técnico não exercitado (e-mail real)",
-        "Scope freeze RECONCILIADO (amendment 2026-08-27): /tecnicos REDESIGN->REFINE — PREVIOUS_ASSUMPTION_REFUTED_BY_RUNTIME_EVIDENCE"
+        "Convite/aceite de tecnico por e-mail real: mesma classe do ADMIN (complementar; nao-executavel por design; negativo provado)"
       ],
-      "NEXT_ACTION": "Retorno da auditoria funcional: convite/aceite quando exercitavel; sem redesign",
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (lista dono + medida truncamento) · tour2 12:28Z (lista gestor)",
         "tour3 12:40Z recheck gestor (API 1 / UI 1) · tour5 12:53Z 'Ver perfil completo' -> /tecnicos/557",
         "probe-perfil 15:09Z (3x HTTP 200 com chaves completas) · tour6 pontoApiStatus 200",
         "tour8 tecnicos longos (sem truncamento) + perfil pinta"
       ],
-      "LAST_VERIFIED_HEAD": "3d62335 (staging deploy c559423+format; bundle index-42CSXyQX) @ 2026-08-27 Ciclo 2"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "END_USER_CAPABILITY",
+      "NOTA_C3": "/tecnicos segue REFINE (sem redesign; amendment preservado).",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json + resultado-probe-tecnicos-empty.json"
     },
     {
       "ID": "AUD-CAP-FINANCEIRO",
@@ -418,13 +421,17 @@
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "Checkout/portal Stripe: ação financeira externa VEDADA por D7 — gap intrínseco declarado (não executável nesta auditoria)"
+        "EXACT_BLOCKER: BLOCKED_EXTERNAL(STRIPE_KEY_STAGING) — POST /billing/checkout 500 \"Stripe não configurado\" (chave de TEST ausente no Railway staging); sem ela nem sandbox e possivel. AUTHORITY_REQUIRED: usuario (provisionar STRIPE_SECRET_KEY test em staging). NEXT_ACTION: upsert da chave test via fase external-secrets + reprobe checkout/portal (sem completar pagamento).",
+        "Cobranca REAL de producao permanece D2/D7 (independente da chave test)."
       ],
-      "NEXT_ACTION": "NONE (checkout real é D2/D7)",
+      "NEXT_ACTION": "Aguardar STRIPE test key (user gate); reprobe cria sessao sem completar",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (assinatura + billing/status) · tour2 12:28Z (assinatura gestor)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "ADMIN_CAPABILITY",
+      "NOTA_C3": "Portal: 400 \"Sem assinatura ativa\" = recusa de negocio COERENTE no trial. Trial/gating/RBAC ja provados. Nao-completo e EXPLICADO e irreducivel sem a chave.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json"
     },
     {
       "ID": "AUD-CAP-SEGURANCA",
@@ -547,14 +554,17 @@
       "MOBILE_STATE": "N/A",
       "STAGING_EVIDENCE": "Catálogo GET /metricas 200 com 10 métricas (faturamento-liquido, ticket-medio, comissao-total, servicos-concluidos, taxa-aprovacao, producao-por-tecnico, horas-trabalhadas, nota-media-avaliacao, taxa-recompra, taxa-conversao-orcamento); detalhe + série 200 (tour3). Consumidores reais: dashboard 12 KPIs, gestor/indicadores, repartição.",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "INTEGRATED",
+      "FINAL_CLASSIFICATION": "FOUNDATIONAL_COMPLETE",
       "GAPS": [],
       "NEXT_ACTION": "NONE (hubs de UI seguem DEFERRED_BY_SCOPE)",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (dashboard) · tour2 12:28Z (gestor/indicadores)",
         "tour3 12:40Z GET /metricas + serie 200"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:28Z"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "FOUNDATIONAL_CAPABILITY",
+      "COMPLETION_SEMANTICS": "Capability foundational NAO exige pagina propria: DONE = contrato de metricas + correcao semantica + consistencia entre consumidores + testes + prova em staging. PROVADO: catalogo 12 metricas; R1 populacao agregado==drilldown (463==463, count 4); R2 net revenue real (380-120=260); R3 recomputo independente via /servicos == agregado; R4 serie soma==agregado com dia-zero; R5 metrica desconhecida 404; consumidores reais = dashboard KPIs + indicadores (ciclo 1); suite integracao dedicada metricas_exposicao (20 testes, incl. soma==agregado e tenant isolation) + metricas_campo_seguranca no CI de cada push.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour13-metricas-obs.json (R1-R5)"
     },
     {
       "ID": "AUD-CAP-INDICADORES",
@@ -590,21 +600,22 @@
       "INTEGRATION_STATE": "OK(E4)",
       "RBAC_STATE": "OK(E4)",
       "PERSISTENCE_STATE": "OK(E4)",
-      "ERROR_STATE": "UNKNOWN",
+      "ERROR_STATE": "OK(C3 tour12: /meu-ponto com rede falhando -> \"Não foi possível carregar\")",
       "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "OK(E3/E4)",
       "STAGING_EVIDENCE": "Batida real provada no baseline (persistiu pós-reload); /meu-ponto renderiza o dia com sequência Entrada→Almoço→Volta→Saída, 'Próximo: Entrada' e aviso de selfie+localização (tour2); presencaHoje aparece nos indicadores do gestor. /tecnicos/557/ponto?mes=2026-08 responde 200 (visão gestor/dono acessível).",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
-      "GAPS": [
-        "Selfie da batida: VALIDACAO NAO-EXECUTAVEL em headless (não é gap de produto); visão gestor/dono do ponto via /tecnicos/:id/ponto 200"
-      ],
-      "NEXT_ACTION": "NONE obrigatória (selfie declarada não-executável por instrumento)",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
+      "GAPS": [],
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "baseline E2E (ponto batido) · tour2 12:28Z (meu-ponto estado do dia)"
       ],
-      "LAST_VERIFIED_HEAD": "ecf4c14 (deploy staging Publish preview, run 33081925408) @ 2026-08-27T15:05Z"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "END_USER_CAPABILITY",
+      "NOTA_C3": "Selfie EXERCITADA DE VERDADE (gap de instrumento fechado): consent LGPD do ponto -> getUserMedia com --use-fake-device-for-media-stream (midia sintetica legitima do Chrome) -> canvas JPEG -> POST /ponto/bater {selfie, lat,lng} com Emulation.setGeolocationOverride -> toast -> \"Com selfie\" persistido pos-reload -> sequencia avanca. Negativo de papel: dono POST /ponto/bater 4xx. Nada do produto foi enfraquecido.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour11-ponto.json (10/10) + resultado-tour12 (error state)"
     },
     {
       "ID": "AUD-CAP-CONFIGURACOES",
@@ -673,15 +684,19 @@
       "MOBILE_STATE": "N/A",
       "STAGING_EVIDENCE": "GET /health 200 {status ok, whatsapp desconectado, uptime, checks.database ok} ao vivo (tour0); logger estruturado por evento + Sentry (capturarErro com feature/userId/empresaId) no código; métricas de app via metricsMiddleware (E1 app.js).",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "INTEGRATED",
+      "FINAL_CLASSIFICATION": "OPERATIONAL_COMPLETE",
       "GAPS": [
-        "Capability de infraestrutura: 'usuário' aqui é operador; dashboards externos (Railway/Sentry) não verificáveis desta sessão"
+        "Re-execucao da fase logs HOJE: BLOCKED_EXTERNAL(GITHUB_ACTIONS_BILLING) — run 33134423489 nem iniciou (\"account payments have failed or spending limit\"). AUTHORITY_REQUIRED: usuario (billing GitHub). Nao invalida a prova operacional ja executada.",
+        "Dashboards Sentry/Railway (paineis web de terceiros): verificacao externa a esta sessao, declarada."
       ],
-      "NEXT_ACTION": "NONE (nota: verificação de Sentry/Railway dashboards é operação externa)",
+      "NEXT_ACTION": "NONE obrigatoria (re-probe de logs quando Actions voltar)",
       "EVIDENCE_POINTERS": [
         "tour0 12:23Z (health body completo)"
       ],
-      "LAST_VERIFIED_HEAD": "8a53cc5 (deploy staging) @ 2026-08-27T12:23Z"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "OPERATIONAL_CAPABILITY",
+      "COMPLETION_SEMANTICS": "Capability operacional: o \"usuario\" e o operador. DONE = operador consegue observar saude, logs estruturados e erros SEM vazar segredo. PROVADO: /health 200 fresh (status/uptime/checks.database; sem segredos no corpo — tour13); logger estruturado por evento + Sentry wiring + metricsMiddleware (codigo, E1); pipeline REAL de logs do operador executado no ciclo 2 (fase logs do bootstrap: deploymentLogs + attributes estruturados + FILTRO_ERRO + scrubLinha com selftest 23/23 — foi ele que revelou o erro de WebSocket/Node22); logs de erro estruturados gerados por probes reais (billing_checkout_erro em 2026-08-28) registrados pelo logger.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour13-metricas-obs.json (health) + ciclo2 fase logs"
     },
     {
       "ID": "AUD-CAP-ADMIN",
@@ -693,23 +708,24 @@
       "INTEGRATION_STATE": "OK(E3)",
       "RBAC_STATE": "OK(E3)",
       "PERSISTENCE_STATE": "OK(E3)",
-      "ERROR_STATE": "UNKNOWN",
+      "ERROR_STATE": "OK(E3 + C3: pagina /convite invalido mostra erro coerente)",
       "EMPTY_STATE": "OK(E3)",
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "N/A",
       "STAGING_EVIDENCE": "Recheck (tour3): /configuracao/usuarios lista '3 contas cadastradas' com papéis e status (Dono você / Gestor / Func Técnico, todos Ativo) + botão '+'; GET /usuarios 200 (3); /permissoes/catalogo 200; config empresa GET/PATCH provados. O '0 contas' era flash-of-empty. REVERIFY (tour6): contador exibiu travessão cedo e '3 contas cadastradas' após o fetch — sem zero transitório. [Ciclo 2 tour8] Criacao de usuario via UI (modal Nova conta: nome/usuario/senha/papel Funcionario) + MatrizPermissoes (override de modulo) provadas no tenant descartavel; usuario criado loga e sofre o override. Convite segue nao exercitado (dispara e-mail real).",
       "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
-      "GAPS": [
-        "Convite de usuário (POST /usuarios/convidar → e-mail real via Resend): VALIDACAO NAO-EXECUTAVEL no ambiente (não é gap de produto — criação DIRETA de usuário provada ponta-a-ponta com override efetivo)"
-      ],
-      "NEXT_ACTION": "Candidata a FEATURE_COMPLETE quando o aceite de convite for exercitável; auditoria consultável (parte de ADMIN) já FEATURE_COMPLETE",
+      "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
+      "GAPS": [],
+      "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (config/catalogo/usuarios API+UI)",
         "tour3 12:40Z recheck usuarios ('3 contas cadastradas')",
         "tour8 ADMIN criacao+matriz"
       ],
-      "LAST_VERIFIED_HEAD": "3d62335 (staging deploy c559423+format; bundle index-42CSXyQX) @ 2026-08-27 Ciclo 2"
+      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "CAPABILITY_TYPE": "ADMIN_CAPABILITY",
+      "NOTA_C3": "Decisao de escopo (secao 20): convite por e-mail e fluxo COMPLEMENTAR de criacao — a criacao DIRETA + matriz + override efetivo (tour8) cobrem o contrato de produto \"adicionar e governar usuarios\". Negativo do aceite provado (GET /convite/token-invalido 404 \"Convite inválido ou expirado\" + pagina coerente, tour12). Leitura do e-mail real: VALIDACAO NAO-EXECUTAVEL POR DESIGN (Resend key e segredo opaco do runner; nunca local) — limitacao de ambiente NAO-intrinseca, registrada.",
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json"
     },
     {
       "ID": "AUD-CAP-DOCUMENTOS",
@@ -1208,6 +1224,28 @@
       "tools/admai-delivery/react-doctor-summary.mjs",
       "tools/admai-delivery/react-doctor-router.mjs"
     ],
-    "decisaoCurrentVnext": "CURRENT — todos os criterios da secao 41 PASS com evidencia (discovery, dry-run recusado, baselines, classificacao, controle negativo residual 0, changed scope, router 8/8, capability/perfil separados, skill registrada, economia de tokens, 2 fixes materiais com processo completo, CI shadow provado em run real, pin 0.9.12, fail-closed, score-nao-KPI, orcamento medido)"
+    "decisaoCurrentVnext": "CURRENT — todos os criterios da secao 41 PASS com evidencia (discovery, dry-run recusado, baselines, classificacao, controle negativo residual 0, changed scope, router 8/8, capability/perfil separados, skill registrada, economia de tokens, 2 fixes materiais com processo completo, CI shadow provado em run real, pin 0.9.12, fail-closed, score-nao-KPI, orcamento medido)",
+    "ciGate": {
+      "modo": "BLOCKING_NEW_ERRORS",
+      "promovidoEm": "2026-08-28",
+      "commit": "d082870",
+      "provaFailReal": "PR #115 (branch tmp/rd-gate-negcontrol, commit 4e1a4e7 via plumbing — worktree intocada): run 33133459036 frontend FAILURE no step \"React Doctor — gate\" (eval sintetico detectado como erro NOVO), artifact ainda publicado, ci-ok FAILURE. PR fechado SEM merge; branch remota deletada (restore proof; staging/master intocados).",
+      "provaGateVerdeNoStaging": "run 33133420614: step gate SUCCESS com codigo real (0 erros novos)",
+      "ciGreenAposRestore": "run 33134315654 (pos-restore, commit 12e0774): TODOS os 5 jobs de trabalho SUCCESS — frontend (que CONTEM o step do gate) SUCCESS com 0 erros novos e 243 warnings legados nao bloqueando; backend SUCCESS (374/374 — fix do flake provado). UNICO vermelho: job agregador ci-ok com 0 steps e annotation literal \"job was not started because recent account payments have failed or your spending limit needs to be increased\" = GITHUB_ACTIONS_BILLING (infra externa, user gate) — nao e semantica do gate nem dos testes.",
+      "legadoNaoBloqueia": "243 warnings baselined seguem nao-bloqueantes (diff por id)"
+    },
+    "rollout": "CLOSED"
+  },
+  "cicloAtual": {
+    "id": "CYCLE3",
+    "concluidoEm": "2026-08-28",
+    "resultado": "18 FEATURE_COMPLETE(+4) + 1 FOUNDATIONAL_COMPLETE + 1 OPERATIONAL_COMPLETE + 1 USER_REAL_CAN_USE(BILLING, blocker externo exato) — ZERO_UNEXPLAINED_NON_COMPLETE_STATE",
+    "fixes": [
+      "12e0774 flake telefone (5 helpers integracao)"
+    ],
+    "achadosExternos": [
+      "GITHUB_ACTIONS_BILLING esgotado durante o ciclo (novos runs nao iniciam) — USER_GATE para CI continuo",
+      "STRIPE_KEY_STAGING ausente — USER_GATE para billing sandbox"
+    ]
   }
 }

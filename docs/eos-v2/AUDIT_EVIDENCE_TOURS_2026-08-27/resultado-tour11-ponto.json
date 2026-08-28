@@ -1,0 +1,86 @@
+{
+  "tour": "tour11-ponto",
+  "quando": "2026-08-28T01:48:20.008Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "emulação: geolocation override (permissão + posição sintética)",
+      "ok": true,
+      "detalhe": {
+        "grant": "ok",
+        "override": true
+      }
+    },
+    {
+      "passo": "login func.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "/meu-ponto: estado do dia com próxima batida",
+      "ok": true,
+      "detalhe": {
+        "proximaBatida": null
+      }
+    },
+    {
+      "passo": "bater ponto: consent de selfie/GPS (LGPD) → câmera fake abre",
+      "ok": true,
+      "detalhe": {
+        "consentSelfieGpsVisto": true,
+        "modal": true,
+        "camera": "fake-device"
+      }
+    },
+    {
+      "passo": "capturar: Tirar foto → Usar esta foto → toast de batida registrada",
+      "ok": true,
+      "detalhe": {
+        "toast": "registrada"
+      }
+    },
+    {
+      "passo": "estado do dia atualiza: batida com hora + marcador \"Com selfie\"",
+      "ok": true,
+      "detalhe": {
+        "hora": true,
+        "comSelfie": true
+      }
+    },
+    {
+      "passo": "persistência: reload /meu-ponto mantém a batida e avança a sequência",
+      "ok": true,
+      "detalhe": {
+        "persistiu": true
+      }
+    },
+    {
+      "passo": "API do dia confirma batida persistida (GET /ponto/hoje ou equivalente)",
+      "ok": true,
+      "detalhe": {
+        "rota": "/ponto/hoje",
+        "chaves": [
+          "data",
+          "entradaEm",
+          "almocoSaidaEm",
+          "almocoVoltaEm",
+          "saidaEm",
+          "completo",
+          "proximaBatida",
+          "proximaBatidaRotulo"
+        ]
+      }
+    },
+    {
+      "passo": "logout func",
+      "ok": true
+    },
+    {
+      "passo": "NEGATIVO de papel: dono.a.stg POST /ponto/bater → recusado",
+      "ok": true,
+      "detalhe": {
+        "status": 400,
+        "erro": "Sua conta não está vinculada a um técnico"
+      }
+    }
+  ]
+}

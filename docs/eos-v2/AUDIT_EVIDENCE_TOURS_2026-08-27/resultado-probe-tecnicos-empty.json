@@ -1,0 +1,20 @@
+{
+  "tour": "probe-tecnicos-empty",
+  "quando": "2026-08-28T02:07:35.994Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "EMPTY real: /tecnicos com lista vazia renderiza EstadoVazio",
+      "ok": true,
+      "detalhe": {
+        "emptyRenderizado": true,
+        "amostra": "g Administrador Sair EQUIPE TÉCNICOS 0 cadastrados Nenhum técnico cadastrado Toque no + para adicionar o primeiro técnico da sua equipe. Adicionar técnico + © 2026 AdmAi·Privacidade·Termos·Cookies·Preferências de cookies",
+        "listaVoltou": true
+      }
+    }
+  ]
+}

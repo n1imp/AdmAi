@@ -1,0 +1,78 @@
+{
+  "tour": "tour13-metricas-obs",
+  "quando": "2026-08-28T01:58:05.143Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "catálogo: GET /metricas com 10 métricas",
+      "ok": true,
+      "detalhe": {
+        "qtd": 12
+      }
+    },
+    {
+      "passo": "agregado: GET /metricas/faturamento-liquido {valor, registros}",
+      "ok": true,
+      "detalhe": {
+        "valor": 463,
+        "meta": "{\"metricId\":\"faturamento-liquido\",\"name\":\"Receita líquida\",\"version\":\"1.0.0\",\"window\":{\"inicio\":\"2026-08-01T00:00:00.000Z\",\"fim\":\"2026-08-28T01:57:48.971Z\"},\"sc"
+      }
+    },
+    {
+      "passo": "R1 população: drilldown /registros bate com o agregado (count e soma)",
+      "ok": true,
+      "detalhe": {
+        "somaDrilldown": 463,
+        "valorAgregado": 463,
+        "count": 4
+      }
+    },
+    {
+      "passo": "R2 net revenue: valorLiquido == valorCobrado - valorMaterial (registro real)",
+      "ok": true,
+      "detalhe": {
+        "exemplo": {
+          "cobrado": 380,
+          "material": 120,
+          "liquido": 260
+        }
+      }
+    },
+    {
+      "passo": "R3 recomputo independente via /servicos (predicado do contrato)",
+      "ok": true,
+      "detalhe": {
+        "recomputo": 463,
+        "agregado": 463,
+        "totalServicos": 4,
+        "netRevenueRegraOk": true
+      }
+    },
+    {
+      "passo": "R4 série: soma dos pontos == agregado (dia-zero preservado)",
+      "ok": true,
+      "detalhe": {
+        "pontos": 28,
+        "somaSerie": 463,
+        "diaZeroPresente": true
+      }
+    },
+    {
+      "passo": "R5 contrato: métrica desconhecida → 404 com erro claro",
+      "ok": true,
+      "detalhe": {
+        "status": 404,
+        "erro": "Métrica desconhecida"
+      }
+    },
+    {
+      "passo": "OBS /health: body operacional completo sem segredos",
+      "ok": false,
+      "erro": "health 404"
+    }
+  ]
+}

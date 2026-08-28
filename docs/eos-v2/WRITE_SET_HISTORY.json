@@ -65514,9 +65514,23 @@
       "bloqueiaIntegracao": false,
       "nota": "node --check 5/5; prettier verde; validacao de execucao = CI do push (integracao nao roda local por politica)",
       "declaradoEm": "2026-08-28T01:54:26.447Z"
+    },
+    {
+      "sliceId": "C3-CLOSURE",
+      "titulo": "Fechamento do Ciclo 3: evidencias tour10-13+probe, reclassificacoes no ledger, CURRENT_STATE",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "tours 10-13 + probe-empty versionados; ledger CYCLE3_COMPLETE (7 itens + RD gate CLOSED); CURRENT_STATE compacto",
+      "declaradoEm": "2026-08-28T02:08:18.544Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:55:00.542Z",
+  "geradoEm": "2026-08-28T02:11:00.148Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,0 +1,84 @@
+{
+  "tour": "tour10-servicos",
+  "quando": "2026-08-28T01:43:30.302Z",
+  "base": "https://staging.admai-painel.pages.dev",
+  "resultados": [
+    {
+      "passo": "login dono.a.stg",
+      "ok": true
+    },
+    {
+      "passo": "criar servico STG-AUD via API (alvo do delete-UI; create-UI já provado E4)",
+      "ok": true,
+      "detalhe": {
+        "id": 374
+      }
+    },
+    {
+      "passo": "lista mostra o servico + total (subtitle N registros)",
+      "ok": true,
+      "detalhe": {
+        "totalAntes": 5
+      }
+    },
+    {
+      "passo": "drawer do servico via URL (?servico=id) expõe \"Remover serviço\"",
+      "ok": true,
+      "detalhe": {
+        "drawer": true
+      }
+    },
+    {
+      "passo": "DELETE via UI: Remover → \"Confirmar remoção?\" → Sim, remover → toast",
+      "ok": true,
+      "detalhe": {
+        "toast": true
+      }
+    },
+    {
+      "passo": "sumiço imediato da lista + total decrementa",
+      "ok": true,
+      "detalhe": {
+        "totalDepois": 4
+      }
+    },
+    {
+      "passo": "persistência do delete: reload /servicos + GET API sem o id",
+      "ok": true,
+      "detalhe": {
+        "reloadSemServico": true,
+        "get404": true
+      }
+    },
+    {
+      "passo": "EMPTY real: busca sem resultado -> \"Nenhum serviço encontrado\"",
+      "ok": true,
+      "detalhe": {
+        "empty": true
+      }
+    },
+    {
+      "passo": "ERROR real: Fetch.failRequest em /servicos -> FeedbackState de erro + Tentar novamente",
+      "ok": true,
+      "detalhe": {
+        "errorState": true,
+        "retryVisivel": true
+      }
+    },
+    {
+      "passo": "recuperação: Tentar novamente volta a lista saudável",
+      "ok": true,
+      "detalhe": {
+        "recuperou": true
+      }
+    },
+    {
+      "passo": "transições iniciar/concluir NÃO existem no scope (evidência de controles)",
+      "ok": true,
+      "detalhe": {
+        "controles": "/servicos | controles=[\"Saiba mais\",\"Aceitar todos\",\"Apenas necessários\",\"Painel\",\"Relatórios\",\"Equipe\",\"Serviços\",\"Aprovações\",\"Materiais\",\"Estoque\",\"Usuários\",\"Configurações\",\"Ajuda\",\"Sair\",\"Novo serviço\",\"Filtros\",\"Todos\",\"Casa do cliente\",\"Contrato\",\"Ponto da loja\",\"Outro\",\"Func A StagingCasa do clienteServico staging 497040 27/08/2026, 08:35R$ 1,50líquido\",\"Func A StagingCasa do clienteServic",
+        "lifecycleReal": "wizard -> APROVACOES (aprovar/rejeitar) -> delete"
+      }
+    }
+  ]
+}
