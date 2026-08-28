@@ -65584,9 +65584,23 @@
       "bloqueiaIntegracao": false,
       "nota": "vitest 33/33 nos 4 arquivos; RD changed 0 novos; lint 0 erros; prettier; build OK",
       "declaradoEm": "2026-08-28T23:15:43.907Z"
+    },
+    {
+      "sliceId": "FR-A-DOCS-FREEZE-LEDGER",
+      "titulo": "Scope freeze 1.1.0 (assinaturas fora do MVP, D2) + ledger BILLING->DEFERRED_BY_SCOPE + ADMAI_FUNCTIONAL_PRODUCT_AUDIT_COMPLETE",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "freeze 1.1.0 coerente (20 MVP/5 diferidas); ledger audit COMPLETE com distincao CI explicita",
+      "declaradoEm": "2026-08-28T23:28:09.945Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:27:37.772Z",
+  "geradoEm": "2026-08-28T23:29:31.818Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

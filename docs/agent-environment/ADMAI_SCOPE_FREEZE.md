@@ -7,16 +7,35 @@ vai ao ar**. Ele não afirma que está pronto para ir.
 
 | campo | valor |
 | --- | --- |
-| `scopeVersion` | `1.0.0` |
+| `scopeVersion` | `1.1.0` |
 | `repositoryId` | `AdmAi` — worktree `agent-environment`, branch `fix/seguranca-criticos` |
-| `baseCommit` | `633a37f` |
-| `congeladoEm` | 2026-08-22 |
+| `baseCommit` | `633a37f` (1.0.0) · amendment 1.1.0 sobre `1e27957` |
+| `congeladoEm` | 2026-08-22 (1.0.0) · 2026-08-28 (1.1.0) |
 | derivação | números lidos de `feature-registry.mjs` e `surface-registry.mjs`, não digitados |
 | EOS | `FROZEN` — nenhuma slice nova despachada nesta sessão |
 
+### Changelog 1.1.0 — 2026-08-28 (decisão soberana D2, FRONTEND REFOUNDATION Cycle 1)
+
+```text
+REMOVED_FROM_MVP: PAID_SUBSCRIPTIONS / STRIPE_BILLING
+AUTHORITY: decisão D2 explícita do usuário (diretiva do ciclo, seção 0/3 — não requer reconfirmação)
+```
+
+Assinaturas pagas, Stripe checkout/portal, ciclo de webhook, renovação, planos pagos e o
+enforcement por trial/paywall **saem do escopo do MVP**. `STRIPE_KEY_STAGING` deixa de ser
+blocker de MVP. A implementação (frontend `Assinatura.jsx`, backend `middlewares/assinatura.js`,
+rotas `/billing/*`, webhook) fica **preservada intacta e dormente** atrás de fronteira explícita:
+
+- painel: flag `VITE_FEATURE_SUBSCRIPTIONS_BILLING` (default OFF) gate rota `/assinatura`,
+  card "Plano e cobrança" e o redirect 402 do interceptor (commit `1e27957`);
+- backend: `ASSINATURA_ENFORCEMENT_ENABLED` (só `'true'` liga) — paywall inerte por padrão;
+  matriz completa do gate segue provada nos testes com a flag ligada (commit `4ac3df7`).
+
+Nenhuma outra decisão de escopo foi reaberta. `scopeStatus = ADMAI_SCOPE_CLOSED` (abaixo).
+
 ---
 
-## Features incluídas no MVP — 21
+## Features incluídas no MVP — 20 (1.1.0: `BILLING` movida para diferidas)
 
 | feature | prioridade | funcional |
 | --- | --- | --- |
@@ -28,7 +47,6 @@ vai ao ar**. Ele não afirma que está pronto para ir.
 | `SERVICOS_CRUD` | P0 | DONE |
 | `TECNICOS` | P0 | DONE |
 | `FINANCEIRO` | P0 | DONE |
-| `BILLING` | P0 | DONE |
 | `SEGURANCA` | P0 | DONE |
 | `LGPD` | P0 | DONE |
 | `APROVACOES` | P1 | DONE |
@@ -42,7 +60,7 @@ vai ao ar**. Ele não afirma que está pronto para ir.
 | `OBSERVABILIDADE` | P1 | DONE |
 | `ADMIN` | P2 | DONE — **mantida no release por decisão explícita do usuário**, por sustentar RBAC |
 
-## Features diferidas — 4
+## Features diferidas — 5 (1.1.0)
 
 Todas sob flag com **default desligado**: ausência de variável significa fora do ar, para que
 esquecer de configurar não recoloque uma feature diferida em produção.
@@ -52,6 +70,7 @@ esquecer de configurar não recoloque uma feature diferida em produção.
 | `METRIC_HUBS` | `VITE_FEATURE_METRIC_HUBS` — rota, item de menu e `hubEm` do KpiCard removidos |
 | `GOOGLE_REVIEWS` | `VITE_FEATURE_GOOGLE_REVIEWS` — rota e as duas entradas de navegação |
 | `NOTIFICACOES` | `VITE_FEATURE_NOTIFICACOES` — rota e entrada de navegação (**corrigida nesta sessão**) |
+| `SUBSCRIPTIONS_BILLING` | **(1.1.0, D2)** `VITE_FEATURE_SUBSCRIPTIONS_BILLING` (rota `/assinatura`, card Plano, redirect 402) + backend `ASSINATURA_ENFORCEMENT_ENABLED` (paywall inerte); implementação preservada dormente |
 | `E2E` | não implementado; fora do release |
 
 `POST_MVP + USER_REACHABLE = INVALID_RELEASE_STATE` — verificado em runtime nos três papéis.
@@ -167,8 +186,8 @@ Write Set               : MATCH
 | `NOT_INVENTORIED = 0` | sim |
 | `ALL_SURFACES_CLASSIFIED` | sim — 16/33/0 (amendment 2026-08-27: `/tecnicos` REDESIGN→REFINE por evidência) |
 | `VISIBLE_P2_RELEASE_DECISION_RECONCILED` | sim — 3 diferidas por flag, `ADMIN` mantida |
-| `MVP_FEATURE_SET_EXPLICIT` | sim — 21 |
-| `DEFERRED_FEATURE_SET_EXPLICIT` | sim — 4 |
+| `MVP_FEATURE_SET_EXPLICIT` | sim — 20 (1.1.0) |
+| `DEFERRED_FEATURE_SET_EXPLICIT` | sim — 5 (1.1.0) |
 | `ALL_SURFACES_MAPPED` | sim — proveniência declarada por superfície |
 | `ALL_BLOCKERS_EXPLICIT` | sim |
 | `ALL_OPEN_GAPS_EXPLICIT` | sim — 8 compartilhados + 17 locais |

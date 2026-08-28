@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE3_COMPLETE",
+  "status": "FUNCTIONAL_AUDIT_COMPLETE_FRONTEND_REFOUNDATION_IN_PROGRESS",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -405,8 +405,8 @@
     },
     {
       "ID": "AUD-CAP-BILLING",
-      "NAME": "BILLING",
-      "SCOPE_CLASS": "MVP",
+      "NAME": "SUBSCRIPTIONS_BILLING",
+      "SCOPE_CLASS": "DEFERRED_BY_SCOPE",
       "PRIORITY": "P0",
       "FRONTEND_STATE": "OK(E3)",
       "BACKEND_STATE": "OK(E2)",
@@ -418,20 +418,22 @@
       "LOADING_STATE": "OK(E3)",
       "MOBILE_STATE": "UNKNOWN",
       "STAGING_EVIDENCE": "GET /billing/status 200 {status: trialing, trialFimEm: 2026-09-10} (estado REAL do seed); /assinatura renderiza o trial com data correta e CTA ASSINAR para dono; gestor vê 'Somente o admin…' (RBAC de UI no billing); webhook Stripe com idempotência e checkout/portal adminOnly (E1).",
-      "USER_REAL_CAN_USE": "YES",
-      "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
+      "USER_REAL_CAN_USE": "N/A (fora do MVP por decisao soberana)",
+      "FINAL_CLASSIFICATION": "DEFERRED_BY_SCOPE",
       "GAPS": [
-        "EXACT_BLOCKER: BLOCKED_EXTERNAL(STRIPE_KEY_STAGING) — POST /billing/checkout 500 \"Stripe não configurado\" (chave de TEST ausente no Railway staging); sem ela nem sandbox e possivel. AUTHORITY_REQUIRED: usuario (provisionar STRIPE_SECRET_KEY test em staging). NEXT_ACTION: upsert da chave test via fase external-secrets + reprobe checkout/portal (sem completar pagamento).",
-        "Cobranca REAL de producao permanece D2/D7 (independente da chave test)."
+        "EXACT_REASON: removed from MVP by sovereign scope decision (assinaturas pagas/Stripe fora do escopo).",
+        "AUTHORITY: D2 user decision (FRONTEND REFOUNDATION Cycle 1, 2026-08-28; scope freeze 1.1.0).",
+        "NEXT_ACTION: future post-MVP/product-commercial cycle. Implementacao PRESERVADA dormente: painel atras de VITE_FEATURE_SUBSCRIPTIONS_BILLING (rota+card+redirect 402, commit 1e27957); backend atras de ASSINATURA_ENFORCEMENT_ENABLED (paywall inerte por default, matriz provada com flag ON, commit 4ac3df7); Stripe/webhook intocados."
       ],
-      "NEXT_ACTION": "Aguardar STRIPE test key (user gate); reprobe cria sessao sem completar",
+      "NEXT_ACTION": "NONE neste programa (ciclo comercial futuro)",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (assinatura + billing/status) · tour2 12:28Z (assinatura gestor)"
       ],
-      "LAST_VERIFIED_HEAD": "C3@2026-08-28",
+      "LAST_VERIFIED_HEAD": "FR0@2026-08-28",
       "CAPABILITY_TYPE": "ADMIN_CAPABILITY",
       "NOTA_C3": "Portal: 400 \"Sem assinatura ativa\" = recusa de negocio COERENTE no trial. Trial/gating/RBAC ja provados. Nao-completo e EXPLICADO e irreducivel sem a chave.",
-      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json"
+      "STAGING_EVIDENCE_C3": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json",
+      "NOTA_FR0": "STRIPE_KEY_STAGING deixou de ser blocker de MVP. Modo livre do MVP provado em billing_free_mode.test.js (estados mortos/ausencia nao barram; bypass antes de req/db)."
     },
     {
       "ID": "AUD-CAP-SEGURANCA",
@@ -1246,6 +1248,16 @@
     "achadosExternos": [
       "GITHUB_ACTIONS_BILLING esgotado durante o ciclo (novos runs nao iniciam) — USER_GATE para CI continuo",
       "STRIPE_KEY_STAGING ausente — USER_GATE para billing sandbox"
+    ]
+  },
+  "functionalAuditClosure": {
+    "em": "2026-08-28",
+    "ADMAI_FUNCTIONAL_PRODUCT_AUDIT_COMPLETE": "YES",
+    "criterio": "Todas as capabilities tecnicamente executaveis do MVP tem estado terminal correto: 18 FEATURE_COMPLETE + METRIC_FOUNDATION=FOUNDATIONAL_COMPLETE + OBSERVABILIDADE=OPERATIONAL_COMPLETE; USER_REAL_CAN_USE=0; restantes sao D2 (LGPD legal), POST_MVP (WHATSAPP) e DEFERRED_BY_SCOPE (SUBSCRIPTIONS_BILLING, METRIC_HUBS, GOOGLE_REVIEWS, NOTIFICACOES, E2E).",
+    "distincaoExplicita": "PRODUCT FUNCTIONAL COMPLETION != CLOUD CI AVAILABILITY: GITHUB_ACTIONS_BILLING segue BLOCKED_EXTERNAL (infra da conta; jobs novos nao iniciam). Provas deste fechamento sao LOCAIS onde CI nao rodou (LOCAL_PROOF != CI_PROOF) e o CI DEVE ser reexecutado quando Actions voltar — nada aqui declara CI PASS sem execucao.",
+    "validacoesPendentesDeCI": [
+      "chaveiro-bot integracao (billing gate ON matriz + billing_free_mode OFF) — unit 479/479 local OK",
+      "job frontend completo do ci.yml no commit 1e27957+ (React Doctor gate rodou LOCAL changed: 0 novos)"
     ]
   }
 }
