@@ -1,12 +1,12 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-A-DOCS-FREEZE-LEDGER",
-  "titulo": "Scope freeze 1.1.0 (assinaturas fora do MVP, D2) + ledger BILLING->DEFERRED_BY_SCOPE + ADMAI_FUNCTIONAL_PRODUCT_AUDIT_COMPLETE",
+  "sliceId": "FR-C-MAPPING-CONTRACTS",
+  "titulo": "Capability x Surface Matrix + Future Expansion Contract (FR-1/FR-1A/FR-2/FR-3/FR-4)",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:28:09.945Z",
+  "declaradoEm": "2026-08-28T23:31:01.544Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
@@ -605,18 +605,18 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_SCOPE_FREEZE.md",
+      "caminho": "docs/agent-environment/ADMAI_FRONTEND_CAPABILITY_SURFACE_MATRIX.md",
       "precisao": "BOUNDED",
-      "proposito": "scopeVersion 1.1.0: REMOVED_FROM_MVP registrado com autoridade D2; MVP 21->20; diferidas 4->5; scopeStatus=ADMAI_SCOPE_CLOSED",
+      "proposito": "20 capabilities MVP x contratos backend x superficies x papeis x jobs x estados + role priorities + journeys",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "caminho": "docs/agent-environment/ADMAI_FRONTEND_FUTURE_EXPANSION_CONTRACT.md",
       "precisao": "BOUNDED",
-      "proposito": "AUD-CAP-BILLING NAME=SUBSCRIPTIONS_BILLING FINAL=DEFERRED_BY_SCOPE (EXACT_REASON/AUTHORITY/NEXT_ACTION); audit COMPLETE=YES; PRODUCT COMPLETION != CI AVAILABILITY",
+      "proposito": "11 capabilities futuras: tipo A/B/C/D, pressoes, seams AGORA, DO-NOT-IMPLEMENT, impact matrix, fitness questions",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -629,6 +629,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "freeze 1.1.0 coerente (20 MVP/5 diferidas); ledger audit COMPLETE com distincao CI explicita",
+  "nota": "matrix 20 caps + journeys + grafo de invalidacao; expansion contract 11 futuras com seams/impact/fitness",
   "aviso": "Declaracao ENCERRADA."
 }

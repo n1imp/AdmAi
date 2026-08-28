@@ -65598,9 +65598,23 @@
       "bloqueiaIntegracao": false,
       "nota": "freeze 1.1.0 coerente (20 MVP/5 diferidas); ledger audit COMPLETE com distincao CI explicita",
       "declaradoEm": "2026-08-28T23:28:09.945Z"
+    },
+    {
+      "sliceId": "FR-C-MAPPING-CONTRACTS",
+      "titulo": "Capability x Surface Matrix + Future Expansion Contract (FR-1/FR-1A/FR-2/FR-3/FR-4)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "matrix 20 caps + journeys + grafo de invalidacao; expansion contract 11 futuras com seams/impact/fitness",
+      "declaradoEm": "2026-08-28T23:31:01.544Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:29:31.818Z",
+  "geradoEm": "2026-08-28T23:32:57.020Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
