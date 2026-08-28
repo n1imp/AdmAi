@@ -65458,9 +65458,23 @@
       "bloqueiaIntegracao": false,
       "nota": "format:check verde pos-write; vitest completo 280/280; lint 0 erros/12 warnings pre-existentes; build OK",
       "declaradoEm": "2026-08-28T01:04:56.764Z"
+    },
+    {
+      "sliceId": "RD-CLOSURE",
+      "titulo": "Fechamento do piloto React Doctor: refresh do baseline full pos-fixes + ledger + 02_CURRENT_STATE",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "baseline refresh 0E/243W; ledger 16 chaves do pilot; CURRENT_STATE com capability ativa",
+      "declaradoEm": "2026-08-28T01:06:31.082Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:05:24.612Z",
+  "geradoEm": "2026-08-28T01:07:46.412Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

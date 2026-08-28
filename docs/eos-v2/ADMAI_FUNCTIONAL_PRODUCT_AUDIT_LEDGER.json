@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_IN_PROGRESS",
+  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_AWAITING_CI_PROOF",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -1111,5 +1111,103 @@
         "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
       }
     ]
+  },
+  "reactDoctorPilot": {
+    "concluidoEm": "2026-08-27",
+    "pilotVersion": "0.9.12",
+    "discoveryOficial": {
+      "fontes": [
+        "react.doctor/docs (CLI reference)",
+        "mintlify llms.txt + coding-agents/configuration/security-rules",
+        "CLI --help/--version reais v0.9.12 (fonte de verdade da versao corrente; docs referenciavam 0.0.29)"
+      ],
+      "designMode": "EXISTE como subcomando `design` (regras design opt-in no scan geral)",
+      "nodeApi": "existe (docs nodejs-api/diagnose) — nao usado no piloto; npx pinado basta"
+    },
+    "decisaoInstalacao": {
+      "modo": "npx -y react-doctor@0.9.12 (ferramenta de verificacao externa; ZERO devDependency/lockfile/bundle)",
+      "dryRunInspecionado": "install --dry-run criaria: skill p/ 4 agentes + devDependency + package script + git hook pre-commit em path FORA da worktree (C:/Program Files/dev/AdmAi/.git) + workflow proprio — RECUSADO",
+      "skill": ".claude/skills/react-doctor/SKILL.md subordinada (sem @latest, sem playbook remoto curl, sem hooks globais; registrada pelo harness)",
+      "privacidade": "--no-telemetry (sem score API/share/crash) + --no-supply-chain (sem Socket.dev) em toda invocacao; consequencia: score=null — KPIs sao contagens locais + diff por id"
+    },
+    "baseline": {
+      "fullInicial": {
+        "erros": 4,
+        "avisos": 248,
+        "arquivosAfetados": 54,
+        "analisados": 172,
+        "duracaoS": 21.7
+      },
+      "design": {
+        "erros": 0,
+        "avisos": 190,
+        "duracaoS": 15.3
+      },
+      "fullFinal": {
+        "erros": 0,
+        "avisos": 243,
+        "nota": "4 erros corrigidos + 5 avisos resolvidos pela refatoracao; 3 deslocamentos de legado absorvidos no refresh"
+      },
+      "arquivos": [
+        "docs/eos-v2/REACT_DOCTOR_BASELINE_2026-08-27.json",
+        "docs/eos-v2/REACT_DOCTOR_BASELINE_DESIGN_2026-08-27.json"
+      ]
+    },
+    "classificacao": {
+      "erros4": "TRUE_POSITIVE correctness (StrictMode ativo em main.jsx): Overlay no-ref-current-in-render x2; useWidgetPrefs no-impure-state-updater x2 — CORRIGIDOS",
+      "security3": "auth-token-in-web-storage (AuthContext/api/Login) = ACCEPTED_ARCHITECTURE — Bearer + revalidacao no DB por request (prova ciclo 2: 401 imediato pos-exclusao); mudanca exige security review + decisao do usuario",
+      "volume": "LEGACY_DEBT por categoria registrado no perfil (A11y 115 sobrepoe GAP-UX-A11Y-NOME-01 do freeze; sem campanha de limpeza em massa)"
+    },
+    "fixesMateriais": [
+      {
+        "commit": "94f82a1",
+        "alvo": "useWidgetPrefs — updaters puros",
+        "testes": "vitest targeted 7/7 (novo teste StrictMode)"
+      },
+      {
+        "commit": "424b4d0",
+        "alvo": "Overlay — refs fora do render (componente compartilhado, gate dedicado)",
+        "testes": "vitest targeted 13/13 (novo teste StrictMode saida animada + reabertura)"
+      },
+      {
+        "commit": "d265283",
+        "alvo": "prettier useWidgetPrefs (formatacao)"
+      }
+    ],
+    "controleNegativo": {
+      "protocolo": "arquivo temporario nao-versionado em src com sk_live_ FAKE (no-secrets-in-client-code, warning na 0.9.12) + eval() (no-eval, error)",
+      "resultado": "detectados ambos; erro novo => diff exit 1 (portao provado); --scope changed --base HEAD --include-untracked isolou APENAS o arquivo novo em 12,5s; restore => re-scan 0 novos; git status vazio + git diff --check limpo",
+      "SYNTHETIC_REGRESSION_RESIDUAL": 0
+    },
+    "routerEos": {
+      "arquivo": "tools/admai-delivery/react-doctor-router.mjs",
+      "selftest": "8/8 (React->seleciona; backend-only->nao; docs-only->nao; pagina/componente->+design; bordas: teste sozinho nao dispara, misto seleciona, hook .js sem design, e2e/config fora)"
+    },
+    "economiaDeTokens": "JSON bruto (ate 508KB) NUNCA no contexto: adapter react-doctor-summary.mjs (resumo/baseline/diff; selftest 9/9; fail-closed exit 2)",
+    "ciShadow": {
+      "commit": "df270b8",
+      "formato": "step continue-on-error no job frontend: scan pinado + resumo + diff vs baseline no STEP_SUMMARY + artifact 14d",
+      "provaRunReal": "PENDENTE_NO_PUSH — registrada em commit posterior"
+    },
+    "validacaoCompleta": "vitest painel 280/280 (48 files); lint 0 erros/12 warnings pre-existentes; format:check verde; build 11,8s OK",
+    "orcamentoPerformance": {
+      "fullS": 21.7,
+      "designS": 15.3,
+      "changedS": 12.5,
+      "finalFullS": 12.9
+    },
+    "politicas": {
+      "portao": "NO_NEW_BLOCKING_REACT_DOCTOR_DIAGNOSTIC (erro novo vs baseline) + NO_UNEXPLAINED_SCORE_REGRESSION; score NAO e KPI soberano",
+      "falha": "TOOL_UNAVAILABLE!=PASS; SCAN_CRASH!=PASS (adapter exit 2); UNKNOWN!=PASS; legado!=AUTO_FAIL",
+      "pin": "upgrade de versao = re-baseline + revalidacao schema adapter + controle negativo + registro"
+    },
+    "artefatos": [
+      "docs/agent-environment/EOS_REACT_DOCTOR_CAPABILITY.md (global)",
+      "docs/eos-v2/REACT_DOCTOR_PROFILE_ADMAI.json (local)",
+      ".claude/skills/react-doctor/SKILL.md",
+      "tools/admai-delivery/react-doctor-summary.mjs",
+      "tools/admai-delivery/react-doctor-router.mjs"
+    ],
+    "decisaoCurrentVnext": "PENDENTE_RUN_CI (todos os demais criterios da secao 41 PASS; falta apenas prova do shadow em run real do CI — atualizado apos o push)"
   }
 }
