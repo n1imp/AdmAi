@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { StrictMode, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -334,6 +334,49 @@ describe('Overlay', () => {
       const dialog = screen.getByRole('dialog', { name: 'Sai' });
       expect(dialog).toHaveAttribute('data-closing', 'true');
 
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+      delete window.matchMedia;
+    }
+  });
+
+  // O app monta em StrictMode (main.jsx): o React reexecuta renders e a detecção da transição
+  // open→false não pode viver numa mutação de ref no render (um render descartado consumiria a
+  // transição e a saída animada nunca dispararia). Mesma coreografia do teste acima + reabertura
+  // durante a saída, sob StrictMode.
+  it('StrictMode: saída animada dispara, reabertura durante a saída cancela o desmonte', () => {
+    vi.useFakeTimers();
+    window.matchMedia = (q) => ({
+      matches: false,
+      media: q,
+      addEventListener() {},
+      removeEventListener() {},
+    });
+    const cena = (open) => (
+      <StrictMode>
+        <Overlay open={open} onClose={() => {}} title="Sai">
+          <button>Ok</button>
+        </Overlay>
+      </StrictMode>
+    );
+    try {
+      const { rerender } = render(cena(true));
+      expect(screen.getByRole('dialog', { name: 'Sai' })).toBeInTheDocument();
+
+      rerender(cena(false));
+      expect(screen.getByRole('dialog', { name: 'Sai' })).toHaveAttribute('data-closing', 'true');
+
+      // Reabre no meio da animação: o dialog permanece e o estado de saída é cancelado.
+      rerender(cena(true));
+      const reaberto = screen.getByRole('dialog', { name: 'Sai' });
+      expect(reaberto).not.toHaveAttribute('data-closing');
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('dialog', { name: 'Sai' })).toBeInTheDocument();
+
+      // Fecha de novo e deixa a animação terminar: desmonta.
+      rerender(cena(false));
       act(() => vi.advanceTimersByTime(250));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     } finally {

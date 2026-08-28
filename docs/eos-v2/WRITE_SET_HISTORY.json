@@ -65388,9 +65388,23 @@
       "bloqueiaIntegracao": false,
       "nota": "vitest targeted 7/7 (novo teste StrictMode); rescan RD e lint/build/suite completa registrados na validacao final do pilot",
       "declaradoEm": "2026-08-28T00:52:10.125Z"
+    },
+    {
+      "sliceId": "RD-FIX-OVERLAY",
+      "titulo": "Fix correctness (React Doctor no-ref-current-in-render x2): Overlay — refs fora do render",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "vitest targeted 13/13 (novo teste StrictMode: saida animada + reabertura durante saida)",
+      "declaradoEm": "2026-08-28T00:54:49.053Z"
     }
   ],
-  "geradoEm": "2026-08-28T00:54:11.454Z",
+  "geradoEm": "2026-08-28T00:56:30.016Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

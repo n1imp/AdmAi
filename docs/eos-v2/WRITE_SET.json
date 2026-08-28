@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "RD-FIX-WIDGETPREFS",
-  "titulo": "Fix correctness (React Doctor no-impure-state-updater x2): useWidgetPrefs — updaters puros",
+  "sliceId": "RD-FIX-OVERLAY",
+  "titulo": "Fix correctness (React Doctor no-ref-current-in-render x2): Overlay — refs fora do render",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T00:52:10.125Z",
+  "declaradoEm": "2026-08-28T00:54:49.053Z",
   "baseCommitPorLane": {
-    "HARNESS": "823d6993fba8bbe28349a105ed9587d2c2b24400"
+    "HARNESS": "94f82a1cc3be89014205bfab987ef9e3d674587c"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "TRUE_POSITIVE em StrictMode (ativo em main.jsx): setAnuncio() e mutacao de ref dentro de updater de setEstado podem repetir/vazar em re-execucao de updater. Fix: anuncio+origemUsuario passam a fazer parte do estado unico; updaters retornam apenas o proximo estado. API externa do hook inalterada (mesmos campos retornados).",
+  "notaDeMetodo": "TRUE_POSITIVE sob StrictMode/concurrent: (1) onCloseRef.current escrito no corpo do render -> vai para useEffect (consumers leem apenas pos-commit: handlers/backdrop/botao); (2) prevOpenRef mutado no render para detectar transicao open -> vira useState prevOpen (padrao oficial 'adjusting state during render'; render descartado descarta o set junto — a transicao nao vaza). Componente COMPARTILHADO (gate especifico): API e coreografia inalteradas; suite existente de 344 linhas + teste StrictMode novo.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -450,14 +450,14 @@
       "chaveiro-painel/src/config/navigation.js": "78844d13e6bb23c74569a6f6bb98f2a7b463ca8ae80c10a803e5b71a597c5db0",
       "chaveiro-painel/src/contexts/AuthContext.jsx": "832f67e6a052b9b93431d5ca35699d8b949e6df46db485db6b512c02c47a80cd",
       "chaveiro-painel/src/hooks/__tests__/useFormPersist.test.js": "53ad29f2c50d9492adf8feb11c1f115e6ba1c18c4c49dfe13fdaacebdd520a52",
-      "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js": "14418206244bc44d5d4800dcc521d83db7834d44bf6f119b96b347fa9a33145f",
+      "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js": "3673137e687ab4a36482091fcc61cffefc23596b9fbe3cb50c18457c8b68116c",
       "chaveiro-painel/src/hooks/useAnalytics.js": "6378553b7da46eb6dfb58a8b249ee95994d70c4256ba3b22254f24f8e238ba17",
       "chaveiro-painel/src/hooks/useDocumentHead.js": "2872b00a1637b60b8fd9f4bed37bf4622953af623c39aaf60c4d2aa7b6cb8cc3",
       "chaveiro-painel/src/hooks/useFormPersist.js": "bf15fdce28202a34496b90f510d86b842053a646843e337f2c17f7148471653e",
       "chaveiro-painel/src/hooks/useMetricHub.js": "a73fb2c3c81b07f652fc832c4e15218661ff697a00d96f74efa561d82aaec286",
       "chaveiro-painel/src/hooks/useOffline.js": "23981b5ad1158a28af6786684b106ec1a23b87236fccbea21864eee8719bb0d5",
       "chaveiro-painel/src/hooks/usePullToRefresh.js": "1440ac35adacea03b98b83047f16f77f93e2b8443b39d7fa6a325fdfbeea9458",
-      "chaveiro-painel/src/hooks/useWidgetPrefs.js": "cd886b4c8cc0da443f17f6ad43c50790421e78edf2bcb32a9678c5814217bf69",
+      "chaveiro-painel/src/hooks/useWidgetPrefs.js": "a9b68d56a9e22859b93d541be701924b4f958e83a30c8f6b9b08b838d608363b",
       "chaveiro-painel/src/index.css": "3bcf3068f6a87d49a801d10d8e3c047e7f550c71742e19004df1cd7a90654680",
       "chaveiro-painel/src/lib/__tests__/api.test.js": "aaa30f79e5fbe53122a9cdd1ee85b7b944ea56f9750ad13372d58fa77df33aca",
       "chaveiro-painel/src/lib/__tests__/crispBootstrap.test.js": "268e67250477eff56c501ecb36ef5f0c31affaae05022a5216cd7fe56516e2f8",
@@ -656,8 +656,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "8be8693f497a83eb7b4d1410a9f1a2a8ef0fa08ca78f06814eccd66824dccec7",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "d72a31b0b7e9410a23254cc33b793a78f6112b391dae394b05e9be4f10e75876",
+      "docs/eos-v2/WRITE_SET.json": "4ceaa6525660c8c3454635306d6ebb6946caa14e750bc7ff0696ea7f64d735a5",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "8bfc2f7e909e817a886f19b1212423ca1c35c5808c179c4f183fae28ae5daf13",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2606,20 +2606,20 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/hooks/useWidgetPrefs.js",
+      "caminho": "chaveiro-painel/src/components/ui/Overlay.jsx",
       "precisao": "BOUNDED",
-      "proposito": "Updaters puros: anuncio e origem da mudanca incorporados ao estado; PUT/localStorage continuam no effect",
+      "proposito": "onCloseRef via useEffect; prevOpen como state; zero mutacao de ref durante render",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "cd886b4c8cc0da443f17f6ad43c50790421e78edf2bcb32a9678c5814217bf69",
+      "shaNaDeclaracao": "8cabb34273e9dde2ed76fbabcc26aef0f8569d595bc4cf27c9f467e0c534a704",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/hooks/__tests__/useWidgetPrefs.test.js",
+      "caminho": "chaveiro-painel/src/components/ui/__tests__/Overlay.test.jsx",
       "precisao": "BOUNDED",
-      "proposito": "Teste novo: sob StrictMode, mover 1x produz 1 swap e anuncio correto (nao-regressao do double-invoke)",
+      "proposito": "Teste novo: coreografia abrir->fechar->desmontar sob StrictMode",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "14418206244bc44d5d4800dcc521d83db7834d44bf6f119b96b347fa9a33145f",
+      "shaNaDeclaracao": "50200f5a3ba91fdcb416a2e58124ca4b527f070f543e456dc247d717ae7dfb2b",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2630,6 +2630,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "vitest targeted 7/7 (novo teste StrictMode); rescan RD e lint/build/suite completa registrados na validacao final do pilot",
+  "nota": "vitest targeted 13/13 (novo teste StrictMode: saida animada + reabertura durante saida)",
   "aviso": "Declaracao ENCERRADA."
 }

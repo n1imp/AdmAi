@@ -79,17 +79,23 @@ export default function Overlay({
   const titleId = useId();
   const descriptionId = useId();
 
-  onCloseRef.current = onClose;
+  // "Latest ref" gravado pós-commit: o render precisa ficar puro (React pode reexecutar ou
+  // descartar renders) e todos os leitores (handlers, backdrop, botão) só rodam após o commit.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   const [closing, setClosing] = useState(false);
-  const prevOpenRef = useRef(open);
+  const [prevOpen, setPrevOpen] = useState(open);
 
   // Saída coreografada (F6/M3): mantém o nó montado durante a animação de saída e só
   // desmonta ao fim. Ajuste de estado no render (padrão React p/ derivar de props sem
-  // atraso — evita que o dialogRef fique nulo ao abrir). Progressive enhancement: sem
-  // matchMedia (ex.: jsdom) ou com prefers-reduced-motion, desmonta imediatamente.
-  if (prevOpenRef.current !== open) {
-    prevOpenRef.current = open;
+  // atraso — evita que o dialogRef fique nulo ao abrir); o "anterior" é state, não ref,
+  // para que um render descartado descarte a detecção da transição junto. Progressive
+  // enhancement: sem matchMedia (ex.: jsdom) ou com prefers-reduced-motion, desmonta
+  // imediatamente.
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (open) {
       if (closing) setClosing(false);
     } else {
