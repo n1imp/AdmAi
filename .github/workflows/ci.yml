@@ -223,6 +223,31 @@ jobs:
       - name: Auditoria de dependências (falha em High+)
         run: npm audit --audit-level=high --omit=dev
 
+      # React Doctor em SHADOW (rollout: LOCAL→BASELINE→NEGATIVE CONTROL→SHADOW→bloqueante
+      # por decisão futura). Versão PINADA do perfil (docs/eos-v2/REACT_DOCTOR_PROFILE_ADMAI
+      # .json); --no-telemetry/--no-supply-chain: nenhum dado sai p/ score API/Socket.dev.
+      # O diff do adapter sai 1 em ERRO NOVO vs baseline versionado — em shadow isso só
+      # marca o step, não o job. Contrato: docs/agent-environment/EOS_REACT_DOCTOR_CAPABILITY.md.
+      - name: React Doctor (shadow — não-bloqueante)
+        id: react_doctor
+        continue-on-error: true
+        run: |
+          npx -y react-doctor@0.9.12 . --json --json-out react-doctor-report.json \
+            --no-telemetry --no-supply-chain
+          node ../tools/admai-delivery/react-doctor-summary.mjs resumo react-doctor-report.json
+          node ../tools/admai-delivery/react-doctor-summary.mjs diff \
+            ../docs/eos-v2/REACT_DOCTOR_BASELINE_2026-08-27.json react-doctor-report.json \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: React Doctor — relatório como artifact
+        if: ${{ always() && steps.react_doctor.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-doctor-report
+          path: chaveiro-painel/react-doctor-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
   # ── Gate estável p/ branch protection: exige `ci-ok` (1 check só). Passa quando
   #    todo job necessário passou OU foi pulado (path filter); falha se algum falhou. ──
   ci-ok:

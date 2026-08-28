@@ -65430,9 +65430,23 @@
       "bloqueiaIntegracao": false,
       "nota": "excecao estreita no padrao existente",
       "declaradoEm": "2026-08-28T01:00:41.045Z"
+    },
+    {
+      "sliceId": "RD-CI-SHADOW",
+      "titulo": "CI shadow do React Doctor no job frontend (nao-bloqueante, artifact, diff vs baseline)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "YAML parseado OK; steps na ordem; prova com run real ocorre no push p/ staging",
+      "declaradoEm": "2026-08-28T01:01:52.621Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:00:58.609Z",
+  "geradoEm": "2026-08-28T01:02:47.646Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

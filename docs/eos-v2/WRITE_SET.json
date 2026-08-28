@@ -1,16 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "RD-EOS-GITIGNORE",
-  "titulo": "Excecao .gitignore para versionar .claude/skills/react-doctor (mesmo padrao do admai-tool-router)",
+  "sliceId": "RD-CI-SHADOW",
+  "titulo": "CI shadow do React Doctor no job frontend (nao-bloqueante, artifact, diff vs baseline)",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T01:00:41.045Z",
+  "declaradoEm": "2026-08-28T01:01:52.621Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "SHADOW primeiro (continue-on-error) conforme rollout LOCAL->BASELINE->NEGATIVE CONTROL->SHADOW; promocao a BLOCKING_NEW_ERRORS e decisao futura. Sem secrets, sem score API, sem Socket.dev. Validacao completa local roda em paralelo; dist do build declarado como artefato.",
   "baselinePorLane": {
     "EOS": {
       ".eos-capsule/lane-timestamps.txt": "9bca985c1d853dead6d481047c1288cb384b2880c25d837f84292a8e93dda6df",
@@ -602,14 +603,17 @@
   "artefatosPorLane": {
     "EOS": {}
   },
+  "artefatos": [
+    "chaveiro-painel/dist"
+  ],
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": ".gitignore",
+      "caminho": ".github/workflows/ci.yml",
       "precisao": "BOUNDED",
-      "proposito": "Adicionar !.claude/skills/react-doctor/ ao bloco existente de skills versionadas",
+      "proposito": "Step shadow: npx react-doctor@0.9.12 --json + diff do adapter vs baseline versionado + upload do relatorio como artifact",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c2036fa3ef41b1c5e66cb20af126f2b9a4601f263f01285b469524b214c4b16d",
+      "shaNaDeclaracao": "f73b08c70d3d5c79168a87f5d0727ccf90bbfad4010f1eb2d30d6e766ea4db00",
       "sujoNaDeclaracao": false
     }
   ],
@@ -620,6 +624,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "excecao estreita no padrao existente",
+  "nota": "YAML parseado OK; steps na ordem; prova com run real ocorre no push p/ staging",
   "aviso": "Declaracao ENCERRADA."
 }
