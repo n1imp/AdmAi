@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import api from '../lib/api.js';
 
 const STORAGE_KEY = 'admai_dashboard_widgets';
@@ -26,12 +26,12 @@ function carregar(ids) {
 }
 
 export function useWidgetPrefs(ids) {
-  const [estado, setEstado] = useState(() => carregar(ids));
+  // `anuncio` e `origemUsuario` moram no MESMO estado de ordem/ocultos para que os updaters
+  // sejam puros (React/StrictMode pode reexecutar updaters; side effects lá dentro repetem).
+  // `origemUsuario` marca mudança vinda de AÇÃO do usuário (não do load inicial nem da
+  // reconciliação com o servidor) — evita PUT redundante em loop.
+  const [estado, setEstado] = useState(() => ({ ...carregar(ids), anuncio: '', origemUsuario: false }));
   const [editando, setEditando] = useState(false);
-  const [anuncio, setAnuncio] = useState('');
-  // Só grava no servidor quando a mudança veio de uma AÇÃO do usuário (não do load inicial
-  // nem da reconciliação com o que o servidor devolveu) — evita PUT redundante em loop.
-  const origemUsuario = useRef(false);
 
   useEffect(() => {
     try {
@@ -42,10 +42,11 @@ export function useWidgetPrefs(ids) {
     } catch {
       // localStorage indisponível (ex.: modo privado): mantém apenas em memória.
     }
-    if (origemUsuario.current) {
-      origemUsuario.current = false;
+    if (estado.origemUsuario) {
       // M5: sincroniza cross-device (best-effort). Envolto em Promise.resolve para nunca
       // lançar de forma síncrona (ex.: api.put ausente num mock) — degrada em silêncio.
+      // O flag não precisa ser "limpo": o effect só reexecuta quando a identidade de
+      // `estado` muda, e toda mudança seguinte declara a própria origem.
       Promise.resolve()
         .then(() =>
           api.put('/me/preferencias/dashboard', {
@@ -65,7 +66,8 @@ export function useWidgetPrefs(ids) {
       .then(() => api.get('/me/preferencias/dashboard'))
       .then((res) => {
         const dash = res?.data?.dashboard;
-        if (ativo && dash) setEstado(reconciliar(dash, ids));
+        if (ativo && dash)
+          setEstado((prev) => ({ ...prev, ...reconciliar(dash, ids), origemUsuario: false }));
       })
       .catch(() => {});
     return () => {
@@ -82,24 +84,27 @@ export function useWidgetPrefs(ids) {
       if (i < 0 || j < 0 || j >= prev.ordem.length) return prev;
       const ordem = [...prev.ordem];
       [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
-      setAnuncio(`${label} movido para a posição ${j + 1} de ${ordem.length}.`);
-      origemUsuario.current = true;
-      return { ...prev, ordem };
+      return {
+        ...prev,
+        ordem,
+        anuncio: `${label} movido para a posição ${j + 1} de ${ordem.length}.`,
+        origemUsuario: true,
+      };
     });
   }, []);
 
   const alternarVisibilidade = useCallback((id, label) => {
     setEstado((prev) => {
       const ocultos = new Set(prev.ocultos);
+      let anuncio;
       if (ocultos.has(id)) {
         ocultos.delete(id);
-        setAnuncio(`${label} exibido.`);
+        anuncio = `${label} exibido.`;
       } else {
         ocultos.add(id);
-        setAnuncio(`${label} ocultado.`);
+        anuncio = `${label} ocultado.`;
       }
-      origemUsuario.current = true;
-      return { ...prev, ocultos };
+      return { ...prev, ocultos, anuncio, origemUsuario: true };
     });
   }, []);
 
@@ -110,6 +115,6 @@ export function useWidgetPrefs(ids) {
     setEditando,
     mover,
     alternarVisibilidade,
-    anuncio,
+    anuncio: estado.anuncio,
   };
 }

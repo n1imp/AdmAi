@@ -65374,9 +65374,23 @@
       "bloqueiaIntegracao": false,
       "nota": "PILOT_VERSION=0.9.12; full 4E/248W 15.6s; design 0E/190W 4.5s; selftest summarizer 9/9; brutos no scratchpad (nao-versionados)",
       "declaradoEm": "2026-08-28T00:26:45.334Z"
+    },
+    {
+      "sliceId": "RD-FIX-WIDGETPREFS",
+      "titulo": "Fix correctness (React Doctor no-impure-state-updater x2): useWidgetPrefs — updaters puros",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "vitest targeted 7/7 (novo teste StrictMode); rescan RD e lint/build/suite completa registrados na validacao final do pilot",
+      "declaradoEm": "2026-08-28T00:52:10.125Z"
     }
   ],
-  "geradoEm": "2026-08-28T00:29:50.369Z",
+  "geradoEm": "2026-08-28T00:54:11.454Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

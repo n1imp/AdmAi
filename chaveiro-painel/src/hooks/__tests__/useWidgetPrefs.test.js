@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { StrictMode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { useWidgetPrefs } from '../useWidgetPrefs.js';
 
@@ -54,5 +55,19 @@ describe('useWidgetPrefs (F4d)', () => {
     const { result } = renderHook(() => useWidgetPrefs(full));
     expect(result.current.ordem).toEqual(full);
     expect([...result.current.ocultos]).toEqual([]);
+  });
+
+  // Updaters de estado devem ser PUROS: sob StrictMode o React reexecuta cada updater, e um
+  // side effect lá dentro (o antigo setAnuncio/ref) repetiria. Um mover(1x) tem de produzir
+  // exatamente 1 swap e o anúncio da posição final — em StrictMode como no app (main.jsx).
+  it('StrictMode: mover 1x = 1 swap e anúncio correto (updater puro, sem efeito duplicado)', () => {
+    const { result } = renderHook(() => useWidgetPrefs(IDS), { wrapper: StrictMode });
+    act(() => result.current.mover('a', 1, 'A'));
+    expect(result.current.ordem).toEqual(['b', 'a', 'c']);
+    expect(result.current.anuncio).toBe('A movido para a posição 2 de 3.');
+    act(() => result.current.alternarVisibilidade('b', 'B'));
+    expect([...result.current.ocultos]).toEqual(['b']);
+    expect(result.current.anuncio).toBe('B ocultado.');
+    expect(salvo()).toEqual({ ordem: ['b', 'a', 'c'], ocultos: ['b'] });
   });
 });
