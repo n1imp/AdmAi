@@ -65360,9 +65360,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Email fix fechado antes do commit: 2 ocorrencias trocadas; prova de zero barbers-flow fora de legal.js (D6).",
       "declaradoEm": "2026-08-28T00:13:58.306Z"
+    },
+    {
+      "sliceId": "RD1-PILOT-BASELINE",
+      "titulo": "React Doctor pilot — summarizer deterministico + baselines compactos (full+design) do chaveiro-painel",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "PILOT_VERSION=0.9.12; full 4E/248W 15.6s; design 0E/190W 4.5s; selftest summarizer 9/9; brutos no scratchpad (nao-versionados)",
+      "declaradoEm": "2026-08-28T00:26:45.334Z"
     }
   ],
-  "geradoEm": "2026-08-28T00:14:58.251Z",
+  "geradoEm": "2026-08-28T00:29:50.369Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
