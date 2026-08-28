@@ -65662,9 +65662,23 @@
         "caminhos": [],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "FR-E3-DDR-CONTRACT-LEDGER",
+      "titulo": "Design Decision Records (DECISOR FRD vinculante) + Frontend Architecture Contract + Repagination Ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "DDR-1..5 vinculantes registrados; contrato de camadas; ledger do programa com gates e pendencias externas",
+      "declaradoEm": "2026-08-28T23:47:53.412Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:47:07.225Z",
+  "geradoEm": "2026-08-28T23:50:00.647Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

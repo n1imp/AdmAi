@@ -1,0 +1,42 @@
+{
+  "programa": "ADMAI_FRONTEND_REPAGINATION",
+  "iniciadoEm": "2026-08-28",
+  "statusCycle1": "PLANNING_GATES_COMPLETE_FIRST_SLICES_DONE",
+  "contratos": {
+    "matrix": "docs/agent-environment/ADMAI_FRONTEND_CAPABILITY_SURFACE_MATRIX.md",
+    "futuro": "docs/agent-environment/ADMAI_FRONTEND_FUTURE_EXPANSION_CONTRACT.md",
+    "principios": "docs/agent-environment/ADMAI_PRODUCT_DESIGN_PRINCIPLES.md",
+    "glossario": "docs/agent-environment/ADMAI_PRODUCT_GLOSSARY.md",
+    "ddrs": "docs/agent-environment/ADMAI_DESIGN_DECISIONS.md (DECISOR 01a04abb, vinculante)",
+    "arquitetura": "docs/agent-environment/ADMAI_FRONTEND_ARCHITECTURE_CONTRACT.md"
+  },
+  "baselines": {
+    "AURORA_USAGE": { "valor": 1566, "arquivo": "docs/eos-v2/AURORA_USAGE_BASELINE_2026-08-28.json", "invariante": "AURORA_USAGE_ZERO != PRODUCT_ACCEPTED" },
+    "performance": { "jsKB": 1079, "chunks": 13, "cssKB": 62, "buildS": 43, "maioresChunks": ["index 353KB", "BarChart(recharts) 346KB", "react-vendor 154KB"], "medidoEm": "2026-08-28 local" },
+    "reactDoctor": { "modo": "BLOCKING_NEW_ERRORS", "baseline": "0E/243W" }
+  },
+  "fases": {
+    "FR-0": { "status": "COMPLETE", "nota": "Assinaturas fora do MVP (D2): backend flag ASSINATURA_ENFORCEMENT_ENABLED (4ac3df7, DECISOR 01a04a99); painel SUBSCRIPTIONS_BILLING flag unica rota+card+402 (1e27957); freeze 1.1.0 + ledger DEFERRED_BY_SCOPE + FUNCTIONAL_AUDIT_COMPLETE=YES (e3128fd). PENDENTE-EXTERNO: probe staging da desexposicao (CF Pages deploya via GH Actions = billing bloqueado); prova local = vitest 33/33 + build" },
+    "FR-1_1A_2_3_4": { "status": "COMPLETE", "nota": "matrix + future contract + surface inventory + roles + IA (f63376c; DDR-1)" },
+    "FR-5_6_7": { "status": "COMPLETE", "nota": "referencias por problema com disposicao + principios anti-AI + glossario (b345f1d); direcao visual = DDR-3" },
+    "FR-8": { "status": "CANDIDATE", "nota": "filosofia de foundations DECIDIDA (DDR-3: density/radius/elevation/type/dark-first tokens funcionais); tokens materiais entram no FR-13 junto do App Shell (restricao DDR-4: nada de scaffolding vazio)" },
+    "FR-9": { "status": "FIRST_SLICE_DONE", "nota": "registry estatico + fitness §105 + coerencia com router real (b86db93); achado real corrigido: /configuracao/whatsapp gated (§26). Registry completo (roles/permissions/modo/nav) entra no FR-13" },
+    "FR-10_11": { "status": "CONTRACTED", "nota": "application layer + query/mutation/error standard fixados no ARCHITECTURE_CONTRACT + DDR-4 (TanStack hibrido incremental); implementacao a partir do FR-15" },
+    "FR-12": { "status": "NEXT_FRONTIER", "nota": "FR-13 do DDR-5: Foundations + App Shell (tokens, modes, registry completo, sidebar 256/bottom-nav 4+Mais, PublicFrame) — gate APP_SHELL_ACCEPTED" },
+    "FR-13+": { "status": "SEQUENCED", "nota": "DDR-5: Auth -> Jornada de Servico -> Dia do funcionario -> Equipe/recursos -> Negocio/dados -> Admin/conta -> Secundarias -> Publico/legal -> FR-LEGACY" }
+  },
+  "gates": {
+    "NO_PREMATURE_FUTURE_IMPLEMENTATION": "PASS (zero rota/nav/CTA/claim futuro; fixtures dev-only ainda nao criadas)",
+    "FUTURE_READY_FRONTEND_ARCHITECTURE": "NOT_YET_EVALUATED (avaliacao no FR-13 com fitness questions + fixtures de pressao)",
+    "APP_SHELL_ACCEPTED": "PENDING (FR-13)",
+    "DESIGN_SYSTEM_ACCEPTED": "PENDING (foundations candidate -> aceitacao no FR-13)",
+    "INFORMATION_ARCHITECTURE_ACCEPTED": "DDR-1 vinculante; aceitacao final com o shell real"
+  },
+  "pendenciasExternas": [
+    "GITHUB_ACTIONS_BILLING (BLOCKED_EXTERNAL): CI cloud + deploy CF Pages do painel + fase logs indisponiveis; ao voltar: reexecutar CI (bot integracao billing ON/OFF; frontend gate), deploy do painel staging e probe de desexposicao de assinaturas"
+  ],
+  "decisoesMateriais": [
+    { "id": "FR0-ASSINATURA-NEUTRALIZACAO", "thread": "01a04a99", "resultado": "DISCORDO->consenso (flag backend i-A + fronteira unica frontend via feature flag; iv-A ledger)" },
+    { "id": "FRD-ARQUITETURA-DESIGN-BUNDLE", "thread": "01a04abb", "resultado": "DISCORDO->consenso (5 correcoes vinculantes aceitas; DDR-1..5)" }
+  ]
+}
