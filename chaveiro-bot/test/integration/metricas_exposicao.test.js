@@ -40,8 +40,10 @@ async function duasEmpresas() {
   return { a, b };
 }
 
+// Unicidade por processo: Date.now()+random colide entre ms adjacentes (1000+999 == 1001+998).
+let seqTelefone = 0;
 async function criarTecnico(token, nome) {
-  const telefone = '5561' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-9);
+  const telefone = '5561' + String(Date.now() * 100 + seqTelefone++).slice(-9);
   const res = await request(app)
     .post('/api/tecnicos')
     .set('Authorization', `Bearer ${token}`)

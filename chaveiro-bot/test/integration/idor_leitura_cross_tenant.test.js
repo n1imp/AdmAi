@@ -50,8 +50,10 @@ async function duasEmpresas() {
 }
 
 /** Técnico SEM acesso ao painel — `criarAcesso: false`, senão a rota cria credencial junto. */
+// Unicidade por processo: Date.now()+random colide entre ms adjacentes (1000+999 == 1001+998).
+let seqTelefone = 0;
 async function criarTecnico(token, nome) {
-  const telefone = '5551' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-9);
+  const telefone = '5551' + String(Date.now() * 100 + seqTelefone++).slice(-9);
   const res = await request(app)
     .post('/api/tecnicos')
     .set('Authorization', `Bearer ${token}`)

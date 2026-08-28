@@ -61,8 +61,10 @@ async function duasEmpresas() {
  * `criarAcesso` omitido já cria a credencial junto. Sem `criarAcesso: false` o técnico nasceria
  * com acesso, e os testes de `/acesso` mediriam 409 ("já tem acesso") em vez do isolamento.
  */
+// Unicidade por processo: Date.now()+random colide entre ms adjacentes (1000+999 == 1001+998).
+let seqTelefone = 0;
 async function criarTecnico(token, nome) {
-  const telefone = '5541' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-9);
+  const telefone = '5541' + String(Date.now() * 100 + seqTelefone++).slice(-9);
   const res = await request(app)
     .post('/api/tecnicos')
     .set('Authorization', `Bearer ${token}`)
