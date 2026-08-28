@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "RD-CLOSURE",
-  "titulo": "Fechamento do piloto React Doctor: refresh do baseline full pos-fixes + ledger + 02_CURRENT_STATE",
+  "sliceId": "RD-CI-PROOF",
+  "titulo": "Prova do CI shadow em run real + decisao CURRENT selada no ledger",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T01:06:31.082Z",
+  "declaradoEm": "2026-08-28T01:22:08.093Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Baseline full regenerado do scan pos-fixes/pos-prettier (0 erros/243 avisos; 3 deslocamentos de legado absorvidos). Design baseline inalterado (diff 0/0). Prova do CI shadow com run real ocorre no push seguinte e sera registrada em commit proprio.",
   "baselinePorLane": {
     "EOS": {
       ".eos-capsule/lane-timestamps.txt": "9bca985c1d853dead6d481047c1288cb384b2880c25d837f84292a8e93dda6df",
@@ -606,27 +605,9 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/REACT_DOCTOR_BASELINE_2026-08-27.json",
-      "precisao": "BOUNDED",
-      "proposito": "Refresh pos-mudanca-auditada (fixes 94f82a1/424b4d0 + prettier d265283)",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
       "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "Bloco reactDoctorPilot completo + status CYCLE2_CLOSED_REACT_DOCTOR_PILOT_COMPLETE",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
-      "precisao": "BOUNDED",
-      "proposito": "Linha REACT_DOCTOR + READY_FRONTIER de volta a ADMAI_FUNCTIONAL_PRODUCT_AUDIT",
+      "proposito": "ciShadow.provaRunReal=run 33131909547 (novos:0 no runner; artifact publicado); decisaoCurrentVnext=CURRENT; status=PILOT_COMPLETE",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -639,6 +620,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "baseline refresh 0E/243W; ledger 16 chaves do pilot; CURRENT_STATE com capability ativa",
+  "nota": "evidencia literal do runner capturada via gh run view/api",
   "aviso": "Declaracao ENCERRADA."
 }

@@ -65472,9 +65472,23 @@
       "bloqueiaIntegracao": false,
       "nota": "baseline refresh 0E/243W; ledger 16 chaves do pilot; CURRENT_STATE com capability ativa",
       "declaradoEm": "2026-08-28T01:06:31.082Z"
+    },
+    {
+      "sliceId": "RD-CI-PROOF",
+      "titulo": "Prova do CI shadow em run real + decisao CURRENT selada no ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "evidencia literal do runner capturada via gh run view/api",
+      "declaradoEm": "2026-08-28T01:22:08.093Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:07:46.412Z",
+  "geradoEm": "2026-08-28T01:22:09.867Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

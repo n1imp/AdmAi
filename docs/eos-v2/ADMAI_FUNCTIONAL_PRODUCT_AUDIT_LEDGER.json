@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_AWAITING_CI_PROOF",
+  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_COMPLETE",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -1187,7 +1187,7 @@
     "ciShadow": {
       "commit": "df270b8",
       "formato": "step continue-on-error no job frontend: scan pinado + resumo + diff vs baseline no STEP_SUMMARY + artifact 14d",
-      "provaRunReal": "PENDENTE_NO_PUSH — registrada em commit posterior"
+      "provaRunReal": "PROVADO — run 33131909547 (push 39ee01f -> staging): job frontend success; step shadow success com saida literal \"novos: 0 (erros=0 avisos=0) | resolvidos: 0\" (determinismo cross-platform: runner ubuntu = baseline gerado no Windows); artifact react-doctor-report publicado (47263 bytes); ci-ok verde"
     },
     "validacaoCompleta": "vitest painel 280/280 (48 files); lint 0 erros/12 warnings pre-existentes; format:check verde; build 11,8s OK",
     "orcamentoPerformance": {
@@ -1208,6 +1208,6 @@
       "tools/admai-delivery/react-doctor-summary.mjs",
       "tools/admai-delivery/react-doctor-router.mjs"
     ],
-    "decisaoCurrentVnext": "PENDENTE_RUN_CI (todos os demais criterios da secao 41 PASS; falta apenas prova do shadow em run real do CI — atualizado apos o push)"
+    "decisaoCurrentVnext": "CURRENT — todos os criterios da secao 41 PASS com evidencia (discovery, dry-run recusado, baselines, classificacao, controle negativo residual 0, changed scope, router 8/8, capability/perfil separados, skill registrada, economia de tokens, 2 fixes materiais com processo completo, CI shadow provado em run real, pin 0.9.12, fail-closed, score-nao-KPI, orcamento medido)"
   }
 }
