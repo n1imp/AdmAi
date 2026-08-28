@@ -65402,9 +65402,37 @@
       "bloqueiaIntegracao": false,
       "nota": "vitest targeted 13/13 (novo teste StrictMode: saida animada + reabertura durante saida)",
       "declaradoEm": "2026-08-28T00:54:49.053Z"
+    },
+    {
+      "sliceId": "RD-EOS-INTEGRATION",
+      "titulo": "React Doctor como capability frontend do EOS: router deterministico + capability global + perfil AdmAi + skill subordinada",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "router selftest 8/8 (4 casos da diretiva + bordas); integracao perfil real -> router validada; skill sem hooks globais, sem @latest, sem playbook remoto",
+      "declaradoEm": "2026-08-28T00:57:59.539Z"
+    },
+    {
+      "sliceId": "RD-EOS-GITIGNORE",
+      "titulo": "Excecao .gitignore para versionar .claude/skills/react-doctor (mesmo padrao do admai-tool-router)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "excecao estreita no padrao existente",
+      "declaradoEm": "2026-08-28T01:00:41.045Z"
     }
   ],
-  "geradoEm": "2026-08-28T00:56:30.016Z",
+  "geradoEm": "2026-08-28T01:00:58.609Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

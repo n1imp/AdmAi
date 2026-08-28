@@ -1,0 +1,56 @@
+{
+  "$comment": "Perfil LOCAL do AdmAi para a capability global EOS_REACT_DOCTOR_CAPABILITY.md. Tudo que é específico deste repo mora aqui — a capability/router não têm hardcode AdmAi.",
+  "pilotVersion": "0.9.12",
+  "invocacao": {
+    "comando": "npx -y react-doctor@0.9.12",
+    "flagsObrigatorias": ["--no-telemetry", "--no-supply-chain"],
+    "porQue": "Sem score API/share URL/crash reporting e sem envio de dependências ao Socket.dev — transmissão externa não autorizada. Consequência aceita: summary.score=null; os KPIs são as contagens locais (erros/avisos/categorias) e o diff por id.",
+    "instalacao": "NENHUMA — sem devDependency, sem package script, sem git hook, sem workflow do vendor. Decisão registrada após `install --dry-run` (2026-08-27): o installer criaria devDependency+lockfile churn, hook pre-commit em path fora da worktree e workflow próprio."
+  },
+  "roteamento": {
+    "raizesFrontend": ["chaveiro-painel/src/"],
+    "extensoesReact": [".jsx", ".tsx"],
+    "sinaisDesign": ["/pages/", "/components/"]
+  },
+  "baselines": {
+    "full": "docs/eos-v2/REACT_DOCTOR_BASELINE_2026-08-27.json",
+    "design": "docs/eos-v2/REACT_DOCTOR_BASELINE_DESIGN_2026-08-27.json",
+    "politicaDeRefresh": "Regenerar somente após mudança auditada (fix commitado ou classificação registrada); nunca para esconder diagnóstico novo."
+  },
+  "portao": {
+    "bloqueia": "diagnóstico NOVO de severidade error (diff por id contra o baseline full)",
+    "naoBloqueia": "avisos legados, avisos novos (reportados, triados), regras de estilo/design, score",
+    "scoreKpi": false
+  },
+  "classificacoesAceitas": [
+    {
+      "regra": "react-doctor/auth-token-in-web-storage",
+      "ocorrencias": ["src/contexts/AuthContext.jsx", "src/lib/api.js", "src/pages/Login.jsx"],
+      "classificacao": "ACCEPTED_ARCHITECTURE",
+      "razao": "SPA com Bearer token; requireAuth revalida no banco a cada request (prova ciclo 2: 401 imediato pós-exclusão de conta) e logout-all existe. Migrar para cookie HttpOnly muda a arquitetura de auth/2FA/OAuth — exige security review + decisão do usuário; NÃO é matéria de lint.",
+      "revisaoRequerida": "security review antes de qualquer mudança nesta fronteira"
+    },
+    {
+      "regra": "react-doctor/no-secrets-in-client-code",
+      "ocorrencias": [],
+      "classificacao": "REGRA_DE_CONTROLE",
+      "razao": "Zero ocorrências reais no baseline; usada como controle negativo do piloto (v0.9.12 classifica como warning — o controle de BLOQUEIO usa react-doctor/no-eval, error)."
+    }
+  ],
+  "legadoPorCategoria": {
+    "$comment": "Baseline 2026-08-27 pós-fixes: 0 erros; avisos legados = LEGACY_DEBT triável por milestone, sem campanha de limpeza em massa.",
+    "Accessibility": "115 no baseline inicial — dominado por label-has-associated-control/no-placeholder-only-field; sobrepõe GAP-UX-A11Y-NOME-01 do scope freeze (já inventariado como trabalho de produto REFINE)",
+    "Performance": "52 — maioria no-barrel-import/js-combine-iterations (micro-otimizações)",
+    "Bugs": "51 no inicial; os 4 ERRORS foram corrigidos (commits 94f82a1, 424b4d0); restam avisos (no-async-event-handler-without-reentry-guard etc.)",
+    "Maintainability": "31 — no-giant-component/only-export-components",
+    "Security": "3 — todos auth-token-in-web-storage (ACCEPTED_ARCHITECTURE acima)"
+  },
+  "supressoes": [],
+  "orcamentoDePerformance": {
+    "fullMs": 21700,
+    "designMs": 15300,
+    "changedMs": 12500,
+    "medidoEm": "2026-08-27, Windows local, chaveiro-painel 172 arquivos analisados"
+  },
+  "atualizacaoDeVersao": "Subir o pin exige: re-baseline completo, revalidação do schemaVersion no adapter (react-doctor-summary.mjs), re-execução do controle negativo e registro no ledger."
+}

@@ -68,6 +68,7 @@ chaveiro-bot/uploads-docs/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/admai-tool-router/
+!.claude/skills/react-doctor/
 claude/
 .mcp.json
 CLAUDE.md
