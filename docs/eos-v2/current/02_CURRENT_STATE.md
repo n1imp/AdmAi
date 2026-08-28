@@ -9,11 +9,11 @@
 | BASELINE_HEAD | `8a53cc5bd4d0beeb2dc985ba745debfec1b629b3` (tag `admai-staging-accepted-2026-08-27`, imutável) |
 | STAGING_DEPLOY_ATUAL | `8bf37e9` (baseline + ciclos 1–2; frontend CF Pages + backend Railway Node 22; avanço auditado, NÃO reabre o staging aceito) |
 | STAGING_STATUS | ACCEPTED/CLOSED (`REAL_STAGING_ACCEPTANCE_PROVEN=YES`; reopen só por regressão objetiva) |
-| FUNCTIONAL_AUDIT_STATUS | **CYCLE2_COMPLETE** — 27 caps; classificação por evidência real (tours 0–9 + probes); gaps D1–D5 executados e reverificados; DECISOR + REVISOR (APROVADO após 2 rodadas de correções de segurança) |
+| FUNCTIONAL_AUDIT_STATUS | **CYCLE2_CLOSED** — gate reconciliado: AUD2-P1 RECONCILED (zero bloqueios AUD*); /tecnicos REDESIGN→REFINE no scope freeze (refutado por evidência); PII boundary da auditoria = ACCEPTED_AS_CURRENT_TECHNICAL_PRODUCT_BOUNDARY (técnica ≠ legal; sem expansão; mudança exige security review); support e-mail RESOLVIDO no frontend (`suporte@chaveirobot.com.br`, evidência `.env.example`) |
 | CLASSIFICACAO_ATUAL | **14 FEATURE_COMPLETE** · 5 USER_REAL_CAN_USE · 2 INTEGRATED · 1 BACKEND_ONLY→resolvido (AUDITORIA agora FC) · 1 BLOCKED_D2 (LGPD) · 1 POST_MVP (WHATSAPP) · 4 DEFERRED_BY_SCOPE |
 | FEATURE_COMPLETE (14) | AUTH_LOGIN · AUTH_2FA · MULTI_TENANCY · APROVACOES · CONFIGURACOES · STAGING · DOCUMENTOS · ONBOARDING · AUDITORIA · RBAC · SEGURANCA · ESTOQUE · FINANCEIRO · INDICADORES |
 | USER_REAL_CAN_USE (5) | SERVICOS_CRUD · PONTO · BILLING · ADMIN · TECNICOS (gaps declarados: delete-UI / selfie-headless / checkout-D7 / convite-email-real) |
-| READY_FRONTIER | **GATE DO USUÁRIO** (ver `gateDoUsuario` + `writeSetReconciliacoesPendentes` no ledger): 1 disposição de write-set pendente (AUD2-P1, classe D1) + reconciliação de escopo (/tecnicos REDESIGN refutado; WHATSAPP messaging) + validações não-executáveis declaradas |
+| READY_FRONTIER | **EOS_REACT_DOCTOR_FRONTEND_VERIFIER_PILOT** (em execução) → ao concluir, retorna a **ADMAI_FUNCTIONAL_PRODUCT_AUDIT** (5 USER_REAL_CAN_USE: SERVICOS_CRUD/PONTO/BILLING/ADMIN/TECNICOS + 2 INTEGRATED). Restam apenas D2 soberanos (legal/produção) e validações não-executáveis declaradas |
 | RELEASE_STATE | ADMAI_RELEASE_CANDIDATE_READY=YES · ADMAI_RELEASE_READY=NO |
 | LEGAL_STATE | DEFERRED_BY_D2 (D6: conteúdo jurídico intocado; mecanismo LGPD auditado) |
 | PRODUCTION_STATE | UNTOUCHED · PROMOTION NOT_AUTHORIZED · ref `disljhkypaxpyzvbooge` = DENY TARGET · PRODUCTION_TOUCHED=NO |

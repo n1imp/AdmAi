@@ -65153,9 +65153,17 @@
         "HARNESS"
       ],
       "provenance": "UNKNOWN_PROVENANCE",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "P1a: DOCUMENTOS_ENABLED + fix domains-query no tool declarado; escritas foram exatamente o arquivo declarado, em 2 commits mid-slice (d4014ff, 60b5ed6) porque o workflow_dispatch le a branch staging — mesma classe CONTEUDO_ACEITO_ORDEM_VIOLADA se acusar UNKNOWN_DIFFERENCE; licao: fatias de ops fecham antes do commit unico final.",
-      "declaradoEm": "2026-08-27T17:40:02.808Z"
+      "declaradoEm": "2026-08-27T17:40:02.808Z",
+      "reconciliacao": {
+        "em": "2026-08-28T00:11:00.534Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "n1imp (CYCLE 2 CLOSURE 2026-08-27 — Fase A: AUD2-P1=PROCESS_VIOLATION_ACCEPTED, CONTENT_VALID, NO_ROLLBACK, NO_HISTORY_REWRITE)",
+        "justificativa": "HEAD moveu durante a fatia P1 porque as fatias de fix subsequentes (P1B-P1F, d4014ff..97fe7ef) commitaram no meio; a escrita foi exatamente a entrada declarada (DOCUMENTOS_ENABLED no tool). Mesma classe das 3 disposicoes do D1.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     },
     {
       "sliceId": "AUD2-P1B-FORCE-SECRET",
@@ -65324,9 +65332,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Fechamento ciclo 2: CURRENT_STATE + ledger CYCLE2_COMPLETE_AWAITING_USER_GATE; CI verde no HEAD.",
       "declaradoEm": "2026-08-27T20:08:37.440Z"
+    },
+    {
+      "sliceId": "AUD2C-CLOSURE",
+      "titulo": "Cycle 2 closure: AUD2-P1 reconciliado (Fase A) + /tecnicos REDESIGN->REFINE (Fase B) + PII boundary (Fase C) + support email (Fase D) + estado (Fase E)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Cycle 2 closure docs: AUD2-P1 reconciliado (livro-razao do gate) + freeze amendment /tecnicos + ledger fases A-E + CURRENT_STATE; fechado antes do commit.",
+      "declaradoEm": "2026-08-28T00:11:00.299Z"
     }
   ],
-  "geradoEm": "2026-08-27T20:08:39.457Z",
+  "geradoEm": "2026-08-28T00:13:39.350Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

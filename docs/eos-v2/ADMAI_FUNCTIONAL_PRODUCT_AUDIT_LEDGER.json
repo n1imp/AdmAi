@@ -2,7 +2,7 @@
   "schema": "admai-functional-product-audit-ledger/v1",
   "criadoEm": "2026-08-27T05:00:00Z",
   "iniciadoEm": "2026-08-27",
-  "status": "CYCLE2_COMPLETE_AWAITING_USER_GATE",
+  "status": "CYCLE2_CLOSED_REACT_DOCTOR_PILOT_IN_PROGRESS",
   "faseConcluida": [
     "FUNCTIONAL_CAPABILITY_INVENTORY",
     "USER_REAL_CAN_USE_CLASSIFICATION",
@@ -170,6 +170,14 @@
       "descricao": "Nova phase read-only logs no bootstrap (deployments+deploymentLogs, filtro de erro, scrub de JWT/segredos, max 40 linhas) — diagnostico de runtime sem despejo de log bruto. Selftest prova zero mutacao.",
       "evidencia": "run 33100946066 (LOGS_OK) + selftest 21/21",
       "classe": "TOOLING_DURAVEL"
+    },
+    {
+      "id": "AUD2C-SUPPORT-EMAIL",
+      "capability": "AJUDA/SUPORTE",
+      "severidade": "MEDIA",
+      "descricao": "suporte@barbers-flow.com (outro produto) na Ajuda. DISCOVERY DIRECIONADO em fontes autoritativas: chaveiro-bot/.env.example:42-43 declara o par oficial FROM_EMAIL=noreply@chaveirobot.com.br + SUPPORT_EMAIL=suporte@chaveirobot.com.br — EXATAMENTE UM candidato, no dominio institucional canonico do produto (*.chaveirobot.com.br, o mesmo dos guards de producao). RESOLVIDO no frontend: Ajuda.jsx 2x -> suporte@chaveirobot.com.br. FORA do fix: legal.js (D6, conteudo juridico) e defaults de env.js do backend (mudar FROM_EMAIL arriscaria entrega real de e-mail se o dominio chaveirobot.com.br nao estiver verificado no Resend — follow-up com pre-condicao: verificar dominio no Resend e setar envs no Railway; mailto de templates usa env.SUPPORT_EMAIL cujo default segue barbers-flow ate la).",
+      "evidencia": "chaveiro-bot/.env.example:39-45 (fonte autoritativa versionada)",
+      "classe": "RESOLVED_FRONTEND (backend defaults = follow-up com pre-condicao operacional)"
     }
   ],
   "itens": [
@@ -353,10 +361,10 @@
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "USER_REAL_CAN_USE",
       "GAPS": [
-        "REDESIGN do freeze REFUTADO com evidência (tour8: nomes de 52 chars não truncam em 1440px; CardTecnico já aplica a Direção B D-SL15) — recomendar fechar a classe REDESIGN do freeze",
-        "Convite/aceite de técnico não exercitado (e-mail real)"
+        "Convite/aceite de técnico não exercitado (e-mail real)",
+        "Scope freeze RECONCILIADO (amendment 2026-08-27): /tecnicos REDESIGN->REFINE — PREVIOUS_ASSUMPTION_REFUTED_BY_RUNTIME_EVIDENCE"
       ],
-      "NEXT_ACTION": "GATE: recomendar reclassificar /tecnicos de REDESIGN→REFINE/KEEP no scope freeze (refutado por evidência)",
+      "NEXT_ACTION": "Retorno da auditoria funcional: convite/aceite quando exercitavel; sem redesign",
       "EVIDENCE_POINTERS": [
         "tour1 12:26Z (lista dono + medida truncamento) · tour2 12:28Z (lista gestor)",
         "tour3 12:40Z recheck gestor (API 1 / UI 1) · tour5 12:53Z 'Ver perfil completo' -> /tecnicos/557",
@@ -640,7 +648,7 @@
       "USER_REAL_CAN_USE": "YES",
       "FINAL_CLASSIFICATION": "FEATURE_COMPLETE",
       "GAPS": [
-        "DTO expoe PII ALLOWLISTED (nome/email de convite/IP) ao admin do proprio tenant, por design — garantia e sem PII nao-allowlisted; escopado por empresa"
+        "CURRENT_AUDIT_PII_ALLOWLIST = ACCEPTED_AS_CURRENT_TECHNICAL_PRODUCT_BOUNDARY (decisao do ciclo de fechamento): admin-only, tenant-scoped, PII allowlisted = nome/email-de-convite/IP; secrets fechados por DTO. NAO EXPANDIR a allowlist; TECHNICAL_BOUNDARY_ACCEPTED != LEGAL_CONTENT_ACCEPTED (LEGAL_ACCEPTANCE=DEFERRED_BY_D2); qualquer mudanca da boundary exige security review — findings de ferramenta (ex.: React Doctor) NAO alteram o contrato automaticamente."
       ],
       "NEXT_ACTION": "NONE",
       "EVIDENCE_POINTERS": [
@@ -943,6 +951,11 @@
       "quando": "2026-08-27 (Ciclo 2)",
       "fase": "P7 REVISOR — correcoes aplicadas",
       "resultado": "REVISOR (thread 01a044bb) CORRECOES_NECESSARIAS: 2 ALTA de seguranca (shell-injection no workflow; gql podia ecoar secret) + 1 MEDIA (engines) + 1 evidencia (token pos-exclusao). Todos corrigidos e revalidados (selftest 23/23, bot format/lint OK, probe 401). Evidencia de invalidacao substituida pelo probe controlado."
+    },
+    {
+      "quando": "2026-08-27 (Cycle 2 closure)",
+      "fase": "Fases A-E do fechamento",
+      "resultado": "A: AUD2-P1 RECONCILED (zero bloqueios AUD*). B: /tecnicos REDESIGN->REFINE no scope freeze (amendment com evidencia; contadores 16/33/0). C: PII boundary ACCEPTED_AS_CURRENT_TECHNICAL_PRODUCT_BOUNDARY (tecnica != legal; sem expansao; mudanca exige security review). D: support email RESOLVIDO no frontend com evidencia unica (.env.example); legal.js D6 e defaults de backend com pre-condicao registrados. E: estado atualizado; proximo front = EOS_REACT_DOCTOR_FRONTEND_VERIFIER_PILOT."
     }
   ],
   "coldStartPackage": "docs/eos-v2/current/ (01_SESSION_BOOTSTRAP.md e o ponto de entrada)",
@@ -1042,7 +1055,7 @@
   ],
   "gateDoUsuario": {
     "geradoEm": "2026-08-27 (Ciclo 2)",
-    "reconciliacoesWriteSet": "1 disposicao pendente: AUD2-P1-RAILWAY-DOCS-FLAG (classe D1, HEAD movido durante fatia) — comando pronto em writeSetReconciliacoesPendentes; autoria do usuario.",
+    "reconciliacoesWriteSet": "TODAS CONCLUIDAS (D1: 3 + Fase A ciclo 2 closure: AUD2-P1). Zero bloqueios AUD* no WRITE_SET_HISTORY.",
     "decisoesD2Soberanas": [
       "GAP-LEGAL-MODELO-01 (conteudo juridico /termos /privacidade) — RELEASE BLOCKER, D6 mantido",
       "D2-DOC-BUCKET producao · D2-BACKFILL-PROD · D2-Q010-BACKUP · D2-PROMOTION (producao intocada)"
@@ -1052,8 +1065,8 @@
       "WHATSAPP: feature POST_MVP (claims ja honestos); reconciliacao MVP-vs-POST_MVP entre freeze e bootstrap ja resolvida por D2 amendment (featureFlags.js)"
     ],
     "achadosParaDecisao": [
-      "AUD-NOTE-SUPORTE-BARBERS-FLOW: Ajuda.jsx usa mailto suporte@barbers-flow.com (dominio de outro produto) como contato de suporte — nao mudei (nao sei o e-mail correto; inventar seria errado). Decisao do usuario.",
-      "AUDITORIA expoe PII allowlisted (nome/email de convite/IP) ao admin do proprio tenant, por design (aceito pelo REVISOR como risco de privacidade intencional e escopado)."
+      "AUDITORIA expoe PII allowlisted (nome/email de convite/IP) ao admin do proprio tenant, por design (aceito pelo REVISOR como risco de privacidade intencional e escopado).",
+      "Follow-up (nao-bloqueante): defaults de FROM_EMAIL/SUPPORT_EMAIL em chaveiro-bot/src/config/env.js ainda barbers-flow — trocar exige verificar o dominio chaveirobot.com.br no Resend e setar as envs no Railway (senao a entrega de e-mail quebra silenciosamente)."
     ],
     "validacoesNaoExecutaveisDeclaradas": [
       "Verificacao POSITIVA de e-mail (segredo do Railway nao exportado + sandbox Resend) — por design de seguranca",
@@ -1069,7 +1082,8 @@
     "resultado": [
       "AUD-CAP-INVENTORY-CLASSIFICATION: reconciliado=true (UNKNOWN_DIFFERENCE preservada)",
       "AUD-C1-GAP-FIX-BATCH: reconciliado=true (UNDECLARED_ARTIFACT_WRITE preservada)",
-      "AUD-D2-EVIDENCE-PRESERVE: reconciliado=true (UNDECLARED_WRITE preservada)"
+      "AUD-D2-EVIDENCE-PRESERVE: reconciliado=true (UNDECLARED_WRITE preservada)",
+      "AUD2-P1-RAILWAY-DOCS-FLAG: reconciliado=true (UNKNOWN_DIFFERENCE preservada) — CYCLE 2 CLOSURE Fase A, autoria do usuario (PROCESS_VIOLATION_ACCEPTED)"
     ],
     "observacao": "16 bloqueios historicos de programas ANTERIORES a esta auditoria permanecem no WRITE_SET_HISTORY (SCOPE-F2*, SL-*, F6-*, GATE6-*, D2-AMENDMENT-RECLASS, STG-*) — fora do escopo do D1; nenhum criado por este ciclo.",
     "pendenciasOriginais": [
@@ -1097,14 +1111,5 @@
         "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD-D2-EVIDENCE-PRESERVE', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'Os 7 JSONs de evidencia dos tours eram o proprio proposito da fatia (pedido do REVISOR); a declaracao usou diretorio onde o gate exige arquivos.' })))\""
       }
     ]
-  },
-  "writeSetReconciliacoesPendentes": [
-    {
-      "sliceId": "AUD2-P1-RAILWAY-DOCS-FLAG",
-      "comparacao": "UNKNOWN_DIFFERENCE",
-      "causa": "HEAD moveu entre a declaracao da P1 e seu fechamento porque as fatias de fix subsequentes (P1B-P1F: d4014ff..97fe7ef) commitaram no meio. Mesma classe do D1 (HEAD movido durante fatia). A escrita foi exatamente a entrada declarada (DOCUMENTOS_ENABLED no tool).",
-      "disposicaoSugerida": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
-      "comandoParaOUsuario": "node -e \"import('./tools/admai-delivery/write-set-gate.mjs').then(m => console.log(m.reconciliar({ sliceId: 'AUD2-P1-RAILWAY-DOCS-FLAG', disposicao: 'CONTEUDO_ACEITO_ORDEM_VIOLADA', autorizadoPor: 'SEU_NOME', justificativa: 'HEAD movido por fatias de fix subsequentes; escrita foi exatamente DOCUMENTOS_ENABLED declarado.' })))\""
-    }
-  ]
+  }
 }

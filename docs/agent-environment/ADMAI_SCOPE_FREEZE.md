@@ -73,17 +73,27 @@ Nenhuma implementação foi apagada: as três voltam virando uma variável.
 | classificação | quantas |
 | --- | --- |
 | `KEEP` | 16 |
-| `REFINE` | 32 |
-| `REDESIGN` | 1 — `/tecnicos` |
+| `REFINE` | 33 (inclui `/tecnicos` — ver amendment 2026-08-27) |
+| `REDESIGN` | 0 — `/tecnicos` reclassificada (PREVIOUS_ASSUMPTION_REFUTED_BY_RUNTIME_EVIDENCE) |
 | `NOT_INVENTORIED` | **0** |
 
 Cobertura: quatro viewports (360×800 · 390×844 · 1440×900 · 1920×1080) e quatro papéis
 (anônimo · dono · gestor · funcionário). `NOT_OBSERVED = 0` em todos os viewports.
 
-`/tecnicos` permanece `REDESIGN` e **o redesenho não foi iniciado**: em 1440px os nomes colapsam
-para "An…" / "Br…" com ~55% da largura vazia, e numa tela cuja função é identificar pessoas o
-identificador é o primeiro a cair. Corrigir o consentimento não mudou isso — `BUG_FIX !=
-VISUAL_REDESIGN`.
+**AMENDMENT 2026-08-27 (Cycle 2 closure, decisão do usuário · Fase B):** `/tecnicos`
+**REDESIGN → REFINE** — `PREVIOUS_ASSUMPTION_REFUTED_BY_RUNTIME_EVIDENCE`. O achado que
+sustentava o REDESIGN ("em 1440px os nomes colapsam para 'An…' / 'Br…'") foi **refutado em
+staging real** na ADMAI_FUNCTIONAL_PRODUCT_AUDIT: com 3 técnicos de nomes reais de até 52
+caracteres em 1440px, `scrollWidth == clientWidth` (350px) e `white-space: normal` — zero
+truncamento; o `CardTecnico` já aplica a "Direção B (D-SL15)" (quebra integral de linha em lg+),
+e o perfil `/tecnicos/:id` renderiza conteúdo completo. Evidência:
+`docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour8-onboarding.json` (passo "TECNICOS:
+criar 3 tecnicos com nomes LONGOS"). A capability é `USER_REAL_CAN_USE` no audit ledger.
+Nenhum redesenho foi executado — esta é uma reconciliação documental de estado com evidência.
+
+*Registro original (histórico, hoje refutado):* `/tecnicos` permanecia `REDESIGN` porque em
+1440px os nomes colapsavam para "An…" / "Br…" com ~55% da largura vazia — corrigido entre o
+freeze e a auditoria pela Direção B (D-SL15); `BUG_FIX != VISUAL_REDESIGN` valia à época.
 
 ---
 
@@ -132,7 +142,7 @@ Este gap **não impede `ADMAI_SCOPE_CLOSED`** — o escopo está conhecido e con
 | bucket de produção do `DOCUMENTOS` | `BLOCKED_EXTERNAL` | usuário |
 | credenciais de staging (Railway/Supabase) | `BLOCKED_EXTERNAL` | usuário |
 | aceitação de runtime do WhatsApp | `EXTERNAL_RUNTIME_ACCEPTANCE_PENDING` | provedor |
-| Release Experience: 32 REFINE + 1 REDESIGN | trabalho de produto | próxima sessão |
+| Release Experience: 33 REFINE (REDESIGN zerado no amendment 2026-08-27) | trabalho de produto | próxima sessão |
 | runtime não observado: `AUTH_2FA`, `WHATSAPP`, `AUDITORIA` | evidência ausente | próxima sessão |
 | E2E | não implementado | próxima sessão |
 
@@ -155,7 +165,7 @@ Write Set               : MATCH
 | --- | --- |
 | `ALL_RUNTIME_SURFACES_INVENTORIED` | sim — 49 |
 | `NOT_INVENTORIED = 0` | sim |
-| `ALL_SURFACES_CLASSIFIED` | sim — 16/32/1 |
+| `ALL_SURFACES_CLASSIFIED` | sim — 16/33/0 (amendment 2026-08-27: `/tecnicos` REDESIGN→REFINE por evidência) |
 | `VISIBLE_P2_RELEASE_DECISION_RECONCILED` | sim — 3 diferidas por flag, `ADMIN` mantida |
 | `MVP_FEATURE_SET_EXPLICIT` | sim — 21 |
 | `DEFERRED_FEATURE_SET_EXPLICIT` | sim — 4 |
