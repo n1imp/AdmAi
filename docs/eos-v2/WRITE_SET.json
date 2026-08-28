@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "AUD2C-CLOSURE",
-  "titulo": "Cycle 2 closure: AUD2-P1 reconciliado (Fase A) + /tecnicos REDESIGN->REFINE (Fase B) + PII boundary (Fase C) + support email (Fase D) + estado (Fase E)",
+  "sliceId": "AUD2C-EMAIL",
+  "titulo": "Fase D fix: Ajuda.jsx suporte@barbers-flow.com -> suporte@chaveirobot.com.br (evidencia unica .env.example)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T00:11:00.299Z",
+  "declaradoEm": "2026-08-28T00:13:58.306Z",
   "baseCommitPorLane": {
-    "HARNESS": "be3b9abd4458c683037b8c19db21a18a5f491b1f"
+    "HARNESS": "ec9a7ca679b345716b5fcc1888518501cc6d3ed6"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -576,7 +576,7 @@
       "docs/TESTPLAN.md": "59deea0d68da88f2d2d18e6131ca5748e45a7211ca74d07fa4a0ff30eb767de3",
       "docs/TUTORIAL_META_WHATSAPP.md": "a424ca5ace45ded8e949a55193c1c328ca144a0bfc6b1e8500a4c718f8ecdbed",
       "docs/TUTORIAL_RLS_DAST.md": "aca3019a8ef094cba04069e2337d8a4d87c281b0d44c7b70c126795d7d406f4e",
-      "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
+      "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "b28d941fccd2ff58434ac4712e53bf8f5ccea040f596dcb81467d21b6fbf8e1f",
       "docs/agent-environment/AGENT_DECISIONS.md": "fb82b06c94bbb435f0a505316fbc10256d2c5154d3a39b5153b7ddb0adc6f0f0",
       "docs/agent-environment/AGENT_TOOLING_ARCHITECTURE.md": "ab31dbf00e9448b92e262d7f29e2ee7e7004953a7ff4d58317b584698d056eff",
       "docs/agent-environment/B2_R2E_INERT_VALIDATION.md": "f3a54871bbb2aaba51feb0d5c63cad57f7e7d1225d144b9461b49f6fe6d2e853",
@@ -620,7 +620,7 @@
       "docs/eos-v2/ADMAI_COMPLETION_LEDGER.json": "7e3f8ea4a3ae37809af5055290dda7c3ca49707ed8a24faf785baabe02b1e896",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_CONTRACT_REGISTRY.md": "729d9ebf561945bd90ea96819fef47c43600678d63c1e9b883a8ba285a5ab354",
       "docs/eos-v2/ADMAI_FRONTEND_BACKEND_STRUCTURAL_RECONCILIATION.md": "348548fe6efb83cae921caf7d5f97f735364ce592b3b8a79f717005145676b47",
-      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "616bf109b404f76e6acae04993d78738f9029374e305656179e13e6d6104b3f6",
+      "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json": "4e956e9b195d5b4dccc04889634ed70883feec7d815c73a75141d3fb091b7edc",
       "docs/eos-v2/ADMAI_REAL_STAGING_COMPLETION_HANDOFF.md": "970911c9a42fed7dab66c30a446f1f3b60ff6bad4bea7bc4f2cdc682b026e052",
       "docs/eos-v2/ADMAI_V2_RUNWAY_DOSSIER.md": "cfd5df49b055f68c06b82895e2cdca4aed83f23eafaf69bea69dc5dbc7042fb6",
       "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/probe-token-pos-exclusao.txt": "e6faed114992b380728f571b98841e7637e15280e1caa4e71025c9900a7b2bb5",
@@ -653,14 +653,14 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "780b5811906765f5504de65c57b2f98720527ce78fb1777376080ae675d268c8",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "ff4ef5dffa23579a8a3ba6a45d50237780b884f8f6943f7849dfb10bc6993a5d",
+      "docs/eos-v2/WRITE_SET.json": "c66d6af38c49998b4e880d410aa0fa4792cf004b5314cf43a8b0c9d4e1b3c9ad",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "060c00236a04b2e8fb7fbf2a0424f84b3549e73538f3270b989ed91b46988f10",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
       "docs/eos-v2/bootstrap/SL-BOOT-01-BASELINE.md": "a3fc6940da450150f53e50235b5af72a65a44e4e7a21ea505fced70d1ee8f3e3",
       "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md": "5dff019c75a2e45115cc32791306b2b4be1612bc70760f1fe7a171b210157d2f",
-      "docs/eos-v2/current/02_CURRENT_STATE.md": "c707f83c81a3a72508d34be2e9f3b47dbe28475d974660bdbb105be5f32a620e",
+      "docs/eos-v2/current/02_CURRENT_STATE.md": "21fb9dac056c04644f29080451621e2c8067198e04a63539c1a42ad86af885ae",
       "docs/eos-v2/current/03_PROJECT_INDEX.md": "a74f81e76df05ba22fa4596bdaf5c9ef5d88dcb65d1ad3bbb6878ea6e93b7759",
       "docs/eos-v2/current/04_DECISION_INVARIANTS.md": "27c5a338209c1842d0d4636a50a5b51222e44f22be524a34afd4dc8ebdb6edcf",
       "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md": "567eb1b04919fa4884e16e1fb33e18e28c3de43c7107b0ba4c660d2130d1f043",
@@ -2602,29 +2602,11 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/agent-environment/ADMAI_SCOPE_FREEZE.md",
+      "caminho": "chaveiro-painel/src/pages/Ajuda.jsx",
       "precisao": "BOUNDED",
-      "proposito": "amendment /tecnicos REDESIGN->REFINE por evidencia de runtime",
+      "proposito": "2 ocorrencias do mailto de suporte",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ba813a3ab17ee74ad7b7b251992840aaefb18f66ad30bdbcdd2f43898b9dcfb0",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
-      "precisao": "BOUNDED",
-      "proposito": "AUD2-P1 reconciled + PII boundary + support email + fechamento",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "616bf109b404f76e6acae04993d78738f9029374e305656179e13e6d6104b3f6",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
-      "precisao": "BOUNDED",
-      "proposito": "snapshot do fechamento",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "c707f83c81a3a72508d34be2e9f3b47dbe28475d974660bdbb105be5f32a620e",
+      "shaNaDeclaracao": "c5f0dfed1ee5adef12d1fd643cf5b5a84ece78d97e4b9e9c3000a8f7907c32c5",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2635,6 +2617,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "Cycle 2 closure docs: AUD2-P1 reconciliado (livro-razao do gate) + freeze amendment /tecnicos + ledger fases A-E + CURRENT_STATE; fechado antes do commit.",
+  "nota": "Email fix fechado antes do commit: 2 ocorrencias trocadas; prova de zero barbers-flow fora de legal.js (D6).",
   "aviso": "Declaracao ENCERRADA."
 }

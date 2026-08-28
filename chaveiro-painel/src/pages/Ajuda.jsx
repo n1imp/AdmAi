@@ -16,7 +16,7 @@ function abrirCrisp() {
   if (typeof window !== 'undefined' && window.$crisp) {
     window.$crisp.push(['do', 'chat:open']);
   } else {
-    window.location.href = 'mailto:suporte@barbers-flow.com';
+    window.location.href = 'mailto:suporte@chaveirobot.com.br';
   }
 }
 
@@ -236,7 +236,7 @@ export default function Ajuda() {
               <Headphones size={13} /> Chat
             </button>
             <a
-              href="mailto:suporte@barbers-flow.com"
+              href="mailto:suporte@chaveirobot.com.br"
               className="btn-secondary text-xs py-1.5 px-3 gap-1.5 flex items-center justify-center"
             >
               <Mail size={13} /> E-mail

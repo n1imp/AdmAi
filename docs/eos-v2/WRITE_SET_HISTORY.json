@@ -65346,9 +65346,23 @@
       "bloqueiaIntegracao": false,
       "nota": "Cycle 2 closure docs: AUD2-P1 reconciliado (livro-razao do gate) + freeze amendment /tecnicos + ledger fases A-E + CURRENT_STATE; fechado antes do commit.",
       "declaradoEm": "2026-08-28T00:11:00.299Z"
+    },
+    {
+      "sliceId": "AUD2C-EMAIL",
+      "titulo": "Fase D fix: Ajuda.jsx suporte@barbers-flow.com -> suporte@chaveirobot.com.br (evidencia unica .env.example)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "Email fix fechado antes do commit: 2 ocorrencias trocadas; prova de zero barbers-flow fora de legal.js (D6).",
+      "declaradoEm": "2026-08-28T00:13:58.306Z"
     }
   ],
-  "geradoEm": "2026-08-28T00:13:39.350Z",
+  "geradoEm": "2026-08-28T00:14:58.251Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
