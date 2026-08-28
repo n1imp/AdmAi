@@ -65486,9 +65486,23 @@
       "bloqueiaIntegracao": false,
       "nota": "evidencia literal do runner capturada via gh run view/api",
       "declaradoEm": "2026-08-28T01:22:08.093Z"
+    },
+    {
+      "sliceId": "C3-RD-GATE-PROMOTION",
+      "titulo": "React Doctor CI: SHADOW -> BLOCKING_NEW_ERRORS (decisao soberana do Ciclo 3)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "YAML validado; gate bloqueante; artifact if:always() preservado",
+      "declaradoEm": "2026-08-28T01:36:56.751Z"
     }
   ],
-  "geradoEm": "2026-08-28T01:22:09.867Z",
+  "geradoEm": "2026-08-28T01:37:19.585Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -1,16 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "RD-CI-PROOF",
-  "titulo": "Prova do CI shadow em run real + decisao CURRENT selada no ledger",
+  "sliceId": "C3-RD-GATE-PROMOTION",
+  "titulo": "React Doctor CI: SHADOW -> BLOCKING_NEW_ERRORS (decisao soberana do Ciclo 3)",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T01:22:08.093Z",
+  "declaradoEm": "2026-08-28T01:36:56.751Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "Remove continue-on-error do step de scan (diff exit 1 = erro novo bloqueia; exit 2 = crash/tool-unavailable/unknown bloqueia — fail-closed). Warnings legados seguem nao-bloqueantes (diff por id so acusa NOVOS). Artifact step continua if: always().",
   "baselinePorLane": {
     "EOS": {
       ".eos-capsule/lane-timestamps.txt": "9bca985c1d853dead6d481047c1288cb384b2880c25d837f84292a8e93dda6df",
@@ -605,11 +606,11 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
+      "caminho": ".github/workflows/ci.yml",
       "precisao": "BOUNDED",
-      "proposito": "ciShadow.provaRunReal=run 33131909547 (novos:0 no runner; artifact publicado); decisaoCurrentVnext=CURRENT; status=PILOT_COMPLETE",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "Promocao do step a gate bloqueante de erro NOVO",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f73b08c70d3d5c79168a87f5d0727ccf90bbfad4010f1eb2d30d6e766ea4db00",
       "sujoNaDeclaracao": false
     }
   ],
@@ -620,6 +621,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "evidencia literal do runner capturada via gh run view/api",
+  "nota": "YAML validado; gate bloqueante; artifact if:always() preservado",
   "aviso": "Declaracao ENCERRADA."
 }

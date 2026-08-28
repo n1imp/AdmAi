@@ -223,14 +223,15 @@ jobs:
       - name: Auditoria de dependências (falha em High+)
         run: npm audit --audit-level=high --omit=dev
 
-      # React Doctor em SHADOW (rollout: LOCAL→BASELINE→NEGATIVE CONTROL→SHADOW→bloqueante
-      # por decisão futura). Versão PINADA do perfil (docs/eos-v2/REACT_DOCTOR_PROFILE_ADMAI
-      # .json); --no-telemetry/--no-supply-chain: nenhum dado sai p/ score API/Socket.dev.
-      # O diff do adapter sai 1 em ERRO NOVO vs baseline versionado — em shadow isso só
-      # marca o step, não o job. Contrato: docs/agent-environment/EOS_REACT_DOCTOR_CAPABILITY.md.
-      - name: React Doctor (shadow — não-bloqueante)
+      # React Doctor como GATE (Ciclo 3: SHADOW→BLOCKING_NEW_ERRORS, decisão soberana após
+      # shadow provado no run 33131909547). Versão PINADA do perfil (docs/eos-v2/
+      # REACT_DOCTOR_PROFILE_ADMAI.json); --no-telemetry/--no-supply-chain: nenhum dado sai
+      # p/ score API/Socket.dev. BLOQUEIA somente: erro NOVO vs baseline versionado (diff do
+      # adapter sai 1) e falha de scan/ferramenta (fail-closed: exit ≠0 ≠ PASS). NÃO bloqueia:
+      # os 243 warnings legados/baselined, ACCEPTED_ARCHITECTURE, score (null por política).
+      # Contrato: docs/agent-environment/EOS_REACT_DOCTOR_CAPABILITY.md.
+      - name: React Doctor — gate (bloqueia só erro NOVO; legado não bloqueia)
         id: react_doctor
-        continue-on-error: true
         run: |
           npx -y react-doctor@0.9.12 . --json --json-out react-doctor-report.json \
             --no-telemetry --no-supply-chain
