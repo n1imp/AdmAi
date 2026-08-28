@@ -65528,9 +65528,23 @@
       "bloqueiaIntegracao": false,
       "nota": "tours 10-13 + probe-empty versionados; ledger CYCLE3_COMPLETE (7 itens + RD gate CLOSED); CURRENT_STATE compacto",
       "declaradoEm": "2026-08-28T02:08:18.544Z"
+    },
+    {
+      "sliceId": "FR-B1-AURORA-METER",
+      "titulo": "Aurora usage meter deterministico + baseline versionado (FR-LEGACY tracking)",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "selftest 6/6; AURORA_USAGE=1566 (39 tokens/67 classes/96 arquivos)",
+      "declaradoEm": "2026-08-28T23:02:16.660Z"
     }
   ],
-  "geradoEm": "2026-08-28T02:11:00.148Z",
+  "geradoEm": "2026-08-28T23:03:58.810Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

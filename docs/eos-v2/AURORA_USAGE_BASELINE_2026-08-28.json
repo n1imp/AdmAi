@@ -1,0 +1,79 @@
+{
+  "geradoEm": "2026-08-28T23:03:57.817Z",
+  "invariante": "AURORA_USAGE_ZERO != PRODUCT_ACCEPTED",
+  "AURORA_USAGE": 1566,
+  "vocabulario": {
+    "tokens": 39,
+    "classesRemapeadas": 67
+  },
+  "total": 1566,
+  "porCategoria": {
+    "tokens": 4,
+    "classesRemapeadas": 1538,
+    "escopoPanelUi": 20,
+    "importsCssAurora": 4
+  },
+  "arquivosComUso": 96,
+  "top": [
+    [
+      "chaveiro-painel/src/pages/Login.jsx",
+      88
+    ],
+    [
+      "chaveiro-painel/src/pages/PerfilTecnico.jsx",
+      80
+    ],
+    [
+      "chaveiro-painel/src/pages/NovoTecnico.jsx",
+      55
+    ],
+    [
+      "chaveiro-painel/src/pages/Usuarios.jsx",
+      55
+    ],
+    [
+      "chaveiro-painel/src/pages/MeuPainel.jsx",
+      54
+    ],
+    [
+      "chaveiro-painel/src/pages/Tecnicos.jsx",
+      52
+    ],
+    [
+      "chaveiro-painel/src/index.css",
+      46
+    ],
+    [
+      "chaveiro-painel/src/components/avaliacoes/Google.jsx",
+      43
+    ],
+    [
+      "chaveiro-painel/src/pages/CatalogoModais.jsx",
+      43
+    ],
+    [
+      "chaveiro-painel/src/pages/Reparticao.jsx",
+      38
+    ],
+    [
+      "chaveiro-painel/src/pages/Seguranca.jsx",
+      34
+    ],
+    [
+      "chaveiro-painel/src/pages/Catalogo.jsx",
+      32
+    ],
+    [
+      "chaveiro-painel/src/pages/Documentos.jsx",
+      32
+    ],
+    [
+      "chaveiro-painel/src/pages/MeusServicos.jsx",
+      31
+    ],
+    [
+      "chaveiro-painel/src/pages/Servicos.jsx",
+      31
+    ]
+  ]
+}

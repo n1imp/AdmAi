@@ -1,16 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "C3-CLOSURE",
-  "titulo": "Fechamento do Ciclo 3: evidencias tour10-13+probe, reclassificacoes no ledger, CURRENT_STATE",
+  "sliceId": "FR-B1-AURORA-METER",
+  "titulo": "Aurora usage meter deterministico + baseline versionado (FR-LEGACY tracking)",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T02:08:18.544Z",
+  "declaradoEm": "2026-08-28T23:02:16.660Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
   "cobertura": "LANE_COMPLETA",
+  "notaDeMetodo": "O meter extrai o vocabulario Aurora DOS PROPRIOS CSS (seletores .panel-ui .x + tokens --panel-*) e conta ocorrencias em src. AURORA_USAGE_ZERO != PRODUCT_ACCEPTED registrado no proprio baseline.",
   "baselinePorLane": {
     "EOS": {
       ".eos-capsule/lane-timestamps.txt": "9bca985c1d853dead6d481047c1288cb384b2880c25d837f84292a8e93dda6df",
@@ -605,63 +606,18 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour10-servicos.json",
+      "caminho": "tools/admai-delivery/aurora-usage.mjs",
       "precisao": "BOUNDED",
-      "proposito": "SERVICOS_CRUD 11/11: delete-UI, empty, error, transicoes fora-de-scope",
+      "proposito": "Medidor deterministico do design system legado (selftest embutido)",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour11-ponto.json",
+      "caminho": "docs/eos-v2/AURORA_USAGE_BASELINE_2026-08-28.json",
       "precisao": "BOUNDED",
-      "proposito": "PONTO 10/10: selfie REAL fake-device + geo + persistencia + negativo de papel",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour12-billing-admin-tecnicos.json",
-      "precisao": "BOUNDED",
-      "proposito": "BILLING subgate STRIPE; ADMIN convite negativo; TECNICOS error/mobile; PONTO error",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-tour13-metricas-obs.json",
-      "precisao": "BOUNDED",
-      "proposito": "METRIC_FOUNDATION R1-R5 semanticas com dados reais",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/AUDIT_EVIDENCE_TOURS_2026-08-27/resultado-probe-tecnicos-empty.json",
-      "precisao": "BOUNDED",
-      "proposito": "TECNICOS EstadoVazio renderizado no bundle real",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/ADMAI_FUNCTIONAL_PRODUCT_AUDIT_LEDGER.json",
-      "precisao": "BOUNDED",
-      "proposito": "Reclassificacoes C3 + reactDoctorPilot.ciGate + status",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
-      "precisao": "BOUNDED",
-      "proposito": "Snapshot pos-ciclo-3",
+      "proposito": "Baseline AURORA_USAGE=N para acompanhar reducao durante a migracao",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -674,6 +630,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "tours 10-13 + probe-empty versionados; ledger CYCLE3_COMPLETE (7 itens + RD gate CLOSED); CURRENT_STATE compacto",
+  "nota": "selftest 6/6; AURORA_USAGE=1566 (39 tokens/67 classes/96 arquivos)",
   "aviso": "Declaracao ENCERRADA."
 }
