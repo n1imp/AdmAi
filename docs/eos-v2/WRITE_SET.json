@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-A-BACK-ENFORCEMENT-FLAG",
-  "titulo": "Neutralizacao do enforcement de assinatura por flag (DECISOR FR0 thread 01a04a99: i-A com restricoes)",
+  "sliceId": "FR-A-BACK-LINTFIX",
+  "titulo": "Fix no-unexpected-multiline no billing_free_mode (padrao agente do arquivo irmao)",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:07:12.987Z",
+  "declaradoEm": "2026-08-28T23:13:45.268Z",
   "baseCommitPorLane": {
-    "HARNESS": "a2984ab28431f21db337d1fd4da9b864f5f40844"
+    "HARNESS": "4ac3df702ae736cb43a6c435c024082aba5ec314"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "ASSINATURA_ENFORCEMENT_ENABLED (so 'true' liga); bypass no TOPO de requireAssinaturaAtiva antes de req.user/req.db; log de configuracao 1x por boot; assinaturaDaAcesso e montagens intocadas; testes de paywall seguem ON via config de integracao; modo OFF em arquivo novo via re-import (padrao servico_atual).",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -128,7 +127,7 @@
       "chaveiro-bot/src/config/__tests__/env.test.js": "b04297b8270783b7975ea15965ef47a833e1d1f3f7e2860de8bf1c974b45e6de",
       "chaveiro-bot/src/config/__tests__/sentry.test.js": "a27c1c1d76917b349a72b3b91144e31f7c2ff04c7c532851df6af270d11be980",
       "chaveiro-bot/src/config/__tests__/sentryTransport.test.js": "df4b509ce31bda807dfc47ac8487e652b3d13943c17f02e898edd115c40c49eb",
-      "chaveiro-bot/src/config/env.js": "976d244b2c883f176542ecf152fd5caae6bdfc1781ef89c5a818aaa4b35cc0a7",
+      "chaveiro-bot/src/config/env.js": "7e5f34421d792aba4456566a41530d6dac6b3c3b33636283e228cb300e199fc7",
       "chaveiro-bot/src/config/metrics.js": "ff1d76de470b8a1cc03c704eb9c8aea22d5004597f9fcf41e919fe9e2622bb73",
       "chaveiro-bot/src/config/sentry.js": "c4f560ae6debc88f7a56d19bd54cf03edc380ec5e5c1ba54aec01d76ec50d4fa",
       "chaveiro-bot/src/db/__tests__/tenant.test.js": "d505b2bfbe14fbbe52ab5a05aa0d3d5eb12e03e6c8543fcad802d5608347c9cb",
@@ -136,7 +135,7 @@
       "chaveiro-bot/src/db/tenant.js": "ca219ec41279a56b2ed86ff15ba1ca687de7e2ac8f451cdd753bb5709eae436d",
       "chaveiro-bot/src/instrument.js": "9af0790dd34a7d3178ee56efc8773f4471b92cb2f1e8125055f298e78649ab37",
       "chaveiro-bot/src/middlewares/__tests__/rateLimiters.test.js": "0b57f786db53c4abb543e2352100f154831832bac4de59e0a2f52dfd029b8f8c",
-      "chaveiro-bot/src/middlewares/assinatura.js": "ccf4908c679e25c5590a3e69e5b91dcdfe16825c7b7c3093cfc6d7de6c9525c1",
+      "chaveiro-bot/src/middlewares/assinatura.js": "48f27b5d7806007899cdb1b64bbdd22572407f8177162984bb888b5093069a7e",
       "chaveiro-bot/src/middlewares/auth.js": "151f43beae23a9d84edf7fedc877fd566a48ed057bc62d32e15dead00f4483f9",
       "chaveiro-bot/src/middlewares/rateLimiters.js": "8807a450a96817ccf77e78b1b76842dee960a68aa7ec60109f85e8ad17035187",
       "chaveiro-bot/src/queues/email.js": "5120b32bcd3eeb1da58f16b2d356f64fdff0599ad58ebc574e45e7737269ad9d",
@@ -246,7 +245,8 @@
       "chaveiro-bot/test/integration/auditoria_matriz_acoes.test.js": "edf56724f42f9e202e9fd526f0e1b5332aac2387724bbaf40ba1441c016ee906",
       "chaveiro-bot/test/integration/auth.test.js": "c1f2857cdd824477ee94bb247102699842052931220b2a789f89971eabd9df4d",
       "chaveiro-bot/test/integration/autoexclusao_conta.test.js": "2e7ce404ed3d94fe4478e94b17e9731a098f6efa6b04ccb6f0e8e9b2b2a81151",
-      "chaveiro-bot/test/integration/billing_access_audit.test.js": "cdacf475fe207901a3e54a403c85d8bf3747f921918ab4d3e3bdd437129ba78c",
+      "chaveiro-bot/test/integration/billing_access_audit.test.js": "258b2efd1171b291e592dd4319ab70e13e1f24b51960bad316696bb16d9f108f",
+      "chaveiro-bot/test/integration/billing_free_mode.test.js": "e66dff2b9bf4f2cc83f9152e432e46580d861430b768fa9a37ab2eec91ec2a18",
       "chaveiro-bot/test/integration/billing_google_auth.test.js": "003b8c5ab47c13720d212b1db37e108735364a638bcd65ee26a67d0564185d51",
       "chaveiro-bot/test/integration/bugs_regressao.test.js": "e6abed84fdf4e0a272be02eae90bc8a12a773722269a6598023945e807534293",
       "chaveiro-bot/test/integration/cadastro_otp.test.js": "b851790d47b835ec48fb18092c1af0e8042b641fd3339e992e0ff7583b6d61b7",
@@ -300,7 +300,7 @@
       "chaveiro-bot/test/integration/webhook_idempotencia_perda.test.js": "53083a8b7566f326d17d86cbb500452015b340bcea58eecec36641372d42f03b",
       "chaveiro-bot/test/integration/whatsapp_local_hmac.test.js": "f31174c9f7109270d0f74fc5c5b32376910aaffc99b60eb69dfd0870c39a5357",
       "chaveiro-bot/vitest.config.js": "88248b5a3cbff886643c5bc04cb89f2f0acdf4cb6bfd5e01f329842714419440",
-      "chaveiro-bot/vitest.integration.config.js": "fe7c32ecee1e73ac03cabc4e8b545dd71873e56691b3b45da44a5d1b0e9526d8",
+      "chaveiro-bot/vitest.integration.config.js": "bf3b0bfef807682167a1a59672cedf1b6a82d19dd69f1edd55b32272c970cda8",
       "chaveiro-painel/.dockerignore": "153249881c11bc89436274cd0c192c71ef6180f65e7ca9aba1d65a28465f4ad5",
       "chaveiro-painel/.env.example": "5505c97578d07bc8446a19ca1d93be777fd8e075a0734db10df273884895fb62",
       "chaveiro-painel/.env.staging.example": "bb15bc41740d750ed2dd3fe734cf5b49e6461cb3b871c537339362a086e6d343",
@@ -665,8 +665,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "1d0853395e655a1a271039a5c2d3d8a9e39d97cf65df248d71bc9b6866e389ff",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "0417ae774525f0295d71d631a8bd58cfb0a2b28f80f072754bb76026d8a8feb5",
+      "docs/eos-v2/WRITE_SET.json": "d2bd2a058259c08e41eb40732c6b500fc2a4f2b1dc23268358a66c2466ed2654",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "983ca09de1a47b1d19ee2e91d6d6fba38dbbb19e629b2efacd0b2b988b5c3c75",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2617,47 +2617,11 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/config/env.js",
-      "precisao": "BOUNDED",
-      "proposito": "Schema: +ASSINATURA_ENFORCEMENT_ENABLED (string opcional)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "976d244b2c883f176542ecf152fd5caae6bdfc1781ef89c5a818aaa4b35cc0a7",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/src/middlewares/assinatura.js",
-      "precisao": "BOUNDED",
-      "proposito": "Bypass por flag + log 1x + cabecalho atualizado (paywall = futuro comercial, nao MVP)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ccf4908c679e25c5590a3e69e5b91dcdfe16825c7b7c3093cfc6d7de6c9525c1",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/vitest.integration.config.js",
-      "precisao": "BOUNDED",
-      "proposito": "ASSINATURA_ENFORCEMENT_ENABLED ??= 'true' (matriz do gate continua provada integralmente)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "fe7c32ecee1e73ac03cabc4e8b545dd71873e56691b3b45da44a5d1b0e9526d8",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
-      "caminho": "chaveiro-bot/test/integration/billing_access_audit.test.js",
-      "precisao": "BOUNDED",
-      "proposito": "Cabecalho atualizado ao estado vigente (flag; ON nos testes; OFF em billing_free_mode)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "cdacf475fe207901a3e54a403c85d8bf3747f921918ab4d3e3bdd437129ba78c",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "chaveiro-bot/test/integration/billing_free_mode.test.js",
       "precisao": "BOUNDED",
-      "proposito": "NOVO: modo OFF via re-import — estados mortos/ausencia de assinatura NAO barram produto; bypass nao toca req",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
+      "proposito": "const agente = request(app) antes do acesso computado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "e66dff2b9bf4f2cc83f9152e432e46580d861430b768fa9a37ab2eec91ec2a18",
       "sujoNaDeclaracao": false
     }
   ],
@@ -2668,6 +2632,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "unit bot 479/479; prettier+lint verdes; integracao (gate ON matriz + free mode OFF) validada no CI quando Actions voltar — LOCAL_PROOF != CI_PROOF registrado",
+  "nota": "eslint 0 problemas no arquivo; prettier verde",
   "aviso": "Declaracao ENCERRADA."
 }

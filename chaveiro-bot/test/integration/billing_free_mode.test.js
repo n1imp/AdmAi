@@ -82,9 +82,8 @@ describe('MVP FREE MODE — flag desligada: estado comercial NÃO barra o produt
 
       const barradas = [];
       for (const rota of ROTAS_DE_PRODUTO) {
-        const res = await request(app)
-          [rota.metodo](rota.caminho)
-          .set('Authorization', `Bearer ${token}`);
+        const agente = request(app);
+        const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
         if (pareceBloqueioComercial(res)) barradas.push(`${rota.nome} → ${res.status}`);
       }
       expect(
@@ -100,9 +99,8 @@ describe('MVP FREE MODE — flag desligada: estado comercial NÃO barra o produt
 
     const barradas = [];
     for (const rota of ROTAS_DE_PRODUTO) {
-      const res = await request(app)
-        [rota.metodo](rota.caminho)
-        .set('Authorization', `Bearer ${token}`);
+      const agente = request(app);
+      const res = await agente[rota.metodo](rota.caminho).set('Authorization', `Bearer ${token}`);
       if (pareceBloqueioComercial(res)) barradas.push(`${rota.nome} → ${res.status}`);
     }
     expect(barradas).toEqual([]);
