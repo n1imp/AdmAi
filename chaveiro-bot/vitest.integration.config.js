@@ -18,6 +18,11 @@ process.env.SERVICO_ANDAMENTO_ENABLED ??= 'true';
 // F9/M4: liga os documentos do funcionário (/me/documentos). Sem SUPABASE_URL, o upload
 // cai pro disco local (./uploads-docs) — suficiente para exercitar o CRUD nos testes.
 process.env.DOCUMENTOS_ENABLED ??= 'true';
+// Paywall FORA do MVP (D2, Refoundation Cycle 1) — default OFF em runtime. Nos testes a
+// flag liga para manter a matriz completa do gate provada (billing_access_audit,
+// paywall_402_motivos); o modo OFF é coberto isoladamente em billing_free_mode.test.js
+// via re-import com a flag desligada (mesmo padrão do servico_atual flag-off).
+process.env.ASSINATURA_ENFORCEMENT_ENABLED ??= 'true';
 
 // Paridade com vitest.config.js: o .env do host pode trazer ADMIN_USERNAME/ADMIN_PASSWORD
 // inválidos (ex.: senha < 8 chars, ou um `#` que o dotenv corta como comentário inline),

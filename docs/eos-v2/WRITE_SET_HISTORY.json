@@ -65542,9 +65542,23 @@
       "bloqueiaIntegracao": false,
       "nota": "selftest 6/6; AURORA_USAGE=1566 (39 tokens/67 classes/96 arquivos)",
       "declaradoEm": "2026-08-28T23:02:16.660Z"
+    },
+    {
+      "sliceId": "FR-A-BACK-ENFORCEMENT-FLAG",
+      "titulo": "Neutralizacao do enforcement de assinatura por flag (DECISOR FR0 thread 01a04a99: i-A com restricoes)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "unit bot 479/479; prettier+lint verdes; integracao (gate ON matriz + free mode OFF) validada no CI quando Actions voltar — LOCAL_PROOF != CI_PROOF registrado",
+      "declaradoEm": "2026-08-28T23:07:12.987Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:03:58.810Z",
+  "geradoEm": "2026-08-28T23:13:01.973Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

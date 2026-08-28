@@ -1,11 +1,16 @@
 /**
  * BILLING ACCESS AUDIT — existe gate comercial bloqueando o uso do produto?
  *
+ * ESTADO VIGENTE (Refoundation Cycle 1, D2 2026-08-28): assinaturas pagas estão FORA do MVP.
+ *   Em runtime o paywall fica DESLIGADO (`ASSINATURA_ENFORCEMENT_ENABLED` ausente). ESTE arquivo
+ *   roda com a flag LIGADA (vitest.integration.config.js) para manter a matriz completa do gate
+ *   provada — o desenho fail-closed é patrimônio do futuro ciclo comercial. O comportamento do
+ *   MVP (flag OFF: nada barra) é provado em `billing_free_mode.test.js`.
+ *
  * POR QUE ESTE ARQUIVO EXISTE
- *   A decisão de produto vigente é `ADMAI_FREE_MODE = TRUE`: sem paywall, sem assinatura
- *   obrigatória, sem bloqueio por trial. A tentação é "remover o paywall". Mas antes de remover
- *   é preciso PROVAR se ele existe — e `grep` não prova: ausência de evidência não é evidência de
- *   ausência, e um gate pode estar em middleware, em rota, em query ou no frontend.
+ *   Antes de mexer em paywall é preciso PROVAR o que ele faz — e `grep` não prova: ausência de
+ *   evidência não é evidência de ausência, e um gate pode estar em middleware, em rota, em query
+ *   ou no frontend.
  *
  *   Este teste é o instrumento dirigido. Ele coloca a `Assinatura` nos estados comercialmente
  *   mortos (`canceled`, `past_due`, trial vencido) e exercita o produto de verdade, pelo HTTP,

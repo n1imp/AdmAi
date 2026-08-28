@@ -152,6 +152,12 @@ export const schema = z
     // Documentos vão a um bucket PRIVADO (URL assinada); requer SUPABASE_URL/KEY em prod
     // (STORAGE_STRICT decide se cai pro disco). Ligar em staging antes de produção.
     DOCUMENTOS_ENABLED: z.string().optional(),
+    // ── Enforcement comercial (paywall) — FUTURO ciclo comercial, fora do MVP ─────
+    // Decisão soberana (FRONTEND REFOUNDATION Cycle 1, D2): assinaturas pagas saíram do
+    // MVP. Somente a string literal "true" liga o paywall (requireAssinaturaAtiva);
+    // ausente/qualquer outro valor = produto livre. O middleware, o Stripe e o webhook
+    // ficam preservados intactos para quando o modelo comercial voltar.
+    ASSINATURA_ENFORCEMENT_ENABLED: z.string().optional(),
     // ── Observabilidade ───────────────────────────────────────────────────────
     SENTRY_DSN: z.string().url().optional(), // ausente = Sentry desligado (dev/test)
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

@@ -1,15 +1,20 @@
 /**
  * Enforcement comercial: assinatura morta barra o produto.  [GAP-BILL-01]
  *
- * O QUE ISTO CORRIGE
+ * ESTADO VIGENTE (FRONTEND REFOUNDATION Cycle 1, decisão soberana D2 de 2026-08-28):
+ *   assinaturas pagas SAÍRAM do MVP. O paywall abaixo fica DESLIGADO por padrão e só liga com
+ *   `ASSINATURA_ENFORCEMENT_ENABLED === 'true'` (checado no topo de `requireAssinaturaAtiva`,
+ *   antes de qualquer acesso a req.user/req.db/banco). Nada foi removido: o desenho fail-closed
+ *   inteiro — allowlist por posição, estados, motivos — permanece pronto para o futuro ciclo
+ *   comercial, e a matriz completa continua provada nos testes (que ligam a flag).
+ *
+ * O QUE ISTO CORRIGIU (história)
  *   O AdmAi criava trial de 14 dias, tinha checkout, portal e webhook Stripe sincronizando
  *   `Assinatura` — e nenhum lugar do backend LIA esse estado para autorizar. `past_due` e
  *   `canceled` eram escritos e nunca consultados. O `billing_access_audit.test.js` provou isso de
  *   forma dirigida: assinatura morta, cinco rotas de produto, nenhuma bloqueava. Veredito
- *   registrado: `BILLING_GATE_ABSENT_WITH_TESTED_SCOPE`.
- *
- *   O modelo comercial pretendido — trial e depois paywall — é decisão do usuário, e foi tomada.
- *   Este arquivo é a implementação dela.
+ *   registrado: `BILLING_GATE_ABSENT_WITH_TESTED_SCOPE`. O paywall foi então implementado aqui —
+ *   e depois retirado do MVP pela decisão soberana acima, atrás da flag.
  *
  * ALLOWLIST POR INCLUSÃO, NÃO POR EXCEÇÃO
  *   A guarda é aplicada aos routers de PRODUTO, um a um. Ela não é um filtro global com uma lista
@@ -30,7 +35,16 @@
  * permissão do papel (403) — é falta de assinatura, e o cliente resolve pagando.
  */
 
+import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+
+/** Só a string literal 'true' liga o paywall — ausência/outro valor = MVP livre (D2). */
+const ENFORCEMENT_LIGADO = env.ASSINATURA_ENFORCEMENT_ENABLED === 'true';
+// Um único log de configuração por inicialização (nunca por request).
+logger.info('assinatura_enforcement', {
+  ligado: ENFORCEMENT_LIGADO,
+  origem: 'ASSINATURA_ENFORCEMENT_ENABLED',
+});
 
 /** Estados em que a empresa NÃO tem direito de uso. `incomplete` entra: checkout não concluído. */
 export const ESTADOS_SEM_ACESSO = Object.freeze(['past_due', 'canceled', 'incomplete', 'unpaid']);
@@ -93,6 +107,9 @@ export function assinaturaDaAcesso(assinatura, agora = new Date()) {
  *   excecoes.
  */
 export function requireAssinaturaAtiva(req, res, next) {
+  /* MVP sem paywall (D2): bypass ANTES de tocar req.user/req.db — nenhuma consulta ocorre. */
+  if (!ENFORCEMENT_LIGADO) return next();
+
   const empresaId = req.user?.empresaId;
   if (!empresaId) {
     /* Sem contexto de empresa não dá para decidir, e não decidir não pode virar liberação. */
