@@ -1,180 +1,227 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Check, X, Calendar, MapPin, User, HardHat, Loader2 } from 'lucide-react';
-import api, { formatarMoeda, formatarData } from '../lib/api.js';
-import BackHeader from '../components/BackHeader.jsx';
-import { SkeletonLista } from '../components/Skeleton.jsx';
-import EstadoVazio from '../components/EstadoVazio.jsx';
-import ErroBanner from '../components/ErroBanner.jsx';
-import { useToast } from '../components/Toast.jsx';
+import { useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import ServicoDetail from '../features/servicos/ServicoDetail.jsx';
+import { usePendentes, classificarErro } from '../features/servicos/servicosApi.js';
+import { servicoVM } from '../features/servicos/servicosVM.js';
 
-function CardPendente({ servico, onAprovar, onRejeitar, processando }) {
-  const [confirmando, setConfirmando] = useState(false);
-
-  return (
-    <div className="card animate-fade-in">
-      {/* Técnico */}
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center text-accent-300 shrink-0">
-          <HardHat size={16} strokeWidth={1.8} />
-        </div>
-        <span className="font-semibold text-white text-sm truncate">
-          {servico.tecnico?.nome ?? 'Técnico'}
-        </span>
-        <span className="badge bg-dark-700 text-muted border border-dark-600 ml-auto">
-          {servico.local}
-        </span>
-      </div>
-
-      <p className="text-white text-sm font-medium">{servico.descricao}</p>
-
-      {servico.clienteNome && (
-        <p className="text-muted text-xs mt-1.5 flex items-center gap-1 truncate">
-          <User size={11} className="shrink-0" /> {servico.clienteNome}
-        </p>
-      )}
-      <p className="text-xs text-dark-600 mt-1 flex items-center gap-1">
-        <Calendar size={11} /> {formatarData(servico.criadoEm)}
-      </p>
-
-      {/* Valores */}
-      <div className="grid grid-cols-2 gap-2 mt-3">
-        <div className="bg-dark-700 border border-dark-600 rounded-md p-2 text-center">
-          <p className="kpi-label text-[10px]">Cobrado</p>
-          <p className="font-display font-bold text-white text-base tnum">
-            {formatarMoeda(servico.valorCobrado)}
-          </p>
-        </div>
-        <div className="bg-indigo-400/10 border border-indigo-400/20 rounded-md p-2 text-center">
-          <p className="kpi-label text-[10px] text-indigo-300">Comissão</p>
-          <p className="font-display font-bold text-indigo-300 text-base tnum">
-            {formatarMoeda(servico.comissaoGerada)}
-          </p>
-        </div>
-      </div>
-
-      {/* Ações */}
-      {!confirmando ? (
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={() => onAprovar(servico.id)}
-            disabled={processando}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-md bg-success/15 border border-success/30 text-success font-semibold text-sm hover:bg-success/25 transition-colors disabled:opacity-50"
-          >
-            {processando ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}{' '}
-            Aprovar
-          </button>
-          <button
-            onClick={() => setConfirmando(true)}
-            disabled={processando}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-md bg-danger/10 border border-danger/30 text-danger font-semibold text-sm hover:bg-danger/20 transition-colors disabled:opacity-50"
-          >
-            <X size={16} /> Rejeitar
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 mt-3 rounded-md bg-danger/10 border border-danger/20 px-3 py-2.5">
-          <p className="text-danger text-xs flex-1">Rejeitar este serviço?</p>
-          <button
-            onClick={() => onRejeitar(servico.id)}
-            disabled={processando}
-            className="text-xs font-semibold text-danger hover:text-red-300 disabled:opacity-50"
-          >
-            Sim, rejeitar
-          </button>
-          <button
-            onClick={() => setConfirmando(false)}
-            disabled={processando}
-            className="text-xs text-muted hover:text-white"
-          >
-            Cancelar
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
+/**
+ * Aprovações — capability PRÓPRIA nos MESMOS patterns de Serviços (DECISOR 01a04bfb §v).
+ * A fila é GET /servicos/pendentes (consulta derivada; aprovação não é entidade). O detalhe
+ * é o ServicoDetail compartilhado em `decisionContext="fila"`, alimentado pelos DADOS DA
+ * PRÓPRIA FILA — quem tem `aprovacoes.ver` sem `servicos.ver` decide sem GET /:id oculto.
+ * Seleção canônica `/aprovacoes?servico=id`. Pós-decisão: seleção limpa e foco volta ao
+ * cabeçalho da fila (NUNCA auto-seleciona o próximo). Deep-link obsoleto → mensagem amigável.
+ */
 export default function Aprovacoes() {
-  const toast = useToast();
-  const [pendentes, setPendentes] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(null);
-  const [processando, setProcessando] = useState(null); // id em processamento
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selecionadoId = searchParams.get('servico') ? Number(searchParams.get('servico')) : null;
 
-  const buscar = useCallback(async () => {
-    setErro(null);
-    try {
-      const { data } = await api.get('/servicos/pendentes');
-      setPendentes(Array.isArray(data) ? data : []);
-    } catch {
-      setErro('Não foi possível carregar a fila de aprovação.');
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
+  const fila = usePendentes();
+  const pendentes = Array.isArray(fila.data) ? fila.data : [];
+  const selecionado = pendentes.find((s) => s.id === selecionadoId) ?? null;
 
-  useEffect(() => {
-    buscar();
-  }, [buscar]);
+  const tituloRef = useRef(null);
 
-  async function aprovar(id) {
-    setProcessando(id);
-    try {
-      await api.post(`/servicos/${id}/aprovar`);
-      setPendentes((prev) => prev.filter((s) => s.id !== id));
-      toast('Serviço aprovado', 'success');
-    } catch (err) {
-      toast(err.response?.data?.erro ?? 'Não foi possível aprovar.', 'error');
-    } finally {
-      setProcessando(null);
-    }
+  function selecionar(id) {
+    const prox = new URLSearchParams(searchParams);
+    if (id == null) prox.delete('servico');
+    else prox.set('servico', String(id));
+    setSearchParams(prox);
   }
 
-  async function rejeitar(id) {
-    setProcessando(id);
-    try {
-      await api.post(`/servicos/${id}/rejeitar`);
-      setPendentes((prev) => prev.filter((s) => s.id !== id));
-      toast('Serviço rejeitado', 'success');
-    } catch (err) {
-      toast(err.response?.data?.erro ?? 'Não foi possível rejeitar.', 'error');
-    } finally {
-      setProcessando(null);
-    }
-  }
+  const aoDecidir = () => {
+    selecionar(null);
+    requestAnimationFrame(() => tituloRef.current?.focus());
+  };
+
+  const erro = fila.isError ? classificarErro(fila.error) : null;
 
   return (
-    <div className="flex flex-col h-full">
-      <BackHeader titulo="Aprovações" />
-      <p className="px-4 -mt-0.5 mb-2 text-muted text-xs tnum">
-        {pendentes.length > 0
-          ? `${pendentes.length} serviço${pendentes.length !== 1 ? 's' : ''} aguardando`
-          : 'Fila de aprovação dos funcionários'}
-      </p>
+    <div
+      className="adm-shell"
+      style={{ minHeight: '100%', padding: 'var(--adm-s5) var(--adm-s4) var(--adm-s8)' }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gap: 'var(--adm-s5)',
+          gridTemplateColumns: 'minmax(300px, 400px) 1fr',
+        }}
+        className="max-xl:!block"
+      >
+        <section aria-label="Fila de aprovações" style={{ minWidth: 0 }}>
+          <h1
+            ref={tituloRef}
+            tabIndex={-1}
+            style={{ font: 'var(--adm-page-title)', outline: 'none' }}
+          >
+            Aprovações
+          </h1>
+          <p
+            className="num"
+            style={{
+              font: 'var(--adm-body-compact)',
+              color: 'var(--adm-text-muted)',
+              marginBottom: 12,
+            }}
+            aria-live="polite"
+          >
+            {fila.isLoading ? 'Carregando…' : `${pendentes.length} aguardando decisão`}
+          </p>
 
-      {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
+          {fila.isLoading ? (
+            <div aria-busy="true" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="adm-skeleton"
+                  style={{ height: 'var(--adm-row-compact)' }}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+          ) : erro ? (
+            <div role="alert">
+              <p style={{ font: 'var(--adm-body)' }}>{erro.mensagem}</p>
+              <button
+                type="button"
+                className="adm-sair"
+                style={{ marginTop: 12 }}
+                onClick={() => fila.refetch()}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          ) : pendentes.length === 0 ? (
+            <div style={{ padding: 'var(--adm-s6) 0' }}>
+              <p style={{ font: 'var(--adm-body)' }}>
+                Fila vazia — nenhum serviço aguardando aprovação.
+              </p>
+              <p
+                style={{
+                  font: 'var(--adm-body-compact)',
+                  color: 'var(--adm-text-muted)',
+                  marginTop: 4,
+                }}
+              >
+                Novos registros de serviço chegam aqui para decisão.
+              </p>
+            </div>
+          ) : (
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                background: 'var(--adm-surface)',
+                border: '1px solid var(--adm-border)',
+                borderRadius: 'var(--adm-r2)',
+              }}
+            >
+              {pendentes.map((s) => {
+                const vm = servicoVM(s);
+                const ativa = selecionadoId === vm.id;
+                return (
+                  <li key={vm.id} style={{ borderTop: '1px solid var(--adm-border)' }}>
+                    <button
+                      type="button"
+                      onClick={() => selecionar(vm.id)}
+                      aria-current={ativa ? 'true' : undefined}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        width: '100%',
+                        minHeight: 'var(--adm-row-compact)',
+                        padding: '6px 12px',
+                        background: ativa ? 'var(--adm-accent-soft)' : 'transparent',
+                        border: 0,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        font: 'var(--adm-body)',
+                        color: 'var(--adm-text)',
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span
+                          style={{
+                            display: 'block',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {vm.descricao}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            font: 'var(--adm-caption)',
+                            color: 'var(--adm-text-faint)',
+                          }}
+                        >
+                          {[vm.tecnicoNome, vm.criadoEmRotulo].filter(Boolean).join(' · ')}
+                        </span>
+                      </span>
+                      <span
+                        className="num"
+                        style={{
+                          font: 'var(--adm-numeric)',
+                          fontVariantNumeric: 'tabular-nums',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {vm.cobradoRotulo}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
-      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-8 flex flex-col gap-3">
-        {carregando ? (
-          <SkeletonLista qtd={4} />
-        ) : pendentes.length === 0 ? (
-          <EstadoVazio
-            mensagem="Nenhum serviço aguardando aprovação"
-            sub="Os serviços enviados pelos funcionários aparecerão aqui"
-          />
-        ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {pendentes.map((s) => (
-              <CardPendente
-                key={s.id}
-                servico={s}
-                onAprovar={aprovar}
-                onRejeitar={rejeitar}
-                processando={processando === s.id}
-              />
-            ))}
-          </div>
-        )}
+        <section
+          aria-label="Decisão do serviço"
+          style={{
+            background: 'var(--adm-surface)',
+            border: '1px solid var(--adm-border)',
+            borderRadius: 'var(--adm-r2)',
+            alignSelf: 'start',
+            minWidth: 0,
+          }}
+        >
+          {selecionado ? (
+            <ServicoDetail
+              servicoDaFila={selecionado}
+              decisionContext="fila"
+              onDecidido={aoDecidir}
+            />
+          ) : selecionadoId && !fila.isLoading ? (
+            /* Deep-link para serviço que saiu da fila: sem 404 cru. */
+            <p
+              style={{
+                padding: 'var(--adm-s6)',
+                font: 'var(--adm-body-compact)',
+                color: 'var(--adm-text-muted)',
+              }}
+              role="status"
+            >
+              Este serviço não está mais aguardando aprovação.
+            </p>
+          ) : (
+            <p
+              style={{
+                padding: 'var(--adm-s6)',
+                font: 'var(--adm-body-compact)',
+                color: 'var(--adm-text-muted)',
+                textAlign: 'center',
+              }}
+            >
+              Selecione um serviço da fila para revisar e decidir.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -65805,9 +65805,23 @@
       "bloqueiaIntegracao": false,
       "nota": "25/25 (13 pagina + 12 layer); RD changed 0 erros; composicao UNICA por matchMedia (DOM nunca duplica p/ leitores); build OK",
       "declaradoEm": "2026-08-29T05:35:56.261Z"
+    },
+    {
+      "sliceId": "FR14E2-APROVACOES",
+      "titulo": "Aprovacoes nos mesmos patterns (DECISOR §v): fila + detail compartilhado em contexto de decisao; /aprovacoes?servico=; pos-decisao limpa selecao e foca a fila; deep-link obsoleto amigavel",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "7/7; mesmos patterns; sem GET /:id oculto",
+      "declaradoEm": "2026-08-29T05:47:05.127Z"
     }
   ],
-  "geradoEm": "2026-08-29T05:46:46.414Z",
+  "geradoEm": "2026-08-29T05:48:37.628Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
