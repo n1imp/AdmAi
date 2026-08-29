@@ -65676,9 +65676,23 @@
       "bloqueiaIntegracao": false,
       "nota": "DDR-1..5 vinculantes registrados; contrato de camadas; ledger do programa com gates e pendencias externas",
       "declaradoEm": "2026-08-28T23:47:53.412Z"
+    },
+    {
+      "sliceId": "FR-F-CURRENT-STATE",
+      "titulo": "Snapshot pos-Refoundation-Cycle-1 no 02_CURRENT_STATE",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "vitest painel 288/288; prettier verde; RD full gate exit 0 (0 erros novos; 1 aviso novo MAINTAINABILITY triado nao-bloqueante); build OK",
+      "declaradoEm": "2026-08-28T23:50:34.484Z"
     }
   ],
-  "geradoEm": "2026-08-28T23:50:00.647Z",
+  "geradoEm": "2026-08-29T00:01:32.713Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

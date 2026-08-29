@@ -1,12 +1,12 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-E3-DDR-CONTRACT-LEDGER",
-  "titulo": "Design Decision Records (DECISOR FRD vinculante) + Frontend Architecture Contract + Repagination Ledger",
+  "sliceId": "FR-F-CURRENT-STATE",
+  "titulo": "Snapshot pos-Refoundation-Cycle-1 no 02_CURRENT_STATE",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:47:53.412Z",
+  "declaradoEm": "2026-08-28T23:50:34.484Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
@@ -605,27 +605,9 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_DESIGN_DECISIONS.md",
+      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
       "precisao": "BOUNDED",
-      "proposito": "DDR-1..5 (IA/nav, surface modes, foundations, application layer, ordem de migracao) — thread 01a04abb",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_FRONTEND_ARCHITECTURE_CONTRACT.md",
-      "precisao": "BOUNDED",
-      "proposito": "Contrato de camadas, estados, erros, forms, mutations, provider boundary, verification profile",
-      "existiaNaDeclaracao": false,
-      "shaNaDeclaracao": null,
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "EOS",
-      "caminho": "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json",
-      "precisao": "BOUNDED",
-      "proposito": "Fases FR-*, gates, baselines, decisoes, frontier",
+      "proposito": "Estado compacto: scope 1.1.0, audit COMPLETE, programa de repaginacao com frontier FR-13",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -638,6 +620,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "DDR-1..5 vinculantes registrados; contrato de camadas; ledger do programa com gates e pendencias externas",
+  "nota": "vitest painel 288/288; prettier verde; RD full gate exit 0 (0 erros novos; 1 aviso novo MAINTAINABILITY triado nao-bloqueante); build OK",
   "aviso": "Declaracao ENCERRADA."
 }
