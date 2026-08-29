@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api.js';
 
 /**
@@ -64,14 +64,33 @@ export function useServicos(filtros = {}) {
   return useQuery({
     queryKey: chaves.lista(filtros),
     queryFn: async () => {
+      /* Filtros do contrato REAL (servicos.js): tecnico, local, cursor/limit (keyset). */
       const params = new URLSearchParams();
-      if (filtros.busca) params.set('busca', filtros.busca);
+      if (filtros.tecnico) params.set('tecnico', filtros.tecnico);
       if (filtros.local) params.set('local', filtros.local);
       if (filtros.cursor) params.set('cursor', String(filtros.cursor));
       const qs = params.toString();
       const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`);
-      return data; // { data: [...], total, nextCursor? } — contrato keyset real
+      return data; // { data: [...], total, nextCursor } — keyset real; tecnico = {id,nome}
     },
+  });
+}
+
+/** Coleção com paginação keyset real ("Carregar mais"): páginas acumuladas por cursor. */
+export function useServicosInfinita(filtros = {}) {
+  return useInfiniteQuery({
+    queryKey: chaves.lista(filtros),
+    initialPageParam: undefined,
+    queryFn: async ({ pageParam }) => {
+      const params = new URLSearchParams();
+      if (filtros.tecnico) params.set('tecnico', filtros.tecnico);
+      if (filtros.local) params.set('local', filtros.local);
+      if (pageParam) params.set('cursor', String(pageParam));
+      const qs = params.toString();
+      const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`);
+      return data;
+    },
+    getNextPageParam: (ultima) => ultima?.nextCursor ?? undefined,
   });
 }
 

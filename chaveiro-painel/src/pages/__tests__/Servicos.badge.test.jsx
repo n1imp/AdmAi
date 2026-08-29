@@ -1,55 +1,91 @@
-/**
- * O selo de status marca EXCEÇÃO — e 'ativo' é o normal.  [SL-12]
- *
- * O DEFEITO: a linha comparava `status !== 'aprovado'`, mas o valor que a aprovação grava é
- * 'ativo' (servicos.js:285 no bot). Resultado: TODO serviço normal carregava um selo âmbar
- * "ativo", como se algo estivesse errado — e o selo roubava largura do nome em 360px.
- */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Servicos from '../Servicos.jsx';
+import api from '../../lib/api.js';
 
-const mockGet = vi.fn();
 vi.mock('../../lib/api.js', () => ({
-  default: { get: (...a) => mockGet(...a), post: vi.fn(), patch: vi.fn() },
-  formatarMoeda: (v) => `R$ ${Number(v ?? 0).toFixed(2)}`,
-  formatarData: () => '20/08/2026 10:00',
+  default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
+  formatarMoeda: (v) =>
+    'R$ ' +
+    Number(v ?? 0)
+      .toFixed(2)
+      .replace('.', ','),
+  formatarData: () => '28/08/2026 12:00',
 }));
 vi.mock('../../components/Toast.jsx', () => ({ useToast: () => vi.fn() }));
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
-  useSearchParams: () => [new URLSearchParams(), vi.fn()],
-  Link: ({ to, children, className }) => (
-    <a href={to} className={className}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock('../../contexts/AuthContext.jsx', () => ({ useAuth: () => ({ pode: () => true }) }));
 
-const servico = (over) => ({
-  id: over.id,
-  tecnico: { nome: 'Ana Técnica' },
-  local: 'Casa do cliente',
-  descricao: 'Troca de fechadura',
-  criadoEm: '2026-08-20T10:00:00Z',
-  valorLiquido: 100,
-  valorCobrado: 120,
-  ...over,
-});
-
-describe('Servicos — selo de status', () => {
-  it("'ativo' é o normal: NENHUM selo; 'pendente' é exceção: selo presente", async () => {
-    mockGet.mockResolvedValue({
+/** Status é o ÚNICO chip semântico da linha (anti-carnaval, DECISOR §ii) e os rótulos são os
+ *  canônicos do glossário — `pendente` cru NUNCA aparece na tela. */
+describe('Servicos — semântica de status', () => {
+  beforeEach(() => {
+    api.get.mockResolvedValue({
       data: {
-        data: [servico({ id: 1, status: 'ativo' }), servico({ id: 2, status: 'pendente' })],
+        data: [
+          {
+            id: 1,
+            descricao: 'A',
+            local: 'X',
+            status: 'pendente',
+            valorCobrado: 10,
+            tecnico: null,
+            criadoEm: '2026-08-01T00:00:00Z',
+          },
+          {
+            id: 2,
+            descricao: 'B',
+            local: 'X',
+            status: 'ativo',
+            valorCobrado: 10,
+            tecnico: null,
+            criadoEm: '2026-08-01T00:00:00Z',
+          },
+          {
+            id: 3,
+            descricao: 'C',
+            local: 'X',
+            status: 'rejeitado',
+            valorCobrado: 10,
+            tecnico: null,
+            criadoEm: '2026-08-01T00:00:00Z',
+          },
+        ],
+        total: 3,
         nextCursor: null,
-        total: 2,
       },
     });
-    render(<Servicos />);
-    expect(await screen.findAllByText(/troca de fechadura/i)).toHaveLength(2);
-    // Sob o bug antigo ('!== aprovado'), o selo "ativo" apareceria aqui.
-    expect(screen.queryByText(/^ativo$/i)).toBeNull();
-    expect(screen.getByText(/^pendente$/i)).toBeInTheDocument();
+  });
+
+  function montar() {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/servicos']}>
+          <Servicos />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  }
+
+  it('rótulos canônicos presentes; domínio cru ausente', async () => {
+    montar();
+    await screen.findByText('Aguardando aprovação');
+    expect(screen.getByText('Aprovado')).toBeTruthy();
+    expect(screen.getByText('Rejeitado')).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/\bpendente\b/i);
+    expect(document.body.textContent).not.toMatch(/\bativo\b/);
+  });
+
+  it('exatamente UM chip de status por linha', async () => {
+    montar();
+    await screen.findByText('Aguardando aprovação');
+    for (const linha of screen.getAllByRole('listitem')) {
+      const chips = ['Aguardando aprovação', 'Aprovado', 'Rejeitado'].filter((r) =>
+        linha.textContent.includes(r)
+      );
+      expect(chips.length, linha.textContent).toBe(1);
+    }
   });
 });

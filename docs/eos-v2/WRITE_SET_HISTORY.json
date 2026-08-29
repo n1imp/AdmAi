@@ -65791,9 +65791,23 @@
       "bloqueiaIntegracao": false,
       "nota": "layer 12/12 + api.test 10/10; lint/prettier/build OK",
       "declaradoEm": "2026-08-29T05:30:10.281Z"
+    },
+    {
+      "sliceId": "FR14E1-SERVICOS-SPLIT",
+      "titulo": "Servicos nova (DECISOR 01a04bfb): split persistente xl+ / detail tela-cheia mobile via ?servico=; ServicoDetail 7 blocos com query propria; ajustes do layer aos shapes reais",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "25/25 (13 pagina + 12 layer); RD changed 0 erros; composicao UNICA por matchMedia (DOM nunca duplica p/ leitores); build OK",
+      "declaradoEm": "2026-08-29T05:35:56.261Z"
     }
   ],
-  "geradoEm": "2026-08-29T05:33:57.497Z",
+  "geradoEm": "2026-08-29T05:46:46.414Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

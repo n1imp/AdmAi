@@ -1,504 +1,433 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Plus,
-  SlidersHorizontal,
-  MapPin,
-  Calendar,
-  User,
-  Phone,
-  Trash2,
-  Maximize2,
-  ArrowLeft,
-} from 'lucide-react';
-import api, { formatarMoeda, formatarData } from '../lib/api.js';
-import {
-  Overlay,
-  Field,
-  Button,
-  Surface,
-  Row,
-  PageHeader,
-  FeedbackState,
-} from '../components/ui/index.js';
-import { SkeletonLista } from '../components/Skeleton.jsx';
-import { useToast } from '../components/Toast.jsx';
+import { Plus } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import ServicoDetail from '../features/servicos/ServicoDetail.jsx';
+import { useServicosInfinita, classificarErro } from '../features/servicos/servicosApi.js';
+import { servicoVM } from '../features/servicos/servicosVM.js';
 
-const LOCAIS = ['Todos', 'Casa do cliente', 'Contrato', 'Ponto da loja', 'Outro'];
-
-// L4: linha confortável, sem card por linha. Cada linha é um disparador de diálogo
-// (aria-haspopup="dialog") que abre o drawer com o resumo do serviço.
-function LinhaServico({ servico, onAbrir }) {
-  return (
-    <Row
-      onClick={() => onAbrir(servico.id)}
-      aria-haspopup="dialog"
-      aria-label={`Abrir serviço de ${servico.tecnico?.nome ?? 'técnico'}, ${servico.local}, ${formatarMoeda(
-        servico.valorLiquido
-      )} líquido`}
-      className="last:!border-b-0"
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span
-            className="font-semibold text-white text-sm truncate"
-            title={servico.tecnico?.nome ?? undefined}
-          >
-            {servico.tecnico?.nome ?? 'Sem técnico'}
-          </span>
-          <span className="badge bg-dark-700 text-muted border border-dark-600 shrink-0">
-            {servico.local}
-          </span>
-          {/* O selo marca EXCEÇÃO. O valor pós-aprovação é 'ativo' (servicos.js:285) — a
-              comparação antiga com 'aprovado' punha selo de alerta em todo serviço normal e
-              roubava largura do nome na linha de 360px. [SL-12] */}
-          {servico.status && servico.status !== 'ativo' && (
-            <span className="badge bg-warning/15 text-warning border border-warning/30 shrink-0 capitalize">
-              {servico.status}
-            </span>
-          )}
-        </div>
-        <p className="text-muted text-xs truncate" title={servico.descricao}>
-          {servico.descricao}
-        </p>
-        <p className="text-[11px] text-dark-500 mt-0.5 flex items-center gap-1 tnum">
-          <Calendar size={11} /> {formatarData(servico.criadoEm)}
-        </p>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="font-display font-bold text-accent-300 text-lg leading-none tnum">
-          {formatarMoeda(servico.valorLiquido)}
-        </p>
-        <p className="text-muted text-[11px] mt-0.5">líquido</p>
-      </div>
-    </Row>
-  );
-}
-
-function ValorBox({ rotulo, valor, destaque = false }) {
-  return (
-    <div
-      className={`rounded-md p-2 text-center border ${
-        destaque ? 'bg-accent-400/10 border-accent-400/20' : 'bg-dark-700 border-dark-600'
-      }`}
-    >
-      <p className={`kpi-label text-[10px] ${destaque ? 'text-accent-300' : ''}`}>{rotulo}</p>
-      <p
-        className={`font-display font-bold text-base tnum ${destaque ? 'text-accent-300' : 'text-white'}`}
-      >
-        {formatarMoeda(valor)}
-      </p>
-    </div>
-  );
-}
-
-// Conteúdo do Overlay. O mesmo componente serve o drawer (resumo) e a variante
-// tela-cheia (detalhe): a diferença é `modoDetalhe`, que revela os campos extras
-// e troca "Expandir" por "Voltar".
-function DetalheServico({ servico, modoDetalhe, onExpandir, onRecolher, onDeletar }) {
-  const [confirmando, setConfirmando] = useState(false);
-
-  if (!servico) {
-    return (
-      <FeedbackState
-        state="empty"
-        title="Serviço indisponível"
-        description="Este serviço não está na página atual da lista. Feche o painel e use “Carregar mais” para encontrá-lo."
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4 text-white">
-      <div className="flex items-center gap-2">
-        {modoDetalhe ? (
-          <Button variant="ghost" size="small" onClick={onRecolher}>
-            <ArrowLeft size={16} /> Voltar
-          </Button>
-        ) : (
-          <Button variant="secondary" size="small" onClick={onExpandir}>
-            <Maximize2 size={16} /> Expandir
-          </Button>
-        )}
-        <span className="badge bg-dark-700 text-muted border border-dark-600 ml-auto">
-          {servico.local}
-        </span>
-      </div>
-
-      <div>
-        <p className="section-label mb-1">TÉCNICO</p>
-        <p className="text-white font-semibold">{servico.tecnico?.nome ?? 'Não informado'}</p>
-        <p className="text-muted text-xs mt-1 flex items-center gap-1 tnum">
-          <Calendar size={12} /> {formatarData(servico.criadoEm)}
-        </p>
-      </div>
-
-      {servico.descricao && (
-        <div>
-          <p className="section-label mb-1">DESCRIÇÃO</p>
-          <p className="text-muted text-sm">{servico.descricao}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-2">
-        <ValorBox rotulo="Cobrado" valor={servico.valorCobrado} />
-        <ValorBox rotulo="Material" valor={servico.valorMaterial} />
-        <ValorBox rotulo="Líquido" valor={servico.valorLiquido} destaque />
-      </div>
-
-      {modoDetalhe && (
-        <div className="flex flex-col gap-3 border-t border-dark-600 pt-3">
-          {servico.endereco && (
-            <div className="flex gap-2 text-sm">
-              <MapPin size={15} className="text-muted shrink-0 mt-0.5" />
-              <p className="text-muted">{servico.endereco}</p>
-            </div>
-          )}
-          {(servico.clienteNome || servico.clienteTelefone) && (
-            <div className="flex items-center gap-2 rounded-md bg-dark-700 border border-dark-600 px-3 py-2">
-              <User size={15} className="text-accent-300 shrink-0" />
-              <span className="text-sm text-white font-medium truncate">
-                {servico.clienteNome ?? 'Cliente'}
-              </span>
-              {servico.clienteTelefone && (
-                <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted tnum">
-                  <Phone size={12} /> {servico.clienteTelefone}
-                </span>
-              )}
-            </div>
-          )}
-          {servico.material && (
-            <p className="text-xs text-muted">
-              <span className="text-white font-medium">Material:</span> {servico.material}
-            </p>
-          )}
-          {servico.fotoEvidencia && <ImagemEvidencia url={servico.fotoEvidencia} />}
-          <p className="text-xs text-muted">ID #{servico.id}</p>
-        </div>
-      )}
-
-      {!confirmando ? (
-        <button
-          type="button"
-          onClick={() => setConfirmando(true)}
-          className="flex items-center gap-1.5 text-danger text-sm hover:text-red-300 self-start"
-        >
-          <Trash2 size={15} /> Remover serviço
-        </button>
-      ) : (
-        <div className="flex items-center gap-3 border-t border-dark-600 pt-3">
-          <p className="text-danger text-sm flex-1">Confirmar remoção?</p>
-          <Button variant="danger" size="small" onClick={() => onDeletar(servico.id)}>
-            Sim, remover
-          </Button>
-          <Button variant="ghost" size="small" onClick={() => setConfirmando(false)}>
-            Cancelar
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* [SEC-HB-02] Evidência nova vem em URL autenticada (/api/servicos/evidencia/...) — <img src>
-   não manda Authorization, então baixamos via api (Bearer) e exibimos como blob. URL legada
-   (/uploads/...) continua estática pública e renderiza direto. */
-function ImagemEvidencia({ url }) {
-  const protegida = url.startsWith('/api/');
-  const [src, setSrc] = useState(protegida ? null : url);
+/**
+ * Serviços — primeira superfície do novo design system (FR-14, DECISOR 01a04bfb).
+ * MASTER_DETAIL: split persistente em xl+ (lista | detalhe sempre alocado); abaixo disso a
+ * MESMA rota compõe route-like (selecionar vira tela de detalhe com "Voltar"). `?servico=id`
+ * é a seleção canônica nos dois layouts — deep-link/reload resolvem pelo GET /servicos/:id
+ * (query própria do detail), nunca pela página carregada da lista. Sem drawer, sem dialog:
+ * regiões nomeadas. O wrapper `.adm-shell` marca a página como MIGRADA (sai do poço Aurora).
+ */
+/* UMA composição por vez (split xl+ OU route-like) — decidida por matchMedia, nunca por CSS
+   escondendo DOM duplicado (leitores de tela leriam tudo duas vezes). Sem matchMedia
+   (jsdom/ambientes mínimos) cai na composição route-like, a mais segura. */
+function useSplitDesktop() {
+  const consultar = () =>
+    typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 1280px)').matches;
+  const [split, setSplit] = useState(consultar);
   useEffect(() => {
-    if (!protegida) return undefined;
-    let vivo = true;
-    let objeto;
-    api
-      .get(url.replace(/^\/api/, ''), { responseType: 'blob' })
-      .then((r) => {
-        if (!vivo) return;
-        objeto = URL.createObjectURL(r.data);
-        setSrc(objeto);
-      })
-      .catch(() => {});
-    return () => {
-      vivo = false;
-      if (objeto) URL.revokeObjectURL(objeto);
-    };
-  }, [url, protegida]);
-
-  if (!src) return null;
-  return (
-    <a href={src} target="_blank" rel="noopener noreferrer" className="block">
-      <img
-        src={src}
-        alt="Foto de evidência do serviço"
-        loading="lazy"
-        className="w-full max-h-60 object-cover rounded-md border border-dark-600"
-      />
-    </a>
-  );
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const mq = window.matchMedia('(min-width: 1280px)');
+    const ouvir = (e) => setSplit(e.matches);
+    mq.addEventListener?.('change', ouvir);
+    return () => mq.removeEventListener?.('change', ouvir);
+  }, []);
+  return split;
 }
 
 export default function Servicos() {
   const navigate = useNavigate();
-  const toast = useToast();
+  const { pode } = useAuth();
+  const splitDesktop = useSplitDesktop();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [servicos, setServicos] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [cursor, setCursor] = useState(null);
-  const [carregando, setCarregando] = useState(true);
-  const [carregandoMais, setCarregandoMais] = useState(false);
-  const [erro, setErro] = useState(null);
+  const selecionadoId = searchParams.get('servico') ? Number(searchParams.get('servico')) : null;
+  const filtroLocal = searchParams.get('local') || '';
+  const [buscaTecnico, setBuscaTecnico] = useState(searchParams.get('tecnico') || '');
+  const [tecnicoAplicado, setTecnicoAplicado] = useState(buscaTecnico);
 
-  const [filtroLocal, setFiltroLocal] = useState('Todos');
-  const [filtroTecnico, setFiltroTecnico] = useState('');
-  const [filtroEndereco, setFiltroEndereco] = useState('');
-  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
-  const buscaRef = useRef(null);
-
-  // DT4: o estado do detalhe vive na URL (sem novas rotas). A lista nunca é
-  // desmontada, então filtros e posição de scroll são preservados.
-  const servicoParam = searchParams.get('servico');
-  const modoDetalhe = searchParams.get('detalhe') === '1';
-  const servicoSelecionado = useMemo(
-    () => servicos.find((s) => String(s.id) === servicoParam) ?? null,
-    [servicos, servicoParam]
+  const filtros = useMemo(
+    () => ({
+      ...(tecnicoAplicado ? { tecnico: tecnicoAplicado } : {}),
+      ...(filtroLocal ? { local: filtroLocal } : {}),
+    }),
+    [tecnicoAplicado, filtroLocal]
   );
 
-  const buscar = useCallback(
-    // `guard` permite cancelar os setState após desmontar/refazer o efeito.
-    async (cursorParam = null, acumular = false, guard) => {
-      const estaAtivo = typeof guard === 'function' ? guard : () => true;
-      const params = new URLSearchParams({ limit: '15' });
-      if (cursorParam) params.set('cursor', cursorParam);
-      if (filtroLocal !== 'Todos') params.set('local', filtroLocal);
-      if (filtroTecnico.trim()) params.set('tecnico', filtroTecnico.trim());
-      if (filtroEndereco.trim()) params.set('endereco', filtroEndereco.trim());
+  const consulta = useServicosInfinita(filtros);
+  const paginas = consulta.data?.pages ?? [];
+  const itens = paginas.flatMap((p) => p?.data ?? []);
+  const total = paginas[0]?.total ?? itens.length;
+  const temFiltro = Boolean(tecnicoAplicado || filtroLocal);
 
-      try {
-        const { data } = await api.get(`/servicos?${params}`);
-        if (!estaAtivo()) return;
-        setTotal(data.total);
-        setServicos((prev) => (acumular ? [...prev, ...data.data] : data.data));
-        setCursor(data.nextCursor ?? null);
-        setErro(null);
-      } catch {
-        if (estaAtivo()) setErro('Não foi possível carregar os serviços.');
-      } finally {
-        if (estaAtivo()) {
-          setCarregando(false);
-          setCarregandoMais(false);
-        }
-      }
-    },
-    [filtroLocal, filtroTecnico, filtroEndereco]
-  );
+  /* Locais para os chips derivam dos dados carregados (não inventa taxonomia). */
+  const locais = useMemo(() => [...new Set(itens.map((s) => s.local).filter(Boolean))], [itens]);
 
-  useEffect(() => {
-    let active = true;
-    setCarregando(true);
-    setCursor(null);
-    buscar(null, false, () => active);
-    return () => {
-      active = false;
-    };
-  }, [buscar]);
+  const tituloListaRef = useRef(null);
 
-  async function carregarMais() {
-    if (!cursor) return;
-    setCarregandoMais(true);
-    await buscar(cursor, true);
-  }
-
-  async function deletarServico(id) {
-    try {
-      await api.delete(`/servicos/${id}`);
-      setServicos((prev) => prev.filter((s) => s.id !== id));
-      setTotal((t) => t - 1);
-      toast('Serviço removido com sucesso', 'success');
-      return true;
-    } catch {
-      toast('Erro ao remover serviço', 'error');
-      return false;
+  function mudarParams(mudancas) {
+    const prox = new URLSearchParams(searchParams);
+    for (const [k, v] of Object.entries(mudancas)) {
+      if (v == null || v === '') prox.delete(k);
+      else prox.set(k, String(v));
     }
+    setSearchParams(prox);
   }
 
-  function recarregar() {
-    setErro(null);
-    setCarregando(true);
-    buscar(null, false);
+  const selecionar = (id) => mudarParams({ servico: id });
+  /* Back interno seguro: remove a seleção sem depender de haver histórico anterior. */
+  const voltarParaLista = () => {
+    mudarParams({ servico: null });
+    requestAnimationFrame(() => tituloListaRef.current?.focus());
+  };
+
+  function aplicarBusca(e) {
+    e.preventDefault();
+    setTecnicoAplicado(buscaTecnico.trim());
+    mudarParams({ tecnico: buscaTecnico.trim() || null, servico: null });
   }
 
-  // DT4: transições sempre com push, para o "Voltar" do navegador reverter
-  // lista ← drawer ← página.
-  function abrirServico(id) {
-    setSearchParams({ servico: String(id) });
-  }
-  function expandirServico() {
-    if (servicoParam) setSearchParams({ servico: servicoParam, detalhe: '1' });
-  }
-  function recolherServico() {
-    if (servicoParam) setSearchParams({ servico: servicoParam });
-  }
-  function fecharServico() {
-    setSearchParams({});
-  }
-  async function removerEFechar(id) {
-    if (await deletarServico(id)) fecharServico();
-  }
+  const aoSairDoDetalhe = () => voltarParaLista();
 
-  // FI4: Escape dentro do painel de filtros recolhe e devolve o foco à busca.
-  function onFiltrosKeyDown(e) {
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      setFiltrosAbertos(false);
-      buscaRef.current?.focus();
-    }
-  }
+  const erroLista = consulta.isError ? classificarErro(consulta.error) : null;
 
-  const filtrosAtivos = (filtroLocal !== 'Todos' ? 1 : 0) + (filtroEndereco.trim() ? 1 : 0);
-  const temMais = servicos.length < total;
+  const chip = (vmStatus) => {
+    const cor = {
+      attention: ['var(--adm-attention)', 'var(--adm-attention-soft)'],
+      success: ['var(--adm-success)', 'var(--adm-success-soft)'],
+      danger: ['var(--adm-danger)', 'var(--adm-danger-soft)'],
+      neutral: ['var(--adm-text-muted)', 'transparent'],
+    }[vmStatus.semantica];
+    return (
+      <span
+        style={{
+          font: 'var(--adm-label)',
+          padding: '2px 8px',
+          borderRadius: 'var(--adm-r1)',
+          color: cor[0],
+          background: cor[1],
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {vmStatus.rotulo}
+      </span>
+    );
+  };
 
-  return (
-    <div className="flex flex-col h-full">
-      <PageHeader
-        eyebrow="REGISTROS"
-        title="Serviços"
-        subtitle={total > 0 ? `${total} registro${total !== 1 ? 's' : ''}` : 'Nenhum registro'}
-        actions={
-          <Button variant="primary" size="small" onClick={() => navigate('/servicos/novo')}>
-            <Plus size={18} /> Novo serviço
-          </Button>
-        }
-      />
-
-      {/* FI4: busca sempre visível + painel de filtros avançados recolhível */}
-      <div className="px-4 flex flex-col gap-2">
-        <Field
-          ref={buscaRef}
-          type="search"
-          label="Buscar por técnico"
-          value={filtroTecnico}
-          onChange={(e) => setFiltroTecnico(e.target.value)}
-          placeholder="Nome do técnico…"
-        />
-        <div>
+  const lista = (
+    <section aria-label="Lista de serviços" style={{ minWidth: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 12,
+          flexWrap: 'wrap',
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <h1
+            ref={tituloListaRef}
+            tabIndex={-1}
+            style={{ font: 'var(--adm-page-title)', outline: 'none' }}
+          >
+            Serviços
+          </h1>
+          <p
+            className="num"
+            style={{ font: 'var(--adm-body-compact)', color: 'var(--adm-text-muted)' }}
+            aria-live="polite"
+          >
+            {consulta.isLoading ? 'Carregando…' : `${total} registro${total === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {pode('servicos', 'criar') && (
           <button
             type="button"
-            onClick={() => setFiltrosAbertos((v) => !v)}
-            aria-expanded={filtrosAbertos}
-            aria-controls="servicos-filtros-avancados"
-            className="alvo-toque-linha gap-2 px-1 text-sm text-muted hover:text-white transition-colors"
+            onClick={() => navigate('/servicos/novo')}
+            className="adm-sair"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: 'var(--adm-accent-text)',
+              background: 'var(--adm-accent)',
+              borderColor: 'var(--adm-accent)',
+              minHeight: 38,
+            }}
           >
-            <SlidersHorizontal size={15} />
-            Filtros{filtrosAtivos ? ` (${filtrosAtivos})` : ''}
+            <Plus size={16} aria-hidden="true" /> Registrar serviço
           </button>
-        </div>
-        <div
-          id="servicos-filtros-avancados"
-          hidden={!filtrosAbertos}
-          onKeyDown={onFiltrosKeyDown}
-          className="flex flex-col gap-3 pt-1"
-        >
-          <Field
-            type="search"
-            label="Endereço"
-            value={filtroEndereco}
-            onChange={(e) => setFiltroEndereco(e.target.value)}
-            placeholder="Buscar por endereço…"
-          />
-          <fieldset className="flex flex-col gap-2">
-            <legend className="kpi-label mb-1">Local</legend>
-            <div className="flex gap-2 flex-wrap">
-              {LOCAIS.map((l) => (
-                <button
-                  key={l}
-                  type="button"
-                  aria-pressed={filtroLocal === l}
-                  onClick={() => setFiltroLocal(l)}
-                  className={`alvo-toque px-3 rounded-md text-xs font-display font-semibold uppercase tracking-wide transition-all ${
-                    filtroLocal === l
-                      ? 'bg-accent-400 text-dark-950'
-                      : 'bg-dark-700 text-muted border border-dark-600 hover:text-white'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        </div>
-      </div>
-
-      {/* Lista */}
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4 flex flex-col gap-3">
-        {erro ? (
-          <FeedbackState
-            state="error"
-            announce
-            title="Não foi possível carregar os serviços."
-            action={
-              <Button variant="secondary" size="small" onClick={recarregar}>
-                Tentar novamente
-              </Button>
-            }
-          />
-        ) : carregando ? (
-          <SkeletonLista qtd={6} />
-        ) : servicos.length === 0 ? (
-          <FeedbackState
-            state="empty"
-            title="Nenhum serviço encontrado"
-            description="Tente ajustar os filtros ou registre um novo serviço."
-            action={
-              <Button variant="primary" size="small" onClick={() => navigate('/servicos/novo')}>
-                Registrar serviço
-              </Button>
-            }
-          />
-        ) : (
-          <>
-            <Surface className="overflow-hidden">
-              {servicos.map((s) => (
-                <LinhaServico key={s.id} servico={s} onAbrir={abrirServico} />
-              ))}
-            </Surface>
-
-            {temMais && (
-              <Button
-                variant="ghost"
-                onClick={carregarMais}
-                disabled={carregandoMais}
-                className="w-full"
-              >
-                {carregandoMais ? 'Carregando...' : 'Carregar mais'}
-              </Button>
-            )}
-          </>
         )}
       </div>
 
-      {/* DT4 + O-02: mesmo Overlay para drawer e detalhe tela-cheia (só muda a
-          className/variante). O Overlay restaura o foco à linha de origem. */}
-      <Overlay
-        open={Boolean(servicoParam)}
-        onClose={modoDetalhe ? recolherServico : fecharServico}
-        initialFocus="dialog"
-        showCloseButton={!modoDetalhe}
-        variant={modoDetalhe ? 'fullscreen' : undefined}
-        title={
-          servicoSelecionado
-            ? `Serviço de ${servicoSelecionado.tecnico?.nome ?? 'técnico'}`
-            : 'Serviço'
-        }
+      <form
+        onSubmit={aplicarBusca}
+        role="search"
+        aria-label="Buscar serviços"
+        style={{ display: 'flex', gap: 8, marginBottom: 10 }}
       >
-        <DetalheServico
-          servico={servicoSelecionado}
-          modoDetalhe={modoDetalhe}
-          onExpandir={expandirServico}
-          onRecolher={recolherServico}
-          onDeletar={removerEFechar}
+        <input
+          type="search"
+          value={buscaTecnico}
+          onChange={(e) => setBuscaTecnico(e.target.value)}
+          placeholder="Buscar por técnico"
+          aria-label="Buscar por técnico"
+          style={{
+            flex: 1,
+            minHeight: 38,
+            padding: '8px 12px',
+            font: 'var(--adm-body)',
+            color: 'var(--adm-text)',
+            background: 'var(--adm-surface)',
+            border: '1px solid var(--adm-border-strong)',
+            borderRadius: 'var(--adm-r2)',
+          }}
         />
-      </Overlay>
+        <button type="submit" className="adm-sair">
+          Buscar
+        </button>
+      </form>
+
+      {locais.length > 1 && (
+        <div
+          role="group"
+          aria-label="Filtrar por local"
+          style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}
+        >
+          {['', ...locais].map((l) => (
+            <button
+              key={l || 'todos'}
+              type="button"
+              onClick={() => mudarParams({ local: l || null, servico: null })}
+              className="adm-sair"
+              aria-pressed={filtroLocal === l || (!filtroLocal && !l)}
+              style={
+                (filtroLocal || '') === l
+                  ? {
+                      background: 'var(--adm-accent-soft)',
+                      color: 'var(--adm-accent)',
+                      borderColor: 'var(--adm-accent)',
+                    }
+                  : undefined
+              }
+            >
+              {l || 'Todos'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {consulta.isLoading ? (
+        <div aria-busy="true" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <span
+              key={i}
+              className="adm-skeleton"
+              style={{ height: 'var(--adm-row-compact)' }}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      ) : erroLista ? (
+        <div role="alert" style={{ padding: 'var(--adm-s5) 0' }}>
+          <p style={{ font: 'var(--adm-body)' }}>Não foi possível carregar os serviços.</p>
+          <p
+            style={{
+              font: 'var(--adm-body-compact)',
+              color: 'var(--adm-text-muted)',
+              marginTop: 4,
+            }}
+          >
+            {erroLista.mensagem}
+          </p>
+          <button
+            type="button"
+            className="adm-sair"
+            style={{ marginTop: 12 }}
+            onClick={() => consulta.refetch()}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : itens.length === 0 ? (
+        <div style={{ padding: 'var(--adm-s6) 0', textAlign: 'center' }}>
+          <p style={{ font: 'var(--adm-body)' }}>Nenhum serviço encontrado</p>
+          <p
+            style={{
+              font: 'var(--adm-body-compact)',
+              color: 'var(--adm-text-muted)',
+              marginTop: 4,
+            }}
+          >
+            {temFiltro
+              ? 'Tente ajustar os filtros ou registre um novo serviço.'
+              : 'Registre o primeiro serviço para começar.'}
+          </p>
+          {pode('servicos', 'criar') && !temFiltro && (
+            <button
+              type="button"
+              className="adm-sair"
+              style={{
+                marginTop: 12,
+                color: 'var(--adm-accent-text)',
+                background: 'var(--adm-accent)',
+                borderColor: 'var(--adm-accent)',
+              }}
+              onClick={() => navigate('/servicos/novo')}
+            >
+              Registrar serviço
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <ul
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              background: 'var(--adm-surface)',
+              border: '1px solid var(--adm-border)',
+              borderRadius: 'var(--adm-r2)',
+            }}
+          >
+            {itens.map((s) => {
+              const vm = servicoVM(s);
+              const ativa = selecionadoId === vm.id;
+              return (
+                <li key={vm.id} style={{ borderTop: '1px solid var(--adm-border)' }}>
+                  <button
+                    type="button"
+                    onClick={() => selecionar(vm.id)}
+                    aria-current={ativa ? 'true' : undefined}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      width: '100%',
+                      minHeight: 'var(--adm-row-compact)',
+                      padding: '6px 12px',
+                      background: ativa ? 'var(--adm-accent-soft)' : 'transparent',
+                      border: 0,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      font: 'var(--adm-body)',
+                      color: 'var(--adm-text)',
+                    }}
+                  >
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {vm.descricao}
+                      </span>
+                      <span
+                        style={{
+                          display: 'block',
+                          font: 'var(--adm-caption)',
+                          color: 'var(--adm-text-faint)',
+                        }}
+                      >
+                        {[vm.tecnicoNome, vm.local].filter(Boolean).join(' · ')}
+                      </span>
+                    </span>
+                    {chip(vm.status)}
+                    <span
+                      className="num"
+                      style={{
+                        font: 'var(--adm-numeric)',
+                        fontVariantNumeric: 'tabular-nums',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {vm.cobradoRotulo}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {consulta.hasNextPage && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+              <button
+                type="button"
+                className="adm-sair"
+                disabled={consulta.isFetchingNextPage}
+                onClick={() => consulta.fetchNextPage()}
+              >
+                {consulta.isFetchingNextPage ? 'Carregando…' : 'Carregar mais'}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+
+  const detalhe = (
+    <section
+      aria-label="Detalhes do serviço"
+      style={{
+        background: 'var(--adm-surface)',
+        border: '1px solid var(--adm-border)',
+        borderRadius: 'var(--adm-r2)',
+        alignSelf: 'start',
+        position: 'sticky',
+        top: 'var(--adm-s4)',
+        minWidth: 0,
+      }}
+    >
+      {selecionadoId ? (
+        <ServicoDetail
+          id={selecionadoId}
+          decisionContext="colecao"
+          onDecidido={aoSairDoDetalhe}
+          onRemovido={aoSairDoDetalhe}
+        />
+      ) : (
+        <p
+          style={{
+            padding: 'var(--adm-s6)',
+            font: 'var(--adm-body-compact)',
+            color: 'var(--adm-text-muted)',
+            textAlign: 'center',
+          }}
+        >
+          Selecione um serviço para ver os detalhes.
+        </p>
+      )}
+    </section>
+  );
+
+  return (
+    <div
+      className="adm-shell"
+      style={{ minHeight: '100%', padding: 'var(--adm-s5) var(--adm-s4) var(--adm-s8)' }}
+    >
+      {splitDesktop ? (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(360px, 430px) 1fr',
+            gap: 'var(--adm-s5)',
+          }}
+        >
+          {lista}
+          {detalhe}
+        </div>
+      ) : selecionadoId ? (
+        <ServicoDetail
+          id={selecionadoId}
+          decisionContext="colecao"
+          onVoltar={voltarParaLista}
+          onDecidido={aoSairDoDetalhe}
+          onRemovido={aoSairDoDetalhe}
+        />
+      ) : (
+        lista
+      )}
     </div>
   );
 }

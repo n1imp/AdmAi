@@ -27,8 +27,9 @@ export function servicoVM(dto) {
     descricao: dto.descricao,
     local: dto.local,
     endereco: dto.endereco ?? null,
-    tecnico: dto.tecnico ?? null,
-    tecnicoId: dto.tecnicoId ?? null,
+    /* A API entrega tecnico como OBJETO {id,nome} (include) — nunca renderizar o objeto. */
+    tecnicoNome: dto.tecnico?.nome ?? null,
+    tecnicoId: dto.tecnico?.id ?? dto.tecnicoId ?? null,
     clienteNome: dto.clienteNome ?? null,
     clienteTelefone: dto.clienteTelefone ?? null,
     material: dto.material ?? null,
