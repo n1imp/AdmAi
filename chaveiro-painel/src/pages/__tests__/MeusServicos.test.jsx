@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render as renderRtl, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MeusServicos from '../MeusServicos.jsx';
+
+/* A página migrada usa o application layer (TanStack) e o AuthContext (podeProprio). */
+vi.mock('../../contexts/AuthContext.jsx', () => ({ useAuth: () => ({ podeProprio: () => true }) }));
+function render(ui) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderRtl(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
 
 // Mocks dos colaboradores externos da página.
 const mockGet = vi.fn();

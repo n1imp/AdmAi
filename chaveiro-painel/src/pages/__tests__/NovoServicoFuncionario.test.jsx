@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render as renderRtl, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NovoServicoFuncionario from '../NovoServicoFuncionario.jsx';
 
 const mockNavigate = vi.fn();
@@ -15,129 +16,107 @@ vi.mock('react-router-dom', () => ({
 }));
 
 const mockPost = vi.fn();
-/* `get` entrou porque a tela passou a ler `GET /me/permissoes` para descobrir se a empresa exige
-   aprovação — é isso que decide se o seletor de material aparece.  [GAP-EST-03]
-   Sem ele, `api.get` era `undefined` e três casos quebravam com "default.get is not a function". */
 const mockGet = vi.fn();
 vi.mock('../../lib/api.js', () => ({
   default: { post: (...a) => mockPost(...a), get: (...a) => mockGet(...a) },
   formatarMoeda: (v) => `R$ ${Number(v ?? 0).toFixed(2)}`,
+  formatarData: () => '20/06/2026 10:00',
 }));
 
 const mockToast = vi.fn();
 vi.mock('../../components/Toast.jsx', () => ({ useToast: () => mockToast }));
+
+function render(ui) {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: 0 } },
+  });
+  return renderRtl(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
 
 beforeEach(() => {
   localStorage.clear();
   mockNavigate.mockReset();
   mockToast.mockReset();
   mockPost.mockReset().mockResolvedValue({ data: { status: 'pendente' } });
-  /* Padrão: empresa SEM aprovação, que é o default do modelo (`aprovacaoServico @default(false)`).
-     Os casos que exercitam o seletor sobrescrevem. */
+  /* Padrão: empresa SEM aprovação (`aprovacaoServico @default(false)`) — o seletor de
+     material fica escondido; os casos que o exercitam sobrescrevem. */
   mockGet.mockReset().mockResolvedValue({ data: { aprovacaoServico: false } });
 });
 afterEach(cleanup);
 
-describe('NovoServicoFuncionario — FO3', () => {
-  it('bloqueia o avanço sem descrição e marca o campo inválido', async () => {
+/** Form single-page por seções (DECISOR 01a04bfb §iii) — o wizard de 3 etapas foi removido:
+ *  todos os campos visíveis de uma vez, CTA único "Registrar serviço", validação no submit
+ *  com foco no primeiro erro. */
+describe('NovoServicoFuncionario — form por seções', () => {
+  it('submit sem descrição: campo inválido + foco, sem POST', async () => {
     const user = userEvent.setup();
     render(<NovoServicoFuncionario />);
     const descricao = screen.getByRole('textbox', { name: /Descrição/ });
 
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
+    await user.click(screen.getByRole('button', { name: /Registrar serviço/ }));
 
     await waitFor(() => expect(descricao).toHaveAttribute('aria-invalid', 'true'));
-    // não avançou: o campo "Valor cobrado" (etapa 2) não apareceu
-    expect(screen.queryByRole('textbox', { name: /Valor cobrado/ })).not.toBeInTheDocument();
     expect(mockPost).not.toHaveBeenCalled();
   });
 
-  it('percorre as etapas, envia o payload do funcionário e trata o status pendente', async () => {
+  it('single-page: preenche descrição+valor, envia payload SEM tecnico e navega no sucesso', async () => {
     const user = userEvent.setup();
     render(<NovoServicoFuncionario />);
 
     await user.type(screen.getByRole('textbox', { name: /Descrição/ }), 'Abertura de porta');
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
-
-    await user.type(await screen.findByRole('textbox', { name: /Valor cobrado/ }), '15000');
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
-
-    expect(await screen.findByText(/RESUMO DO SERVIÇO/)).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: /Valor cobrado/ }), '15000');
     await user.click(screen.getByRole('button', { name: /Registrar serviço/ }));
 
     await waitFor(() => expect(mockPost).toHaveBeenCalledTimes(1));
     const [url, payload] = mockPost.mock.calls[0];
     expect(url).toBe('/servicos');
-    expect(payload).toMatchObject({
-      local: 'Casa do cliente',
-      descricao: 'Abertura de porta',
-      valorCobrado: 150,
-      valorMaterial: 0,
-      clienteNome: null,
-      endereco: null,
-    });
-    // payload do funcionário não envia técnico nem materiais
-    expect(payload).not.toHaveProperty('tecnico');
-    expect(payload).not.toHaveProperty('materiais');
-
-    await waitFor(() =>
-      expect(mockToast).toHaveBeenCalledWith('Enviado para aprovação do gestor', 'success')
-    );
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/meus-servicos'));
+    expect(payload.tecnico).toBeUndefined(); // deriva da sessão no backend
+    expect(payload.descricao).toBe('Abertura de porta');
+    expect(payload.valorCobrado).toBe(150);
+    expect(mockNavigate).toHaveBeenCalledWith('/meus-servicos');
   });
 
-  it('SEM aprovação: o seletor de material NÃO aparece', async () => {
-    const user = userEvent.setup();
+  it('SEM aprovação: o seletor de material do catálogo NÃO aparece', async () => {
     render(<NovoServicoFuncionario />);
-
-    await user.type(screen.getByRole('textbox', { name: /Descrição/ }), 'Abertura de porta');
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
-    await screen.findByRole('textbox', { name: /Valor cobrado/ });
-
-    /* O backend recusaria com `materiais_nao_permitidos`, porque sem aprovação o serviço nasce
-       `ativo` e a baixa sairia sem gestor nenhum. Mostrar o campo aqui ofereceria uma capacidade
-       que seria negada depois de o técnico preencher — o pior momento para descobrir. */
+    await screen.findByRole('textbox', { name: /Descrição/ });
+    await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/me/permissoes'));
     expect(screen.queryByText(/Materiais do catálogo/)).not.toBeInTheDocument();
   });
 
-  it('COM aprovação: o seletor aparece e busca o catálogo MÍNIMO', async () => {
-    mockGet.mockImplementation((rota) => {
-      if (rota === '/me/permissoes') return Promise.resolve({ data: { aprovacaoServico: true } });
-      return Promise.resolve({ data: [{ id: 1, nome: 'Fechadura Tetra', unidade: 'un' }] });
-    });
-    const user = userEvent.setup();
+  it('COM aprovação: o seletor aparece', async () => {
+    mockGet.mockImplementation((url) =>
+      url === '/me/permissoes'
+        ? Promise.resolve({ data: { aprovacaoServico: true } })
+        : Promise.resolve({ data: [] })
+    );
     render(<NovoServicoFuncionario />);
-
-    await user.type(screen.getByRole('textbox', { name: /Descrição/ }), 'Abertura de porta');
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
-    await screen.findByRole('textbox', { name: /Valor cobrado/ });
-
     expect(await screen.findByText(/Materiais do catálogo/)).toBeInTheDocument();
-    /* A rota importa tanto quanto o campo: `/materiais` exige `estoque:ver`, que o funcionário não
-       tem, e devolveria custo e saldo. Apontar para a rota errada daria 403 e um seletor vazio. */
-    await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/me/materiais-servico'));
   });
 
   it('sem contexto (falha ao ler permissões) o seletor fica ESCONDIDO', async () => {
-    mockGet.mockRejectedValue(new Error('rede'));
-    const user = userEvent.setup();
+    mockGet.mockRejectedValue(new Error('net'));
     render(<NovoServicoFuncionario />);
-
-    await user.type(screen.getByRole('textbox', { name: /Descrição/ }), 'Abertura de porta');
-    await user.click(screen.getByRole('button', { name: /Continuar/ }));
-    await screen.findByRole('textbox', { name: /Valor cobrado/ });
-
-    /* Falhar para o lado de esconder: um campo ausente é frustração; um campo que aceita entrada e
-       depois derruba o registro inteiro é trabalho perdido em campo. */
+    await screen.findByRole('textbox', { name: /Descrição/ });
     expect(screen.queryByText(/Materiais do catálogo/)).not.toBeInTheDocument();
   });
 
-  it('restaura o rascunho salvo no localStorage ao montar', () => {
+  it('restaura o rascunho salvo no localStorage ao montar (limpo só após sucesso)', async () => {
     localStorage.setItem(
       'admai_novo_servico_func',
-      JSON.stringify({ descricao: 'Rascunho de porta' })
+      JSON.stringify({
+        descricao: 'Rascunho vivo',
+        local: 'Contrato',
+        valorCobrado: '80,00',
+        valorMaterial: '',
+        material: '',
+        endereco: '',
+        clienteNome: '',
+        clienteTelefone: '',
+        tecnico: '',
+        materiais: [],
+      })
     );
     render(<NovoServicoFuncionario />);
-    expect(screen.getByRole('textbox', { name: /Descrição/ })).toHaveValue('Rascunho de porta');
+    expect(await screen.findByDisplayValue('Rascunho vivo')).toBeInTheDocument();
   });
 });

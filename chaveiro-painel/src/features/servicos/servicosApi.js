@@ -102,6 +102,14 @@ export function useServico(id) {
   });
 }
 
+/** Serviços do PRÓPRIO funcionário (/me/servicos) — mesmo prefixo: mutações invalidam junto. */
+export function useMeusServicos() {
+  return useQuery({
+    queryKey: ['servicos', 'meus'],
+    queryFn: async () => (await api.get('/me/servicos')).data,
+  });
+}
+
 export function usePendentes(opts = {}) {
   return useQuery({
     queryKey: chaves.pendentes(),

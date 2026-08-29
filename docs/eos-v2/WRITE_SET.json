@@ -1,14 +1,14 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR14E2-APROVACOES",
-  "titulo": "Aprovacoes nos mesmos patterns (DECISOR §v): fila + detail compartilhado em contexto de decisao; /aprovacoes?servico=; pos-decisao limpa selecao e foca a fila; deep-link obsoleto amigavel",
+  "sliceId": "FR14E3-FORMS-MEUS",
+  "titulo": "ServicoForm single-page por secoes (DECISOR §iii, wizards removidos) + paginas casca + MeusServicos nos patterns + harness e2e ajustado",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-29T05:47:05.127Z",
+  "declaradoEm": "2026-08-29T05:49:19.478Z",
   "baseCommitPorLane": {
-    "HARNESS": "d4283a4ff124c05369860795b4263f26769744f8"
+    "HARNESS": "5340af9186bfdbf6113156d7211240e7383c97a9"
   },
   "cobertura": "LANE_COMPLETA",
   "baselinePorLane": {
@@ -486,7 +486,7 @@
       "chaveiro-painel/src/lib/senha.js": "28ca38f656e0aac34bc7884a677576ec092711f615f4d6419de4cb71f1804916",
       "chaveiro-painel/src/main.jsx": "e3573d0b177242cce7aa6ae36191831f44e3844ce79a59ba24aa1413d44ca36d",
       "chaveiro-painel/src/pages/Ajuda.jsx": "6ef35bbd89996af392421bc95b72bb90cb6b98f9b09b4e2666d76767ac147283",
-      "chaveiro-painel/src/pages/Aprovacoes.jsx": "ada3e93f6ab7093a1a799336703baa3a61547cf8fed6048f47daa6a72f1b35a8",
+      "chaveiro-painel/src/pages/Aprovacoes.jsx": "5b5ced54305ea64fbbb0086821d879916aed38f77da129950a9c69536dbc2f55",
       "chaveiro-painel/src/pages/Assinatura.jsx": "fd847194f5d434e568d9211502521bbbc2e086c7dd762f3134d664794c0ada1a",
       "chaveiro-painel/src/pages/Auditoria.jsx": "0ab1165aa5fb570abada7a49f88f3191545d94553f0afe4ac453d8d5b4943772",
       "chaveiro-painel/src/pages/Avaliacoes.jsx": "552b415dfc9317648ee330b6eb3cb82896d8503ae3256358caa47e885f572ca3",
@@ -529,7 +529,7 @@
       "chaveiro-painel/src/pages/TrocarSenha.jsx": "1fdb77441dc45f0f662f643e87a10ab68d2f49655afd0a0b2b234e917ffd2701",
       "chaveiro-painel/src/pages/Usuarios.jsx": "6769538d2d9571803aa2614b9418f30d216a040402469dc0b95867f9db0267b3",
       "chaveiro-painel/src/pages/VerificarEmail.jsx": "a20d7f4e2b4be08ab1e08c8e2796115410e8876be5f4e5d1f6027d76390c1f5b",
-      "chaveiro-painel/src/pages/__tests__/Aprovacoes.test.jsx": "ef5af2e694a34f1c9297f47bfb430376aac16808b78d206292ff15bb7d2395da",
+      "chaveiro-painel/src/pages/__tests__/Aprovacoes.test.jsx": "9e9c44211eb915b4ad7c6a92c710f75c38b1579666a1d91ec049dce0245492f5",
       "chaveiro-painel/src/pages/__tests__/Assinatura.test.jsx": "e2052c08931c70a116cb59c97b9b7b74458bfb8613b8f1514240959108f25e9d",
       "chaveiro-painel/src/pages/__tests__/Auditoria.test.jsx": "0f0fe318bff2d97eb0f51ce060b4e67b48ace752141aec37d502ef353d815138",
       "chaveiro-painel/src/pages/__tests__/Configuracao.test.jsx": "f4ea17bc08a0f47361ca5155d623df46033bd1d7dbc0ce26842f5a8a3fbbc030",
@@ -681,8 +681,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "3dbd83adc276a3835e3a52ce61bfe8322aa40b2fb14d2deb3cfd405e1c1e99dd",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "ff950b0d6bff11e951c0d5cbd0475ed0426de71b361f996594dff624528730b1",
+      "docs/eos-v2/WRITE_SET.json": "c7ec13f8a7bd999ac6466a2fb4c46fa968a5529494607c5bc2990a162a1b2939",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "d08f451ccf629441e8ce80a9d74d3925a5b03ea2a12e26f2c50b86efd3c28f81",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2636,30 +2636,128 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/Aprovacoes.jsx",
+      "caminho": "chaveiro-painel/src/features/servicos/servicoSchema.js",
       "precisao": "BOUNDED",
-      "proposito": "Fila (usePendentes) + ServicoDetail servicoDaFila/decisionContext=fila — sem GET /:id oculto",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ada3e93f6ab7093a1a799336703baa3a61547cf8fed6048f47daa6a72f1b35a8",
+      "proposito": "Zod composto por secao (seam Quote/Catalog por composicao)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/src/pages/__tests__/Aprovacoes.test.jsx",
+      "caminho": "chaveiro-painel/src/features/servicos/ServicoForm.jsx",
       "precisao": "BOUNDED",
-      "proposito": "Fila/decisao/409/selecao/obsoleto/permissoes",
+      "proposito": "Form unico variante gestao/campo: secoes, rascunho, foco 1o erro, resumo vivo, CTA unico",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/features/servicos/servicosApi.js",
+      "precisao": "BOUNDED",
+      "proposito": "+useMeusServicos (/me/servicos, prefixo servicos)",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "ef5af2e694a34f1c9297f47bfb430376aac16808b78d206292ff15bb7d2395da",
+      "shaNaDeclaracao": "7da94ed95fed1e64a11462407d1ee2db43f42f5c687d539ea36289ce799de29a",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/NovoServico.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Casca: BackHeader + ServicoForm gestao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "0d0fc937b08543c9be2d174bdbfa68df4a9733c7c01410c5b56867928db3a6e6",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/NovoServicoFuncionario.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Casca: ServicoForm campo (exigeAprovacao condiciona catalogo)",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "7a9baf7af5978cfeb8b3b61cb433a825a663f87a09d083e5f307158b87792e3b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/MeusServicos.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Collection light com tabs por status preservadas",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "c6b563dadcbcd45976f7626accc0d0623966394a16d5eaa6cd8ae396412149a7",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/NovoServico.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Secoes/validacao/rascunho/submit",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ad984ac3209ae04562afc319e9a67f47b90d10938cb8d7040aeea0d72d2c0791",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/NovoServicoFuncionario.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Sem tecnico; catalogo condicionado",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f98487db1492158501bcaa1b0334db5a1aed871e057079e83d0165c46e29c476",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeusServicos.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Tabs/estados/canonicos",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "2ceb13723a3c3b23e760f44a3db5b2de9e453aabfe40ef80683b58fcb28e6607",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/pages/__tests__/MeusServicos.axe.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "axe da nova composicao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "aae8f70fc6b99503f770a8474ea0781bbd5e26d6b685137c35e4037bee268408",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/e2e/run.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "Fluxos M ajustados a nova composicao",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "f1487ba979844f6985f1cabd7bf9f9a0a6634a327c2750bc09d2204e03d337d7",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/e2e/jornadas.mjs",
+      "precisao": "BOUNDED",
+      "proposito": "Seletores/textos das jornadas ajustados se referenciarem as superficies migradas",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "ddd675f1681cf43f79f11573808e9bf3153404bf0d68e1f0cba298e2f6766e90",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "MATCH",
+  "comparacao": "UNDECLARED_WRITE",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
-  "bloqueiaIntegracao": false,
-  "nota": "7/7; mesmos patterns; sem GET /:id oculto",
+  "bloqueiaIntegracao": true,
+  "nota": "FR14E3: forms single-page (DECISOR 01a04bfb iii) + MeusServicos migrada com M3 preservado; suite 310 verde, RD full diff 0 erros novos, e2e mock 5/5, jornadas nucleo+assinatura reescritas p/ contratos vigentes",
+  "reconciliacao": {
+    "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+    "autorizadoPor": "Claude (EOS FR-14, regra §128 da diretiva: classificar, nao reverter conteudo valido)",
+    "justificativa": "servicosVM.js recebeu a entrada em_andamento no STATUS_VM durante o porte fiel do bloco F9/M3 de MeusServicos (flag SERVICO_ANDAMENTO_ENABLED): sem ela o status de dominio cru vazaria para a tela, violando a regra 'pendente cru nunca na tela' aplicada a toda a taxonomia. A mudanca e minima (1 entrada no mapa congelado), coberta por servicosVM.test.js e pelos 8 testes de MeusServicos, e pertence a mesma missao da fatia FR14E3-FORMS-MEUS; o defeito foi a declaracao previa nao listar o arquivo, nao a escrita.",
+    "caminhos": [
+      "chaveiro-painel/src/features/servicos/servicosVM.js"
+    ]
+  },
   "aviso": "Declaracao ENCERRADA."
 }

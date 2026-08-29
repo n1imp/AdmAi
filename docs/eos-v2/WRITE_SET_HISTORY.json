@@ -65819,9 +65819,31 @@
       "bloqueiaIntegracao": false,
       "nota": "7/7; mesmos patterns; sem GET /:id oculto",
       "declaradoEm": "2026-08-29T05:47:05.127Z"
+    },
+    {
+      "sliceId": "FR14E3-FORMS-MEUS",
+      "titulo": "ServicoForm single-page por secoes (DECISOR §iii, wizards removidos) + paginas casca + MeusServicos nos patterns + harness e2e ajustado",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "FR14E3: forms single-page (DECISOR 01a04bfb iii) + MeusServicos migrada com M3 preservado; suite 310 verde, RD full diff 0 erros novos, e2e mock 5/5, jornadas nucleo+assinatura reescritas p/ contratos vigentes",
+      "reconciliacao": {
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (EOS FR-14, regra §128 da diretiva: classificar, nao reverter conteudo valido)",
+        "justificativa": "servicosVM.js recebeu a entrada em_andamento no STATUS_VM durante o porte fiel do bloco F9/M3 de MeusServicos (flag SERVICO_ANDAMENTO_ENABLED): sem ela o status de dominio cru vazaria para a tela, violando a regra 'pendente cru nunca na tela' aplicada a toda a taxonomia. A mudanca e minima (1 entrada no mapa congelado), coberta por servicosVM.test.js e pelos 8 testes de MeusServicos, e pertence a mesma missao da fatia FR14E3-FORMS-MEUS; o defeito foi a declaracao previa nao listar o arquivo, nao a escrita.",
+        "caminhos": [
+          "chaveiro-painel/src/features/servicos/servicosVM.js"
+        ]
+      },
+      "declaradoEm": "2026-08-29T05:49:19.478Z"
     }
   ],
-  "geradoEm": "2026-08-29T05:48:37.628Z",
+  "geradoEm": "2026-08-29T06:15:50.838Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

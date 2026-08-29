@@ -1,152 +1,48 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Plus,
-  Calendar,
-  MapPin,
-  User,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Play,
-  CheckCheck,
-  Loader,
-} from 'lucide-react';
-import api, { formatarMoeda, formatarData } from '../lib/api.js';
-import { SkeletonLista } from '../components/Skeleton.jsx';
-import EstadoVazio from '../components/EstadoVazio.jsx';
-import ErroBanner from '../components/ErroBanner.jsx';
+import { Plus } from 'lucide-react';
+import api from '../lib/api.js';
+import BackHeader from '../components/BackHeader.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { useMeusServicos, classificarErro } from '../features/servicos/servicosApi.js';
+import { servicoVM } from '../features/servicos/servicosVM.js';
 
-// Badge por status do serviço próprio.
-const STATUS = {
-  ativo: {
-    rotulo: 'Aprovado',
-    icon: CheckCircle,
-    classe: 'bg-success/10 text-success border-success/20',
-  },
-  // F9/M3: estado transitório "serviço atual" do funcionário (atrás da flag).
-  em_andamento: {
-    rotulo: 'Em andamento',
-    icon: Loader,
-    classe: 'bg-accent-400/10 text-accent-300 border-accent-400/20',
-  },
-  pendente: {
-    rotulo: 'Aguardando aprovação',
-    icon: Clock,
-    classe: 'bg-warning/10 text-warning border-warning/20',
-  },
-  rejeitado: {
-    rotulo: 'Rejeitado',
-    icon: XCircle,
-    classe: 'bg-danger/10 text-danger border-danger/20',
-  },
-};
-
-// F7: filtro por status (view de pendências) — os valores casam com `STATUS` acima.
-const FILTROS = [
-  { valor: 'todos', label: 'Todos' },
-  { valor: 'pendente', label: 'Aguardando' },
-  { valor: 'ativo', label: 'Aprovados' },
-  { valor: 'rejeitado', label: 'Rejeitados' },
+const TABS = [
+  { valor: 'todos', rotulo: 'Todos' },
+  { valor: 'pendente', rotulo: 'Aguardando' },
+  { valor: 'ativo', rotulo: 'Aprovados' },
+  { valor: 'rejeitado', rotulo: 'Rejeitados' },
 ];
 
-function BadgeStatus({ status }) {
-  const cfg = STATUS[status] ?? STATUS.ativo;
-  const Icon = cfg.icon;
-  return (
-    <span className={`badge inline-flex items-center gap-1 border ${cfg.classe}`}>
-      <Icon size={11} /> {cfg.rotulo}
-    </span>
-  );
-}
-
-function CardMeuServico({ servico, acao }) {
-  return (
-    <div className="card animate-fade-in">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <BadgeStatus status={servico.status} />
-            <span className="badge bg-dark-700 text-muted border border-dark-600">
-              {servico.local}
-            </span>
-          </div>
-          {/* Linha PRINCIPAL do card: clamp de 2 linhas em vez de corte em 1 — a descrição é
-              o que identifica o serviço para quem trabalha em campo. [SL-12] */}
-          <p className="text-white text-sm font-medium line-clamp-2 mt-1" title={servico.descricao}>
-            {servico.descricao}
-          </p>
-          {servico.endereco && (
-            <p className="text-muted text-xs mt-1 flex items-center gap-1 truncate">
-              <MapPin size={11} className="shrink-0" /> {servico.endereco}
-            </p>
-          )}
-          {servico.clienteNome && (
-            <p className="text-muted text-xs mt-0.5 flex items-center gap-1 truncate">
-              <User size={11} className="shrink-0" /> {servico.clienteNome}
-            </p>
-          )}
-          <p className="text-xs text-dark-600 mt-1 flex items-center gap-1">
-            <Calendar size={11} /> {formatarData(servico.criadoEm)}
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="font-display font-bold text-white text-xl leading-none tnum">
-            {formatarMoeda(servico.valorCobrado)}
-          </p>
-          <p className="text-muted text-[11px] mt-0.5">cobrado</p>
-          <p className="text-indigo-300 text-xs mt-1.5 tnum">
-            com. {formatarMoeda(servico.comissaoGerada)}
-          </p>
-        </div>
-      </div>
-      {acao && <div className="mt-3">{acao}</div>}
-    </div>
-  );
-}
-
+/**
+ * Meus serviços (funcionário) — mesma arquitetura da coleção de Serviços (prova de
+ * alavancagem dos patterns): application layer + VM + estados completos + foundations light.
+ * Preservados da superfície anterior: tabs por status com deep-link `?status=` (F7) e o
+ * bloco F9/M3 COMPLETO (flag SERVICO_ANDAMENTO_ENABLED, detectada por feature-probe: o
+ * endpoint /me/servico-atual responde 404 com a flag off e a UI some por completo —
+ * "Iniciar serviço" nos aprovados, banner SERVIÇO ATUAL com "Concluir", 409 explicado).
+ */
 export default function MeusServicos() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [servicos, setServicos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(null);
+  const { podeProprio } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  // F9/M3 (flag SERVICO_ANDAMENTO_ENABLED): "serviço atual" do funcionário. Detectado por
-  // feature-probe — o endpoint responde 404 com a flag off, então a UI some por completo.
+  const statusUrl = searchParams.get('status');
+  /* Filtro em ESTADO (inicializado do deep-link) + espelhado na URL — preservado da
+     superfície anterior: o clique responde imediatamente, a URL segue compartilhável. */
+  const [tab, setTab] = useState(TABS.some((t) => t.valor === statusUrl) ? statusUrl : 'todos');
+
+  const consulta = useMeusServicos();
+  const todos = Array.isArray(consulta.data) ? consulta.data : [];
+  const itens = tab === 'todos' ? todos : todos.filter((s) => s.status === tab);
+  const erro = consulta.isError ? classificarErro(consulta.error) : null;
+
+  /* F9/M3: probe do serviço atual — 200 liga a feature; 404/403 desliga por completo. */
   const [servicoAtual, setServicoAtual] = useState(null);
   const [m3Disponivel, setM3Disponivel] = useState(false);
   const [acaoId, setAcaoId] = useState(null);
 
-  // Filtro inicial vindo do deep-link (ex.: MeuPainel → ?status=pendente).
-  const statusUrl = searchParams.get('status');
-  const [filtro, setFiltro] = useState(
-    ['pendente', 'ativo', 'rejeitado'].includes(statusUrl) ? statusUrl : 'todos'
-  );
-
-  function selecionar(valor) {
-    setFiltro(valor);
-    setSearchParams(valor === 'todos' ? {} : { status: valor }, { replace: true });
-  }
-
-  const contar = (valor) =>
-    valor === 'todos' ? servicos.length : servicos.filter((s) => s.status === valor).length;
-  const visiveis = filtro === 'todos' ? servicos : servicos.filter((s) => s.status === filtro);
-
-  const buscar = useCallback(async () => {
-    setErro(null);
-    try {
-      const { data } = await api.get('/me/servicos');
-      setServicos(Array.isArray(data) ? data : []);
-    } catch {
-      setErro('Não foi possível carregar seus serviços.');
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
-
-  // Probe do M3: 200 → feature ligada (guarda o serviço atual); 404/403 → desligada (esconde).
   const sincronizarAtual = useCallback(async () => {
     try {
       const { data } = await api.get('/me/servico-atual');
@@ -157,11 +53,9 @@ export default function MeusServicos() {
       setServicoAtual(null);
     }
   }, []);
-
   useEffect(() => {
-    buscar();
     sincronizarAtual();
-  }, [buscar, sincronizarAtual]);
+  }, [sincronizarAtual]);
 
   async function iniciar(id) {
     if (acaoId) return;
@@ -169,7 +63,7 @@ export default function MeusServicos() {
     try {
       const { data } = await api.post(`/servicos/${id}/iniciar`);
       setServicoAtual(data?.servico ?? null);
-      await buscar();
+      await consulta.refetch();
       toast('Serviço iniciado', 'success');
     } catch (e) {
       if (e.response?.status === 409) toast('Você já tem um serviço em andamento', 'warning');
@@ -185,7 +79,7 @@ export default function MeusServicos() {
     try {
       await api.post(`/servicos/${id}/concluir`);
       setServicoAtual(null);
-      await buscar();
+      await consulta.refetch();
       toast('Serviço concluído', 'success');
     } catch {
       toast('Não foi possível concluir o serviço', 'error');
@@ -194,123 +88,255 @@ export default function MeusServicos() {
     }
   }
 
+  function trocarTab(valor) {
+    setTab(valor);
+    setSearchParams(valor === 'todos' ? {} : { status: valor }, { replace: true });
+  }
+
+  const chipCor = {
+    attention: ['var(--adm-attention)', 'var(--adm-attention-soft)'],
+    success: ['var(--adm-success)', 'var(--adm-success-soft)'],
+    danger: ['var(--adm-danger)', 'var(--adm-danger-soft)'],
+    neutral: ['var(--adm-accent)', 'var(--adm-accent-soft)'],
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <div>
-          <p className="section-label mb-1">
-            <span className="w-5 h-px bg-accent-400" /> REGISTROS
-          </p>
-          <h1 className="font-display text-3xl font-bold text-white uppercase tracking-wide">
-            Meus serviços
-          </h1>
-          <p className="text-muted text-xs mt-0.5 tnum">
-            {servicos.length > 0
-              ? `${servicos.length} registro${servicos.length !== 1 ? 's' : ''}`
-              : 'Nenhum registro'}
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/meus-servicos/novo')}
-          aria-label="Registrar serviço"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-accent-400 text-dark-950 font-display font-semibold uppercase tracking-wider text-sm shadow-[0_0_18px_-6px_rgba(139,92,246,0.6)] hover:bg-accent-300 transition-colors"
-        >
-          <Plus size={18} /> <span className="hidden sm:inline">Novo</span>
-        </button>
-      </div>
-
-      {erro && <ErroBanner mensagem={erro} onRetry={buscar} />}
-
-      {/* Serviço atual em andamento (F9/M3) — some com a flag off (m3Disponivel=false) */}
-      {m3Disponivel && servicoAtual && (
-        <div className="px-4 mb-3">
-          <div className="card card-accent bg-gradient-to-br from-accent-400/10 to-dark-800">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="section-label mb-1">
-                  <span className="w-5 h-px bg-accent-400" /> SERVIÇO ATUAL
-                </p>
-                <p className="text-white font-semibold text-sm truncate">
-                  {servicoAtual.descricao}
-                </p>
-                <p className="text-muted text-xs mt-0.5 truncate">
-                  {servicoAtual.local}
-                  {servicoAtual.iniciadoEm &&
-                    ` · iniciado ${formatarData(servicoAtual.iniciadoEm)}`}
-                </p>
-              </div>
-              <button
-                onClick={() => concluir(servicoAtual.id)}
-                disabled={acaoId === servicoAtual.id}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-success text-dark-950 font-display font-semibold uppercase tracking-wider text-sm hover:bg-success/90 transition-colors disabled:opacity-60 shrink-0"
+      <BackHeader titulo="Meus serviços" para="/" />
+      <div
+        className="adm-shell flex-1 overflow-y-auto px-4 pb-8"
+        style={{ background: 'var(--adm-canvas)' }}
+      >
+        {/* F9/M3: banner do serviço em andamento */}
+        {m3Disponivel && servicoAtual && (
+          <div
+            style={{
+              margin: '12px 0',
+              border: '1px solid var(--adm-accent)',
+              background: 'var(--adm-accent-soft)',
+              borderRadius: 'var(--adm-r2)',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span
+                style={{ display: 'block', font: 'var(--adm-label)', color: 'var(--adm-accent)' }}
               >
-                <CheckCheck size={18} /> Concluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filtro por status (só quando há registros) */}
-      {!carregando && servicos.length > 0 && (
-        <div
-          className="px-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
-          role="group"
-          aria-label="Filtrar por status"
-        >
-          {FILTROS.map((f) => (
+                SERVIÇO ATUAL
+              </span>
+              <span
+                style={{
+                  display: 'block',
+                  font: 'var(--adm-body)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {servicoAtual.descricao}
+              </span>
+            </span>
             <button
-              key={f.valor}
-              onClick={() => selecionar(f.valor)}
-              aria-pressed={filtro === f.valor}
-              className={`alvo-toque shrink-0 px-3 rounded-md text-xs font-medium transition-colors border ${
-                filtro === f.valor
-                  ? 'bg-accent-400 text-dark-950 border-accent-400'
-                  : 'bg-dark-700 text-muted border-dark-600 hover:text-white'
-              }`}
+              type="button"
+              className="adm-sair"
+              disabled={acaoId != null}
+              onClick={() => concluir(servicoAtual.id)}
+              style={{
+                color: 'var(--adm-accent-text)',
+                background: 'var(--adm-accent)',
+                borderColor: 'var(--adm-accent)',
+              }}
             >
-              {f.label} <span className="tnum opacity-70">({contar(f.valor)})</span>
+              Concluir
             </button>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Lista */}
-      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-4 flex flex-col gap-3">
-        {carregando ? (
-          <SkeletonLista qtd={5} />
-        ) : servicos.length === 0 ? (
-          <EstadoVazio
-            mensagem="Nenhum serviço ainda"
-            sub="Registre seu primeiro atendimento no botão acima"
-            cta={{ label: 'Registrar serviço', to: '/meus-servicos/novo' }}
-          />
-        ) : visiveis.length === 0 ? (
-          <EstadoVazio
-            mensagem="Nenhum serviço neste status"
-            sub="Ajuste o filtro acima para ver outros serviços."
-          />
-        ) : (
-          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            {visiveis.map((s) => (
-              <CardMeuServico
-                key={s.id}
-                servico={s}
-                acao={
-                  m3Disponivel && s.status === 'ativo' && !servicoAtual ? (
-                    <button
-                      onClick={() => iniciar(s.id)}
-                      disabled={acaoId === s.id}
-                      className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-md bg-accent-400/10 text-accent-300 border border-accent-400/20 font-display font-semibold uppercase tracking-wide text-xs hover:bg-accent-400/15 transition-colors disabled:opacity-60"
-                    >
-                      <Play size={14} /> Iniciar serviço
-                    </button>
-                  ) : null
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            margin: '12px 0',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div
+            role="group"
+            aria-label="Filtrar por status"
+            style={{ display: 'flex', gap: 6, flex: 1, flexWrap: 'wrap' }}
+          >
+            {TABS.map((t) => (
+              <button
+                key={t.valor}
+                type="button"
+                aria-pressed={tab === t.valor}
+                onClick={() => trocarTab(t.valor)}
+                className="adm-sair"
+                style={
+                  tab === t.valor
+                    ? {
+                        background: 'var(--adm-accent-soft)',
+                        color: 'var(--adm-accent)',
+                        borderColor: 'var(--adm-accent)',
+                      }
+                    : undefined
                 }
+              >
+                {t.rotulo}
+              </button>
+            ))}
+          </div>
+          {podeProprio('registrar_servico') && (
+            <button
+              type="button"
+              onClick={() => navigate('/meus-servicos/novo')}
+              className="adm-sair"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                color: 'var(--adm-accent-text)',
+                background: 'var(--adm-accent)',
+                borderColor: 'var(--adm-accent)',
+                minHeight: 38,
+              }}
+            >
+              <Plus size={16} aria-hidden="true" /> Registrar serviço
+            </button>
+          )}
+        </div>
+
+        {consulta.isLoading ? (
+          <div aria-busy="true" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <span
+                key={i}
+                className="adm-skeleton"
+                style={{ height: 'var(--adm-row-comfortable)' }}
+                aria-hidden="true"
               />
             ))}
           </div>
+        ) : erro ? (
+          <div role="alert" style={{ padding: 'var(--adm-s5) 0' }}>
+            <p style={{ font: 'var(--adm-body)' }}>{erro.mensagem}</p>
+            <button
+              type="button"
+              className="adm-sair"
+              style={{ marginTop: 12 }}
+              onClick={() => consulta.refetch()}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : itens.length === 0 ? (
+          <div style={{ padding: 'var(--adm-s6) 0', textAlign: 'center' }}>
+            <p style={{ font: 'var(--adm-body)' }}>
+              {tab === 'todos' ? 'Nenhum serviço ainda' : 'Nenhum serviço neste status.'}
+            </p>
+            <p
+              style={{
+                font: 'var(--adm-body-compact)',
+                color: 'var(--adm-text-muted)',
+                marginTop: 4,
+              }}
+            >
+              {tab === 'todos'
+                ? 'Registre o primeiro serviço do seu dia.'
+                : 'Troque de aba para ver os demais registros.'}
+            </p>
+          </div>
+        ) : (
+          <ul
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              background: 'var(--adm-surface)',
+              border: '1px solid var(--adm-border)',
+              borderRadius: 'var(--adm-r2)',
+            }}
+          >
+            {itens.map((s) => {
+              const vm = servicoVM(s);
+              const cor = chipCor[vm.status.semantica];
+              const podeIniciar = m3Disponivel && s.status === 'ativo' && !servicoAtual;
+              return (
+                <li
+                  key={vm.id}
+                  style={{
+                    borderTop: '1px solid var(--adm-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    minHeight: 'var(--adm-row-comfortable)',
+                    padding: '8px 12px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 160 }}>
+                    <span
+                      style={{
+                        display: 'block',
+                        font: 'var(--adm-body)',
+                        color: 'var(--adm-text)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {vm.descricao}
+                    </span>
+                    <span
+                      style={{
+                        display: 'block',
+                        font: 'var(--adm-caption)',
+                        color: 'var(--adm-text-faint)',
+                      }}
+                    >
+                      {[vm.local, vm.criadoEmRotulo].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                  <span
+                    style={{
+                      font: 'var(--adm-label)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--adm-r1)',
+                      color: cor[0],
+                      background: cor[1],
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {vm.status.rotulo}
+                  </span>
+                  <span
+                    className="num"
+                    style={{
+                      font: 'var(--adm-numeric)',
+                      fontVariantNumeric: 'tabular-nums',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {vm.cobradoRotulo}
+                  </span>
+                  {podeIniciar && (
+                    <button
+                      type="button"
+                      className="adm-sair"
+                      disabled={acaoId != null}
+                      onClick={() => iniciar(vm.id)}
+                    >
+                      Iniciar serviço
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     </div>

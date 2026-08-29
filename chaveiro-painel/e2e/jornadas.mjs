@@ -200,6 +200,7 @@ async function abrirNavegador({ largura = 1280, altura = 800, mobile = false } =
     ir,
     texto,
     esperarTexto,
+    esperarCampo,
     digitar,
     clicarTexto,
     clicarQuandoHabilitado,
@@ -287,16 +288,18 @@ const JORNADAS = [
     },
   },
   {
-    nome: 'núcleo (dono): login UI → wizard de serviço 4 etapas → aparece na lista',
+    nome: 'núcleo (dono): login UI → form de serviço single-page → aparece na lista',
     async executar() {
       const n = await abrirNavegador();
       try {
         await n.loginUi('dono.demo');
         await n.esperarTexto(/lucro do período|receita/i, 10000);
         await n.ir('/servicos/novo');
-        // Etapa 1 — contexto: técnico (select), endereço, descrição
+        /* Form por seções (FR-14/DECISOR 01a04bfb): tudo numa página, CTA único. O select de
+           técnico só renderiza depois do GET /tecnicos — esperar por ele antes de setar. */
+        await n.esperarCampo('select#sf-tecnico');
         await n.aval(`(() => {
-          const sel = [...document.querySelectorAll('select')][0];
+          const sel = document.querySelector('select#sf-tecnico');
           const op = [...sel.options].find((o) => /Ana Técnica/i.test(o.textContent));
           Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(sel, op.value);
           sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -307,22 +310,13 @@ const JORNADAS = [
           'textarea[placeholder="Descreva o serviço realizado"]',
           `Servico jornada ${unico}`
         );
-        await n.clicarTexto('^Continuar$');
-        await espera(600);
-        // Etapa 2 — materiais: nenhum
-        await n.clicarTexto('^Continuar$');
-        await espera(600);
-        // Etapa 3 — valores
-        await n.digitar('input[placeholder="0,00"]', '150');
-        await n.clicarTexto('^Continuar$');
-        await espera(600);
-        // Etapa 4 — revisão
-        await n.esperarTexto(new RegExp(`Servico jornada ${unico}`), 6000);
-        await n.clicarTexto('Salvar serviço');
+        await n.digitar('#sf-valorCobrado', '15000'); // máscara de centavos → 150,00
+        await n.esperarTexto(/R\$\s*150,00/, 4000); // resumo financeiro AO VIVO reagiu
+        await n.clicarTexto('^Registrar serviço$');
         await espera(2000);
         await n.ir('/servicos');
         await n.esperarTexto(new RegExp(`Servico jornada ${unico}`), 10000);
-        return 'serviço criado pela UI e listado';
+        return 'serviço criado pela UI (single-page) e listado';
       } finally {
         await n.fechar();
       }
@@ -349,8 +343,11 @@ const JORNADAS = [
     },
   },
   {
-    nome: 'negativo: assinatura morta → produto explica, /assinatura oferece saída (allowlist na UI)',
+    nome: 'MVP sem paywall: assinatura morta no banco → produto segue INTEIRO; /assinatura não existe',
     async executar() {
+      /* [D2 Refoundation] Assinaturas saíram do MVP: o backend em free mode (default) não emite
+         402 e a rota /assinatura vive atrás de SUBSCRIPTIONS_BILLING (off). A ponte com o banco
+         fica: ela prova que o produto NÃO depende do estado da assinatura no free mode. */
       await noBot(`
         import { prisma } from './src/db/prisma.js';
         const e = await prisma.empresa.findFirst({ where: { nome: 'Jornada E2E ${unico}' } });
@@ -363,15 +360,20 @@ const JORNADAS = [
       try {
         await n.loginUi(`jornada${unico}`, 'SenhaForte1!');
         await espera(1500);
-        // Produto: a página NÃO pode ficar em branco nem fingir normalidade.
+        // Produto inteiro: a coleção de serviços renderiza de verdade (sem 402, sem tela vazia).
         await n.ir('/servicos');
+        await n.esperarTexto(/serviço/i, 8000);
         const t = await n.texto();
-        if (t.replace(/\s+/g, '').length < 40) throw new Error('tela em branco sob 402');
-        // Allowlist na UI: /assinatura carrega o STATUS e oferece a ação.
+        if (t.replace(/\s+/g, '').length < 40)
+          throw new Error('tela em branco com assinatura morta');
+        if (/assinatura necessária|renove a assinatura/i.test(t))
+          throw new Error('paywall apareceu no MVP free mode');
+        // Deep-link antigo: /assinatura cai no catch-all → volta para / sem quebrar.
         await n.ir('/assinatura');
-        await n.esperarTexto(/assinatura cancelada|assine/i, 8000);
-        await n.esperarTexto(/^|Assinar/i, 4000);
-        return 'produto degrada com explicação; /assinatura renderiza status + ação';
+        const rota = await n.aval('location.pathname');
+        if (rota === '/assinatura') throw new Error('rota /assinatura ainda existe com a flag off');
+        await n.esperarTexto(/lucro do período|receita|painel/i, 8000);
+        return 'free mode ignora assinatura morta; /assinatura redireciona para o painel';
       } finally {
         await n.fechar();
       }
@@ -411,7 +413,9 @@ const JORNADAS = [
           return 'ok';
         })()`);
         if (rSubmit !== 'ok')
-          throw new Error(`desafio sumiu antes da submissao: ${rSubmit} | aposDigitar: ${aposDigitar}`);
+          throw new Error(
+            `desafio sumiu antes da submissao: ${rSubmit} | aposDigitar: ${aposDigitar}`
+          );
         await n.esperarTexto(/inválid|incorret/i, 8000);
         const token = await n.aval(`localStorage.getItem('admai_token')`);
         if (token) throw new Error('sessão criada com código 2FA errado');

@@ -11,6 +11,8 @@ export const STATUS_VM = Object.freeze({
   ativo: { rotulo: 'Aprovado', semantica: 'success' },
   rejeitado: { rotulo: 'Rejeitado', semantica: 'danger' },
   rascunho: { rotulo: 'Rascunho', semantica: 'neutral' },
+  /* F9/M3 (flag SERVICO_ANDAMENTO_ENABLED): estado transitório do serviço atual do técnico. */
+  em_andamento: { rotulo: 'Em andamento', semantica: 'neutral' },
 });
 
 export function statusVM(status) {
