@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -10,6 +10,7 @@ import {
   useAprovarServico,
   useTecnicosAtivos,
   useContextoDeMateriais,
+  useEvidenciaAutenticada,
 } from '../servicosApi.js';
 import api from '../../../lib/api.js';
 
@@ -168,6 +169,80 @@ describe('consultas de apoio das superfícies (boundary da application layer)', 
     renderHook(() => useContextoDeMateriais({ enabled: false }), { wrapper: wrapperCom(qc) });
     renderHook(() => useTecnicosAtivos({ enabled: false }), { wrapper: wrapperCom(qc) });
     expect(api.get).not.toHaveBeenCalled();
+  });
+});
+
+/* [SEC-HB-02] Evidência autenticada: Bearer + blob + revoke, fora do cache de propósito.
+   Revisor 01a04c56 (rodada 3): o estado precisa estar VINCULADO à url pedida — sem isso a
+   troca de serviço mostrava a foto do atendimento anterior. */
+describe('evidência autenticada — ciclo de vida do blob', () => {
+  let criadas;
+  let revogadas;
+  beforeEach(() => {
+    criadas = 0;
+    revogadas = [];
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: () => `blob:objeto-${++criadas}`,
+      revokeObjectURL: (u) => revogadas.push(u),
+    });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('url pública legada renderiza direto (sem download autenticado)', () => {
+    const { result } = renderHook(() => useEvidenciaAutenticada('https://cdn/x.jpg'));
+    expect(result.current).toBe('https://cdn/x.jpg');
+    expect(api.get).not.toHaveBeenCalled();
+  });
+
+  it('url protegida baixa com signal e vira blob', async () => {
+    api.get.mockResolvedValue({ data: new Blob(['a']) });
+    const { result } = renderHook(() => useEvidenciaAutenticada('/api/servicos/1/foto'));
+
+    expect(result.current).toBeNull(); // nada na tela antes do download
+    await waitFor(() => expect(result.current).toBe('blob:objeto-1'));
+    const [caminho, opcoes] = api.get.mock.calls[0];
+    expect(caminho).toBe('/servicos/1/foto'); // prefixo /api removido: o transporte já o põe
+    expect(opcoes.responseType).toBe('blob');
+    expect(opcoes.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('troca A→B: a evidência de A SOME antes de B resolver, e o blob de A é revogado', async () => {
+    let resolverB;
+    api.get
+      .mockResolvedValueOnce({ data: new Blob(['a']) })
+      .mockImplementationOnce(() => new Promise((r) => (resolverB = r)));
+
+    const { result, rerender } = renderHook(({ url }) => useEvidenciaAutenticada(url), {
+      initialProps: { url: '/api/servicos/1/foto' },
+    });
+    await waitFor(() => expect(result.current).toBe('blob:objeto-1'));
+
+    rerender({ url: '/api/servicos/2/foto' });
+    // enquanto B não chega: SEM imagem — nunca a foto do serviço 1 no detalhe do 2
+    expect(result.current).toBeNull();
+    expect(revogadas).toContain('blob:objeto-1');
+
+    resolverB({ data: new Blob(['b']) });
+    await waitFor(() => expect(result.current).toBe('blob:objeto-2'));
+  });
+
+  it('desmontar aborta o download em voo e revoga o blob', async () => {
+    api.get.mockResolvedValue({ data: new Blob(['a']) });
+    const { result, unmount } = renderHook(() => useEvidenciaAutenticada('/api/servicos/1/foto'));
+    await waitFor(() => expect(result.current).toBe('blob:objeto-1'));
+
+    const { signal } = api.get.mock.calls[0][1];
+    unmount();
+    expect(signal.aborted).toBe(true);
+    expect(revogadas).toContain('blob:objeto-1');
+  });
+
+  it('falha no download não deixa evidência de ninguém na tela', async () => {
+    api.get.mockRejectedValue({ response: { status: 403, data: {} } });
+    const { result } = renderHook(() => useEvidenciaAutenticada('/api/servicos/9/foto'));
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+    expect(result.current).toBeNull();
   });
 });
 

@@ -78,14 +78,46 @@
     "FR-13C": {
       "status": "COMPLETE_LOCAL",
       "nota": "Matriz 13 screenshots (3 papeis x 360/390/1440/1920 + /mais + /servicos) provou shell real; teclado: 3xTab -> foco em link real com anel visivel — ACHADO: anel amarelo Aurora vencia na casca light (contraste fraco) -> fix especificidade, reprovado violeta 2px AA; axe 14/14; typecheck OK; perf delta +2KB JS/+3KB CSS (budget +20KB); AURORA 1580->1564 natural; RD full exit 0 (0 erros novos); fitness workspace/analytical/temporal via prototipos reais FR-13A (mesmos tokens) + contratos [data-mode] no CSS de producao; registry fitness 8/8 + navigation 16/16 (disabled sem rota/nav; sintetica compoe; permission filtering gestorRestrito/funcMinimo)."
+    },
+    "FR-14A/B": {
+      "status": "COMPLETE",
+      "nota": "Baseline BEFORE: 8 screenshots (dono 1440/390 servicos+aprovacoes+novo; func 390 meus+novo) + AURORA_SLICE_BEFORE=111. Surface contract + friccoes (fila desconectada do servico; wizard 4 etapas p/ 3 obrigatorios; drawer raso; delete escondido). Research dirigido (forms <=5 campos -> single-page; master-detail: foco ao detail, regions nomeadas). DECISOR 01a04bfb (VINCULANTE, bundle 5 pontos): split persistente xl+/detail rota mobile com ?servico= canonico e QUERY PROPRIA; detail 7 blocos (aprovacao E ESTADO, nao RelatedResource); forms SINGLE-PAGE por secoes nas 2 variantes (wizards 4/3 REMOVIDOS; resumo financeiro vivo substitui Revisao; CTA unico); next-best-action minimo (pendente+aprovacoes.aprovar); Aprovacoes pagina propria com detail compartilhado servicoDaFila (sem GET /:id oculto p/ quem so tem aprovacoes.ver)."
+    },
+    "FR-14C/D": {
+      "status": "COMPLETE",
+      "nota": "Gate de dependencia dedicado @tanstack/react-query 5.102.8 (4fb481a). Application layer (7660f6e): lib/queryClient.js politica DDR-4 (retry so transitorio <2 sem response; mutations 0; refetchOnWindowFocus false; staleTime 15s; limparCacheServidor() em limparSessao); features/servicos/servicosApi.js (keys minimas lista/detalhe/pendentes/meus; keyset useServicosInfinita; invalidacao = grafo real da capability: mutacao -> prefixo servicos, deletar tambem removeQueries detalhe); servicosVM.js (pendente cru NUNCA no JSX; em_andamento M3; proximaAcao por permissao — autorizacao real segue no backend); classificarErro (taxonomia §79). 12 testes do layer."
+    },
+    "FR-14E1..E4": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "E1 Servicos MASTER_DETAIL (d4283a4): UMA composicao por matchMedia 1280 (sem DOM duplicado), ?servico= deep-link/reload/back provados, ServicoDetail 7 blocos (1 chip status; dl tabular; decisao confirm inline; zona de perigo colecao+servicos.deletar; evidencia blob autenticada preservada), estados completos sem flash-of-empty, foco lista<->detail. E2 Aprovacoes (5340af9): fila /servicos/pendentes (array asc) nos MESMOS patterns; decisionContext=fila com dados da propria fila; pos-decisao limpa selecao + foca fila (sem auto-selecao); deep-link obsoleto amigavel; 7 testes. E3 forms+meus (178b0d3): ServicoForm unico gestao/campo por secoes zod compostas (seam Quote/Catalog); rascunho limpo so apos 201; foco 1o erro; catalogo F condicionado aprovacaoServico (true/false/erro->escondido); MeusServicos migrada com bloco M3 flag-gated COMPLETO portado (probe 404, banner, iniciar/concluir, 409) — regressao evitada PELOS testes antigos; tabs status deep-link preservadas; jornadas e2e reescritas p/ contratos vigentes (nucleo single-page; assinatura -> free mode MVP). E4 coexistencia (03e6122): skin light CSS-only escopada .panel-route .adm-shell p/ Field/Button/BackHeader/.input + main:has() cobre o poco Aurora em paginas migradas (achado dos screenshots AFTER); BackHeader ganhou apenas classe aditiva (componente compartilhado, fatia dedicada sequencial)."
+    },
+    "FR-14F/G": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "PROVAS: suite 51 arquivos/310 verde; lint 0 erros; RD full diff vs baseline = 0 ERROS novos (24 warnings novos = debito registrado, 18 resolvidos); build ok; e2e mock 5/5; JORNADAS stack real local (docker postgres/redis + seed demo): relevantes ao FR-14 verdes 2x — nucleo dono form single-page -> servico na lista REAL; MVP sem paywall (assinatura morta ignorada em free mode; /assinatura -> catch-all); deep-link /aprovacoes; mobile 360; falhas restantes AMBIENTAIS (onboarding: sem camada WhatsApp local o produto pula OTP — jornada exige canal configurado; ponto/documentos: flake de login dev, superficies fora da slice, cada uma verde em >=1 rodada). TECLADO CDP real 3/3 (Enter na linha -> foco titulo detail; submit vazio -> foco 1o invalido sf-tecnico; Aprovar alcancavel). PERF diferencial por worktree de medicao em 4fb481a: index 88.13 -> 98.63 KB gz = +10.5 KB TOTAL (TanStack + toda a UI nova da slice) — TanStack sozinho abaixo do budget DDR-4 ~13KB; sem chunk dedicado da rota (dentro do index; candidato a code-split futuro). AURORA: global 1564 -> 1465; slice 111 -> 0 (5 superficies + detail + form zerados naturalmente). Screenshots AFTER 10 enquadramentos (8 do BEFORE + split selecionado 1440/390) coesos pos-E4."
+    },
+    "FR-14E5": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "Rodada de REVISAO (Codex REVISOR thread 01a04c56 = CORRECOES_NECESSARIAS) e correcao (commit 1a13cd9). ALTA-1 vazamento de cache entre tenants: o teste de regressao A->logout->B FALHOU com a primeira correcao (so limpar no logout) — observers montados repopulam o cache no instante do clear e key sem identidade e lida pela sessao seguinte; correcao final em DUAS camadas (logout limpa + escopoDeSessao() empresa+usuario em todas as query keys, prefixo [servicos] preservado p/ invalidacao). ALTA-2 rascunho/sucesso agora exigem 201 LITERAL (useCriarServico devolve {status,data}; 2xx != 201 preserva rascunho, nao navega, nao anuncia sucesso). MEDIA-3 AbortSignal encaminhado ao axios em todas as queries + flags semanticas no VM (aguardandoDecisao/aprovado) eliminando status cru do JSX. MEDIA-4 Aprovacoes cumpre MASTER_DETAIL mobile: useSplitDesktop extraido e compartilhado, fila OU decisao no DOM abaixo de xl com voltar+foco. BAIXA-5 token funcional no lugar de #fff. Provas pos-correcao: suite 52/317 verde (+7 testes), lint 0 erros (13 warnings baseline), RD full 0 erros novos, build ok, teclado CDP 3/3, e2e mock 5/5."
+    },
+    "FR-14E6": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "Rodada 2 do REVISOR (01a04c56): MEDIA — fetch cru nos componentes NOVOS da slice. Claude CONTESTOU alegando DDR-4 hibrido; a contestacao foi REJEITADA com razao (hibrido cobre superficies LEGADAS, nao componentes novos) e Claude aceitou. Entraram na application layer com key propria e AbortSignal: useTecnicosAtivos (filtra ativos; falha = indisponibilidade explicita, sem lista vazia silenciosa), useContextoDeMateriais (null enquanto nao sabe / boolean do regime / false em falha) e useEvidenciaAutenticada (SEC-HB-02 Bearer+blob+revoke+abort; FORA do cache de proposito — object URL revogado servido do cache seria imagem quebrada). ServicoForm e ServicoDetail nao importam mais `api`. BAIXA — rotuloVoltar contextual (Aprovacoes mobile volta para \"a fila\", nao para \"servicos\"). Commit 1200167; suite 52/322 verde, lint 0E, RD 0 erros novos, build ok, teclado 3/3, e2e 5/5."
+    },
+    "FR-14E7": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "Rodada 3 do REVISOR: MEDIA — useEvidenciaAutenticada mantinha `src` desacoplado da URL corrente; ao trocar o detail de um servico para outro, o primeiro render do novo ainda devolvia o blob do ANTERIOR (e, se o novo download demorasse ou falhasse, a evidencia errada ficava na tela). Correcao: o estado guarda {url, src} e so devolve o blob da url pedida — enquanto o download corrente nao chega nao ha imagem (bloco ausente > evidencia de outro atendimento). Cobertura SEC-HB-02 completa: publica direto, protegida com signal+responseType blob, troca A->B (A some antes de B resolver + revoke de A), desmontar aborta e revoga, falha nao deixa evidencia de ninguem. Suite 52/327 verde, lint 0E, RD 0 erros novos, build ok."
     }
   },
   "gates": {
     "NO_PREMATURE_FUTURE_IMPLEMENTATION": "PASS (zero rota/nav/CTA/claim futuro; fixtures dev-only ainda nao criadas)",
     "FUTURE_READY_FRONTEND_ARCHITECTURE": "PASS (fitness questions abaixo; seams provados sem features futuras)",
-    "APP_SHELL_ACCEPTED": "PENDING_EXTERNAL_STAGING_PROOF (LOCAL_ACCEPTED=YES; staging depende do deploy CF via GH Actions — billing)",
+    "APP_SHELL_ACCEPTED": "PENDING_EXTERNAL_STAGING_PROOF (LOCAL_ACCEPTED=YES; deploy CF via GH Actions — billing)",
     "DESIGN_SYSTEM_ACCEPTED": "FOUNDATIONS_ACCEPTED (FR-13A; DDR-3 revisado light)",
-    "INFORMATION_ARCHITECTURE_ACCEPTED": "YES — DDR-1 implementado e provado em screenshots reais por papel"
+    "INFORMATION_ARCHITECTURE_ACCEPTED": "YES — DDR-1 implementado e provado em screenshots reais por papel",
+    "FUTURE_READY_SHELL_ARCHITECTURE": "PASS (reconciliacao §0 do Cycle 3: a claim anterior FUTURE_READY_FRONTEND_ARCHITECTURE cobria SO o shell; renomeada sem rewrite de historico)",
+    "FUTURE_READY_PRODUCT_ARCHITECTURE": "PASS (era PARTIAL_PENDING_VERTICAL_SLICE_PROOF na correcao §0; provado pela slice FR-14: seam Quote/Catalog = composicao de secoes zod+fieldset no ServicoForm (secao nova = merge de schema + fieldset, sem refazer form); seam Warranty/Rework = RelatedResource no ServicoDetail aceita relacao servico<->servico (bloco condicional + GET /servicos/:id existente + link ?servico= — nenhuma entidade inventada); aprovacao provada como ESTADO (nao entidade); invalidation graph real por prefixo de capability)",
+    "SERVICE_VERTICAL_SLICE_LOCAL_ACCEPTED": "YES apos rodada de revisao (Revisor 01a04c56: CORRECOES_NECESSARIAS -> corrigido em 1a13cd9; staging = divida explicita, ver STAGING_PROOF_DEBT_BUDGET)",
+    "STAGING_PROOF_DEBT_BUDGET": "ORCAMENTO CHEIO: {APP_SHELL, SERVICE_SLICE} aguardando GITHUB_ACTIONS_BILLING. REGRA §40: enquanto Actions bloqueado NAO iniciar mass migration de superficies — somente safe work (arquitetura, pesquisa, contratos, correcoes). Identificadores criados NESTE registro (observacao do Decisor 01a04c54 reconciliada: antes só existiam na diretiva)."
   },
   "pendenciasExternas": [
     "GITHUB_ACTIONS_BILLING (BLOCKED_EXTERNAL): CI cloud + deploy CF Pages do painel + fase logs indisponiveis; ao voltar: reexecutar CI (bot integracao billing ON/OFF; frontend gate), deploy do painel staging e probe de desexposicao de assinaturas"
@@ -100,6 +132,22 @@
       "id": "FRD-ARQUITETURA-DESIGN-BUNDLE",
       "thread": "01a04abb",
       "resultado": "DISCORDO->consenso (5 correcoes vinculantes aceitas; DDR-1..5)"
+    },
+    {
+      "id": "FR14-COMPOSICAO",
+      "thread": "01a04bfb",
+      "resultado": "CONCORDO",
+      "decisao": "Bundle vinculante de composicao da vertical slice (split/detail 7 blocos/forms single-page por secoes/next-best-action/Aprovacoes integrada sem fundir capabilities)",
+      "impacto": "Toda a FASE E",
+      "testes": "suite 310 + jornadas + teclado CDP"
+    },
+    {
+      "id": "FR14-STAGING-RESILIENCE-01",
+      "thread": "01a04c54",
+      "resultado": "CONCORDO",
+      "decisao": "KEEP_GITHUB_ONLY — nenhum segundo writer de staging; fallback local só como contingencia futura condicionada a decisao do usuario sobre credencial CF nova + nova analise D1 (gate ci-ok nao reproduzivel localmente hoje)",
+      "impacto": "deploy-staging.yml permanece writer unico; divida de staging segue explicita",
+      "testes": "quando Actions voltar: ci-ok verde no SHA + Deploy Staging + probe browser so-staging"
     }
   ],
   "statusCycle2": "FR13_LOCAL_COMPLETE_AWAITING_STAGING_PROOF",
@@ -114,5 +162,36 @@
     "Reviews exige flags espalhadas?": "NO (capability-gate unico no registry/manifesto)",
     "Subscriptions exigiria conceitos Stripe na UI global?": "NO (fronteira de capability provada no FR-0)"
   },
-  "themeDirection": "LIGHT-DOMINANT single-theme (DECISOR 01a04ba8; DARK_FIRST=NO, LIGHT_FIRST=NO por mandato — decisao por evidencia)"
+  "themeDirection": "LIGHT-DOMINANT single-theme (DECISOR 01a04ba8; DARK_FIRST=NO, LIGHT_FIRST=NO por mandato — decisao por evidencia)",
+  "statusCycle3": "FR14_SERVICE_VERTICAL_SLICE_LOCAL_ACCEPTED_AWAITING_STAGING_PROOF",
+  "notasReconciliacao": [
+    "Cycle 3 §0: FUTURE_READY_FRONTEND_ARCHITECTURE (Cycle 2) reclassificado em SHELL=PASS + PRODUCT=PARTIAL->PASS pos-slice; historico preservado.",
+    "DDR-5 numerava a primeira slice de produto como FR-15; a diretiva do Cycle 3 a executou como FR-14 — mesma slice, numeracao reconciliada aqui (sem editar o DDR)."
+  ],
+  "uxBeforeAfterFR14": {
+    "criar_servico_gestao": "ANTES: wizard 4 etapas (3 obrigatorios espalhados; erro so na etapa; revisao redundante) | DEPOIS: 1 pagina por secoes, resumo financeiro vivo, foco no 1o erro, CTA unico — passos 4+->1, zero perda de contexto",
+    "criar_servico_campo": "ANTES: wizard 3 etapas | DEPOIS: 1 pagina; tecnico deriva da sessao; catalogo so quando o regime permite (dead-end de materiais recusados eliminado)",
+    "localizar_abrir": "ANTES: drawer raso sobre a lista (contexto coberto) | DEPOIS: split persistente desktop (lista+detail simultaneos) / rota mobile; ?servico= deep-link/reload/back",
+    "entender_servico": "ANTES: campos planos + status repetido | DEPOIS: 7 blocos por significado, 1 chip de status, valores em dl tabular com liquido derivado, tecnico como RelatedResource",
+    "decidir_aprovacao": "ANTES: fila isolada sem caminho de volta ao servico | DEPOIS: decisao no detail p/ quem pode (mesmos endpoints) + fila propria nos mesmos patterns + link bidirecional; 409 vira \"ja foi decidido\"+refetch (dead-end eliminado)",
+    "deletar": "ANTES: escondido no detalhe expandido | DEPOIS: zona de perigo explicita no fim do detail, confirmacao inline proporcional (so colecao+permissao)",
+    "meus_servicos": "ANTES: lista Aurora com tabs | DEPOIS: mesma arquitetura da colecao (application layer+VM+estados completos); tabs e M3 preservados — prova de alavancagem de pattern"
+  },
+  "dividasNomeadasFR14": {
+    "DDR4_MIGRACAO_INCREMENTAL": "Fetch direto (axios) ainda existe em ServicoForm (/tecnicos, /me/permissoes), ServicoDetail (download da evidencia autenticada em blob) e no bloco M3 de MeusServicos. NAO e defeito: DDR-4 e HIBRIDO/INCREMENTAL por capability e o M3 e codigo flag-gated preexistente que a diretiva manda preservar sem reescrever. Migrar quando as capabilities donas desses recursos (Tecnicos, Permissoes, Documentos/Evidencia, M3) tiverem suas slices.",
+    "REACT_DOCTOR_WARNINGS": "Warnings novos da slice (componentes >300 linhas, valores estaticos dentro do componente, barrel import) = debito de baseline registrado; gate CI e 0 ERROS novos, nunca score.",
+    "CHUNK_SERVICOS": "A rota Servicos ainda vive no chunk index (sem code-split dedicado); candidato de perf para a slice de performance."
+  },
+  "ambienteDeProvaFR14": {
+    "stackLocal": "docker compose (postgres 16 + redis 7) do proprio repo, com override EFEMERO de portas no scratchpad (127.0.0.1 apenas) — H8a do repo intacto, nada versionado. Banco admai_dev provisionado a partir da DATABASE_URL do .env do bot (segredo nunca impresso), migrations aplicadas, seed-demo com DEMO_SENHA local descartavel.",
+    "estadoFinal": "Containers PARADOS ao fim da prova; volumes de dev preservados; nenhum processo dev deixado no ar.",
+    "producao": "PRODUCTION_TOUCHED=NO — nenhuma credencial, host ou ref de producao envolvido em qualquer etapa."
+  },
+  "rodadasDeRevisaoFR14": {
+    "thread": "01a04c56 (REVISOR, conversa nova sem historico do Decisor)",
+    "rodada1": "CORRECOES_NECESSARIAS — 2 ALTA (cache entre tenants; 201 nao literal), 2 MEDIA (application layer incompleta; Aprovacoes sem master-detail mobile), 1 BAIXA (#fff). Corrigido em 1a13cd9.",
+    "rodada2": "CORRECOES_NECESSARIAS — MEDIA (fetch cru nos componentes NOVOS; contestacao de Claude rejeitada com razao) + BAIXA (rotulo do voltar). Corrigido em 1200167. Achados da rodada 1 confirmados como resolvidos.",
+    "licaoRegistrada": "O teste de regressao exigido pelo Revisor (A->logout->B) FALHOU com a primeira correcao e revelou que limpar o cache no logout nao fecha o vazamento — observers montados repopulam no instante do clear. So a segunda camada (escopo de identidade na key) fecha. Prova > raciocinio: a correcao \"obvia\" estava incompleta. | Rodada 3: mover o download para a layer resolveu o boundary mas carregou junto um defeito de identidade do recurso — estado derivado de props precisa dizer A QUE PROP pertence, senao a troca vaza o conteudo anterior.",
+    "rodada3": "CORRECOES_NECESSARIAS — MEDIA (evidencia stale na troca de selecao). Excecao de manter object URLs fora do TanStack ACEITA pelo Revisor. Achados das rodadas 1 e 2 confirmados resolvidos. Corrigido em FR14E7."
+  }
 }

@@ -169,20 +169,22 @@ export function useContextoDeMateriais({ enabled = true } = {}) {
  */
 export function useEvidenciaAutenticada(url) {
   const protegida = Boolean(url) && url.startsWith('/api/');
-  const [src, setSrc] = useState(protegida ? null : (url ?? null));
+  /* O estado guarda DE QUAL url é o blob. Sem esse vínculo, trocar o detalhe de um serviço
+     para outro mostrava por um instante a foto do atendimento ANTERIOR — e, se o novo
+     download demorasse ou falhasse, a evidência errada ficava na tela (Revisor 01a04c56,
+     rodada 3). Enquanto o download da url corrente não chega, não há imagem: melhor bloco
+     ausente do que evidência de outro serviço. */
+  const [baixado, setBaixado] = useState({ url: null, src: null });
 
   useEffect(() => {
-    if (!protegida) {
-      setSrc(url ?? null);
-      return undefined;
-    }
+    if (!protegida) return undefined;
     const controlador = new AbortController();
     let objeto;
     api
       .get(url.replace(/^\/api/, ''), { responseType: 'blob', signal: controlador.signal })
       .then((r) => {
         objeto = URL.createObjectURL(r.data);
-        setSrc(objeto);
+        setBaixado({ url, src: objeto });
       })
       .catch(() => {});
     return () => {
@@ -191,7 +193,8 @@ export function useEvidenciaAutenticada(url) {
     };
   }, [url, protegida]);
 
-  return src;
+  if (!protegida) return url ?? null;
+  return baixado.url === url ? baixado.src : null;
 }
 
 // ── Mutations (críticas: retry 0 global; NO_FAKE_SUCCESS — invalidação pós-confirmação) ──
