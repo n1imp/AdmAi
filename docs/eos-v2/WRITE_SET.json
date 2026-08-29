@@ -1,12 +1,12 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR-F-CURRENT-STATE",
-  "titulo": "Snapshot pos-Refoundation-Cycle-1 no 02_CURRENT_STATE",
+  "sliceId": "FR13A-THEME-DDR",
+  "titulo": "FR-13A fechado: THEME_DIRECTION=LIGHT-DOMINANT (DECISOR 01a04ba8 CONCORDO) + FOUNDATIONS_ACCEPTED no DDR-3/ledger",
   "lanes": {
     "EOS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\EOS_BUILD_CLAUDE"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-28T23:50:34.484Z",
+  "declaradoEm": "2026-08-29T03:58:21.684Z",
   "baseCommitPorLane": {
     "EOS": "2cd592d9069a91bd5e9f01bc1be5fe8c432c2def"
   },
@@ -605,9 +605,18 @@
   "entradas": [
     {
       "lane": "EOS",
-      "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
+      "caminho": "docs/agent-environment/ADMAI_DESIGN_DECISIONS.md",
       "precisao": "BOUNDED",
-      "proposito": "Estado compacto: scope 1.1.0, audit COMPLETE, programa de repaginacao com frontier FR-13",
+      "proposito": "DDR-3 secao Cor/tema substituida pela decisao evidence-driven (dark-first revogado pela soberana)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "EOS",
+      "caminho": "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json",
+      "precisao": "BOUNDED",
+      "proposito": "FR-13A COMPLETE com evidencia (protótipos, contraste 22/22, anti-AI)",
       "existiaNaDeclaracao": false,
       "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
@@ -620,6 +629,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "vitest painel 288/288; prettier verde; RD full gate exit 0 (0 erros novos; 1 aviso novo MAINTAINABILITY triado nao-bloqueante); build OK",
+  "nota": "DDR-3 cor/tema revisado com evidencia; ledger FR-13A COMPLETE + FOUNDATIONS_ACCEPTED",
   "aviso": "Declaracao ENCERRADA."
 }

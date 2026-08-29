@@ -69,12 +69,22 @@ filtros/rolagem/seleção/histórico; scroll/header/largura pertencem ao shell.
 - **Tipografia**: 9 papéis — display (raro) / page-title / section-title / component-title /
   body / body-compact / label / caption-meta / **numeric-data** (`tabular-nums`+`lining-nums`;
   dinheiro nunca perde centavos). Sem fonte nova "para personalidade".
-- **Cor/tema**: **dark-first single-theme no Cycle 1** com TOKENS FUNCIONAIS (`surface`,
-  `text`, `border`, `danger`, `attention`, `success`, `accent`) — light theme futuro sem
-  reescrever componentes (o seam é semântico). Ordem: neutral → semantic → accent → dataviz →
-  interaction. O violeta deixa de ser "a cor do app": accent restrito a ação primária, seleção,
-  foco. Dataviz com paleta própria. Sem toggle de tema. Componentes novos NÃO conhecem
-  `--panel-*`/`.panel-ui`/`dark-700`.
+- **Cor/tema** *(REVISADO no Cycle 2 — a soberana revogou o dark-first; decisão nova
+  PRODUCT_EVIDENCE_DRIVEN, DECISOR `01a04ba8` CONCORDO/ALTA)*: **LIGHT-DOMINANT
+  single-theme**, `color-scheme: light`, com TOKENS FUNCIONAIS (`surface`, `text`, `border`,
+  `danger`, `attention`, `success`, `accent`). Evidência (2026-08-29): 7 composições × 2
+  direções com dados reais (Serviços/Financeiro/Ponto-390/Auditoria + fixtures workspace/
+  analytical/temporal); contraste WCAG medido 11/11 pares AA em AMBAS (a11y não desempata);
+  light venceu nos contextos determinantes — Ponto em campo/luz do dia, Financeiro com
+  hierarquia de documento (dark comprime valores secundários), leitura densa da Auditoria;
+  anti-AI: "dark SaaS violeta" é a convenção de template que a política rejeita — light
+  sóbrio com violeta CONTIDO é a cara de ferramenta de trabalho do AdmAi. DARK-DOMINANT
+  rejeitada (sem evidência de uso noturno dominante); MIXED rejeitada (duas direções de QA
+  sem benefício). Restrições: sem toggle; sem `prefers-color-scheme`; sem exceções dark por
+  superfície; seam semântico preservado para futura decisão SEM implementar/testar dark
+  agora; accent só em ação primária/seleção/foco; componentes novos NÃO conhecem
+  `--panel-*`/`.panel-ui`/escalas cromáticas literais. Ordem: neutral → semantic → accent →
+  dataviz → interaction.
 - Migração não depende de AURORA_USAGE=0; cada slice proíbe usos novos e reduz o baseline (1566).
 
 ## DDR-4 — Application Layer / Server State (CONFIANÇA ALTA)

@@ -65690,9 +65690,23 @@
       "bloqueiaIntegracao": false,
       "nota": "vitest painel 288/288; prettier verde; RD full gate exit 0 (0 erros novos; 1 aviso novo MAINTAINABILITY triado nao-bloqueante); build OK",
       "declaradoEm": "2026-08-28T23:50:34.484Z"
+    },
+    {
+      "sliceId": "FR13A-THEME-DDR",
+      "titulo": "FR-13A fechado: THEME_DIRECTION=LIGHT-DOMINANT (DECISOR 01a04ba8 CONCORDO) + FOUNDATIONS_ACCEPTED no DDR-3/ledger",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "DDR-3 cor/tema revisado com evidencia; ledger FR-13A COMPLETE + FOUNDATIONS_ACCEPTED",
+      "declaradoEm": "2026-08-29T03:58:21.684Z"
     }
   ],
-  "geradoEm": "2026-08-29T00:01:32.713Z",
+  "geradoEm": "2026-08-29T03:59:30.512Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
