@@ -82,9 +82,13 @@
   color: var(--adm-text);
   background: var(--adm-canvas);
 }
-.adm-shell :focus-visible {
+/* Especificidade dobrada de propósito: o PanelScope legado envolve TUDO e seu anel de foco
+   amarelo (panel.css, pensado para fundo escuro) venceria por ordem — em casca light o
+   amarelo não tem contraste. Achado da prova de teclado do FR-13C. */
+.adm-shell.adm-shell :focus-visible {
   outline: 2px solid var(--adm-focus);
   outline-offset: 2px;
+  box-shadow: none;
 }
 
 /* Sidebar desktop 256px (DDR-1) */

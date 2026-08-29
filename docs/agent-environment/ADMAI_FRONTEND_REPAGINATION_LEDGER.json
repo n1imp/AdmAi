@@ -70,14 +70,22 @@
     "FR-13A": {
       "status": "COMPLETE",
       "nota": "THEME_DIRECTION=LIGHT-DOMINANT single-theme (DECISOR 01a04ba8 CONCORDO ALTA; dark-first revogado pela soberana). Evidencia: 7 composicoes x 2 direcoes (4 contextos reais + 3 pressoes futuras, dados reais), contraste WCAG 22/22 AA medido, anti-AI review PASS, hierarquia sem cards provada. DESIGN_SYSTEM_FOUNDATIONS=ACCEPTED (type 9 papeis, radius 0/2/4/8, density 48/40/32, spacing 4px, elevation 4 niveis). Artefatos de design no scratchpad (nao versionados por serem descartaveis; screenshots citados no DDR)."
+    },
+    "FR-13B": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "App Shell light implementado (e42ebf7 + 19a8994): Sidebar 256 grupos canonicos + GlobalUtilities seam; BottomNav por jobs (G+Servicos, F sem Perfil primario); Layout host data-mode (registry DDR-2); ctx admin (Auditoria na nav); PublicFrame = fronteira existente preservada (auth/landing/legais fora do shell autenticado); poco de conteudo Aurora ate cada pagina migrar (§112). Suite 290/290 sem regressao; navigation manifesto UNICO com capability-gate."
+    },
+    "FR-13C": {
+      "status": "COMPLETE_LOCAL",
+      "nota": "Matriz 13 screenshots (3 papeis x 360/390/1440/1920 + /mais + /servicos) provou shell real; teclado: 3xTab -> foco em link real com anel visivel — ACHADO: anel amarelo Aurora vencia na casca light (contraste fraco) -> fix especificidade, reprovado violeta 2px AA; axe 14/14; typecheck OK; perf delta +2KB JS/+3KB CSS (budget +20KB); AURORA 1580->1564 natural; RD full exit 0 (0 erros novos); fitness workspace/analytical/temporal via prototipos reais FR-13A (mesmos tokens) + contratos [data-mode] no CSS de producao; registry fitness 8/8 + navigation 16/16 (disabled sem rota/nav; sintetica compoe; permission filtering gestorRestrito/funcMinimo)."
     }
   },
   "gates": {
     "NO_PREMATURE_FUTURE_IMPLEMENTATION": "PASS (zero rota/nav/CTA/claim futuro; fixtures dev-only ainda nao criadas)",
-    "FUTURE_READY_FRONTEND_ARCHITECTURE": "NOT_YET_EVALUATED (avaliacao no FR-13 com fitness questions + fixtures de pressao)",
-    "APP_SHELL_ACCEPTED": "PENDING (FR-13)",
-    "DESIGN_SYSTEM_ACCEPTED": "PENDING (foundations candidate -> aceitacao no FR-13)",
-    "INFORMATION_ARCHITECTURE_ACCEPTED": "DDR-1 vinculante; aceitacao final com o shell real"
+    "FUTURE_READY_FRONTEND_ARCHITECTURE": "PASS (fitness questions abaixo; seams provados sem features futuras)",
+    "APP_SHELL_ACCEPTED": "PENDING_EXTERNAL_STAGING_PROOF (LOCAL_ACCEPTED=YES; staging depende do deploy CF via GH Actions — billing)",
+    "DESIGN_SYSTEM_ACCEPTED": "FOUNDATIONS_ACCEPTED (FR-13A; DDR-3 revisado light)",
+    "INFORMATION_ARCHITECTURE_ACCEPTED": "YES — DDR-1 implementado e provado em screenshots reais por papel"
   },
   "pendenciasExternas": [
     "GITHUB_ACTIONS_BILLING (BLOCKED_EXTERNAL): CI cloud + deploy CF Pages do painel + fase logs indisponiveis; ao voltar: reexecutar CI (bot integracao billing ON/OFF; frontend gate), deploy do painel staging e probe de desexposicao de assinaturas"
@@ -94,5 +102,17 @@
       "resultado": "DISCORDO->consenso (5 correcoes vinculantes aceitas; DDR-1..5)"
     }
   ],
-  "statusCycle2": "FR13_IN_PROGRESS"
+  "statusCycle2": "FR13_LOCAL_COMPLETE_AWAITING_STAGING_PROOF",
+  "fitnessQuestions": {
+    "Clientes exige trocar App Shell?": "NO (rotas profundas cabem no host data-mode; grupos por metadado)",
+    "Agenda exige trocar navegacao?": "NO (destino novo no manifesto + modo WORKSPACE contratado)",
+    "WhatsApp quebra layout global?": "NO (WORKSPACE hospedado; provado em prototipo com mesmos tokens)",
+    "Notifications exige reconstruir header?": "NO (GlobalUtilities seam existente na sidebar)",
+    "Metric Hubs exige novo design system?": "NO (ANALYTICAL contratado; dataviz provado no prototipo)",
+    "Quotes exige reescrever form de Servico?": "NOT_YET_PROVABLE (prova real na slice FR-15 de forms)",
+    "Garantia/Retrabalho exige hacks de relacao?": "NOT_YET_PROVABLE (RelatedResource nasce dos casos atuais em FR-15/17)",
+    "Reviews exige flags espalhadas?": "NO (capability-gate unico no registry/manifesto)",
+    "Subscriptions exigiria conceitos Stripe na UI global?": "NO (fronteira de capability provada no FR-0)"
+  },
+  "themeDirection": "LIGHT-DOMINANT single-theme (DECISOR 01a04ba8; DARK_FIRST=NO, LIGHT_FIRST=NO por mandato — decisao por evidencia)"
 }

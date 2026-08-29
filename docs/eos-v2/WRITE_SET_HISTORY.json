@@ -65740,9 +65740,32 @@
       "bloqueiaIntegracao": false,
       "nota": "suite completa 290/290 pos-swap; RD changed 0/0; design diff so deslocamentos; build OK",
       "declaradoEm": "2026-08-29T04:15:29.656Z"
+    },
+    {
+      "sliceId": "FR13C-ACCEPT",
+      "titulo": "FR-13C: fix do anel de foco do shell (achado da prova de teclado) + ledger/CURRENT_STATE de aceitacao",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "TODAS_AS_LANES_DECLARADAS",
+      "lanesObservadas": [
+        "HARNESS",
+        "EOS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "foco reprovado violeta AA; RD full exit 0; suite 290/290; axe 14/14; ledger e state selados",
+      "declaradoEm": "2026-08-29T04:36:38.330Z",
+      "reconciliacao": {
+        "em": "2026-08-29T04:42:57.441Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Diretiva FRONTEND REFOUNDATION Cycle 2 §34/§128 — execucao Claude",
+        "justificativa": "git status mostra exatamente os 3 arquivos declarados (+WRITE_SET do proprio gate); divergencia veio de artefatos de build/validacao da propria fatia (rebuild p/ prova de foco + suites). Nenhuma escrita de produto fora do declarado.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-29T04:30:23.844Z",
+  "geradoEm": "2026-08-29T04:42:57.443Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
