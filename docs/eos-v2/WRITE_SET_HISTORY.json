@@ -74086,12 +74086,22 @@
         "HARNESS"
       ],
       "provenance": "ORIGINAL_PRE_MUTATION",
-      "bloqueiaIntegracao": true,
+      "bloqueiaIntegracao": false,
       "nota": "FR14E9: comentario e ledger passam a descrever a implementacao efetiva (reset do src na troca de url), com a tentativa barrada pelo RD como historico; teste prova o abort de B via signal.aborted no lugar da assercao vazia. Suite 52/328, lint 0E, RD 0 erros novos, build ok",
-      "declaradoEm": "2026-08-29T14:11:47.245Z"
+      "declaradoEm": "2026-08-29T14:11:47.245Z",
+      "reconciliacao": {
+        "em": "2026-08-29T14:23:24.986Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (EOS FR-14, regra §128 e §131)",
+        "justificativa": "A fatia FR14E9 mudou apenas comentario, teste e ledger, e sua spec omitiu o campo artefatos — mas a validacao obrigatoria da fatia inclui `npm run build`, que reescreve chaveiro-painel/dist. As fatias anteriores desta frente declararam dist justamente por isso; aqui a omissao foi minha, na spec, nao uma escrita fora da missao. O conteudo e artefato derivado, nao versionado (dist esta no gitignore) e reproduzivel pelo mesmo comando a partir do HEAD; nenhum arquivo de codigo ou documento ficou fora da declaracao.",
+        "caminhos": [
+          "chaveiro-painel/dist"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-29T14:22:44.809Z",
+  "geradoEm": "2026-08-29T14:23:24.998Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
