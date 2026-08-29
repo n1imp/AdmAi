@@ -2,8 +2,10 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/Toast.jsx';
 import PanelScope from './components/ui/PanelScope.jsx';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { featureAtiva } from './lib/featureFlags.js';
 import { modoDaRota } from './lib/capabilities.js';
+import { queryClient } from './lib/queryClient.js';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import { RequireAuth, RequirePermissao } from './components/Guards.jsx';
 import BottomNav from './components/BottomNav.jsx';
@@ -73,9 +75,13 @@ function Home() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    /* Server state (DDR-4): TanStack orquestra SÓ as capabilities migradas; axios segue o
+       transporte único. Provider no topo para o cache sobreviver a navegação. */
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -1,17 +1,17 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR14C-TANSTACK-DEP",
-  "titulo": "Dependencia @tanstack/react-query (DDR-4: hibrido incremental; entra junto da primeira superficie com server state)",
+  "sliceId": "FR14D-APPLICATION-LAYER",
+  "titulo": "Application layer de Servicos (DDR-4/FR-10/11): queryClient + queries/mutations/keys/invalidacao + view models + testes",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-29T05:29:03.740Z",
+  "declaradoEm": "2026-08-29T05:30:10.281Z",
   "baseCommitPorLane": {
-    "HARNESS": "4df7ec77a4b11b2a71cc2187b43b58ec32168f81"
+    "HARNESS": "4fb481acd3176400f2bea7f72d7530df0fa8736b"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Gate de dependencia/lockfile (regra do repo). Budget <=15KB gz atribuivel (medir no fechamento). Nenhum uso ainda nesta fatia — o provider e o layer entram na fatia seguinte.",
+  "notaDeMetodo": "Axios = transporte (interceptors intactos); TanStack orquestra server state SO desta capability. Grafo de invalidacao real: mutacao de servico -> prefixo ['servicos'] (lista+detalhe+pendentes); dashboards legados fora do cache ate suas slices (documentado). Retry so falha de rede (nunca 4xx); mutations retry 0; refetchOnWindowFocus off (Capacitor/camera); cache limpo em limparSessao.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -375,8 +375,8 @@
       "chaveiro-painel/index.html": "d786acd8e9810c307751d15dc9b8ac2b09bcb42d2761aa6b9f25534715c85e88",
       "chaveiro-painel/jsconfig.json": "8c1eaa0a35d0055fe8c59fe9bf60dc932c44adf65b0aef0dbcbdb630322e7134",
       "chaveiro-painel/nginx.conf": "74096274d1a147c737444849132cb247c6c372761eeaca7d5e52121b675d405b",
-      "chaveiro-painel/package-lock.json": "71f098aa78936b8a74dfd5c26d5239295c6b453a16e5f32d95b62ad6a151fd24",
-      "chaveiro-painel/package.json": "6ee89c4aace251ba2d22cb962fda5ba7c98e073922d8285859e1cd1857525306",
+      "chaveiro-painel/package-lock.json": "7b221cd71195d1233e31ed9108682e1da40c5517ae6b239f4f8579ef7909717a",
+      "chaveiro-painel/package.json": "d99ed03f750d82465ef9af6e324d0ac2fe8eb062e88fd96cfc284512b4059756",
       "chaveiro-painel/postcss.config.js": "98e8d8a143f16216f4b50a2520024f6254987049b2e199026742a96e16ba411e",
       "chaveiro-painel/public/_redirects": "4d7c53e6e411a7fead9643ff20321defd73dcd127b000f5f2d5356a263cb949c",
       "chaveiro-painel/public/fonts/jetbrains-mono-400.woff2": "83c005d49d8a6a50474c73a5a36ac0468076e9c4a29da7bdb14995d80560a5be",
@@ -676,8 +676,8 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "43baf4023bbc64a263029ae2b4b99291a377d67e4f324a4624d6d07eeb309bd3",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "9eb7bcef67906812a4edf13f6541d9667379ef9a5dcd6d2a3fe8412999cdc638",
+      "docs/eos-v2/WRITE_SET.json": "4e50d705491535f325dda117a065c57616ce160306b386e1e86538db50260f7e",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "1d4d52624083d20dbc4f30616738f246ddd462390854614da402ae21f6b784ff",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
@@ -2625,23 +2625,71 @@
       "chaveiro-painel/telas/verif2/sonda-anonimo.json": "4537:1787451368390"
     }
   },
+  "artefatos": [
+    "chaveiro-painel/dist"
+  ],
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/package.json",
+      "caminho": "chaveiro-painel/src/lib/queryClient.js",
       "precisao": "BOUNDED",
-      "proposito": "+@tanstack/react-query (dependencies)",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6ee89c4aace251ba2d22cb962fda5ba7c98e073922d8285859e1cd1857525306",
+      "proposito": "Instancia unica com defaults DDR-4 + limparCacheServidor()",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
-      "caminho": "chaveiro-painel/package-lock.json",
+      "caminho": "chaveiro-painel/src/App.jsx",
       "precisao": "BOUNDED",
-      "proposito": "lockfile coerente via npm install",
+      "proposito": "QueryClientProvider no topo do app",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "71f098aa78936b8a74dfd5c26d5239295c6b453a16e5f32d95b62ad6a151fd24",
+      "shaNaDeclaracao": "6b03864fea1cd51ba5dcc6140badd235df3575a03686705c595f6d573f96a79b",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/lib/api.js",
+      "precisao": "BOUNDED",
+      "proposito": "limparSessao tambem limpa o cache de server state",
+      "existiaNaDeclaracao": true,
+      "shaNaDeclaracao": "5c73523c2b19943d065709638e6be30d17cc0821d5fd0e3d8ad7dc2cca139784",
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/features/servicos/servicosApi.js",
+      "precisao": "BOUNDED",
+      "proposito": "Hooks de query/mutation da capability + taxonomia de erro",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/features/servicos/servicosVM.js",
+      "precisao": "BOUNDED",
+      "proposito": "View models: status->rotulo/semantica, servicoVM, proximaAcao (glossario)",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/features/servicos/__tests__/servicosVM.test.js",
+      "precisao": "BOUNDED",
+      "proposito": "VM: rotulos canonicalizados, pendente cru nunca vaza, proximaAcao por permissao",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
+      "sujoNaDeclaracao": false
+    },
+    {
+      "lane": "HARNESS",
+      "caminho": "chaveiro-painel/src/features/servicos/__tests__/servicosApi.test.jsx",
+      "precisao": "BOUNDED",
+      "proposito": "Keys estaveis; invalidacao do grafo em criar/deletar/aprovar; 4xx sem retry",
+      "existiaNaDeclaracao": false,
+      "shaNaDeclaracao": null,
       "sujoNaDeclaracao": false
     }
   ],
@@ -2652,6 +2700,6 @@
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "@tanstack/react-query 5.102.8 instalado; sem uso ainda; budget medido no fechamento",
+  "nota": "layer 12/12 + api.test 10/10; lint/prettier/build OK",
   "aviso": "Declaracao ENCERRADA."
 }

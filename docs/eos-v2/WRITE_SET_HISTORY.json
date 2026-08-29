@@ -65777,9 +65777,23 @@
       "bloqueiaIntegracao": false,
       "nota": "@tanstack/react-query 5.102.8 instalado; sem uso ainda; budget medido no fechamento",
       "declaradoEm": "2026-08-29T05:29:03.740Z"
+    },
+    {
+      "sliceId": "FR14D-APPLICATION-LAYER",
+      "titulo": "Application layer de Servicos (DDR-4/FR-10/11): queryClient + queries/mutations/keys/invalidacao + view models + testes",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "layer 12/12 + api.test 10/10; lint/prettier/build OK",
+      "declaradoEm": "2026-08-29T05:30:10.281Z"
     }
   ],
-  "geradoEm": "2026-08-29T05:29:32.552Z",
+  "geradoEm": "2026-08-29T05:33:57.497Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

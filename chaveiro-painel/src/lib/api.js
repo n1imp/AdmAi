@@ -29,6 +29,11 @@ api.interceptors.request.use((config) => {
 // (via evento) para que o estado React não fique "autenticado" após o 401.
 export function limparSessao() {
   localStorage.removeItem('admai_token');
+  // Server state NUNCA sobrevive à troca de identidade (DDR-4): nada de dados de uma
+  // conta/empresa aparecendo na próxima. Import dinâmico evita ciclo api↔queryClient.
+  import('./queryClient.js')
+    .then(({ limparCacheServidor }) => limparCacheServidor())
+    .catch(() => {});
   // O AuthProvider escuta este evento para zerar o estado do usuário.
   window.dispatchEvent(new Event('admai:logout'));
 }
