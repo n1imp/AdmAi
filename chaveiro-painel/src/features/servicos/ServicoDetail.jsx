@@ -3,40 +3,20 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../components/Toast.jsx';
-import api from '../../lib/api.js';
 import {
   useServico,
   useAprovarServico,
   useRejeitarServico,
   useDeletarServico,
+  useEvidenciaAutenticada,
   classificarErro,
 } from './servicosApi.js';
 import { servicoVM } from './servicosVM.js';
 
-/* [SEC-HB-02] Evidência autenticada: <img src> não manda Authorization — baixa via api
-   (Bearer) e exibe como blob com revoke no cleanup. URL legada pública renderiza direto.
-   (Mecanismo preservado da superfície anterior; uma única apresentação — DECISOR §ii.) */
+/* [SEC-HB-02] Evidência autenticada — o download (Bearer + blob + revoke) mora na
+   application layer; aqui só a apresentação (DECISOR §ii: uma única apresentação). */
 function ImagemEvidencia({ url }) {
-  const protegida = url.startsWith('/api/');
-  const [src, setSrc] = useState(protegida ? null : url);
-  useEffect(() => {
-    if (!protegida) return undefined;
-    let vivo = true;
-    let objeto;
-    api
-      .get(url.replace(/^\/api/, ''), { responseType: 'blob' })
-      .then((r) => {
-        if (!vivo) return;
-        objeto = URL.createObjectURL(r.data);
-        setSrc(objeto);
-      })
-      .catch(() => {});
-    return () => {
-      vivo = false;
-      if (objeto) URL.revokeObjectURL(objeto);
-    };
-  }, [url, protegida]);
-
+  const src = useEvidenciaAutenticada(url);
   if (!src) return null;
   return (
     <a
@@ -74,6 +54,8 @@ function ImagemEvidencia({ url }) {
  *    sem `servicos.ver` decide com o que a fila entrega; GET /:id não é requisito oculto)
  *  - decisionContext: 'fila' | 'colecao' (prioridade das ações de decisão)
  *  - onVoltar: back interno seguro (remove `servico` da URL sem depender de histórico)
+ *  - rotuloVoltar: para onde a pessoa volta É contexto da superfície — a fila de aprovações
+ *    não é "serviços" (Revisor 01a04c56)
  *  - onDecidido / onRemovido: a superfície decide o pós (limpar seleção, foco)
  */
 export default function ServicoDetail({
@@ -81,6 +63,7 @@ export default function ServicoDetail({
   servicoDaFila = null,
   decisionContext = 'colecao',
   onVoltar,
+  rotuloVoltar = 'Voltar para serviços',
   onDecidido,
   onRemovido,
 }) {
@@ -232,7 +215,7 @@ export default function ServicoDetail({
               cursor: 'pointer',
             }}
           >
-            <ArrowLeft size={16} aria-hidden="true" /> Voltar para serviços
+            <ArrowLeft size={16} aria-hidden="true" /> {rotuloVoltar}
           </button>
         )}
         <h2

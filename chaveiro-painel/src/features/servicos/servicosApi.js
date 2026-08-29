@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api.js';
 import { escopoDeSessao } from '../../lib/queryClient.js';
@@ -122,6 +123,75 @@ export function usePendentes(opts = {}) {
     queryFn: async ({ signal }) => (await api.get('/servicos/pendentes', { signal })).data,
     ...opts,
   });
+}
+
+// ── Consultas de APOIO das superfícies da capability ─────────────────────────
+/* Revisor 01a04c56 (rodada 2): o caráter híbrido do DDR-4 cobre superfícies LEGADAS — não
+   autoriza fetch cru nos componentes NOVOS desta slice. O que o formulário e o detalhe
+   precisam para funcionar entra aqui, com key própria (mutação de serviço não as invalida)
+   e cancelamento. Quando Técnicos/Permissões tiverem suas slices, os hooks migram para lá
+   sem tocar nas superfícies — o boundary é justamente o que torna isso possível. */
+
+/** Técnicos ativos para o seletor do registro em gestão. */
+export function useTecnicosAtivos({ enabled = true } = {}) {
+  const consulta = useQuery({
+    queryKey: ['tecnicos', escopoDeSessao(), 'ativos'],
+    enabled,
+    queryFn: async ({ signal }) => (await api.get('/tecnicos', { signal })).data,
+  });
+  const lista = Array.isArray(consulta.data) ? consulta.data.filter((t) => t.ativo) : [];
+  return { tecnicos: lista, indisponivel: consulta.isError };
+}
+
+/**
+ * Regime de materiais da empresa (`aprovacaoServico`) para o registro em campo.
+ * `permiteCatalogo === null` = contexto ainda não chegou (não desenha nem esconde: sem
+ * flash). Falha ESCONDE o campo: o backend decide de verdade, e oferecer o seletor "no
+ * escuro" trocaria campo ausente por submissão recusada.
+ */
+export function useContextoDeMateriais({ enabled = true } = {}) {
+  const consulta = useQuery({
+    queryKey: ['me', escopoDeSessao(), 'permissoes'],
+    enabled,
+    queryFn: async ({ signal }) => (await api.get('/me/permissoes', { signal })).data,
+  });
+  if (!enabled) return { permiteCatalogo: null };
+  if (consulta.isError) return { permiteCatalogo: false };
+  if (!consulta.isSuccess) return { permiteCatalogo: null };
+  return { permiteCatalogo: Boolean(consulta.data?.aprovacaoServico) };
+}
+
+/**
+ * [SEC-HB-02] Evidência autenticada: `<img src>` não manda Authorization — o arquivo vem
+ * pela api (Bearer) e vira blob local. Fora do cache de propósito: object URL tem ciclo de
+ * vida próprio (revoke no cleanup) e um blob revogado servido do cache seria imagem quebrada.
+ * URL legada pública é usada direto.
+ */
+export function useEvidenciaAutenticada(url) {
+  const protegida = Boolean(url) && url.startsWith('/api/');
+  const [src, setSrc] = useState(protegida ? null : (url ?? null));
+
+  useEffect(() => {
+    if (!protegida) {
+      setSrc(url ?? null);
+      return undefined;
+    }
+    const controlador = new AbortController();
+    let objeto;
+    api
+      .get(url.replace(/^\/api/, ''), { responseType: 'blob', signal: controlador.signal })
+      .then((r) => {
+        objeto = URL.createObjectURL(r.data);
+        setSrc(objeto);
+      })
+      .catch(() => {});
+    return () => {
+      controlador.abort();
+      if (objeto) URL.revokeObjectURL(objeto);
+    };
+  }, [url, protegida]);
+
+  return src;
 }
 
 // ── Mutations (críticas: retry 0 global; NO_FAKE_SUCCESS — invalidação pós-confirmação) ──

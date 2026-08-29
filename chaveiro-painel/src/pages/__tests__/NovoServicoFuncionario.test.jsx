@@ -101,7 +101,9 @@ describe('NovoServicoFuncionario — form por seções', () => {
   it('SEM aprovação: o seletor de material do catálogo NÃO aparece', async () => {
     render(<NovoServicoFuncionario />);
     await screen.findByRole('textbox', { name: /Descrição/ });
-    await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/me/permissoes'));
+    await waitFor(() =>
+      expect(mockGet.mock.calls.some(([url]) => url === '/me/permissoes')).toBe(true)
+    );
     expect(screen.queryByText(/Materiais do catálogo/)).not.toBeInTheDocument();
   });
 

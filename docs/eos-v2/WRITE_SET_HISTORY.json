@@ -71348,9 +71348,34 @@
         ]
       },
       "declaradoEm": "2026-08-29T07:19:41.852Z"
+    },
+    {
+      "sliceId": "FR14E6-BOUNDARY-LAYER",
+      "titulo": "Revisor 01a04c56 rodada 2: zero fetch cru nos componentes NOVOS da slice (tecnicos/permissoes/evidencia entram na application layer) + rotulo contextual do voltar no detail compartilhado",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14E6: boundary da application layer nos componentes NOVOS (useTecnicosAtivos/useContextoDeMateriais/useEvidenciaAutenticada com signal) + rotulo contextual do voltar. Suite 52/322 verde, lint 0E, RD 0 erros novos, build ok, teclado 3/3, e2e 5/5",
+      "declaradoEm": "2026-08-29T13:27:40.458Z",
+      "reconciliacao": {
+        "em": "2026-08-29T13:37:29.577Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Claude (EOS FR-14, regra §128: classificar, nao reverter conteudo valido)",
+        "justificativa": "Os dois documentos de governanca (ADMAI_FRONTEND_REPAGINATION_LEDGER.json e 02_CURRENT_STATE.md) estavam sendo escritos pela fatia FR14G-LEDGER, que foi ARQUIVADA quando a rodada de revisao exigiu abrir as fatias de correcao E5/E6 antes do fechamento. O conteudo e o registro factual do proprio ciclo (fases, gates, dividas nomeadas, ambiente de prova) e nao toca codigo de produto; a comparacao os viu como escrita fora da declaracao da E6 apenas porque as fatias se sobrepuseram no tempo. Uma fatia dedicada (FR14G2) declara e fecha esses dois arquivos em seguida, restaurando a ordem.",
+        "caminhos": [
+          "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json",
+          "docs/eos-v2/current/02_CURRENT_STATE.md"
+        ],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-29T13:21:09.899Z",
+  "geradoEm": "2026-08-29T13:37:29.579Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

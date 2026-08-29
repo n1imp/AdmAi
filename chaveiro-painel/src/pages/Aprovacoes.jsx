@@ -189,6 +189,7 @@ export default function Aprovacoes() {
           decisionContext="fila"
           onDecidido={aoDecidir}
           onVoltar={splitDesktop ? undefined : voltarParaFila}
+          rotuloVoltar="Voltar para a fila"
         />
       ) : selecionadoId && !fila.isLoading ? (
         /* Deep-link para serviço que saiu da fila: sem 404 cru. */

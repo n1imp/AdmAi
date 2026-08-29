@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react';
-import api, { formatarMoeda } from '../../lib/api.js';
+import { useState } from 'react';
+import { formatarMoeda } from '../../lib/api.js';
 import { formatarMoedaInput, moedaParaNumero } from '../../lib/moeda.js';
 import MaterialPicker from '../../components/MaterialPicker.jsx';
 import { Field, Button } from '../../components/ui/index.js';
 import { useToast } from '../../components/Toast.jsx';
 import { useFormPersist } from '../../hooks/useFormPersist.js';
 import { useAnalytics } from '../../hooks/useAnalytics.js';
-import { useCriarServico, classificarErro } from './servicosApi.js';
+import {
+  useCriarServico,
+  useTecnicosAtivos,
+  useContextoDeMateriais,
+  classificarErro,
+} from './servicosApi.js';
 import { schemaServicoGestao, schemaServicoCampo, errosPorCampo } from './servicoSchema.js';
 
 const LOCAIS_OPCOES = ['Casa do cliente', 'Contrato', 'Ponto da loja', 'Outro'];
@@ -50,37 +55,13 @@ export default function ServicoForm({ variante = 'gestao', chavePersist, onSuces
   );
   const [erros, setErros] = useState({});
 
-  const [tecnicos, setTecnicos] = useState([]);
-  const [erroTecnicos, setErroTecnicos] = useState(false);
-  useEffect(() => {
-    if (!gestao) return undefined;
-    let vivo = true;
-    api
-      .get('/tecnicos')
-      .then(({ data }) => vivo && setTecnicos(data.filter((t) => t.ativo)))
-      .catch(() => vivo && setErroTecnicos(true));
-    return () => {
-      vivo = false;
-    };
-  }, [gestao]);
-
-  /* Regime de materiais do funcionário: sem aprovação configurada o catálogo não aparece
-     (oferecer campo que o backend recusa é dead-end). `null` = contexto ainda não chegou —
-     não desenha nem esconde (sem flash; preservado da superfície anterior). */
-  const [permiteCatalogo, setPermiteCatalogo] = useState(gestao ? true : null);
-  useEffect(() => {
-    if (gestao) return undefined;
-    let vivo = true;
-    api
-      .get('/me/permissoes')
-      .then(({ data }) => vivo && setPermiteCatalogo(Boolean(data?.aprovacaoServico)))
-      /* Falha de contexto ESCONDE o campo: o backend decide de verdade; oferecer o seletor
-         "no escuro" trocaria campo ausente por submissão recusada. */
-      .catch(() => vivo && setPermiteCatalogo(false));
-    return () => {
-      vivo = false;
-    };
-  }, [gestao]);
+  /* Tudo o que o formulário precisa do servidor vem da application layer — nenhum fetch cru
+     aqui (boundary do Revisor 01a04c56). */
+  const { tecnicos, indisponivel: erroTecnicos } = useTecnicosAtivos({ enabled: gestao });
+  /* Regime de materiais: em gestão o catálogo é sempre oferecido; em campo depende de
+     `aprovacaoServico` (null = contexto ainda não chegou, não desenha nem esconde). */
+  const contextoMateriais = useContextoDeMateriais({ enabled: !gestao });
+  const permiteCatalogo = gestao ? true : contextoMateriais.permiteCatalogo;
 
   const valorCobradoNum = moedaParaNumero(form.valorCobrado);
   const valorMaterialNum = moedaParaNumero(form.valorMaterial);

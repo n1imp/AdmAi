@@ -144,7 +144,8 @@ describe('Aprovações — composição por viewport', () => {
     expect(await screen.findByLabelText('Decisão do serviço')).toBeInTheDocument();
     expect(screen.queryByLabelText('Fila de aprovações')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /Voltar/ }));
+    /* O rótulo diz para ONDE se volta: a fila de aprovações não é "serviços". */
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar para a fila' }));
     expect(await screen.findByLabelText('Fila de aprovações')).toBeInTheDocument();
     expect(screen.queryByLabelText('Decisão do serviço')).toBeNull();
   });

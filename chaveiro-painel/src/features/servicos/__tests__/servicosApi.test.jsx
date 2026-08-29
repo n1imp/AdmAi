@@ -8,6 +8,8 @@ import {
   useCriarServico,
   useDeletarServico,
   useAprovarServico,
+  useTecnicosAtivos,
+  useContextoDeMateriais,
 } from '../servicosApi.js';
 import api from '../../../lib/api.js';
 
@@ -114,6 +116,58 @@ describe('cancelamento: o AbortSignal do TanStack chega ao axios', () => {
 
     const [, opcoes] = api.get.mock.calls[0];
     expect(opcoes?.signal).toBeInstanceOf(AbortSignal);
+  });
+});
+
+/* Revisor 01a04c56 (rodada 2): componente NOVO da slice não faz fetch cru — o que o
+   formulário precisa do servidor entra na layer, com key própria e cancelamento. */
+describe('consultas de apoio das superfícies (boundary da application layer)', () => {
+  it('técnicos ativos: filtra inativos, passa signal e sinaliza indisponibilidade', async () => {
+    const qc = clienteDeTeste();
+    api.get.mockResolvedValue({
+      data: [
+        { id: 1, nome: 'Ana', ativo: true },
+        { id: 2, nome: 'Ex-técnico', ativo: false },
+      ],
+    });
+
+    const { result } = renderHook(() => useTecnicosAtivos(), { wrapper: wrapperCom(qc) });
+    await waitFor(() => expect(result.current.tecnicos).toHaveLength(1));
+    expect(result.current.tecnicos[0].nome).toBe('Ana');
+    expect(result.current.indisponivel).toBe(false);
+    expect(api.get.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('técnicos: falha vira indisponibilidade explícita (a superfície avisa, não inventa lista)', async () => {
+    const qc = clienteDeTeste();
+    api.get.mockRejectedValue({ response: { status: 500, data: {} } });
+
+    const { result } = renderHook(() => useTecnicosAtivos(), { wrapper: wrapperCom(qc) });
+    await waitFor(() => expect(result.current.indisponivel).toBe(true));
+    expect(result.current.tecnicos).toEqual([]);
+  });
+
+  it('contexto de materiais: null enquanto não sabe, boolean do regime, false em falha', async () => {
+    const qc = clienteDeTeste();
+    api.get.mockResolvedValue({ data: { aprovacaoServico: true } });
+
+    const { result } = renderHook(() => useContextoDeMateriais(), { wrapper: wrapperCom(qc) });
+    expect(result.current.permiteCatalogo).toBeNull(); // sem flash antes da resposta
+    await waitFor(() => expect(result.current.permiteCatalogo).toBe(true));
+
+    const qc2 = clienteDeTeste();
+    api.get.mockRejectedValue({ response: { status: 500, data: {} } });
+    const erro = renderHook(() => useContextoDeMateriais(), { wrapper: wrapperCom(qc2) });
+    /* Falha ESCONDE: oferecer o seletor no escuro trocaria campo ausente por submissão
+       recusada pelo backend. */
+    await waitFor(() => expect(erro.result.current.permiteCatalogo).toBe(false));
+  });
+
+  it('desabilitado não consulta (variante que não precisa do contexto)', async () => {
+    const qc = clienteDeTeste();
+    renderHook(() => useContextoDeMateriais({ enabled: false }), { wrapper: wrapperCom(qc) });
+    renderHook(() => useTecnicosAtivos({ enabled: false }), { wrapper: wrapperCom(qc) });
+    expect(api.get).not.toHaveBeenCalled();
   });
 });
 
