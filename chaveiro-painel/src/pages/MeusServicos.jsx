@@ -261,7 +261,7 @@ export default function MeusServicos() {
             {itens.map((s) => {
               const vm = servicoVM(s);
               const cor = chipCor[vm.status.semantica];
-              const podeIniciar = m3Disponivel && s.status === 'ativo' && !servicoAtual;
+              const podeIniciar = m3Disponivel && vm.aprovado && !servicoAtual;
               return (
                 <li
                   key={vm.id}

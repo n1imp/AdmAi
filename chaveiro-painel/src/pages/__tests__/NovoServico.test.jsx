@@ -34,7 +34,7 @@ function render(ui) {
 beforeEach(() => {
   localStorage.clear();
   mockNavigate.mockReset();
-  mockPost.mockReset().mockResolvedValue({ data: { id: 1 } });
+  mockPost.mockReset().mockResolvedValue({ status: 201, data: { id: 1 } });
   mockGet
     .mockReset()
     .mockImplementation((url) =>

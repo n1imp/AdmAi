@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -53,18 +53,29 @@ function montar(rota = '/aprovacoes') {
   );
 }
 
+/* Split desktop (xl+): matchMedia decide a composição — sem stub, jsdom cai no route-like,
+   que é o layout de celular/tablet. */
+function montarSplit(rota = '/aprovacoes') {
+  vi.stubGlobal('matchMedia', () => ({
+    matches: true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+  return montar(rota);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   auth.pode = () => true;
   api.get.mockResolvedValue({ data: FILA });
   api.post.mockResolvedValue({ data: { ok: true } });
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe('Aprovações — fila nos patterns compartilhados (DECISOR §v)', () => {
-  it('fila lista os pendentes SEM chamar GET /servicos/:id (dados da própria fila)', async () => {
+  it('detalhe alimentado pela FILA, sem GET /servicos/:id (quem só tem aprovacoes.ver decide)', async () => {
     montar('/aprovacoes?servico=11');
-    await screen.findAllByText('Troca de segredo');
-    // detalhe alimentado por servicoDaFila — nenhuma chamada de detalhe individual
+    await screen.findByText('Troca de segredo');
     expect(api.get.mock.calls.every(([u]) => u === '/servicos/pendentes')).toBe(true);
     expect(screen.getByLabelText('Decisão do serviço').textContent).toContain('R$ 380,00');
   });
@@ -78,10 +89,9 @@ describe('Aprovações — fila nos patterns compartilhados (DECISOR §v)', () =
       expect(document.activeElement?.tagName).toBe('H1');
       expect(document.activeElement?.textContent).toBe('Aprovações');
     });
-    // sem auto-seleção do próximo
-    expect(screen.getByLabelText('Decisão do serviço').textContent).toContain(
-      'Selecione um serviço'
-    );
+    // volta à FILA sem auto-selecionar o próximo
+    expect(screen.getByLabelText('Fila de aprovações')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Decisão do serviço')).toBeNull();
   });
 
   it('rejeitar exige confirmação e envia o endpoint correto', async () => {
@@ -94,15 +104,18 @@ describe('Aprovações — fila nos patterns compartilhados (DECISOR §v)', () =
   it('sem permissão de aprovar: fila visível, botões de decisão AUSENTES', async () => {
     auth.pode = (m, a) => !(m === 'aprovacoes' && a === 'aprovar');
     montar('/aprovacoes?servico=11');
-    await screen.findAllByText('Troca de segredo');
+    await screen.findByText('Troca de segredo');
     expect(screen.queryByRole('button', { name: 'Aprovar' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Rejeitar' })).toBeNull();
   });
 
-  it('deep-link obsoleto (serviço fora da fila) → mensagem amigável, sem 404 cru', async () => {
+  it('deep-link obsoleto (serviço fora da fila) → mensagem amigável com saída, sem 404 cru', async () => {
     montar('/aprovacoes?servico=999');
-    await screen.findAllByText('Troca de segredo');
-    expect(screen.getByRole('status').textContent).toContain('não está mais aguardando aprovação');
+    const aviso = await screen.findByRole('status');
+    expect(aviso.textContent).toContain('não está mais aguardando aprovação');
+    // no layout de celular a pessoa não fica presa: há caminho de volta
+    fireEvent.click(screen.getByRole('button', { name: /Voltar para a fila/ }));
+    expect(await screen.findByLabelText('Fila de aprovações')).toBeInTheDocument();
   });
 
   it('fila vazia explica o que significa', async () => {
@@ -117,6 +130,30 @@ describe('Aprovações — fila nos patterns compartilhados (DECISOR §v)', () =
     montar();
     await screen.findByRole('alert');
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
-    await screen.findAllByText('Troca de segredo');
+    await screen.findByText('Troca de segredo');
+  });
+});
+
+/* MASTER_DETAIL (DDR-2; Revisor 01a04c56): UMA composição por vez — abaixo de xl o detalhe é
+   promovido a tela própria, e o DOM nunca carrega fila e detalhe ao mesmo tempo. */
+describe('Aprovações — composição por viewport', () => {
+  it('abaixo de xl: selecionar SUBSTITUI a fila pela decisão; voltar devolve a fila', async () => {
+    montar();
+    fireEvent.click(await screen.findByRole('button', { name: /Troca de segredo/ }));
+
+    expect(await screen.findByLabelText('Decisão do serviço')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Fila de aprovações')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Voltar/ }));
+    expect(await screen.findByLabelText('Fila de aprovações')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Decisão do serviço')).toBeNull();
+  });
+
+  it('xl+: fila e decisão coexistem (split persistente), sem controle de voltar', async () => {
+    montarSplit('/aprovacoes?servico=11');
+    expect(await screen.findByLabelText('Fila de aprovações')).toBeInTheDocument();
+    expect(screen.getByLabelText('Decisão do serviço')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Voltar$/ })).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull(); // regiões nomeadas, nunca modal
   });
 });

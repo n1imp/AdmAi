@@ -170,7 +170,7 @@ export default function ServicoDetail({
   }
   if (!vm) return null;
 
-  const podeDecidir = vm.statusDominio === 'pendente' && pode('aprovacoes', 'aprovar');
+  const podeDecidir = vm.aguardandoDecisao && pode('aprovacoes', 'aprovar');
   const podeRemover = pode('servicos', 'deletar');
   const semantCor = {
     attention: 'var(--adm-attention)',
@@ -307,10 +307,10 @@ export default function ServicoDetail({
       </section>
 
       {/* decisão — estado da aprovação; ação quando aplicável (next-best-action §iv) */}
-      {(vm.statusDominio !== 'pendente' && vm.aprovadoEmRotulo) || podeDecidir ? (
+      {(!vm.aguardandoDecisao && vm.aprovadoEmRotulo) || podeDecidir ? (
         <section aria-label="Decisão">
           <h3 style={{ font: 'var(--adm-component-title)', marginBottom: 4 }}>Decisão</h3>
-          {vm.statusDominio === 'pendente' ? (
+          {vm.aguardandoDecisao ? (
             podeDecidir && (
               <div>
                 {confirmando === 'aprovar' || confirmando === 'rejeitar' ? (
@@ -389,18 +389,16 @@ export default function ServicoDetail({
       ) : null}
 
       {/* ações secundárias — navegação contextual */}
-      {decisionContext === 'colecao' &&
-        vm.statusDominio === 'pendente' &&
-        pode('aprovacoes', 'ver') && (
-          <section aria-label="Ações">
-            <Link
-              to={`/aprovacoes?servico=${vm.id}`}
-              style={{ font: 'var(--adm-body-compact)', color: 'var(--adm-accent)' }}
-            >
-              Ver na fila de aprovações
-            </Link>
-          </section>
-        )}
+      {decisionContext === 'colecao' && vm.aguardandoDecisao && pode('aprovacoes', 'ver') && (
+        <section aria-label="Ações">
+          <Link
+            to={`/aprovacoes?servico=${vm.id}`}
+            style={{ font: 'var(--adm-body-compact)', color: 'var(--adm-accent)' }}
+          >
+            Ver na fila de aprovações
+          </Link>
+        </section>
+      )}
 
       {/* zona de perigo — isolada ao final */}
       {podeRemover && decisionContext === 'colecao' && (
@@ -430,7 +428,7 @@ export default function ServicoDetail({
                 onClick={remover}
                 className="adm-sair"
                 style={{
-                  color: '#fff',
+                  color: 'var(--adm-accent-text)',
                   background: 'var(--adm-danger)',
                   borderColor: 'var(--adm-danger)',
                 }}

@@ -1,5 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api.js';
+import { escopoDeSessao } from '../../lib/queryClient.js';
 
 /**
  * Application layer de Serviços (FR-11/FR-14, DDR-4). Superfícies desta capability NUNCA
@@ -7,8 +8,10 @@ import api from '../../lib/api.js';
  * intactos); aqui vivem keys, invalidação (grafo REAL da capability-surface matrix) e a
  * tradução de erro para a taxonomia do produto.
  *
- * QUERY KEYS (convenção mínima, §17): prefixo da capability + recorte + contexto.
- *   ['servicos','lista',{busca,local}] · ['servicos','detalhe',id] · ['servicos','pendentes']
+ * QUERY KEYS (convenção mínima, §17): prefixo da capability + ESCOPO DE IDENTIDADE + recorte.
+ *   ['servicos',escopo,'lista',{tecnico,local}] · [...,'detalhe',id] · [...,'pendentes']
+ * O escopo (empresa+usuário, de `lib/queryClient.js`) impede que a sessão seguinte leia o
+ * cache da anterior; o prefixo `['servicos']` continua cobrindo a invalidação da capability.
  *
  * INVALIDAÇÃO (grafo, §19): toda mutação de serviço afeta lista, detalhe e a fila de
  * pendentes — o prefixo ['servicos'] cobre exatamente esse conjunto e nada além dele.
@@ -17,9 +20,10 @@ import api from '../../lib/api.js';
  */
 
 export const chaves = Object.freeze({
-  lista: (filtros = {}) => ['servicos', 'lista', filtros],
-  detalhe: (id) => ['servicos', 'detalhe', id],
-  pendentes: () => ['servicos', 'pendentes'],
+  lista: (filtros = {}) => ['servicos', escopoDeSessao(), 'lista', filtros],
+  detalhe: (id) => ['servicos', escopoDeSessao(), 'detalhe', id],
+  pendentes: () => ['servicos', escopoDeSessao(), 'pendentes'],
+  meus: () => ['servicos', escopoDeSessao(), 'meus'],
 });
 
 /** Taxonomia de erro do produto (ARCHITECTURE_CONTRACT §79): tradução segura, sem vazar cru. */
@@ -60,17 +64,19 @@ export function classificarErro(error) {
 
 // ── Queries ──────────────────────────────────────────────────────────────────
 
+/* O `signal` do TanStack vai ao axios: desmontar/trocar de key CANCELA o request em voo
+   (Revisor 01a04c56 — sem isto, resposta velha de um filtro anterior podia aterrissar). */
 export function useServicos(filtros = {}) {
   return useQuery({
     queryKey: chaves.lista(filtros),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       /* Filtros do contrato REAL (servicos.js): tecnico, local, cursor/limit (keyset). */
       const params = new URLSearchParams();
       if (filtros.tecnico) params.set('tecnico', filtros.tecnico);
       if (filtros.local) params.set('local', filtros.local);
       if (filtros.cursor) params.set('cursor', String(filtros.cursor));
       const qs = params.toString();
-      const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`);
+      const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`, { signal });
       return data; // { data: [...], total, nextCursor } — keyset real; tecnico = {id,nome}
     },
   });
@@ -81,13 +87,13 @@ export function useServicosInfinita(filtros = {}) {
   return useInfiniteQuery({
     queryKey: chaves.lista(filtros),
     initialPageParam: undefined,
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam, signal }) => {
       const params = new URLSearchParams();
       if (filtros.tecnico) params.set('tecnico', filtros.tecnico);
       if (filtros.local) params.set('local', filtros.local);
       if (pageParam) params.set('cursor', String(pageParam));
       const qs = params.toString();
-      const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`);
+      const { data } = await api.get(`/servicos${qs ? `?${qs}` : ''}`, { signal });
       return data;
     },
     getNextPageParam: (ultima) => ultima?.nextCursor ?? undefined,
@@ -98,22 +104,22 @@ export function useServico(id) {
   return useQuery({
     queryKey: chaves.detalhe(id),
     enabled: id != null,
-    queryFn: async () => (await api.get(`/servicos/${id}`)).data,
+    queryFn: async ({ signal }) => (await api.get(`/servicos/${id}`, { signal })).data,
   });
 }
 
 /** Serviços do PRÓPRIO funcionário (/me/servicos) — mesmo prefixo: mutações invalidam junto. */
 export function useMeusServicos() {
   return useQuery({
-    queryKey: ['servicos', 'meus'],
-    queryFn: async () => (await api.get('/me/servicos')).data,
+    queryKey: chaves.meus(),
+    queryFn: async ({ signal }) => (await api.get('/me/servicos', { signal })).data,
   });
 }
 
 export function usePendentes(opts = {}) {
   return useQuery({
     queryKey: chaves.pendentes(),
-    queryFn: async () => (await api.get('/servicos/pendentes')).data,
+    queryFn: async ({ signal }) => (await api.get('/servicos/pendentes', { signal })).data,
     ...opts,
   });
 }
@@ -132,8 +138,14 @@ function useMutacaoDeServico(fn, aoConfirmar) {
   });
 }
 
+/** Devolve { status, data }: o chamador exige o 201 LITERAL do contrato de criação antes de
+ *  limpar rascunho/anunciar sucesso (DECISOR 01a04bfb §iii; Revisor 01a04c56 — um 2xx
+ *  qualquer não é prova de criação). */
 export function useCriarServico() {
-  return useMutacaoDeServico(async (corpo) => (await api.post('/servicos', corpo)).data);
+  return useMutacaoDeServico(async (corpo) => {
+    const resposta = await api.post('/servicos', corpo);
+    return { status: resposta.status, data: resposta.data };
+  });
 }
 
 export function useDeletarServico() {

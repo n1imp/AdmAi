@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/api.js';
 import { decodeJWT } from '../lib/jwt.js';
 import { useAnalyticsIdentify, analyticsReset } from '../hooks/useAnalytics.js';
+import { limparCacheServidor } from '../lib/queryClient.js';
 
 const AuthContext = createContext(null);
 
@@ -58,6 +59,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('admai_token');
     setUser(null);
     setPermissoes(null);
+    /* Server state NUNCA sobrevive à troca de identidade (DDR-4; achado do Revisor
+       01a04c56): sem isto, dados da empresa A reapareciam do cache após entrar como B.
+       `limparSessao` (api.js) cobre o caminho do interceptor; este cobre o logout da UI. */
+    limparCacheServidor();
     analyticsReset();
   }
 

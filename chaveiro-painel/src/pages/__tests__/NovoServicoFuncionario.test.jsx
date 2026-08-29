@@ -37,7 +37,7 @@ beforeEach(() => {
   localStorage.clear();
   mockNavigate.mockReset();
   mockToast.mockReset();
-  mockPost.mockReset().mockResolvedValue({ data: { status: 'pendente' } });
+  mockPost.mockReset().mockResolvedValue({ status: 201, data: { status: 'pendente' } });
   /* Padrão: empresa SEM aprovação (`aprovacaoServico @default(false)`) — o seletor de
      material fica escondido; os casos que o exercitam sobrescrevem. */
   mockGet.mockReset().mockResolvedValue({ data: { aprovacaoServico: false } });
@@ -74,6 +74,28 @@ describe('NovoServicoFuncionario — form por seções', () => {
     expect(payload.descricao).toBe('Abertura de porta');
     expect(payload.valorCobrado).toBe(150);
     expect(mockNavigate).toHaveBeenCalledWith('/meus-servicos');
+  });
+
+  /* Revisor 01a04c56 (ALTA): "rascunho limpo só após 201" precisa ser literal — qualquer
+     outro 2xx não prova que o serviço foi criado. */
+  it('resposta 2xx que NÃO é 201: rascunho preservado, sem sucesso e sem navegar', async () => {
+    const user = userEvent.setup();
+    mockPost.mockResolvedValue({ status: 200, data: {} });
+    render(<NovoServicoFuncionario />);
+
+    await user.type(screen.getByRole('textbox', { name: /Descrição/ }), 'Abertura de porta');
+    await user.type(screen.getByRole('textbox', { name: /Valor cobrado/ }), '15000');
+    await user.click(screen.getByRole('button', { name: /Registrar serviço/ }));
+
+    await waitFor(() => expect(mockPost).toHaveBeenCalledTimes(1));
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockToast).not.toHaveBeenCalledWith('Serviço registrado com sucesso!', 'success');
+    expect(screen.getByRole('textbox', { name: /Descrição/ })).toHaveValue('Abertura de porta');
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem('admai_novo_servico_func') ?? '{}').descricao).toBe(
+        'Abertura de porta'
+      )
+    );
   });
 
   it('SEM aprovação: o seletor de material do catálogo NÃO aparece', async () => {

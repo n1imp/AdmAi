@@ -147,7 +147,13 @@ export default function ServicoForm({ variante = 'gestao', chavePersist, onSuces
         clienteTelefone: resultado.data.clienteTelefone || null,
       };
       if (!permiteCatalogo || corpo.materiais.length === 0) delete corpo.materiais;
-      await criar.mutateAsync(corpo);
+      const resposta = await criar.mutateAsync(corpo);
+      /* 201 LITERAL do contrato de criação (DECISOR §iii; Revisor 01a04c56): qualquer outro
+         2xx não prova que o serviço existe — rascunho fica e nada de sucesso fingido. */
+      if (resposta?.status !== 201) {
+        toast('Não foi possível confirmar o registro. Tente novamente.', 'error');
+        return;
+      }
       clearForm();
       track('servico_criado');
       toast('Serviço registrado com sucesso!', 'success');

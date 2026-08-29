@@ -36,6 +36,19 @@ describe('servicosVM — tradução domínio→produto (glossário)', () => {
     expect(vm.status.rotulo).toBe('Aguardando aprovação');
   });
 
+  /* Revisor 01a04c56: a apresentação não compara status de domínio — a fronteira DTO→VM
+     entrega o significado pronto (o JSX pergunta "aguarda decisão?", não "é 'pendente'?"). */
+  it('flags semânticas traduzem o estado para a apresentação', () => {
+    const flags = (status) => {
+      const vm = servicoVM({ id: 1, status, valorCobrado: 0 });
+      return [vm.aguardandoDecisao, vm.aprovado];
+    };
+    expect(flags('pendente')).toEqual([true, false]);
+    expect(flags('ativo')).toEqual([false, true]);
+    expect(flags('rejeitado')).toEqual([false, false]);
+    expect(flags('em_andamento')).toEqual([false, false]);
+  });
+
   it('proximaAcao: pendente + permissão de aprovar → Revisar; sem permissão → nenhuma', () => {
     const pode = (m, a) => m === 'aprovacoes' && a === 'aprovar';
     expect(proximaAcao({ status: 'pendente' }, pode)).toEqual({

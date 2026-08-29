@@ -38,6 +38,10 @@ export function servicoVM(dto) {
     fotoEvidencia: dto.fotoEvidencia ?? null,
     status: statusVM(dto.status),
     statusDominio: dto.status,
+    /* Flags SEMÂNTICAS para a apresentação (Revisor 01a04c56): o JSX nunca compara o
+       status de domínio cru — a fronteira DTO→VM decide o que cada estado significa. */
+    aguardandoDecisao: dto.status === 'pendente',
+    aprovado: dto.status === 'ativo',
     criadoEmRotulo: formatarData(dto.criadoEm),
     cobradoRotulo: formatarMoeda(cobrado),
     materialRotulo: formatarMoeda(material),

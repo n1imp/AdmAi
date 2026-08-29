@@ -360,7 +360,7 @@ main:has(.panel-route > .adm-shell) {
 .panel-route .adm-shell .panel-button--danger {
   background: var(--adm-danger);
   border-color: var(--adm-danger);
-  color: #fff;
+  color: var(--adm-accent-text);
 }
 /* MaterialPicker legado: só o CAMPO de busca (.input, Aurora) entra na pele light; o
    dropdown segue a superfície escura própria (popover autocontido, contraste interno ok)

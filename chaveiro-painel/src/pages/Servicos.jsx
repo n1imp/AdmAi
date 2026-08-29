@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import ServicoDetail from '../features/servicos/ServicoDetail.jsx';
 import { useServicosInfinita, classificarErro } from '../features/servicos/servicosApi.js';
 import { servicoVM } from '../features/servicos/servicosVM.js';
+import { useSplitDesktop } from '../features/servicos/useSplitDesktop.js';
 
 /**
  * Serviços — primeira superfície do novo design system (FR-14, DECISOR 01a04bfb).
@@ -14,23 +15,6 @@ import { servicoVM } from '../features/servicos/servicosVM.js';
  * (query própria do detail), nunca pela página carregada da lista. Sem drawer, sem dialog:
  * regiões nomeadas. O wrapper `.adm-shell` marca a página como MIGRADA (sai do poço Aurora).
  */
-/* UMA composição por vez (split xl+ OU route-like) — decidida por matchMedia, nunca por CSS
-   escondendo DOM duplicado (leitores de tela leriam tudo duas vezes). Sem matchMedia
-   (jsdom/ambientes mínimos) cai na composição route-like, a mais segura. */
-function useSplitDesktop() {
-  const consultar = () =>
-    typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 1280px)').matches;
-  const [split, setSplit] = useState(consultar);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return undefined;
-    const mq = window.matchMedia('(min-width: 1280px)');
-    const ouvir = (e) => setSplit(e.matches);
-    mq.addEventListener?.('change', ouvir);
-    return () => mq.removeEventListener?.('change', ouvir);
-  }, []);
-  return split;
-}
-
 export default function Servicos() {
   const navigate = useNavigate();
   const { pode } = useAuth();

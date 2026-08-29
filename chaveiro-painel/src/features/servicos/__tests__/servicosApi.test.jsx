@@ -31,23 +31,45 @@ const wrapperCom = (qc) =>
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('query keys — convenção mínima estável (§17)', () => {
-  it('prefixo da capability + recorte + contexto', () => {
-    expect(chaves.lista({ busca: 'x' })).toEqual(['servicos', 'lista', { busca: 'x' }]);
-    expect(chaves.detalhe(7)).toEqual(['servicos', 'detalhe', 7]);
-    expect(chaves.pendentes()).toEqual(['servicos', 'pendentes']);
+describe('query keys — convenção mínima estável (§17) + escopo de identidade', () => {
+  it('prefixo da capability + escopo + recorte', () => {
+    expect(chaves.lista({ busca: 'x' })).toEqual(['servicos', 'anon', 'lista', { busca: 'x' }]);
+    expect(chaves.detalhe(7)).toEqual(['servicos', 'anon', 'detalhe', 7]);
+    expect(chaves.pendentes()).toEqual(['servicos', 'anon', 'pendentes']);
+  });
+
+  /* Revisor 01a04c56 (ALTA): sem o escopo, a sessão seguinte lia o cache da anterior. */
+  it('identidades diferentes produzem keys diferentes', () => {
+    const jwt = (p) =>
+      `e30.${btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(p))))}.s`;
+    localStorage.setItem('admai_token', jwt({ id: 1, empresaId: 1, exp: 4102444800 }));
+    const deA = chaves.lista({});
+    localStorage.setItem('admai_token', jwt({ id: 2, empresaId: 2, exp: 4102444800 }));
+    const deB = chaves.lista({});
+    localStorage.removeItem('admai_token');
+
+    expect(deA).not.toEqual(deB);
+    expect(deA[0]).toBe('servicos'); // prefixo preservado: invalidação da capability segue igual
+    expect(deB[0]).toBe('servicos');
   });
 });
 
 describe('grafo de invalidação (§19): mutação → lista+detalhe+pendentes, nada além', () => {
-  it('criar serviço invalida o prefixo da capability', async () => {
+  it('criar serviço invalida o prefixo da capability e devolve o STATUS ao chamador', async () => {
     const qc = clienteDeTeste();
     const invalidar = vi.spyOn(qc, 'invalidateQueries');
-    api.post.mockResolvedValue({ data: { id: 99 } });
+    api.post.mockResolvedValue({ status: 201, data: { id: 99 } });
 
     const { result } = renderHook(() => useCriarServico(), { wrapper: wrapperCom(qc) });
-    await result.current.mutateAsync({ local: 'X', descricao: 'ABC', valorCobrado: 10 });
+    const resposta = await result.current.mutateAsync({
+      local: 'X',
+      descricao: 'ABC',
+      valorCobrado: 10,
+    });
 
+    /* O status vem junto: só o 201 literal do contrato autoriza limpar rascunho e
+       anunciar sucesso na superfície (Revisor 01a04c56). */
+    expect(resposta).toEqual({ status: 201, data: { id: 99 } });
     expect(invalidar).toHaveBeenCalledWith({ queryKey: ['servicos'] });
     expect(invalidar).toHaveBeenCalledTimes(1); // nada de invalidate-everything
   });
@@ -62,7 +84,7 @@ describe('grafo de invalidação (§19): mutação → lista+detalhe+pendentes, 
     await result.current.mutateAsync(42);
 
     expect(invalidar).toHaveBeenCalledWith({ queryKey: ['servicos'] });
-    expect(remover).toHaveBeenCalledWith({ queryKey: ['servicos', 'detalhe', 42] });
+    expect(remover).toHaveBeenCalledWith({ queryKey: chaves.detalhe(42) });
   });
 
   it('aprovar invalida o grafo (fila de pendentes coberta pelo prefixo)', async () => {
@@ -75,6 +97,23 @@ describe('grafo de invalidação (§19): mutação → lista+detalhe+pendentes, 
 
     expect(api.post).toHaveBeenCalledWith('/servicos/7/aprovar');
     expect(invalidar).toHaveBeenCalledWith({ queryKey: ['servicos'] });
+  });
+});
+
+describe('cancelamento: o AbortSignal do TanStack chega ao axios', () => {
+  /* Sem encaminhar o signal, a resposta de um filtro abandonado ainda aterrissava
+     (Revisor 01a04c56): a request continuava viva depois de desmontar/trocar de key. */
+  it('a query passa signal ao transporte', async () => {
+    const qc = clienteDeTeste();
+    api.get.mockResolvedValue({ data: { data: [], total: 0 } });
+
+    const { result } = renderHook(() => useServicos({ local: 'Casa' }), {
+      wrapper: wrapperCom(qc),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const [, opcoes] = api.get.mock.calls[0];
+    expect(opcoes?.signal).toBeInstanceOf(AbortSignal);
   });
 });
 
