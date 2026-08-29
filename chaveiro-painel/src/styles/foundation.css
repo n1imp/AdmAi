@@ -1,0 +1,271 @@
+/* ============================================================================
+   FOUNDATIONS do novo design system (FR-13A ACCEPTED · DDR-3 revisado).
+   Direção: LIGHT-DOMINANT single-theme (DECISOR 01a04ba8 — evidência em protótipos
+   contrastantes; contraste WCAG 22/22 AA medido). Sem toggle, sem prefers-color-scheme.
+   Tokens FUNCIONAIS: componentes novos consomem SÓ estes nomes — nunca --panel-*,
+   .panel-ui ou escalas cromáticas literais (Aurora é legacy em retirada).
+   Escopo: os tokens vivem em :root (custo zero); `color-scheme: light` aplica-se ao
+   SHELL novo (.adm-shell) — o conteúdo legado Aurora segue dono do próprio fundo até
+   sua slice de migração (coexistência transitória prevista no programa, §112).
+   ========================================================================== */
+
+:root {
+  /* — Tipografia: 9 papéis (DDR-3); stack de sistema, nenhuma fonte nova — */
+  --adm-font: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --adm-display: 600 28px/1.2 var(--adm-font);
+  --adm-page-title: 600 20px/1.25 var(--adm-font);
+  --adm-section-title: 600 16px/1.3 var(--adm-font);
+  --adm-component-title: 600 14px/1.35 var(--adm-font);
+  --adm-body: 400 14px/1.5 var(--adm-font);
+  --adm-body-compact: 400 13px/1.45 var(--adm-font);
+  --adm-label: 500 12.5px/1.3 var(--adm-font);
+  --adm-caption: 400 12px/1.35 var(--adm-font);
+  --adm-numeric: 500 14px/1.4 var(--adm-font); /* usar com font-variant-numeric */
+
+  /* — Spacing 4px-base — */
+  --adm-s1: 4px;
+  --adm-s2: 8px;
+  --adm-s3: 12px;
+  --adm-s4: 16px;
+  --adm-s5: 20px;
+  --adm-s6: 24px;
+  --adm-s8: 32px;
+
+  /* — Radius sóbrio: 0 estruturas/tabelas · 2 controles compactos · 4 inputs/botões ·
+       8 dialog/popover (raro) · full só avatar/indicador — */
+  --adm-r0: 0;
+  --adm-r1: 2px;
+  --adm-r2: 4px;
+  --adm-r3: 8px;
+
+  /* — Density (alturas de linha de coleção) — */
+  --adm-row-comfortable: 48px;
+  --adm-row-compact: 40px;
+  --adm-row-dense: 32px;
+
+  /* — Paleta LIGHT (única implementada; nomes funcionais preservam o seam) — */
+  --adm-canvas: #f4f5f7;
+  --adm-surface: #ffffff;
+  --adm-raised: #ffffff;
+  --adm-border: #d8dce3;
+  --adm-border-strong: #b8bfcc;
+  --adm-text: #1b1f27;
+  --adm-text-muted: #5a6272;
+  --adm-text-faint: #8890a0;
+  --adm-accent: #5b48d6;
+  --adm-accent-text: #ffffff;
+  --adm-accent-soft: #ecebfb;
+  --adm-success: #156f3f;
+  --adm-success-soft: #e2f4e8;
+  --adm-danger: #b3261e;
+  --adm-danger-soft: #fbe9e7;
+  --adm-attention: #8a5a00;
+  --adm-attention-soft: #fdf1d8;
+  --adm-focus: #5b48d6;
+
+  /* — Elevation: só popover/dialog/overlay (painéis usam borda+superfície) — */
+  --adm-shadow-popover: 0 4px 16px rgba(20, 24, 35, 0.14);
+  --adm-shadow-dialog: 0 12px 40px rgba(20, 24, 35, 0.22);
+
+  /* — Layout stack: semântica ÚNICA de camadas do app (FR-13B §21) — */
+  --adm-z-nav: 40; /* sidebar/bottom-nav */
+  --adm-z-fixed: 45; /* regiões fixas de página (CTA do ponto, consent) */
+  --adm-z-drawer: 50;
+  --adm-z-dialog: 60;
+  --adm-z-toast: 70;
+}
+
+/* ── Shell novo (FR-13B): casca light; conteúdo legado segue Aurora até migrar ── */
+.adm-shell {
+  color-scheme: light;
+  font: var(--adm-body);
+  color: var(--adm-text);
+  background: var(--adm-canvas);
+}
+.adm-shell :focus-visible {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
+
+/* Sidebar desktop 256px (DDR-1) */
+.adm-sidebar {
+  width: 256px;
+  background: var(--adm-surface);
+  border-right: 1px solid var(--adm-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  z-index: var(--adm-z-nav);
+}
+.adm-brand {
+  font: var(--adm-section-title);
+  padding: var(--adm-s5) var(--adm-s4) var(--adm-s3);
+}
+.adm-navgroup {
+  padding: var(--adm-s3) var(--adm-s2) 0;
+}
+.adm-navgroup > h3 {
+  font: var(--adm-label);
+  color: var(--adm-text-faint);
+  padding: var(--adm-s2) var(--adm-s2) var(--adm-s1);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.adm-navitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--adm-body);
+  color: var(--adm-text-muted);
+  padding: 8px 10px;
+  border-radius: var(--adm-r2);
+  text-decoration: none;
+  min-height: 36px;
+}
+.adm-navitem:hover {
+  background: var(--adm-canvas);
+  color: var(--adm-text);
+}
+.adm-navitem.ativa {
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent);
+  font-weight: 600;
+}
+.adm-navitem svg {
+  flex-shrink: 0;
+}
+
+/* Topbar (contexto de página + utilities globais + conta) */
+.adm-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-s3);
+  min-height: 56px;
+  padding: 0 var(--adm-s5);
+  background: var(--adm-surface);
+  border-bottom: 1px solid var(--adm-border);
+}
+.adm-topbar .titulo {
+  font: var(--adm-section-title);
+  flex: 1;
+  min-width: 0;
+}
+.adm-utilities {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-s2);
+}
+.adm-conta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--adm-body-compact);
+  color: var(--adm-text-muted);
+}
+.adm-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: var(--adm-component-title);
+}
+.adm-sair {
+  font: var(--adm-label);
+  color: var(--adm-text-muted);
+  background: none;
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-r2);
+  padding: 6px 10px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.adm-sair:hover {
+  color: var(--adm-danger);
+  border-color: var(--adm-danger);
+}
+
+/* Bottom navigation mobile: 4 destinos + Mais (DDR-1); alvos ≥44px */
+.adm-bottomnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: var(--adm-z-nav);
+  background: var(--adm-surface);
+  border-top: 1px solid var(--adm-border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.adm-bottomnav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  min-height: 52px;
+  font: var(--adm-caption);
+  color: var(--adm-text-muted);
+  text-decoration: none;
+}
+.adm-bottomnav a.ativa {
+  color: var(--adm-accent);
+  font-weight: 600;
+}
+
+/* Área de conteúdo: dona da rolagem; offset do bottom-nav no mobile */
+.adm-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.adm-conteudo {
+  flex: 1;
+  overflow-y: auto;
+}
+@media (max-width: 1023.98px) {
+  .adm-conteudo {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Surface modes (DDR-2): o modo governa largura/composição do container do conteúdo.
+   Contratos mínimos; WORKSPACE/ANALYTICAL hospedam fixtures até existir superfície real. */
+.adm-conteudo[data-mode='STANDARD'] > * {
+  max-width: 720px;
+  margin-inline: auto;
+}
+.adm-conteudo[data-mode='WIDE'] > * {
+  max-width: 1160px;
+  margin-inline: auto;
+}
+.adm-conteudo[data-mode='MASTER_DETAIL'] > * {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+.adm-conteudo[data-mode='ANALYTICAL'] > * {
+  max-width: 1360px;
+  margin-inline: auto;
+}
+.adm-conteudo[data-mode='WORKSPACE'] {
+  overflow: hidden;
+}
+.adm-conteudo[data-mode='WORKSPACE'] > * {
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-shell * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

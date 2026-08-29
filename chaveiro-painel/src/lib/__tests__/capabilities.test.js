@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { CAPABILITIES, capabilityAtiva, rotasExpostas } from '../capabilities.js';
+import { CAPABILITIES, capabilityAtiva, rotasExpostas, modoDaRota } from '../capabilities.js';
 import { FLAGS } from '../featureFlags.js';
 
 const appJsx = readFileSync(
@@ -52,6 +52,24 @@ describe('registry — regra única de exposição (§26)', () => {
       expect(c.flag, `${c.id} sem flag`).toBeTruthy();
       expect(c.flag in FLAGS, `${c.id}: flag ${c.flag} não existe em FLAGS`).toBe(true);
     }
+  });
+});
+
+describe('surface modes (DDR-2) — metadata declarativa rota→modo', () => {
+  it('a home muda de superfície por papel e o modo acompanha', () => {
+    expect(modoDaRota('/', 'funcionario')).toBe('STANDARD');
+    expect(modoDaRota('/', 'gestor')).toBe('WIDE');
+    expect(modoDaRota('/', 'dono')).toBe('ANALYTICAL');
+  });
+
+  it('mapa DDR-2: master-detail, wide, analytical e default STANDARD', () => {
+    expect(modoDaRota('/servicos', 'dono')).toBe('MASTER_DETAIL');
+    expect(modoDaRota('/aprovacoes', 'gestor')).toBe('MASTER_DETAIL');
+    expect(modoDaRota('/reparticao', 'dono')).toBe('ANALYTICAL');
+    expect(modoDaRota('/configuracao/auditoria', 'dono')).toBe('WIDE');
+    expect(modoDaRota('/tecnicos/557', 'dono')).toBe('WIDE'); // rota com parâmetro
+    expect(modoDaRota('/ajuda', 'funcionario')).toBe('STANDARD'); // default
+    expect(modoDaRota('/meu-ponto', 'funcionario')).toBe('STANDARD');
   });
 });
 

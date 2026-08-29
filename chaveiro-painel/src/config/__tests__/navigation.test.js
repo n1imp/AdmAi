@@ -22,9 +22,9 @@ const moreTos = (nav) => nav.moreGroups.flatMap((g) => g.itens.map((i) => i.to))
 const desktopTos = (nav) => nav.desktopGroups.flatMap((g) => g.itens.map((i) => i.to));
 
 describe('buildNavigation — PR2 + PR4', () => {
-  it('Dono: primários curados, sem autosserviço, ≤ MAX_PRIMARY', () => {
+  it('Dono: primários curados (DDR-1: Painel/Financeiro/Aprovações/Equipe), sem autosserviço', () => {
     const nav = buildNavigation(dono);
-    expect(tos(nav.primary)).toEqual(['/', '/tecnicos', '/reparticao']);
+    expect(tos(nav.primary)).toEqual(['/', '/reparticao', '/aprovacoes', '/tecnicos']);
     expect(nav.primary.length).toBeLessThanOrEqual(MAX_PRIMARY);
     const todos = [...tos(nav.primary), ...moreTos(nav), ...desktopTos(nav)];
     expect(todos).not.toContain('/meu-ponto');
@@ -32,10 +32,12 @@ describe('buildNavigation — PR2 + PR4', () => {
     expect(todos).not.toContain('/meus-servicos/novo');
   });
 
-  it('Gestor pleno: 4 primários operacionais, sem autosserviço', () => {
+  it('Gestor pleno: 4 primários operacionais COM Serviços (DDR-1 corrige o gap), sem autosserviço', () => {
     const nav = buildNavigation(gestorPleno);
-    expect(tos(nav.primary)).toEqual(['/', '/aprovacoes', '/tecnicos', '/estoque']);
+    expect(tos(nav.primary)).toEqual(['/', '/servicos', '/aprovacoes', '/tecnicos']);
     expect(moreTos(nav)).not.toContain('/meu-ponto');
+    // Estoque saiu do primário mas continua alcançável no "Mais"
+    expect(moreTos(nav)).toContain('/estoque');
   });
 
   it('Gestor restrito: itens sem permissão somem (não desabilitam)', () => {
@@ -47,23 +49,21 @@ describe('buildNavigation — PR2 + PR4', () => {
     expect(todos).not.toContain('/estoque');
   });
 
-  it('Funcionário pleno: início, ponto, registrar, perfil', () => {
+  it('Funcionário pleno: Hoje/Ponto/Registrar/Serviços (DDR-1: Perfil sai do slot primário)', () => {
     const nav = buildNavigation(funcPleno);
-    expect(tos(nav.primary)).toEqual([
-      '/',
-      '/meu-ponto',
-      '/meus-servicos/novo',
-      '/configuracao/perfil',
-    ]);
+    expect(tos(nav.primary)).toEqual(['/', '/meu-ponto', '/meus-servicos/novo', '/meus-servicos']);
+    // Perfil continua a um toque no "Mais" — jobs do dia ocupam os slots primários
+    expect(moreTos(nav)).toContain('/configuracao/perfil');
   });
 
   it('Funcionário sem capacidades próprias: só destinos de escopo próprio (sempre)', () => {
     const nav = buildNavigation(funcMinimo);
     const primary = tos(nav.primary);
     expect(primary).toContain('/');
-    expect(primary).toContain('/configuracao/perfil');
     expect(primary).not.toContain('/meu-ponto');
     expect(primary).not.toContain('/meus-servicos/novo');
+    // perfil segue alcançável no "Mais" mesmo no mínimo
+    expect(moreTos(nav)).toContain('/configuracao/perfil');
   });
 
   it('Invariantes: sem destinos duplicados; primário e "Mais" disjuntos', () => {
@@ -90,7 +90,8 @@ describe('buildNavigation — PR2 + PR4', () => {
 
   it('Papel desconhecido cai no manifesto de funcionário (fallback seguro)', () => {
     const nav = buildNavigation({ papel: undefined, pode: () => false, podeProprio: () => true });
-    expect(tos(nav.primary)).toContain('/configuracao/perfil');
+    expect(tos(nav.primary)).toContain('/meu-ponto'); // alocação exclusiva do funcionário
+    expect(moreTos(nav)).toContain('/configuracao/perfil');
   });
 });
 
@@ -167,18 +168,15 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
   });
 
   it('SABOTAGEM DO GUARD: `sempre: true` não pode ressuscitar capacidade diferida', () => {
-    /* A entrada real de Notificações tem `{ sempre: true, feature: 'NOTIFICACOES' }`. Este teste
-       falha se alguém reverter a ordem em `permite()` OU remover a `feature` da entrada — as duas
-       formas de reabrir o vazamento. É a sabotagem escrita como invariante permanente. */
+    /* Mecanismo atual (DDR-1): a entrada carrega `capability: 'NOTIFICACOES'` e buildNavigation
+       corta por capabilityAtiva ANTES de chamar permite() — então `sempre: true` nunca vê a
+       decisão. Este teste falha se alguém remover a capability da entrada OU mover o corte para
+       depois do guard — as duas formas de reabrir o vazamento. */
     const fonte = readFileSync(NAVEGACAO, 'utf8');
-    /* Ancorar no PRÓXIMO `guard:` em vez de numa janela de N caracteres: comentário acrescentado
-       entre a entrada e o guard empurraria o alvo para fora de qualquer janela fixa, e o teste
-       falharia por motivo errado — foi o que aconteceu na primeira escrita deste controle. */
     const daEntrada = fonte.slice(fonte.indexOf("to: '/configuracao/notificacoes'"));
-    const guard = daEntrada.slice(daEntrada.indexOf('guard:'));
-    expect(guard.slice(0, 120)).toMatch(/guard:\s*\{[^}]*feature:\s*'NOTIFICACOES'/);
+    expect(daEntrada.slice(0, 200)).toMatch(/capability:\s*'NOTIFICACOES'/);
     expect(fonte).toMatch(
-      /if \(guard\.feature && !featureAtiva\(guard\.feature\)\) return false;\s*\n\s*if \(guard\.sempre\) return true;/
+      /if \(destino\.capability && !capabilityAtiva\(destino\.capability\)\) continue;[\s\S]{0,400}?if \(!permite\(/
     );
   });
 
@@ -223,12 +221,12 @@ describe('GAP-UX-NAV-DIFERIDA-01 — POST_MVP + USER_REACHABLE = INVALID_RELEASE
     for (const { rota, flag } of sobFlag) {
       let i = fonte.indexOf(`to: '${rota}'`);
       while (i !== -1) {
-        const daEntrada = fonte.slice(i);
-        const guard =
-          daEntrada
-            .slice(daEntrada.indexOf('guard:'), daEntrada.indexOf('guard:') + 200)
-            .match(/guard:\s*\{([^}]*)\}/)?.[1] ?? '';
-        if (!guard.includes(`feature: '${flag}'`)) faltando.push(`${rota} (esperava ${flag})`);
+        /* Mecanismo atual: a exigência é `capability: 'FLAG'` na PRÓPRIA entrada (o corte por
+           registry acontece antes de qualquer guard). A janela vai até `porPapel` — tudo que
+           define a entrada base. */
+        const daEntrada = fonte.slice(i, fonte.indexOf('porPapel', i));
+        if (!daEntrada.includes(`capability: '${flag}'`))
+          faltando.push(`${rota} (esperava capability ${flag})`);
         i = fonte.indexOf(`to: '${rota}'`, i + 1);
       }
     }

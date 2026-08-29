@@ -65704,9 +65704,31 @@
       "bloqueiaIntegracao": false,
       "nota": "DDR-3 cor/tema revisado com evidencia; ledger FR-13A COMPLETE + FOUNDATIONS_ACCEPTED",
       "declaradoEm": "2026-08-29T03:58:21.684Z"
+    },
+    {
+      "sliceId": "FR13B1-TOKENS-NAV-REGISTRY",
+      "titulo": "Foundations light no produto + navigation DDR-1 (manifesto unico + porPapel + capability gate do registry) + surfaceMode no registry",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "navigation 16/16 + capabilities 8/8; sabotagens re-ancoradas no mecanismo capability-gate; lint/prettier/build OK",
+      "declaradoEm": "2026-08-29T04:02:14.000Z",
+      "reconciliacao": {
+        "em": "2026-08-29T04:13:55.862Z",
+        "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+        "autorizadoPor": "Diretiva FRONTEND REFOUNDATION §128/§34 (classificar; sem rollback de conteudo valido) — execucao Claude",
+        "justificativa": "dist/* regenerado pelo build de VALIDACAO da propria fatia; a declaracao omitiu artefatos:[chaveiro-painel/dist] (classe ja conhecida do ciclo 2). Nenhuma escrita fora de build outputs.",
+        "caminhos": [],
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+      }
     }
   ],
-  "geradoEm": "2026-08-29T03:59:30.512Z",
+  "geradoEm": "2026-08-29T04:13:55.866Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

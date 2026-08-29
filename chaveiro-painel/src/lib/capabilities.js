@@ -106,3 +106,36 @@ export function capabilityAtiva(id, manifesto = POR_ID.get(id)) {
 export function rotasExpostas(capabilities = CAPABILITIES) {
   return capabilities.filter((c) => capabilityAtiva(c.id, c)).flatMap((c) => c.routes);
 }
+
+/* ── Surface modes (DDR-2): metadata declarativa rota→modo, consumida pelo App Shell.
+   Exatamente um modo-base por superfície; densidade/drawer/dialog NÃO são modos.
+   WORKSPACE não tem superfície MVP (fixtures dev-only provam o hosting). ── */
+const MODO_POR_ROTA = Object.freeze({
+  '/servicos': 'MASTER_DETAIL',
+  '/aprovacoes': 'MASTER_DETAIL',
+  '/tecnicos': 'WIDE',
+  '/tecnicos/novo': 'STANDARD',
+  '/meus-servicos': 'WIDE',
+  '/materiais': 'WIDE',
+  '/estoque': 'WIDE',
+  '/configuracao/usuarios': 'WIDE',
+  '/configuracao/auditoria': 'WIDE',
+  '/reparticao': 'ANALYTICAL',
+  '/metricas/faturamento-liquido': 'ANALYTICAL',
+  '/metricas/servicos-concluidos': 'ANALYTICAL',
+});
+
+/**
+ * Modo da superfície para uma rota. A home ('/') muda de SUPERFÍCIE por papel
+ * (MeuPainel/GestorHome/Dashboard), então o modo acompanha: F=STANDARD, G=WIDE
+ * (cockpit operacional), dono=ANALYTICAL (DDR-2).
+ */
+export function modoDaRota(pathname, papel) {
+  if (pathname === '/') {
+    return papel === 'funcionario' ? 'STANDARD' : papel === 'gestor' ? 'WIDE' : 'ANALYTICAL';
+  }
+  if (MODO_POR_ROTA[pathname]) return MODO_POR_ROTA[pathname];
+  // rotas com parâmetro: perfil do técnico é WIDE (DDR-2)
+  if (/^\/tecnicos\/\d+/.test(pathname)) return 'WIDE';
+  return 'STANDARD';
+}
