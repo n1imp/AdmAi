@@ -65838,7 +65838,26 @@
         "justificativa": "servicosVM.js recebeu a entrada em_andamento no STATUS_VM durante o porte fiel do bloco F9/M3 de MeusServicos (flag SERVICO_ANDAMENTO_ENABLED): sem ela o status de dominio cru vazaria para a tela, violando a regra 'pendente cru nunca na tela' aplicada a toda a taxonomia. A mudanca e minima (1 entrada no mapa congelado), coberta por servicosVM.test.js e pelos 8 testes de MeusServicos, e pertence a mesma missao da fatia FR14E3-FORMS-MEUS; o defeito foi a declaracao previa nao listar o arquivo, nao a escrita.",
         "caminhos": [
           "chaveiro-painel/src/features/servicos/servicosVM.js"
-        ]
+        ],
+        "originalEvent": {
+          "actor": "Claude",
+          "write_set_compliance": "violated",
+          "original_evidence": "preserved"
+        },
+        "governanca": {
+          "id": "FR14-WSR-01",
+          "authority": "EOS_GOVERNANCE",
+          "decision": "APPROVED",
+          "disposition": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+          "authorization_scope": "FR-14_ONLY",
+          "integration_block": "lifted",
+          "history_rewritten": false,
+          "rollback_required": false,
+          "process_violation_preserved": true,
+          "blanket_write_set_exception": false,
+          "emitidoEm": "2026-08-29T14:53:27.365Z",
+          "nota": "Autorizacao especifica desta ocorrencia. NAO estabelece precedente nem dispensa write-set validado nas proximas fatias: nova mutacao fora do write-set exige parar a frontier afetada, preservar evidencia, classificar e obter autorizacao antes de levantar bloqueio."
+        }
       },
       "declaradoEm": "2026-08-29T05:49:19.478Z"
     },
@@ -71324,7 +71343,26 @@
         "caminhos": [
           "chaveiro-painel/src/styles/foundation.css"
         ],
-        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação.",
+        "originalEvent": {
+          "actor": "Claude",
+          "write_set_compliance": "violated",
+          "original_evidence": "preserved"
+        },
+        "governanca": {
+          "id": "FR14-WSR-02",
+          "authority": "EOS_GOVERNANCE",
+          "decision": "APPROVED",
+          "disposition": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+          "authorization_scope": "FR-14_ONLY",
+          "integration_block": "lifted",
+          "history_rewritten": false,
+          "rollback_required": false,
+          "process_violation_preserved": true,
+          "blanket_write_set_exception": false,
+          "emitidoEm": "2026-08-29T14:53:27.365Z",
+          "nota": "Autorizacao especifica desta ocorrencia. NAO estabelece precedente nem dispensa write-set validado nas proximas fatias: nova mutacao fora do write-set exige parar a frontier afetada, preservar evidencia, classificar e obter autorizacao antes de levantar bloqueio."
+        }
       }
     },
     {
@@ -71345,7 +71383,26 @@
         "justificativa": "lib/queryClient.js recebeu escopoDeSessao() durante a correcao do achado ALTA #1 do Revisor 01a04c56. A declaracao da fatia previa apenas limpar o cache no logout (AuthContext), mas o teste de regressao A->logout->B PROVOU que a limpeza sozinha nao fecha o vazamento: observers ainda montados repopulam o cache no instante do clear e uma key sem identidade e lida pela sessao seguinte como cache valido. O escopo de identidade na key e a correcao minima que fecha o defeito de seguranca, pertence a mesma missao da fatia e esta coberta por 4 testes novos (2 de isolamento entre tenants, 2 de key). O defeito foi a declaracao previa nao antecipar o arquivo, nao a escrita.",
         "caminhos": [
           "chaveiro-painel/src/lib/queryClient.js"
-        ]
+        ],
+        "originalEvent": {
+          "actor": "Claude",
+          "write_set_compliance": "violated",
+          "original_evidence": "preserved"
+        },
+        "governanca": {
+          "id": "FR14-WSR-03",
+          "authority": "EOS_GOVERNANCE",
+          "decision": "APPROVED",
+          "disposition": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+          "authorization_scope": "FR-14_ONLY",
+          "integration_block": "lifted",
+          "history_rewritten": false,
+          "rollback_required": false,
+          "process_violation_preserved": true,
+          "blanket_write_set_exception": false,
+          "emitidoEm": "2026-08-29T14:53:27.365Z",
+          "nota": "Autorizacao especifica desta ocorrencia. NAO estabelece precedente nem dispensa write-set validado nas proximas fatias: nova mutacao fora do write-set exige parar a frontier afetada, preservar evidencia, classificar e obter autorizacao antes de levantar bloqueio."
+        }
       },
       "declaradoEm": "2026-08-29T07:19:41.852Z"
     },
@@ -71371,7 +71428,26 @@
           "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json",
           "docs/eos-v2/current/02_CURRENT_STATE.md"
         ],
-        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação.",
+        "originalEvent": {
+          "actor": "Claude",
+          "write_set_compliance": "violated",
+          "original_evidence": "preserved"
+        },
+        "governanca": {
+          "id": "FR14-WSR-04",
+          "authority": "EOS_GOVERNANCE",
+          "decision": "APPROVED",
+          "disposition": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+          "authorization_scope": "FR-14_ONLY",
+          "integration_block": "lifted",
+          "history_rewritten": false,
+          "rollback_required": false,
+          "process_violation_preserved": true,
+          "blanket_write_set_exception": false,
+          "emitidoEm": "2026-08-29T14:53:27.365Z",
+          "nota": "Autorizacao especifica desta ocorrencia. NAO estabelece precedente nem dispensa write-set validado nas proximas fatias: nova mutacao fora do write-set exige parar a frontier afetada, preservar evidencia, classificar e obter autorizacao antes de levantar bloqueio."
+        }
       }
     },
     {
@@ -74097,11 +74173,44 @@
         "caminhos": [
           "chaveiro-painel/dist"
         ],
-        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
+        "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação.",
+        "originalEvent": {
+          "actor": "Claude",
+          "write_set_compliance": "violated",
+          "original_evidence": "preserved"
+        },
+        "governanca": {
+          "id": "FR14-WSR-05",
+          "authority": "EOS_GOVERNANCE",
+          "decision": "APPROVED",
+          "disposition": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+          "authorization_scope": "FR-14_ONLY",
+          "integration_block": "lifted",
+          "history_rewritten": false,
+          "rollback_required": false,
+          "process_violation_preserved": true,
+          "blanket_write_set_exception": false,
+          "emitidoEm": "2026-08-29T14:53:27.365Z",
+          "nota": "Autorizacao especifica desta ocorrencia. NAO estabelece precedente nem dispensa write-set validado nas proximas fatias: nova mutacao fora do write-set exige parar a frontier afetada, preservar evidencia, classificar e obter autorizacao antes de levantar bloqueio."
+        }
       }
+    },
+    {
+      "sliceId": "FR14G3-GOVERNANCA",
+      "titulo": "Aplicar a autorizacao de governanca EOS as 5 reconciliacoes da FR-14 (FR14-WSR-01..05): provenance original PRESERVADA + bloco de governanca acrescentado; 19 historicas NAO autorizadas",
+      "estado": "CLOSED",
+      "comparacao": "OBSERVED_SUBSET",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14G3: autorizacao EOS_GOVERNANCE aplicada as 5 reconciliacoes da FR-14 (FR14-WSR-01..05) de forma ADITIVA — provenance original e comparacao UNDECLARED_* preservadas, bloco de governanca acrescentado, bloqueio de integracao levantado; 19 historicas seguem NOT_GRANTED com frente propria de auditoria registrada",
+      "declaradoEm": "2026-08-29T14:52:56.924Z"
     }
   ],
-  "geradoEm": "2026-08-29T14:23:24.998Z",
+  "geradoEm": "2026-08-29T14:54:52.045Z",
   "reconciliacoes": [
     {
       "id": "R24-07",
@@ -74112,5 +74221,39 @@
       "controlesNovos": 7,
       "declaracoesReclassificadas": 2
     }
-  ]
+  ],
+  "governancaWriteSet": {
+    "FR14": {
+      "decision": "APPROVED",
+      "authority": "EOS_GOVERNANCE",
+      "scope": "FR-14_ONLY",
+      "itens": [
+        "FR14-WSR-01",
+        "FR14-WSR-02",
+        "FR14-WSR-03",
+        "FR14-WSR-04",
+        "FR14-WSR-05"
+      ],
+      "emitidoEm": "2026-08-29T14:53:27.365Z"
+    },
+    "historicas19": {
+      "status": "NOT_GRANTED",
+      "motivo": "INSUFFICIENT_CURRENT_REVIEW_SCOPE",
+      "esclarecimento": "NAO significa REJECTED: significa NOT_REVIEWED_BY_THIS_GOVERNANCE_DECISION. Permanecem no estado historico atual ate auditoria propria.",
+      "frenteFutura": "WRITE_SET_HISTORICAL_RECONCILIATION_AUDIT",
+      "escopoAAuditar": [
+        "SAFE-MIG",
+        "GAP-UI",
+        "SCOPE-F2x",
+        "SL-01",
+        "SL-02",
+        "SL-03",
+        "SL-11",
+        "F6",
+        "GATE6",
+        "D2-AMENDMENT",
+        "demais ocorrencias contabilizadas nas 19"
+      ]
+    }
+  }
 }

@@ -124,7 +124,7 @@
     "INFORMATION_ARCHITECTURE_ACCEPTED": "YES — DDR-1 implementado e provado em screenshots reais por papel",
     "FUTURE_READY_SHELL_ARCHITECTURE": "PASS (reconciliacao §0 do Cycle 3: a claim anterior FUTURE_READY_FRONTEND_ARCHITECTURE cobria SO o shell; renomeada sem rewrite de historico)",
     "FUTURE_READY_PRODUCT_ARCHITECTURE": "PASS (era PARTIAL_PENDING_VERTICAL_SLICE_PROOF na correcao §0; provado pela slice FR-14: seam Quote/Catalog = composicao de secoes zod+fieldset no ServicoForm (secao nova = merge de schema + fieldset, sem refazer form); seam Warranty/Rework = RelatedResource no ServicoDetail aceita relacao servico<->servico (bloco condicional + GET /servicos/:id existente + link ?servico= — nenhuma entidade inventada); aprovacao provada como ESTADO (nao entidade); invalidation graph real por prefixo de capability)",
-    "SERVICE_VERTICAL_SLICE_LOCAL_ACCEPTED": "YES apos rodada de revisao (Revisor 01a04c56: CORRECOES_NECESSARIAS -> corrigido em 1a13cd9; staging = divida explicita, ver STAGING_PROOF_DEBT_BUDGET)",
+    "SERVICE_VERTICAL_SLICE_LOCAL_ACCEPTED": "YES apos 6 rodadas de revisao (01a04c56) e autorizacao de governanca das 5 reconciliacoes (FR14-WSR-01..05, escopo FR-14_ONLY). Staging = divida explicita — ver STAGING_PROOF_DEBT_BUDGET.",
     "STAGING_PROOF_DEBT_BUDGET": "ORCAMENTO CHEIO: {APP_SHELL, SERVICE_SLICE} aguardando GITHUB_ACTIONS_BILLING. REGRA §40: enquanto Actions bloqueado NAO iniciar mass migration de superficies — somente safe work (arquitetura, pesquisa, contratos, correcoes). Identificadores criados NESTE registro (observacao do Decisor 01a04c54 reconciliada: antes só existiam na diretiva)."
   },
   "pendenciasExternas": [
@@ -199,9 +199,38 @@
     "thread": "01a04c56 (REVISOR, conversa nova sem historico do Decisor)",
     "rodada1": "CORRECOES_NECESSARIAS — 2 ALTA (cache entre tenants; 201 nao literal), 2 MEDIA (application layer incompleta; Aprovacoes sem master-detail mobile), 1 BAIXA (#fff). Corrigido em 1a13cd9.",
     "rodada2": "CORRECOES_NECESSARIAS — MEDIA (fetch cru nos componentes NOVOS; contestacao de Claude rejeitada com razao) + BAIXA (rotulo do voltar). Corrigido em 1200167. Achados da rodada 1 confirmados como resolvidos.",
-    "licaoRegistrada": "O teste de regressao exigido pelo Revisor (A->logout->B) FALHOU com a primeira correcao e revelou que limpar o cache no logout nao fecha o vazamento — observers montados repopulam no instante do clear. So a segunda camada (escopo de identidade na key) fecha. Prova > raciocinio: a correcao \"obvia\" estava incompleta. | Rodada 3: mover o download para a layer resolveu o boundary mas carregou junto um defeito de identidade do recurso — estado derivado de props precisa dizer A QUE PROP pertence, senao a troca vaza o conteudo anterior. | Rodada 4: o Revisor leu o LEDGER contra o codigo e pegou o registro afirmando uma divida que a fatia anterior ja tinha extinguido — documento de fechamento tambem e artefato revisavel, nao narrativa.",
+    "licaoRegistrada": "O teste de regressao exigido pelo Revisor (A->logout->B) FALHOU com a primeira correcao e revelou que limpar o cache no logout nao fecha o vazamento — observers montados repopulam no instante do clear. So a segunda camada (escopo de identidade na key) fecha. Prova > raciocinio: a correcao \"obvia\" estava incompleta. | Rodada 3: mover o download para a layer resolveu o boundary mas carregou junto um defeito de identidade do recurso — estado derivado de props precisa dizer A QUE PROP pertence, senao a troca vaza o conteudo anterior. | Rodada 4: o Revisor leu o LEDGER contra o codigo e pegou o registro afirmando uma divida que a fatia anterior ja tinha extinguido — documento de fechamento tambem e artefato revisavel, nao narrativa. | Rodada 6: o gate exigia autoria material para dispor de uma violacao e eu assinei como se a autoridade fosse minha — validade formal do campo nao e o mesmo que legitimidade da decisao.",
     "rodada3": "CORRECOES_NECESSARIAS — MEDIA (evidencia stale na troca de selecao). Excecao de manter object URLs fora do TanStack ACEITA pelo Revisor. Achados das rodadas 1 e 2 confirmados resolvidos. Corrigido em FR14E7.",
     "rodada4": "CORRECOES_NECESSARIAS — MEDIA (ciclo A->B->A reusava blob revogado) + 2 BAIXA de precisao do proprio registro. Corrigido em FR14E8. Rodadas 1-3 confirmadas resolvidas por inspecao do Revisor.",
-    "rodada5": "CORRECOES_NECESSARIAS — 2 BAIXA de precisao (narrativa obsoleta no codigo/ledger; assercao vazia de abort no teste). Nenhum risco funcional residual identificado no ciclo de evidencia. Corrigido em FR14E9."
+    "rodada5": "CORRECOES_NECESSARIAS — 2 BAIXA de precisao (narrativa obsoleta no codigo/ledger; assercao vazia de abort no teste). Nenhum risco funcional residual identificado no ciclo de evidencia. Corrigido em FR14E9.",
+    "rodada6": "USUARIO_NECESSARIO — sem achado tecnico restante. O Revisor apontou que as reconciliacoes estavam assinadas por Claude, enquanto o proprio write-set-gate determina que aceitar a excecao de processo e decisao do usuario. Resolvido pela autorizacao EOS_GOVERNANCE (FR14-WSR-01..05), aplicada de forma ADITIVA: provenance original preservada, violacoes preservadas, bloqueio levantado."
+  },
+  "governancaWriteSetFR14": {
+    "decisao": "APPROVED",
+    "autoridade": "EOS_GOVERNANCE",
+    "escopo": "FR-14_ONLY",
+    "disposicao": "CONTEUDO_ACEITO_ORDEM_VIOLADA",
+    "itens": {
+      "FR14-WSR-01": "E3 servicosVM.js — flag em_andamento no porte do M3",
+      "FR14-WSR-02": "E5 foundation.css — declaracao orfa ao ampliar escopo da fatia",
+      "FR14-WSR-03": "E5 queryClient.js — escopo de sessao exigido pela correcao do vazamento entre tenants; SECURITY_FIX_VALID != PROCESS_COMPLIANT, as duas verdades ficam registradas",
+      "FR14-WSR-04": "E6 ledger + CURRENT_STATE — fatias sobrepostas no tempo",
+      "FR14-WSR-05": "E9 dist — build sem declarar o artefato"
+    },
+    "oQueAAutorizacaoFAZ": "Levanta o bloqueio processual de integracao destas 5 ocorrencias.",
+    "oQueAAutorizacaoNAOFaz": [
+      "NAO transforma a execucao original em conforme",
+      "NAO apaga a violacao de ordem (comparacao segue UNDECLARED_* no historico)",
+      "NAO reescreve historico nem altera autoria original (autorizadoPor segue Claude; bloco de governanca foi ACRESCENTADO)",
+      "NAO autoriza violacoes equivalentes futuras nem estabelece precedente automatico",
+      "NAO dispensa write-set validado nas proximas fatias"
+    ],
+    "enforcementFuturo": "MUTATION_REQUIRES_VALIDATED_WRITE_SET continua obrigatorio. Nova mutacao fora do write-set deve: (1) parar a mutation frontier afetada; (2) preservar evidencia original; (3) classificar a ocorrencia; (4) obter autorizacao de governanca quando exigida; (5) so entao levantar eventual integration block.",
+    "historicas19": {
+      "status": "NOT_GRANTED",
+      "motivo": "INSUFFICIENT_CURRENT_REVIEW_SCOPE",
+      "esclarecimento": "NOT_REVIEWED_BY_THIS_GOVERNANCE_DECISION — nao e REJECTED.",
+      "frenteFutura": "WRITE_SET_HISTORICAL_RECONCILIATION_AUDIT (avaliacao individual, sem regularizacao coletiva)"
+    }
   }
 }
