@@ -74222,9 +74222,23 @@
       "bloqueiaIntegracao": false,
       "nota": "FR14G4: Cycle 3 fechado com veredito APROVADO do Revisor (rodada 7); provas, validacoes nao executadas e dividas ativas consolidadas; push para origin/staging registrado como PENDENTE DE AUTORIZACAO",
       "declaradoEm": "2026-08-29T14:58:02.624Z"
+    },
+    {
+      "sliceId": "FR14H-PUBLICACAO",
+      "titulo": "Registro da publicacao autorizada em origin/staging (HEAD 2aeccc8) e do estado do cloud CI (BLOCKED_EXTERNAL por billing, com evidencia literal dos runs)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14H: publicacao autorizada registrada — REMOTE_STAGING_HEAD == LOCAL == AUTHORIZED (2aeccc8), fast-forward sem force, master intocado; cloud CI BLOCKED_EXTERNAL com annotation literal de billing nos runs 33259655545/33259655539; gates de staging seguem PENDING_EXTERNAL_STAGING_PROOF",
+      "declaradoEm": "2026-08-29T15:14:13.990Z"
     }
   ],
-  "geradoEm": "2026-08-29T14:58:35.193Z",
+  "geradoEm": "2026-08-29T15:15:23.379Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

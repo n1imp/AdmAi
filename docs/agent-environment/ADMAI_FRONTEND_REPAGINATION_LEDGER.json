@@ -263,5 +263,41 @@
     ],
     "pendenteDeUsuario": "PUSH para origin/staging (nao autorizado nesta sessao; commits permanecem locais).",
     "producao": "PRODUCTION_TOUCHED=NO em todas as etapas."
+  },
+  "publicacaoFR14": {
+    "autorizacao": "EOS_GOVERNANCE — PUSH_TO_ORIGIN_STAGING APPROVED, escopo FR-14_ONLY",
+    "authorizedHead": "2aeccc89a3cad4223ec6a65ca5c127ca7c03e879",
+    "verificacoesPrePush": {
+      "headConfere": "SIM (HEAD == AUTHORIZED_HEAD, byte a byte)",
+      "worktree": "CLEAN (0 arquivos)",
+      "fastForward": "SIM — o staging remoto (4df7ec7, fechamento do FR-13) e ancestral do HEAD: push sem force, sem reescrita de historico",
+      "commitsNovosNoRemoto": "14 (os outros 4 dos 18 da contagem local ja estavam publicados: a base 4df7ec7 era o proprio staging remoto)"
+    },
+    "resultado": {
+      "REMOTE_PUSH_RESULT": "SUCCESS (4df7ec7..2aeccc8 HEAD -> staging, exit 0)",
+      "REMOTE_STAGING_HEAD": "2aeccc89a3cad4223ec6a65ca5c127ca7c03e879",
+      "LOCAL_HEAD": "2aeccc89a3cad4223ec6a65ca5c127ca7c03e879",
+      "match": "REMOTE == LOCAL == AUTHORIZED",
+      "FR14_REMOTE_PUBLICATION": "COMPLETE",
+      "masterRemoto": "ec23144 — INTOCADO (nao foi alvo, nao foi tocado)"
+    },
+    "cloudCI": {
+      "estado": "BLOCKED_EXTERNAL (GITHUB_ACTIONS_BILLING)",
+      "evidenciaLiteral": "Runs disparados pelo push no SHA 2aeccc8: CI (33259655545) e Deploy Staging (33259655539), ambos conclusion=failure com a annotation literal \"The job was not started because recent account payments have failed or your spending limit needs to be increased.\" — NENHUM job chegou a iniciar (falha de billing, nao do codigo).",
+      "consequencia": "O deploy do painel em Cloudflare Pages NAO ocorreu. PUSH_SUCCESS != STAGING_DEPLOY_SUCCESS; STAGING_BRANCH_UPDATED != STAGING_RUNTIME_UPDATED."
+    },
+    "gatesDeStagingAposPush": {
+      "APP_SHELL_STAGING_ACCEPTED": "PENDING_EXTERNAL_STAGING_PROOF",
+      "SERVICE_VERTICAL_SLICE_STAGING_ACCEPTED": "PENDING_EXTERNAL_STAGING_PROOF",
+      "regra": "Ausencia de execucao NAO vira PASS. Publicar o branch nao prova runtime; a divida so fecha com CI verde + deploy + probes reais."
+    },
+    "ordemQuandoActionsVoltar": [
+      "CI verde no SHA exato",
+      "deploy Cloudflare do frontend staging",
+      "prova de staging do App Shell",
+      "prova de staging de Servicos/Aprovacoes",
+      "fechar a divida acumulada de staging (STAGING_PROOF_DEBT_BUDGET)"
+    ],
+    "producao": "PRODUCTION_TOUCHED=NO — master remoto intocado; nenhuma operacao de producao em qualquer etapa."
   }
 }
