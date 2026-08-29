@@ -238,30 +238,45 @@
   }
 }
 
-/* Surface modes (DDR-2): o modo governa largura/composição do container do conteúdo.
-   Contratos mínimos; WORKSPACE/ANALYTICAL hospedam fixtures até existir superfície real. */
-.adm-conteudo[data-mode='STANDARD'] > * {
-  max-width: 720px;
+/* Surface modes (DDR-2): o modo governa a largura do wrapper de conteúdo — contrato do
+   shell, nunca das páginas. WORKSPACE/ANALYTICAL sem superfície MVP hospedam fixtures. */
+.adm-shell [data-mode] {
+  width: 100%;
   margin-inline: auto;
 }
-.adm-conteudo[data-mode='WIDE'] > * {
+.adm-shell [data-mode='STANDARD'] {
+  max-width: 760px;
+}
+.adm-shell [data-mode='WIDE'] {
   max-width: 1160px;
-  margin-inline: auto;
 }
-.adm-conteudo[data-mode='MASTER_DETAIL'] > * {
+.adm-shell [data-mode='MASTER_DETAIL'] {
   max-width: 1280px;
-  margin-inline: auto;
 }
-.adm-conteudo[data-mode='ANALYTICAL'] > * {
+.adm-shell [data-mode='ANALYTICAL'] {
   max-width: 1360px;
-  margin-inline: auto;
 }
-.adm-conteudo[data-mode='WORKSPACE'] {
+.adm-shell [data-mode='WORKSPACE'] {
+  max-width: none;
+  height: 100%;
   overflow: hidden;
 }
-.adm-conteudo[data-mode='WORKSPACE'] > * {
-  height: 100%;
+
+/* Skeleton neutro do shell (o `.skeleton` legado pertence ao Aurora) */
+.adm-skeleton {
+  display: block;
+  background: var(--adm-border);
+  border-radius: var(--adm-r1);
+  animation: adm-pulse 1.4s ease-in-out infinite;
 }
+@keyframes adm-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Coexistência §112: o MIOLO das páginas legadas mantém o canvas Aurora (bg-dark-900 via
+   Tailwind no Layout) até cada página migrar — a casca (sidebar/bottom-nav) já é light. */
 
 @media (prefers-reduced-motion: reduce) {
   .adm-shell * {

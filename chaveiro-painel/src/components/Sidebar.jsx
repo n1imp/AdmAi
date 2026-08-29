@@ -5,38 +5,30 @@ import { buildNavigation } from '../config/navigation.js';
 
 const PAPEL_LABEL = { dono: 'Dono', gestor: 'Gestor', funcionario: 'Funcionário' };
 
-// Navegação do desktop (≥ lg). Módulos principais estáveis, agrupados por seção,
-// derivados do mesmo manifesto do BottomNav/"Mais" (fonte única, PR2 + PR4).
+/* Sidebar do App Shell (FR-13B) — 256px, foundations LIGHT (DDR-1/DDR-3). Projeção do
+   manifesto único: capability habilitada → papel → permissão → grupos canônicos. A lógica
+   provada permanece: skeleton estável enquanto permissões carregam (sem flash nem
+   reordenação), logout no desktop [AUD-INPUT-DESKTOP-LOGOUT], aria-busy/labels. */
 function Item({ to, label, icon: Icon, end }) {
   return (
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) =>
-        `group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all min-h-[44px] ${
-          isActive
-            ? 'bg-accent-400/10 text-accent-300 shadow-[inset_2px_0_0_0_theme(colors.accent.400)]'
-            : 'text-muted hover:text-white hover:bg-dark-700'
-        }`
-      }
+      className={({ isActive }) => `adm-navitem${isActive ? ' ativa' : ''}`}
     >
       <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
-      <span className="tracking-wide">{label}</span>
+      <span>{label}</span>
     </NavLink>
   );
 }
 
 function Grupo({ titulo, itens }) {
   return (
-    <div className="px-3">
-      <p className="px-3 mb-1.5 text-[10px] font-display font-semibold uppercase tracking-[0.18em] text-dark-500">
-        {titulo}
-      </p>
-      <div className="space-y-0.5">
-        {itens.map((i) => (
-          <Item key={i.to} {...i} />
-        ))}
-      </div>
+    <div className="adm-navgroup">
+      <h3>{titulo}</h3>
+      {itens.map((i) => (
+        <Item key={i.to} {...i} />
+      ))}
     </div>
   );
 }
@@ -44,59 +36,82 @@ function Grupo({ titulo, itens }) {
 export default function Sidebar() {
   const { user, papel, permissoes, pode, podeProprio, logout } = useAuth();
   const carregando = papel !== 'dono' && permissoes === null;
-  const grupos = carregando ? [] : buildNavigation({ papel, pode, podeProprio }).desktopGroups;
+  const grupos = carregando
+    ? []
+    : buildNavigation({ papel, pode, podeProprio, admin: user?.admin === true }).desktopGroups;
   const papelLabel = user?.admin ? 'Administrador' : (PAPEL_LABEL[papel] ?? 'Conta');
 
   return (
-    <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 border-r border-dark-600 bg-dark-900/80 backdrop-blur sticky top-0 h-dvh">
-      <div className="flex items-center gap-2.5 px-5 h-16 border-b border-dark-600">
-        <div className="w-9 h-9 rounded-md bg-accent-400/15 border border-accent-400/30 flex items-center justify-center">
-          <KeyRound size={18} className="text-accent-300" strokeWidth={2} aria-hidden="true" />
-        </div>
-        <div className="leading-tight">
-          <p className="font-display font-bold text-white text-lg tracking-wide">
-            ADM<span className="text-accent-400">AI</span>
-          </p>
-          <p className="text-[10px] text-dark-500 uppercase tracking-[0.2em] -mt-0.5">
-            painel de controle
-          </p>
-        </div>
+    <aside className="adm-sidebar hidden lg:flex shrink-0">
+      <div className="adm-brand" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <KeyRound
+          size={20}
+          strokeWidth={2}
+          aria-hidden="true"
+          style={{ color: 'var(--adm-accent)' }}
+        />
+        <span>
+          AdmAi{' '}
+          <span style={{ color: 'var(--adm-text-faint)', font: 'var(--adm-caption)' }}>painel</span>
+        </span>
       </div>
 
       <nav
         aria-label="Navegação lateral"
         aria-busy={carregando || undefined}
-        className="flex-1 overflow-y-auto py-5 space-y-5"
+        style={{ flex: 1, overflowY: 'auto', paddingBottom: 'var(--adm-s5)' }}
       >
         {carregando
           ? Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="px-6">
-                <span className="skeleton block h-4 w-full rounded" aria-hidden="true" />
+              <div key={i} className="adm-navgroup">
+                <span className="adm-skeleton" style={{ height: 16 }} aria-hidden="true" />
               </div>
             ))
           : grupos.map((g) => <Grupo key={g.titulo} titulo={g.titulo} itens={g.itens} />)}
       </nav>
 
-      <div className="border-t border-dark-600 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-dark-700 border border-dark-600 flex items-center justify-center font-display font-bold text-accent-300">
+      {/* GLOBAL UTILITIES (seam estrutural do shell): hoje somente as utilities REAIS —
+          identidade da conta e logout. Um futuro Notification Center entra AQUI quando a
+          capability existir; nenhum sino/placeholder antes disso (§19/§49). */}
+      <div
+        className="adm-utilities"
+        style={{
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          gap: 8,
+          padding: '12px 12px 14px',
+          borderTop: '1px solid var(--adm-border)',
+        }}
+      >
+        <div className="adm-conta">
+          <span className="adm-avatar" aria-hidden="true">
             {(user?.nome ?? '?').charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm text-white font-medium truncate">{user?.nome ?? 'Usuário'}</p>
-            <p className="text-[11px] text-muted truncate">{papelLabel}</p>
-          </div>
+          </span>
+          <span style={{ minWidth: 0 }}>
+            <span
+              style={{
+                display: 'block',
+                color: 'var(--adm-text)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {user?.nome ?? 'Usuário'}
+            </span>
+            <span style={{ font: 'var(--adm-caption)', color: 'var(--adm-text-faint)' }}>
+              {papelLabel}
+            </span>
+          </span>
         </div>
-        {/* No desktop este era o único viewport SEM logout — o "Sair" vivia só em /mais,
-            aba da navegação mobile. Mesmo logout() que Mais.jsx usa; encerramento local
-            da sessão (o token some do storage). [AUD-INPUT-DESKTOP-LOGOUT] */}
         <button
           type="button"
           onClick={logout}
-          className="mt-2 w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium min-h-[44px] text-muted hover:text-danger hover:bg-dark-700 transition-all"
+          className="adm-sair"
+          style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
         >
-          <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
-          <span className="tracking-wide">Sair</span>
+          <LogOut size={15} strokeWidth={1.8} aria-hidden="true" />
+          Sair
         </button>
       </div>
     </aside>

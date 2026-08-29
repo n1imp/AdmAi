@@ -65726,9 +65726,23 @@
         "caminhos": [],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "FR13B2-APP-SHELL",
+      "titulo": "App Shell light: Sidebar/BottomNav re-estilizados com foundations + Layout host de surface-mode + ctx admin + GlobalUtilities seam",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "suite completa 290/290 pos-swap; RD changed 0/0; design diff so deslocamentos; build OK",
+      "declaradoEm": "2026-08-29T04:15:29.656Z"
     }
   ],
-  "geradoEm": "2026-08-29T04:13:55.866Z",
+  "geradoEm": "2026-08-29T04:30:23.844Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

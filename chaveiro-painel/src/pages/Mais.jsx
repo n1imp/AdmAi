@@ -26,7 +26,9 @@ function CardLink({ to, label, descricao, icon: Icon }) {
 export default function Mais() {
   const { user, papel, permissoes, pode, podeProprio, logout } = useAuth();
   const carregando = papel !== 'dono' && permissoes === null;
-  const grupos = carregando ? [] : buildNavigation({ papel, pode, podeProprio }).moreGroups;
+  const grupos = carregando
+    ? []
+    : buildNavigation({ papel, pode, podeProprio, admin: user?.admin === true }).moreGroups;
 
   return (
     <div className="flex flex-col min-h-full px-4 pt-6 pb-8">
