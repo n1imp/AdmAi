@@ -74208,9 +74208,23 @@
       "bloqueiaIntegracao": false,
       "nota": "FR14G3: autorizacao EOS_GOVERNANCE aplicada as 5 reconciliacoes da FR-14 (FR14-WSR-01..05) de forma ADITIVA — provenance original e comparacao UNDECLARED_* preservadas, bloco de governanca acrescentado, bloqueio de integracao levantado; 19 historicas seguem NOT_GRANTED com frente propria de auditoria registrada",
       "declaradoEm": "2026-08-29T14:52:56.924Z"
+    },
+    {
+      "sliceId": "FR14G4-FECHAMENTO",
+      "titulo": "Fechamento formal do Cycle 3: veredito APROVADO do Revisor (rodada 7), provas consolidadas, validacoes NAO executadas declaradas e dividas ativas",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14G4: Cycle 3 fechado com veredito APROVADO do Revisor (rodada 7); provas, validacoes nao executadas e dividas ativas consolidadas; push para origin/staging registrado como PENDENTE DE AUTORIZACAO",
+      "declaradoEm": "2026-08-29T14:58:02.624Z"
     }
   ],
-  "geradoEm": "2026-08-29T14:54:52.045Z",
+  "geradoEm": "2026-08-29T14:58:35.193Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

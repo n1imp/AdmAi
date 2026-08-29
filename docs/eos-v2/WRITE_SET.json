@@ -1,17 +1,16 @@
 {
   "schema": "admai.write-set/4",
-  "sliceId": "FR14G3-GOVERNANCA",
-  "titulo": "Aplicar a autorizacao de governanca EOS as 5 reconciliacoes da FR-14 (FR14-WSR-01..05): provenance original PRESERVADA + bloco de governanca acrescentado; 19 historicas NAO autorizadas",
+  "sliceId": "FR14G4-FECHAMENTO",
+  "titulo": "Fechamento formal do Cycle 3: veredito APROVADO do Revisor (rodada 7), provas consolidadas, validacoes NAO executadas declaradas e dividas ativas",
   "lanes": {
     "HARNESS": "C:\\Users\\n1iag\\dev\\admai-worktrees\\agent-environment"
   },
   "estado": "CLOSED",
-  "declaradoEm": "2026-08-29T14:52:56.924Z",
+  "declaradoEm": "2026-08-29T14:58:02.624Z",
   "baseCommitPorLane": {
-    "HARNESS": "99c65fe793b58569eda8d80367b9ce14c0d6d248"
+    "HARNESS": "575db1cd8543641cad9c6bae30fc308f3f02bd1d"
   },
   "cobertura": "LANE_COMPLETA",
-  "notaDeMetodo": "Escrita aditiva no historico do write-set: nenhum campo original e removido ou reescrito (autorizadoPor segue 'Claude', comparacao segue UNDECLARED_WRITE/UNDECLARED_ARTIFACT_WRITE). Sem build nesta fatia — nenhum artefato produzido.",
   "baselinePorLane": {
     "HARNESS": {
       ".claude/skills/admai-tool-router/SKILL.md": "be0cd84d6a6d9c5c44511ae2332b90d78e7cf4d962a413fa1a6ee9ef96b144b4",
@@ -596,7 +595,7 @@
       "docs/agent-environment/ADMAI_FRONTEND_ARCHITECTURE_CONTRACT.md": "523eccf3cdac280b8d35214e3b70c1073070d6e25764344b50a4a9bcb4ce0ede",
       "docs/agent-environment/ADMAI_FRONTEND_CAPABILITY_SURFACE_MATRIX.md": "49fe2a96358b793c36b4242885aaf5bbf7186b6e29f8e0b2a337dc5b1ae77de0",
       "docs/agent-environment/ADMAI_FRONTEND_FUTURE_EXPANSION_CONTRACT.md": "4574abfd9f8cd45adfe5dc8e6acf1b51e77a6e029694a4342cf11250b4f15d60",
-      "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json": "1fa683619cb521ab8662ad37f3fc2e480c672226bc99bfd3cffcec7b7c1972de",
+      "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json": "4920d562fdc8f4feae5c9aeacbf967b99ffcdf4043ea7b16b1e6cc69da6c87a3",
       "docs/agent-environment/ADMAI_PRODUCT_DESIGN_PRINCIPLES.md": "0ae2f7768b37b4716d72bf7bb9cb013c9dcfe26d3c8c1590f340fa44e8665109",
       "docs/agent-environment/ADMAI_PRODUCT_GLOSSARY.md": "c35f7dd48c9732713462777393ddfa1bf9ea322e4e79d19e8e3d69a7ad408b4a",
       "docs/agent-environment/ADMAI_SCOPE_FREEZE.md": "a55973f7a9ca88ab6b518faff398627a9824dca649f3081257992a8a0de6fddb",
@@ -686,14 +685,14 @@
       "docs/eos-v2/TOOL_COST_REGISTRY.md": "344c2ddb70f271c4584a9c3d3fb31dc3494b9f1cd0c324d89d344778330a35f6",
       "docs/eos-v2/USER_DECISION_PROPOSAL_PROMOTE_ADMAI.md": "7fbdb9c8f00e973dd1b54419bd77b9e15f5d4bb2b2a0cd52c66522243bef9cc7",
       "docs/eos-v2/VERIFICATION_RECORD.json": "f9142ce15bfab9f964a8af1817b38d0ad126ab35e9745bc19c7c3a2a45c9388f",
-      "docs/eos-v2/WRITE_SET.json": "03defa10f13a002147e3b5d04b954bad6a9d5647d0bb76dc12415b1aa0db4998",
-      "docs/eos-v2/WRITE_SET_HISTORY.json": "8a0316dfe0339e6e40cb5a66491307e4310641e399d0f517c96870cd4ebe24eb",
+      "docs/eos-v2/WRITE_SET.json": "d9a4020c20f36bae1dcce390146910ec87a28e50c1e40a02d4cc8849e7707468",
+      "docs/eos-v2/WRITE_SET_HISTORY.json": "1c3be3802fa44a6ac328364cf1203fcfe4d792f5ff4c8f7344824470039830d3",
       "docs/eos-v2/bootstrap/LEGACY_SECURITY_EVIDENCE_SNAPSHOT.md": "deeae2c0a44da7635febabec97a13bfe96a5d20629528ab85767411f201324ed",
       "docs/eos-v2/bootstrap/REPOSITORY_SECURITY_PROFILE_ADMAI.md": "2379168cb27ddd63d8c9d83234600e17cf48a56a6d4fde07b92d917387b3514e",
       "docs/eos-v2/bootstrap/SL-A-01-REVIEW-LOG-R7-R10.md": "6375efe9d4ca013c42882163eed90b8934a737cb942db5bd7dbdf81e238cf3b5",
       "docs/eos-v2/bootstrap/SL-BOOT-01-BASELINE.md": "a3fc6940da450150f53e50235b5af72a65a44e4e7a21ea505fced70d1ee8f3e3",
       "docs/eos-v2/current/01_SESSION_BOOTSTRAP.md": "5dff019c75a2e45115cc32791306b2b4be1612bc70760f1fe7a171b210157d2f",
-      "docs/eos-v2/current/02_CURRENT_STATE.md": "6234fc69065d2396eb3835b522a329f1eb99d7bac13e11dbe845abc628d855d4",
+      "docs/eos-v2/current/02_CURRENT_STATE.md": "e485b6ceee830786714882959c35c357551080b2fb636d9a6291ee33dcfb9838",
       "docs/eos-v2/current/03_PROJECT_INDEX.md": "a74f81e76df05ba22fa4596bdaf5c9ef5d88dcb65d1ad3bbb6878ea6e93b7759",
       "docs/eos-v2/current/04_DECISION_INVARIANTS.md": "27c5a338209c1842d0d4636a50a5b51222e44f22be524a34afd4dc8ebdb6edcf",
       "docs/eos-v2/current/05_CARRYOVER_FINDINGS.md": "567eb1b04919fa4884e16e1fb33e18e28c3de43c7107b0ba4c660d2130d1f043",
@@ -2638,39 +2637,30 @@
   "entradas": [
     {
       "lane": "HARNESS",
-      "caminho": "docs/eos-v2/WRITE_SET_HISTORY.json",
-      "precisao": "BOUNDED",
-      "proposito": "originalEvent + governanca nas 5 entradas autorizadas",
-      "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "8a0316dfe0339e6e40cb5a66491307e4310641e399d0f517c96870cd4ebe24eb",
-      "sujoNaDeclaracao": false
-    },
-    {
-      "lane": "HARNESS",
       "caminho": "docs/agent-environment/ADMAI_FRONTEND_REPAGINATION_LEDGER.json",
       "precisao": "BOUNDED",
-      "proposito": "Decisao de governanca registrada: escopo FR-14, nao e blanket exception, 19 historicas pendentes de auditoria propria",
+      "proposito": "rodada 7 + statusCycle3 + bloco fechamentoCycle3",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "1fa683619cb521ab8662ad37f3fc2e480c672226bc99bfd3cffcec7b7c1972de",
+      "shaNaDeclaracao": "4920d562fdc8f4feae5c9aeacbf967b99ffcdf4043ea7b16b1e6cc69da6c87a3",
       "sujoNaDeclaracao": false
     },
     {
       "lane": "HARNESS",
       "caminho": "docs/eos-v2/current/02_CURRENT_STATE.md",
       "precisao": "BOUNDED",
-      "proposito": "Snapshot com a autorizacao e a frente futura de auditoria",
+      "proposito": "Snapshot final com veredito e pendencia de push",
       "existiaNaDeclaracao": true,
-      "shaNaDeclaracao": "6234fc69065d2396eb3835b522a329f1eb99d7bac13e11dbe845abc628d855d4",
+      "shaNaDeclaracao": "e485b6ceee830786714882959c35c357551080b2fb636d9a6291ee33dcfb9838",
       "sujoNaDeclaracao": false
     }
   ],
-  "comparacao": "OBSERVED_SUBSET",
+  "comparacao": "MATCH",
   "escopoDaComparacao": "LANE_UNICA",
   "lanesObservadas": [
     "HARNESS"
   ],
   "provenance": "ORIGINAL_PRE_MUTATION",
   "bloqueiaIntegracao": false,
-  "nota": "FR14G3: autorizacao EOS_GOVERNANCE aplicada as 5 reconciliacoes da FR-14 (FR14-WSR-01..05) de forma ADITIVA — provenance original e comparacao UNDECLARED_* preservadas, bloco de governanca acrescentado, bloqueio de integracao levantado; 19 historicas seguem NOT_GRANTED com frente propria de auditoria registrada",
+  "nota": "FR14G4: Cycle 3 fechado com veredito APROVADO do Revisor (rodada 7); provas, validacoes nao executadas e dividas ativas consolidadas; push para origin/staging registrado como PENDENTE DE AUTORIZACAO",
   "aviso": "Declaracao ENCERRADA."
 }
