@@ -7,10 +7,10 @@ import ServicoForm from '../features/servicos/ServicoForm.jsx';
 export default function NovoServicoFuncionario() {
   const navigate = useNavigate();
   return (
-    <div className="flex flex-col h-full">
+    <div className="adm-shell flex flex-col h-full">
       <BackHeader titulo="Registrar serviço" para="/meus-servicos" />
       <div
-        className="adm-shell flex-1 overflow-y-auto px-4 pb-6 lg:max-w-2xl"
+        className="flex-1 overflow-y-auto px-4 pb-6 lg:max-w-2xl"
         style={{ background: 'var(--adm-canvas)' }}
       >
         <div style={{ paddingTop: 'var(--adm-s4)' }}>

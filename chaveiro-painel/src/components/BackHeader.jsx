@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 export default function BackHeader({ titulo, para = '/configuracao' }) {
   const navigate = useNavigate();
   return (
-    <div className="flex items-center gap-3 px-4 pt-5 pb-1">
+    <div className="adm-backheader flex items-center gap-3 px-4 pt-5 pb-1">
       <button
         onClick={() => navigate(para)}
         aria-label="Voltar"

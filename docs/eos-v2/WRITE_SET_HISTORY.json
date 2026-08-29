@@ -65841,9 +65841,23 @@
         ]
       },
       "declaradoEm": "2026-08-29T05:49:19.478Z"
+    },
+    {
+      "sliceId": "FR14E4-COEXIST-SKIN",
+      "titulo": "Pele light escopada para primitivas legadas dentro de .adm-shell (Field/Button/BackHeader) + paginas migradas preenchem o poco Aurora (achados dos screenshots AFTER §36)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14E4: pele light escopada (.panel-route .adm-shell) p/ Field/Button/BackHeader/.input + main:has() cobre poco nas paginas migradas; screenshots AFTER recapturados coesos; lint 0 erros; RD diff 0 erros novos; testes das superficies 51/51",
+      "declaradoEm": "2026-08-29T06:46:48.057Z"
     }
   ],
-  "geradoEm": "2026-08-29T06:15:50.838Z",
+  "geradoEm": "2026-08-29T07:00:24.343Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

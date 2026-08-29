@@ -101,12 +101,9 @@ export default function MeusServicos() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="adm-shell flex flex-col h-full">
       <BackHeader titulo="Meus serviços" para="/" />
-      <div
-        className="adm-shell flex-1 overflow-y-auto px-4 pb-8"
-        style={{ background: 'var(--adm-canvas)' }}
-      >
+      <div className="flex-1 overflow-y-auto px-4 pb-8" style={{ background: 'var(--adm-canvas)' }}>
         {/* F9/M3: banner do serviço em andamento */}
         {m3Disponivel && servicoAtual && (
           <div
