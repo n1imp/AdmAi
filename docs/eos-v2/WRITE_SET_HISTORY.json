@@ -65763,9 +65763,23 @@
         "caminhos": [],
         "preserva": "A comparação permanece UNDECLARED_WRITE. Isto dispõe do bloqueio, não da violação."
       }
+    },
+    {
+      "sliceId": "FR14C-TANSTACK-DEP",
+      "titulo": "Dependencia @tanstack/react-query (DDR-4: hibrido incremental; entra junto da primeira superficie com server state)",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "@tanstack/react-query 5.102.8 instalado; sem uso ainda; budget medido no fechamento",
+      "declaradoEm": "2026-08-29T05:29:03.740Z"
     }
   ],
-  "geradoEm": "2026-08-29T04:42:57.443Z",
+  "geradoEm": "2026-08-29T05:29:32.552Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

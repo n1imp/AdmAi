@@ -29,6 +29,7 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@sentry/react": "^10.64.0",
+    "@tanstack/react-query": "^5.102.8",
     "axios": "^1.6.7",
     "driver.js": "^1.6.0",
     "lucide-react": "^1.23.0",
