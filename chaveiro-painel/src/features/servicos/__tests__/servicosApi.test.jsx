@@ -230,11 +230,10 @@ describe('evidência autenticada — ciclo de vida do blob', () => {
   /* Revisor 01a04c56 (rodada 4): comparar a string da url deixava passar este ciclo — ao
      voltar para A o estado ainda dizia "sou de A", servindo um blob JÁ REVOGADO. */
   it('A→B(pendente)→A: nada na tela até o download NOVO de A chegar (blob revogado não volta)', async () => {
-    let resolverB;
     let resolverA2;
     api.get
       .mockResolvedValueOnce({ data: new Blob(['a']) })
-      .mockImplementationOnce(() => new Promise((r) => (resolverB = r)))
+      .mockImplementationOnce(() => new Promise(() => {})) // B fica pendente de propósito
       .mockImplementationOnce(() => new Promise((r) => (resolverA2 = r)));
 
     const A = '/api/servicos/1/foto';
@@ -249,9 +248,12 @@ describe('evidência autenticada — ciclo de vida do blob', () => {
     rerender({ url: A }); // volta para A antes de B resolver
     expect(result.current).toBeNull(); // NUNCA o blob revogado
 
+    /* O download de B foi ABORTADO de verdade (o signal prova; a promise pendente sozinha
+       não provaria nada) — B nunca vira imagem no detalhe de A. */
+    expect(api.get.mock.calls[1][1].signal.aborted).toBe(true);
+
     resolverA2({ data: new Blob(['a2']) });
     await waitFor(() => expect(result.current).toBe('blob:objeto-2'));
-    expect(resolverB).toBeTypeOf('function'); // B foi abortado, nunca virou imagem
   });
 
   it('desmontar aborta o download em voo e revoga o blob', async () => {

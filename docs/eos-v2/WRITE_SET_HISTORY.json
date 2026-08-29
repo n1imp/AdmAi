@@ -74075,9 +74075,23 @@
       "bloqueiaIntegracao": false,
       "nota": "FR14E8: evidencia sem reuso de blob revogado (A->B->A) via estado derivado de props sem ref — RD apontou 2 erros novos na 1a tentativa (ref no render) e a versao final volta a 0; controle negativo executado 2x; 2 imprecisoes do registro corrigidas. Suite 52/328, lint 0E, build ok, teclado 3/3, e2e 5/5",
       "declaradoEm": "2026-08-29T13:56:53.195Z"
+    },
+    {
+      "sliceId": "FR14E9-PRECISAO",
+      "titulo": "Revisor rodada 5: comentario e ledger descrevem a implementacao EFETIVA (nao a rejeitada) + teste prova o abort de B em vez de alegar",
+      "estado": "CLOSED",
+      "comparacao": "UNDECLARED_ARTIFACT_WRITE",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": true,
+      "nota": "FR14E9: comentario e ledger passam a descrever a implementacao efetiva (reset do src na troca de url), com a tentativa barrada pelo RD como historico; teste prova o abort de B via signal.aborted no lugar da assercao vazia. Suite 52/328, lint 0E, RD 0 erros novos, build ok",
+      "declaradoEm": "2026-08-29T14:11:47.245Z"
     }
   ],
-  "geradoEm": "2026-08-29T14:08:50.819Z",
+  "geradoEm": "2026-08-29T14:22:44.809Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

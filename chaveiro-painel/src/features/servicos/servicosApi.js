@@ -169,19 +169,18 @@ export function useContextoDeMateriais({ enabled = true } = {}) {
  */
 export function useEvidenciaAutenticada(url) {
   const protegida = Boolean(url) && url.startsWith('/api/');
-  /* O blob pertence a uma ATIVAÇÃO, não a uma string de url. Comparar a url deixava passar o
-     ciclo A→B(pendente)→A: o cleanup revoga o blob de A, mas o estado ainda dizia "sou de A",
-     então voltar para A servia uma object URL REVOGADA — imagem quebrada — até o novo
-     download chegar (Revisor 01a04c56, rodadas 3 e 4). Cada ativação recebe um número e só o
-     download da ativação corrente vira imagem. Sem download atual não há imagem: bloco
-     ausente é melhor que evidência revogada, ou pior, a de outro atendimento. */
+  /* Trocar de url DESCARTA o blob anterior. Guardar só o `src` mostrava a foto do atendimento
+     anterior no detalhe do novo; guardar `{url, src}` e apenas comparar a url ainda deixava
+     passar o ciclo A→B(pendente)→A, porque o cleanup já revogou o blob de A e servi-lo de
+     volta dá imagem quebrada (Revisor 01a04c56, rodadas 3 e 4). Zerar de fato o `src` resolve
+     os dois: sem download da url corrente não há imagem, e bloco ausente é melhor do que
+     evidência revogada — ou pior, a de outro atendimento. */
   const [baixado, setBaixado] = useState({ url: undefined, src: null });
   if (baixado.url !== url) {
-    /* Ajustar estado durante o render é o padrão do React para derivar de props — e aqui é o
-       ponto exato onde a imagem antiga tem de sumir: já no primeiro render da url nova, antes
-       de qualquer efeito. Zerar o `src` (em vez de só marcar de quem ele é) também cobre o
-       ciclo A→B→A, em que o blob de A foi revogado pelo cleanup e não pode voltar à tela.
-       Sem ref mutada no render: render descartado pelo React não deixa rastro. */
+    /* Ajustar estado durante o render é o padrão do React para derivar de props, e aqui é o
+       ponto exato em que a imagem antiga tem de sumir: no primeiro render da url nova, antes
+       de qualquer efeito. Nada de ref mutada no render — um render descartado pelo React não
+       pode deixar rastro (o gate do React Doctor barra esse padrão, com razão). */
     setBaixado({ url, src: null });
   }
 
