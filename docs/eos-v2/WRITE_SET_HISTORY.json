@@ -74061,9 +74061,23 @@
       "bloqueiaIntegracao": false,
       "nota": "FR14E7: evidencia vinculada a URL corrente (troca A->B nao vaza a foto do atendimento anterior) + cobertura SEC-HB-02 completa; registro final do ciclo no ledger e CURRENT_STATE. Suite 52/327 verde, lint 0E, RD 0 erros novos, build ok",
       "declaradoEm": "2026-08-29T13:42:58.524Z"
+    },
+    {
+      "sliceId": "FR14E8-EVIDENCIA-ATIVACAO",
+      "titulo": "Revisor rodada 4: evidencia identificada pela ATIVACAO (A->B pendente->A nao reusa blob revogado) + correcao de duas imprecisoes do registro",
+      "estado": "CLOSED",
+      "comparacao": "MATCH",
+      "escopoDaComparacao": "LANE_UNICA",
+      "lanesObservadas": [
+        "HARNESS"
+      ],
+      "provenance": "ORIGINAL_PRE_MUTATION",
+      "bloqueiaIntegracao": false,
+      "nota": "FR14E8: evidencia sem reuso de blob revogado (A->B->A) via estado derivado de props sem ref — RD apontou 2 erros novos na 1a tentativa (ref no render) e a versao final volta a 0; controle negativo executado 2x; 2 imprecisoes do registro corrigidas. Suite 52/328, lint 0E, build ok, teclado 3/3, e2e 5/5",
+      "declaradoEm": "2026-08-29T13:56:53.195Z"
     }
   ],
-  "geradoEm": "2026-08-29T13:52:33.419Z",
+  "geradoEm": "2026-08-29T14:08:50.819Z",
   "reconciliacoes": [
     {
       "id": "R24-07",

@@ -227,6 +227,33 @@ describe('evidência autenticada — ciclo de vida do blob', () => {
     await waitFor(() => expect(result.current).toBe('blob:objeto-2'));
   });
 
+  /* Revisor 01a04c56 (rodada 4): comparar a string da url deixava passar este ciclo — ao
+     voltar para A o estado ainda dizia "sou de A", servindo um blob JÁ REVOGADO. */
+  it('A→B(pendente)→A: nada na tela até o download NOVO de A chegar (blob revogado não volta)', async () => {
+    let resolverB;
+    let resolverA2;
+    api.get
+      .mockResolvedValueOnce({ data: new Blob(['a']) })
+      .mockImplementationOnce(() => new Promise((r) => (resolverB = r)))
+      .mockImplementationOnce(() => new Promise((r) => (resolverA2 = r)));
+
+    const A = '/api/servicos/1/foto';
+    const { result, rerender } = renderHook(({ url }) => useEvidenciaAutenticada(url), {
+      initialProps: { url: A },
+    });
+    await waitFor(() => expect(result.current).toBe('blob:objeto-1'));
+
+    rerender({ url: '/api/servicos/2/foto' }); // B ainda pendente; blob de A revogado
+    expect(revogadas).toContain('blob:objeto-1');
+
+    rerender({ url: A }); // volta para A antes de B resolver
+    expect(result.current).toBeNull(); // NUNCA o blob revogado
+
+    resolverA2({ data: new Blob(['a2']) });
+    await waitFor(() => expect(result.current).toBe('blob:objeto-2'));
+    expect(resolverB).toBeTypeOf('function'); // B foi abortado, nunca virou imagem
+  });
+
   it('desmontar aborta o download em voo e revoga o blob', async () => {
     api.get.mockResolvedValue({ data: new Blob(['a']) });
     const { result, unmount } = renderHook(() => useEvidenciaAutenticada('/api/servicos/1/foto'));

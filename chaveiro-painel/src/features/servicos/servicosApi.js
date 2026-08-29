@@ -169,12 +169,21 @@ export function useContextoDeMateriais({ enabled = true } = {}) {
  */
 export function useEvidenciaAutenticada(url) {
   const protegida = Boolean(url) && url.startsWith('/api/');
-  /* O estado guarda DE QUAL url é o blob. Sem esse vínculo, trocar o detalhe de um serviço
-     para outro mostrava por um instante a foto do atendimento ANTERIOR — e, se o novo
-     download demorasse ou falhasse, a evidência errada ficava na tela (Revisor 01a04c56,
-     rodada 3). Enquanto o download da url corrente não chega, não há imagem: melhor bloco
-     ausente do que evidência de outro serviço. */
-  const [baixado, setBaixado] = useState({ url: null, src: null });
+  /* O blob pertence a uma ATIVAÇÃO, não a uma string de url. Comparar a url deixava passar o
+     ciclo A→B(pendente)→A: o cleanup revoga o blob de A, mas o estado ainda dizia "sou de A",
+     então voltar para A servia uma object URL REVOGADA — imagem quebrada — até o novo
+     download chegar (Revisor 01a04c56, rodadas 3 e 4). Cada ativação recebe um número e só o
+     download da ativação corrente vira imagem. Sem download atual não há imagem: bloco
+     ausente é melhor que evidência revogada, ou pior, a de outro atendimento. */
+  const [baixado, setBaixado] = useState({ url: undefined, src: null });
+  if (baixado.url !== url) {
+    /* Ajustar estado durante o render é o padrão do React para derivar de props — e aqui é o
+       ponto exato onde a imagem antiga tem de sumir: já no primeiro render da url nova, antes
+       de qualquer efeito. Zerar o `src` (em vez de só marcar de quem ele é) também cobre o
+       ciclo A→B→A, em que o blob de A foi revogado pelo cleanup e não pode voltar à tela.
+       Sem ref mutada no render: render descartado pelo React não deixa rastro. */
+    setBaixado({ url, src: null });
+  }
 
   useEffect(() => {
     if (!protegida) return undefined;
